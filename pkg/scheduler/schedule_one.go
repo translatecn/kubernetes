@@ -60,7 +60,9 @@ const (
 )
 
 // scheduleOne does the entire scheduling workflow for a single pod. It is serialized on the scheduling algorithm's host fitting.
+// scheduleOne 为单个 pod 完成整个调度工作流。
 func (sched *Scheduler) scheduleOne(ctx context.Context) {
+	// 拿出下一个pod对象
 	podInfo := sched.NextPod()
 	// pod could be nil when schedulerQueue is closed
 	if podInfo == nil || podInfo.Pod == nil {
@@ -74,6 +76,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 		klog.ErrorS(err, "Error occurred")
 		return
 	}
+	// 如果能跳过指定情况下的pod，则返回
 	if sched.skipPodSchedule(fwk, pod) {
 		return
 	}
@@ -92,6 +95,9 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 	schedulingCycleCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// 尝试调度单个pod
+	// 执行到调度框架中的 permit操作
+	// 参考图：https://kubernetes.io/zh-cn/docs/concepts/scheduling-eviction/scheduling-framework/
 	scheduleResult, assumedPodInfo, status := sched.schedulingCycle(schedulingCycleCtx, state, fwk, podInfo, start, podsToActivate)
 	if !status.IsSuccess() {
 		sched.FailureHandler(schedulingCycleCtx, fwk, assumedPodInfo, status, scheduleResult.nominatingInfo, start)
@@ -99,6 +105,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 	}
 
 	// bind the pod to its host asynchronously (we can do this b/c of the assumption step above).
+	// 把pod 异步绑定到特定node主机上
 	go func() {
 		bindingCycleCtx, cancel := context.WithCancel(ctx)
 		defer cancel()
@@ -118,6 +125,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 var clearNominatedNode = &framework.NominatingInfo{NominatingMode: framework.ModeOverride, NominatedNodeName: ""}
 
 // schedulingCycle tries to schedule a single Pod.
+// 调度单个pod
 func (sched *Scheduler) schedulingCycle(
 	ctx context.Context,
 	state *framework.CycleState,
@@ -126,7 +134,10 @@ func (sched *Scheduler) schedulingCycle(
 	start time.Time,
 	podsToActivate *framework.PodsToActivate,
 ) (ScheduleResult, *framework.QueuedPodInfo, *framework.Status) {
+	// pod队样
 	pod := podInfo.Pod
+
+	// 可以查看调度框架的流程，这一步执行到score操作结束
 	scheduleResult, err := sched.SchedulePod(ctx, fwk, state, pod)
 	if err != nil {
 		if err == ErrNoNodesAvailable {
@@ -173,6 +184,8 @@ func (sched *Scheduler) schedulingCycle(
 	assumedPodInfo := podInfo.DeepCopy()
 	assumedPod := assumedPodInfo.Pod
 	// assume modifies `assumedPod` by setting NodeName=scheduleResult.SuggestedHost
+	// 乐观绑定的调度作法
+	// 调用assume方法，在scheduler的cache中的记录这个pod已经调度，因为更新pod的nodeName，是异步操作，防止pod被重复调度
 	err = sched.assume(assumedPod, scheduleResult.SuggestedHost)
 	if err != nil {
 		// This is most probably result of a BUG in retrying logic.
@@ -233,6 +246,8 @@ func (sched *Scheduler) bindingCycle(
 	podsToActivate *framework.PodsToActivate) *framework.Status {
 
 	assumedPod := assumedPodInfo.Pod
+
+	// 搭配 https://kubernetes.io/zh-cn/docs/concepts/scheduling-eviction/scheduling-framework/
 
 	// Run "permit" plugins.
 	if status := fwk.WaitOnPermit(ctx, assumedPod); !status.IsSuccess() {
@@ -334,25 +349,30 @@ func (sched *Scheduler) skipPodSchedule(fwk framework.Framework, pod *v1.Pod) bo
 // If it fails, it will return a FitError with reasons.
 // schedulePod 尝试将输入的 pod 调度到节点列表中的节点之一。
 // return : 节点名称 or err
+// 主要的调度框架的方法，分别都在findNodesThatFitPod方法与prioritizeNodes方法当中。
 func (sched *Scheduler) schedulePod(ctx context.Context, fwk framework.Framework, state *framework.CycleState, pod *v1.Pod) (result ScheduleResult, err error) {
 	trace := utiltrace.New("Scheduling", utiltrace.Field{Key: "namespace", Value: pod.Namespace}, utiltrace.Field{Key: "name", Value: pod.Name})
 	defer trace.LogIfLong(100 * time.Millisecond)
 
+	// 1. 更新cache 中的 node快照信息
 	if err := sched.Cache.UpdateSnapshot(sched.nodeInfoSnapshot); err != nil {
 		return result, err
 	}
 	trace.Step("Snapshotting scheduler cache and node infos done")
 
+	// 没有node，直接error
 	if sched.nodeInfoSnapshot.NumNodes() == 0 {
 		return result, ErrNoNodesAvailable
 	}
 
+	// 2. 根据框架的过滤器与插件，找到适合pod的节点"们"，(会拿到node列表)
 	feasibleNodes, diagnosis, err := sched.findNodesThatFitPod(ctx, fwk, state, pod)
 	if err != nil {
 		return result, err
 	}
 	trace.Step("Computing predicates done")
 
+	// 没有合适的node，直接error
 	if len(feasibleNodes) == 0 {
 		return result, &framework.FitError{
 			Pod:         pod,
@@ -361,6 +381,7 @@ func (sched *Scheduler) schedulePod(ctx context.Context, fwk framework.Framework
 		}
 	}
 
+	// 如果只有一个node，直接返回，并调度到这个上面
 	// When only one node after predicate, just use it.
 	if len(feasibleNodes) == 1 {
 		return ScheduleResult{
@@ -370,14 +391,18 @@ func (sched *Scheduler) schedulePod(ctx context.Context, fwk framework.Framework
 		}, nil
 	}
 
+	// 3. prioritizeNodes 使用插件的评分方法给上面过滤出的nodes打分。
+	// 返回：node name 与 分数
 	priorityList, err := prioritizeNodes(ctx, sched.Extenders, fwk, state, pod, feasibleNodes)
 	if err != nil {
 		return result, err
 	}
 
+	// 4. 选定一个最好的node
 	host, err := selectHost(priorityList)
 	trace.Step("Prioritizing done")
 
+	// 5. 返回结果
 	return ScheduleResult{
 		SuggestedHost:  host,
 		EvaluatedNodes: len(feasibleNodes) + len(diagnosis.NodeToStatusMap),
@@ -387,16 +412,22 @@ func (sched *Scheduler) schedulePod(ctx context.Context, fwk framework.Framework
 
 // Filters the nodes to find the ones that fit the pod based on the framework
 // filter plugins and filter extenders.
+// 根据框架的过滤器插件找到适合此pod的nodes节点们
 func (sched *Scheduler) findNodesThatFitPod(ctx context.Context, fwk framework.Framework, state *framework.CycleState, pod *v1.Pod) ([]*v1.Node, framework.Diagnosis, error) {
+	// 记录详细信息，以诊断调度失败
 	diagnosis := framework.Diagnosis{
 		NodeToStatusMap:      make(framework.NodeToStatusMap),
 		UnschedulablePlugins: sets.NewString(),
 	}
 
+	// 从snapshot中 list出所有的node
 	allNodes, err := sched.nodeInfoSnapshot.NodeInfos().List()
 	if err != nil {
 		return nil, diagnosis, err
 	}
+
+	// 搭配框架图，方便理解
+	// https://kubernetes.io/zh-cn/docs/concepts/scheduling-eviction/scheduling-framework/
 	// Run "prefilter" plugins.
 	preRes, s := fwk.RunPreFilterPlugins(ctx, state, pod)
 	if !s.IsSuccess() {
@@ -416,6 +447,7 @@ func (sched *Scheduler) findNodesThatFitPod(ctx context.Context, fwk framework.F
 
 	// "NominatedNodeName" can potentially be set in a previous scheduling cycle as a result of preemption.
 	// This node is likely the only candidate that will fit the pod, and hence we try it first before iterating over all nodes.
+	// 关于抢占的概念，先不涉及
 	if len(pod.Status.NominatedNodeName) > 0 {
 		feasibleNodes, err := sched.evaluateNominatedNode(ctx, pod, fwk, state, diagnosis)
 		if err != nil {
@@ -428,6 +460,7 @@ func (sched *Scheduler) findNodesThatFitPod(ctx context.Context, fwk framework.F
 	}
 
 	nodes := allNodes
+	// 如果没有node
 	if !preRes.AllNodes() {
 		nodes = make([]*framework.NodeInfo, 0, len(preRes.NodeNames))
 		for n := range preRes.NodeNames {
@@ -438,6 +471,8 @@ func (sched *Scheduler) findNodesThatFitPod(ctx context.Context, fwk framework.F
 			nodes = append(nodes, nInfo)
 		}
 	}
+
+	// findNodesThatPassFilters 找到适合过滤器的所有节点"们"
 	feasibleNodes, err := sched.findNodesThatPassFilters(ctx, fwk, state, pod, diagnosis, nodes)
 	// always try to update the sched.nextStartNodeIndex regardless of whether an error has occurred
 	// this is helpful to make sure that all the nodes have a chance to be searched
@@ -634,6 +669,9 @@ func findNodesThatPassExtenders(extenders []framework.Extender, pod *v1.Pod, fea
 // The scores from each plugin are added together to make the score for that node, then
 // any extenders are run as well.
 // All scores are finally combined (added) to get the total weighted scores of all nodes
+// priorityNodes 通过运行评分插件来确定节点的优先级，从调用 RunScorePlugins() 返回每个节点的分数。
+// 将每个插件的分数加在一起得出该节点的分数。
+// 最后将所有分数合并（相加）得到所有节点的总加权分数
 func prioritizeNodes(
 	ctx context.Context,
 	extenders []framework.Extender,
@@ -654,6 +692,8 @@ func prioritizeNodes(
 		}
 		return result, nil
 	}
+
+	// 搭配框架图，https://kubernetes.io/zh-cn/docs/concepts/scheduling-eviction/scheduling-framework/
 
 	// Run PreScore plugins.
 	preScoreStatus := fwk.RunPreScorePlugins(ctx, state, pod, nodes)
@@ -749,6 +789,7 @@ func prioritizeNodes(
 
 // selectHost takes a prioritized list of nodes and then picks one
 // in a reservoir sampling manner from the nodes that had the highest score.
+// 使用水库抽样法，选出分数最高的node。
 func selectHost(nodeScores []framework.NodePluginScores) (string, error) {
 	if len(nodeScores) == 0 {
 		return "", fmt.Errorf("empty priorityList")

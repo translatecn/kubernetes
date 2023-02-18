@@ -73,9 +73,14 @@ func init() {
 type Option func(runtime.Registry) error
 
 // NewSchedulerCommand creates a *cobra.Command object with default parameters and registryOptions
+// 1. 初始化组件配置的启动参数值
+// 2. 使用cobra定义kube-scheduler的命令行
+// 3. 组件的命令启动参数解析
 func NewSchedulerCommand(registryOptions ...Option) *cobra.Command {
+	// 1. 初始化组件配置的启动参数值
 	opts := options.NewOptions()
 
+	// 2. 使用cobra定义kube-scheduler的命令行
 	cmd := &cobra.Command{
 		Use: "kube-scheduler",
 		Long: `The Kubernetes scheduler is a control plane process which assigns
@@ -87,6 +92,7 @@ kube-scheduler is the reference implementation.
 See [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/)
 for more information about scheduling and the kube-scheduler component.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// 重要方法 runCommand
 			return runCommand(cmd, opts, registryOptions...)
 		},
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -99,6 +105,7 @@ for more information about scheduling and the kube-scheduler component.`,
 		},
 	}
 
+	// 3. 组件的命令启动参数解析
 	nfs := opts.Flags
 	verflag.AddFlags(nfs.FlagSet("global"))
 	globalflag.AddGlobalFlags(nfs.FlagSet("global"), cmd.Name(), logs.SkipLoggingConfigurationFlags())
@@ -118,6 +125,8 @@ for more information about scheduling and the kube-scheduler component.`,
 }
 
 // runCommand runs the scheduler.
+// 1. 执行Setup方法
+// 2. 执行scheduler Run方法
 func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Option) error {
 	verflag.PrintAndExitIfRequested()
 
@@ -137,14 +146,14 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
 		cancel()
 	}()
 
-	// 设置配置文件与返回实例
+	// 1. 设置配置文件与返回实例，所有的配置都在此方法中完成。
 	cc, sched, err := Setup(ctx, opts, registryOptions...)
 	if err != nil {
 		return err
 	}
 	// add feature enablement metrics
 	utilfeature.DefaultMutableFeatureGate.AddMetrics()
-	// 执行scheduler主要逻辑
+	// 2. 执行scheduler主要逻辑
 	return Run(ctx, cc, sched)
 }
 
@@ -163,6 +172,7 @@ func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *
 	}
 
 	// Start events processing pipeline.
+	// 1. 启动event上报管理器
 	cc.EventBroadcaster.StartRecordingToSink(ctx.Done())
 	defer cc.EventBroadcaster.Shutdown()
 
@@ -185,6 +195,7 @@ func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *
 	}
 
 	// Start up the healthz server.
+	// 2. 健康检查http server
 	if cc.SecureServing != nil {
 		handler := buildHandlerChain(newHealthzAndMetricsHandler(&cc.ComponentConfig, cc.InformerFactory, isLeader, checks...), cc.Authentication.Authenticator, cc.Authorization.Authorizer)
 		// TODO: handle stoppedCh and listenerStoppedCh returned by c.SecureServing.Serve
@@ -194,6 +205,7 @@ func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *
 		}
 	}
 
+	// 3. 启动InformerFactory监听
 	// Start all informers.
 	cc.InformerFactory.Start(ctx.Done())
 	// DynInformerFactory can be nil in tests.
@@ -209,6 +221,7 @@ func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *
 	}
 
 	// If leader election is enabled, runCommand via LeaderElector until done and exit.
+	// 4. 判断是否有选举功能
 	if cc.LeaderElection != nil {
 		cc.LeaderElection.Callbacks = leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(ctx context.Context) {
@@ -240,6 +253,7 @@ func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *
 
 	// Leader election is disabled, so runCommand inline until done.
 	close(waitingForLeader)
+	// 5. 启动kube-scheduler组件
 	sched.Run(ctx)
 	return fmt.Errorf("finished without leader elect")
 }
@@ -305,7 +319,9 @@ func WithPlugin(name string, factory runtime.PluginFactory) Option {
 	}
 }
 
-// Setup creates a completed config and a scheduler based on the command args and options
+// Setup creates a completed config and a scheduler based on the command args and  options
+// 1. 完成配置文件。ex: 赋值与校验
+// 2. 调用scheduler.New，完成scheduler实例化对象
 func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions ...Option) (*schedulerserverconfig.CompletedConfig, *scheduler.Scheduler, error) {
 	if cfg, err := latest.Default(); err != nil {
 		return nil, nil, err

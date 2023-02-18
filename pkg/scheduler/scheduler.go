@@ -99,7 +99,9 @@ type Scheduler struct {
 }
 
 func (s *Scheduler) applyDefaultHandlers() {
+	// 重要方法，调度pod的方法
 	s.SchedulePod = s.schedulePod
+	// 设置pod调度失败的处理逻辑
 	s.FailureHandler = s.handleSchedulingFailure
 }
 
@@ -239,7 +241,8 @@ var defaultSchedulerOptions = schedulerOptions{
 }
 
 // New returns a Scheduler
-//
+// New 实例化 Scheduler对象，非常重要
+// 多个步骤
 func New(client clientset.Interface,
 	informerFactory informers.SharedInformerFactory,
 	dynInformerFactory dynamicinformer.DynamicSharedInformerFactory,
@@ -252,7 +255,7 @@ func New(client clientset.Interface,
 		stopEverything = wait.NeverStop
 	}
 
-	// 配置，类似选项模式
+	// 1. 配置，类似选项模式
 	options := defaultSchedulerOptions
 	for _, opt := range opts {
 		opt(&options)
@@ -268,7 +271,7 @@ func New(client clientset.Interface,
 		options.profiles = cfg.Profiles
 	}
 
-	// 返回所有scheduler初始化插件的对象
+	// 2. 返回所有scheduler初始化插件的对象
 	registry := frameworkplugins.NewInTreeRegistry()
 	if err := registry.Merge(options.frameworkOutOfTreeRegistry); err != nil {
 		return nil, err
@@ -281,7 +284,7 @@ func New(client clientset.Interface,
 		return nil, fmt.Errorf("couldn't build extenders: %w", err)
 	}
 
-	// informer的list接口对象，
+	// 3. informer的list接口对象，
 	podLister := informerFactory.Core().V1().Pods().Lister()
 	nodeLister := informerFactory.Core().V1().Nodes().Lister()
 
@@ -290,7 +293,7 @@ func New(client clientset.Interface,
 	snapshot := internalcache.NewEmptySnapshot()
 	clusterEventMap := make(map[framework.ClusterEvent]sets.String)
 
-	// 重要方法
+	// 4. 重要方法，配置的map 初始化
 	profiles, err := profile.NewMap(options.profiles, registry, recorderFactory, stopCh,
 		frameworkruntime.WithComponentConfigVersion(options.componentConfigVersion),
 		frameworkruntime.WithClientSet(client),
@@ -315,7 +318,7 @@ func New(client clientset.Interface,
 	for profileName, profile := range profiles {
 		preEnqueuePluginMap[profileName] = profile.PreEnqueuePlugins()
 	}
-	// scheduler最重要的数据结构，队列
+	// 5. scheduler最重要的数据结构，队列
 	podQueue := internalqueue.NewSchedulingQueue(
 		profiles[options.profiles[0].SchedulerName].QueueSortFunc(), // 对pod信息进行排序的函数
 		informerFactory, // informerFactory对象，由之前实例化后传入
@@ -327,16 +330,17 @@ func New(client clientset.Interface,
 		internalqueue.WithPreEnqueuePluginMap(preEnqueuePluginMap),
 	)
 
+	// 6. scheduler cache缓存
 	schedulerCache := internalcache.New(durationToExpireAssumedPod, stopEverything)
 
 	// Setup cache debugger.
 	debugger := cachedebugger.New(nodeLister, podLister, schedulerCache, podQueue)
 	debugger.ListenForSignal(stopEverything)
 
-	// scheduler调度对象，所有的准备工作都完成。
+	// 7. scheduler调度对象，所有的准备工作都完成。
 	sched := &Scheduler{
-		Cache:                    schedulerCache,
-		client:                   client,
+		Cache:                    schedulerCache, // 缓存，存放对象的
+		client:                   client, // k8s客户端，用于
 		nodeInfoSnapshot:         snapshot,
 		percentageOfNodesToScore: options.percentageOfNodesToScore,
 		Extenders:                extenders,
@@ -345,10 +349,10 @@ func New(client clientset.Interface,
 		SchedulingQueue:          podQueue,
 		Profiles:                 profiles,
 	}
-	// 赋值两个非常重要的方法：schedulePod handleSchedulingFailure
+	// 8. 赋值两个非常重要的方法：schedulePod handleSchedulingFailure
 	sched.applyDefaultHandlers()
 
-	// 为之前设置的informerFactory中的各个监听对象加入EventHandler
+	// 9. 为之前设置的informerFactory中的各个监听对象加入EventHandler
 	addAllEventHandlers(sched, informerFactory, dynInformerFactory, unionedGVKs(clusterEventMap))
 
 	return sched, nil
@@ -356,6 +360,7 @@ func New(client clientset.Interface,
 
 // Run begins watching and scheduling. It starts scheduling and blocked until the context is done.
 func (sched *Scheduler) Run(ctx context.Context) {
+	// 调度队列执行，重要！！
 	sched.SchedulingQueue.Run()
 
 	// We need to start scheduleOne loop in a dedicated goroutine,
@@ -364,6 +369,12 @@ func (sched *Scheduler) Run(ctx context.Context) {
 	// If there are no new pods to schedule, it will be hanging there
 	// and if done in this goroutine it will be blocking closing
 	// SchedulingQueue, in effect causing a deadlock on shutdown.
+	// 我们需要在专用 goroutine 中启动 scheduleOne 循环，
+	// 因为 scheduleOne 函数在获取下一项时挂起
+	// 来自调度队列。
+	// 如果没有新的 pod 可以调度，它会挂在那里
+	// 如果在这个 goroutine 中完成，它将阻止关闭
+	// SchedulingQueue，实际上导致关闭时出现死锁。
 	go wait.UntilWithContext(ctx, sched.scheduleOne, 0)
 
 	<-ctx.Done()
