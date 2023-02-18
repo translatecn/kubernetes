@@ -42,7 +42,7 @@ const updateEnvVar = "UPDATE_POD_SECURITY_FIXTURE_DATA"
 //
 //	UPDATE_POD_SECURITY_FIXTURE_DATA=true go test k8s.io/pod-security-admission/test
 func TestFixtures(t *testing.T) {
-	expectedFiles := sets.NewString("testdata/README.md")
+	expectedFiles := sets.NewString("testdata/README11.md")
 
 	defaultChecks := policy.DefaultChecks()
 

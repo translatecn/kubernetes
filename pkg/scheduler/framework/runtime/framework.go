@@ -582,6 +582,7 @@ func (f *frameworkImpl) PreEnqueuePlugins() []framework.PreEnqueuePlugin {
 }
 
 // QueueSortFunc returns the function to sort pods in scheduling queue
+// QueueSortFunc 返回调度队列中 Pod 排序的函数
 func (f *frameworkImpl) QueueSortFunc() framework.LessFunc {
 	if f == nil {
 		// If frameworkImpl is nil, simply keep their order unchanged.

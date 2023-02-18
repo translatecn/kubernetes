@@ -119,6 +119,7 @@ type SchedulingQueue interface {
 }
 
 // NewSchedulingQueue initializes a priority queue as a new scheduling queue.
+// NewSchedulingQueue 初始化一个优先级队列作为一个新的调度队列。
 func NewSchedulingQueue(
 	lessFn framework.LessFunc,
 	informerFactory informers.SharedInformerFactory,
@@ -157,8 +158,11 @@ type PriorityQueue struct {
 	lock sync.RWMutex
 	cond sync.Cond
 
+	// 以下三个对象是scheduler调度中最重要的三个队列
+
 	// activeQ is heap structure that scheduler actively looks at to find pods to
 	// schedule. Head of heap is the highest priority pod.
+	// activeQ 是堆结构，scheduler会从activeQ中拿取要调度的pod。
 	activeQ *heap.Heap
 	// podBackoffQ is a heap ordered by backoff expiry. Pods which have completed backoff
 	// are popped from this heap before the scheduler looks at activeQ
@@ -268,16 +272,19 @@ func newQueuedPodInfoForLookup(pod *v1.Pod, plugins ...string) *framework.Queued
 }
 
 // NewPriorityQueue creates a PriorityQueue object.
+// NewPriorityQueue 创建一个 PriorityQueue对象
 func NewPriorityQueue(
 	lessFn framework.LessFunc,
 	informerFactory informers.SharedInformerFactory,
 	opts ...Option,
 ) *PriorityQueue {
+	// 设置配置文件
 	options := defaultPriorityQueueOptions
 	for _, opt := range opts {
 		opt(&options)
 	}
 
+	// 排序pod的lessFn方法
 	comp := func(podInfo1, podInfo2 interface{}) bool {
 		pInfo1 := podInfo1.(*framework.QueuedPodInfo)
 		pInfo2 := podInfo2.(*framework.QueuedPodInfo)
@@ -288,6 +295,7 @@ func NewPriorityQueue(
 		options.podNominator = NewPodNominator(informerFactory.Core().V1().Pods().Lister())
 	}
 
+	// 总的scheduler调度结构的对象实例化
 	pq := &PriorityQueue{
 		PodNominator:                      options.podNominator,
 		clock:                             options.clock,
@@ -1052,8 +1060,10 @@ func NewPodNominator(podLister listersv1.PodLister) framework.PodNominator {
 
 // MakeNextPodFunc returns a function to retrieve the next pod from a given
 // scheduling queue
+// MakeNextPodFunc 返回一个函数来从给定的 pod 中检索下一个 pod 调度队列
 func MakeNextPodFunc(queue SchedulingQueue) func() *framework.QueuedPodInfo {
 	return func() *framework.QueuedPodInfo {
+		// 弹出堆中的pod
 		podInfo, err := queue.Pop()
 		if err == nil {
 			klog.V(4).InfoS("About to try and schedule pod", "pod", klog.KObj(podInfo.Pod))

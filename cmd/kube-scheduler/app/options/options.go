@@ -281,6 +281,7 @@ func (o *Options) Config() (*schedulerappconfig.Config, error) {
 	}
 
 	// Prepare kube clients.
+	// 实例化clientSet对象
 	client, eventClient, err := createClients(c.KubeConfig)
 	if err != nil {
 		return nil, err
@@ -303,6 +304,7 @@ func (o *Options) Config() (*schedulerappconfig.Config, error) {
 		}
 	}
 
+	// 初始化client informerFactory 等对象
 	c.Client = client
 	c.InformerFactory = scheduler.NewInformerFactory(client, 0)
 	dynClient := dynamic.NewForConfigOrDie(c.KubeConfig)

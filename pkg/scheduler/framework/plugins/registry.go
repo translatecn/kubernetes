@@ -45,6 +45,8 @@ import (
 // NewInTreeRegistry builds the registry with all the in-tree plugins.
 // A scheduler that runs out of tree plugins can register additional plugins
 // through the WithFrameworkOutOfTreeRegistry option.
+// NewInTreeRegistry 构建所有内置插件。
+// 通过 WithFrameworkOutOfTreeRegistry 选项，加入额外的插件。
 func NewInTreeRegistry() runtime.Registry {
 	fts := plfeature.Features{
 		EnableDynamicResourceAllocation:              feature.DefaultFeatureGate.Enabled(features.DynamicResourceAllocation),
@@ -57,6 +59,7 @@ func NewInTreeRegistry() runtime.Registry {
 		EnablePodDisruptionConditions:                feature.DefaultFeatureGate.Enabled(features.PodDisruptionConditions),
 	}
 
+	// 所有插件的map表
 	registry := runtime.Registry{
 		dynamicresources.Name:                runtime.FactoryAdapter(fts, dynamicresources.New),
 		selectorspread.Name:                  selectorspread.New,

@@ -1,4 +1,4 @@
-/*
+ /*
 Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,7 @@ import (
 )
 
 func main() {
+	// 启动scheduler入口
 	command := app.NewSchedulerCommand()
 	code := cli.Run(command)
 	os.Exit(code)

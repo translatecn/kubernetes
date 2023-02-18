@@ -89,7 +89,7 @@ func TestNoNewBetaAPIsByDefault(t *testing.T) {
 			}
 
 			t.Errorf("%v is a new beta API.  New beta APIs may not be enabled by default.  "+
-				"See https://github.com/kubernetes/enhancements/blob/0ad0fc8269165ca300d05ca51c7ce190a79976a5/keps/sig-architecture/3136-beta-apis-off-by-default/README.md "+
+				"See https://github.com/kubernetes/enhancements/blob/0ad0fc8269165ca300d05ca51c7ce190a79976a5/keps/sig-architecture/3136-beta-apis-off-by-default/README11.md "+
 				"for more details.", enabledGVR)
 		}
 	}

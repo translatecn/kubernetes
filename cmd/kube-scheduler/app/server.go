@@ -137,12 +137,14 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
 		cancel()
 	}()
 
+	// 设置配置文件与返回实例
 	cc, sched, err := Setup(ctx, opts, registryOptions...)
 	if err != nil {
 		return err
 	}
 	// add feature enablement metrics
 	utilfeature.DefaultMutableFeatureGate.AddMetrics()
+	// 执行scheduler主要逻辑
 	return Run(ctx, cc, sched)
 }
 
@@ -311,18 +313,21 @@ func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions 
 		opts.ComponentConfig = cfg
 	}
 
+	// opt验证配置
 	if errs := opts.Validate(); len(errs) > 0 {
 		return nil, nil, utilerrors.NewAggregate(errs)
 	}
-
+	// 配置对象
 	c, err := opts.Config()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// Get the completed config
+	// 完成需要用的配置文件
 	cc := c.Complete()
 
+	// 与初始化插件有关
 	outOfTreeRegistry := make(runtime.Registry)
 	for _, option := range outOfTreeRegistryOptions {
 		if err := option(outOfTreeRegistry); err != nil {
@@ -333,6 +338,7 @@ func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions 
 	recorderFactory := getRecorderFactory(&cc)
 	completedProfiles := make([]kubeschedulerconfig.KubeSchedulerProfile, 0)
 	// Create the scheduler.
+	// 实例化scheduler对象
 	sched, err := scheduler.New(cc.Client,
 		cc.InformerFactory,
 		cc.DynInformerFactory,

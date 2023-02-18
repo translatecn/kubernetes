@@ -306,6 +306,7 @@ type PreEnqueuePlugin interface {
 }
 
 // LessFunc is the function to sort pod info
+// LessFunc 是对 pod 信息进行排序的函数
 type LessFunc func(podInfo1, podInfo2 *QueuedPodInfo) bool
 
 // QueueSortPlugin is an interface that must be implemented by "QueueSort" plugins.

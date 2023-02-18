@@ -457,6 +457,6 @@ func TestNewBetaResourcesEnabledByDefault(t *testing.T) {
 		if legacyBetaResourcesWithoutStableEquivalents[gvr.GroupResource()] {
 			continue // this is another beta of a legacy beta resource with no stable equivalent
 		}
-		t.Errorf("no new beta resources can be enabled by default, see https://github.com/kubernetes/enhancements/blob/0ad0fc8269165ca300d05ca51c7ce190a79976a5/keps/sig-architecture/3136-beta-apis-off-by-default/README.md: %v", gvr)
+		t.Errorf("no new beta resources can be enabled by default, see https://github.com/kubernetes/enhancements/blob/0ad0fc8269165ca300d05ca51c7ce190a79976a5/keps/sig-architecture/3136-beta-apis-off-by-default/README11.md: %v", gvr)
 	}
 }

@@ -239,6 +239,7 @@ var defaultSchedulerOptions = schedulerOptions{
 }
 
 // New returns a Scheduler
+//
 func New(client clientset.Interface,
 	informerFactory informers.SharedInformerFactory,
 	dynInformerFactory dynamicinformer.DynamicSharedInformerFactory,
@@ -251,6 +252,7 @@ func New(client clientset.Interface,
 		stopEverything = wait.NeverStop
 	}
 
+	// 配置，类似选项模式
 	options := defaultSchedulerOptions
 	for _, opt := range opts {
 		opt(&options)
@@ -266,6 +268,7 @@ func New(client clientset.Interface,
 		options.profiles = cfg.Profiles
 	}
 
+	// 返回所有scheduler初始化插件的对象
 	registry := frameworkplugins.NewInTreeRegistry()
 	if err := registry.Merge(options.frameworkOutOfTreeRegistry); err != nil {
 		return nil, err
@@ -278,6 +281,7 @@ func New(client clientset.Interface,
 		return nil, fmt.Errorf("couldn't build extenders: %w", err)
 	}
 
+	// informer的list接口对象，
 	podLister := informerFactory.Core().V1().Pods().Lister()
 	nodeLister := informerFactory.Core().V1().Nodes().Lister()
 
@@ -286,6 +290,7 @@ func New(client clientset.Interface,
 	snapshot := internalcache.NewEmptySnapshot()
 	clusterEventMap := make(map[framework.ClusterEvent]sets.String)
 
+	// 重要方法
 	profiles, err := profile.NewMap(options.profiles, registry, recorderFactory, stopCh,
 		frameworkruntime.WithComponentConfigVersion(options.componentConfigVersion),
 		frameworkruntime.WithClientSet(client),
@@ -310,9 +315,10 @@ func New(client clientset.Interface,
 	for profileName, profile := range profiles {
 		preEnqueuePluginMap[profileName] = profile.PreEnqueuePlugins()
 	}
+	// scheduler最重要的数据结构，队列
 	podQueue := internalqueue.NewSchedulingQueue(
-		profiles[options.profiles[0].SchedulerName].QueueSortFunc(),
-		informerFactory,
+		profiles[options.profiles[0].SchedulerName].QueueSortFunc(), // 对pod信息进行排序的函数
+		informerFactory, // informerFactory对象，由之前实例化后传入
 		internalqueue.WithPodInitialBackoffDuration(time.Duration(options.podInitialBackoffSeconds)*time.Second),
 		internalqueue.WithPodMaxBackoffDuration(time.Duration(options.podMaxBackoffSeconds)*time.Second),
 		internalqueue.WithPodNominator(nominator),
@@ -327,19 +333,22 @@ func New(client clientset.Interface,
 	debugger := cachedebugger.New(nodeLister, podLister, schedulerCache, podQueue)
 	debugger.ListenForSignal(stopEverything)
 
+	// scheduler调度对象，所有的准备工作都完成。
 	sched := &Scheduler{
 		Cache:                    schedulerCache,
 		client:                   client,
 		nodeInfoSnapshot:         snapshot,
 		percentageOfNodesToScore: options.percentageOfNodesToScore,
 		Extenders:                extenders,
-		NextPod:                  internalqueue.MakeNextPodFunc(podQueue),
+		NextPod:                  internalqueue.MakeNextPodFunc(podQueue), // 重要：如何取出堆中next的pod的方法
 		StopEverything:           stopEverything,
 		SchedulingQueue:          podQueue,
 		Profiles:                 profiles,
 	}
+	// 赋值两个非常重要的方法：schedulePod handleSchedulingFailure
 	sched.applyDefaultHandlers()
 
+	// 为之前设置的informerFactory中的各个监听对象加入EventHandler
 	addAllEventHandlers(sched, informerFactory, dynInformerFactory, unionedGVKs(clusterEventMap))
 
 	return sched, nil

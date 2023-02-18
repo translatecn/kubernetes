@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # A library of helper functions for landing kubemark containers on a
-# pre-existing Kubernetes master. See test/kubemark/pre-existing/README.md
+# pre-existing Kubernetes master. See test/kubemark/pre-existing/README11.md
 # for me details on using a pre-existing provider.
 
 KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/../..

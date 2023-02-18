@@ -67,6 +67,8 @@ func DecodeInto(obj runtime.Object, into interface{}) error {
 // Registry is a collection of all available plugins. The framework uses a
 // registry to enable and initialize configured plugins.
 // All plugins must be in the registry before initializing the framework.
+// Registry是一个map，存了所有可以使用的调度插件。
+// 在初始化框架之前，所有插件都必须在注册表中。
 type Registry map[string]PluginFactory
 
 // Register adds a new plugin to the registry. If a plugin with the same name

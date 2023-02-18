@@ -25,5 +25,5 @@ if diff -u test/conformance/testdata/conformance.yaml test/conformance/conforman
   echo PASS
   exit 0
 fi
-echo 'See instructions in test/conformance/README.md'
+echo 'See instructions in test/conformance/README11.md'
 exit 1

@@ -248,6 +248,7 @@ func responsibleForPod(pod *v1.Pod, profiles profile.Map) bool {
 
 // addAllEventHandlers is a helper function used in tests and in Scheduler
 // to add event handlers for various informers.
+// 如果熟悉informer概念的应该都不陌生！这里使用FilteringResourceEventHandler，增加过滤函数FilterFunc。
 func addAllEventHandlers(
 	sched *Scheduler,
 	informerFactory informers.SharedInformerFactory,
