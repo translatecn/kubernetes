@@ -30,6 +30,7 @@ import (
 )
 
 func main() {
+	// 启动api-server入口
 	command := app.NewAPIServerCommand()
 	code := cli.Run(command)
 	os.Exit(code)

@@ -91,7 +91,9 @@ func init() {
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
 func NewAPIServerCommand() *cobra.Command {
+	// 完成配置文件
 	s := options.NewServerRunOptions()
+	// 下列使用cobra启动kube-apiserver
 	cmd := &cobra.Command{
 		Use: "kube-apiserver",
 		Long: `The Kubernetes API server validates and configures data
@@ -130,6 +132,7 @@ cluster's shared state through which all other components interact.`,
 			}
 			// add feature enablement metrics
 			utilfeature.DefaultMutableFeatureGate.AddMetrics()
+			// api-server启动重要地方
 			return Run(completedOptions, genericapiserver.SetupSignalHandler())
 		},
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -163,17 +166,20 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 	klog.Infof("Version: %+v", version.Get())
 
 	klog.InfoS("Golang settings", "GOGC", os.Getenv("GOGC"), "GOMAXPROCS", os.Getenv("GOMAXPROCS"), "GOTRACEBACK", os.Getenv("GOTRACEBACK"))
-
+	// 构建调用链，注册四个server的路由
 	server, err := CreateServerChain(completeOptions)
 	if err != nil {
 		return err
 	}
 
+	// 进行服务运行的准备
+	// 注册健康检查，就绪，存活探针的地址
 	prepared, err := server.PrepareRun()
 	if err != nil {
 		return err
 	}
 
+	// 简单运行
 	return prepared.Run(stopCh)
 }
 
