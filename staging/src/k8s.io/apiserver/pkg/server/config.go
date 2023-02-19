@@ -648,6 +648,7 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 		return nil, fmt.Errorf("Genericapiserver.New() called with config.EquivalentResourceRegistry == nil")
 	}
 
+	// 1. 重要的方法，请求调用链的func，也就是DefaultBuildHandlerChain
 	handlerChainBuilder := func(handler http.Handler) http.Handler {
 		return c.BuildHandlerChainFunc(handler, c.Config)
 	}
@@ -657,8 +658,10 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 		debugSocket = routes.NewDebugSocket(c.DebugSocketPath)
 	}
 
+	// 2. 重要！生成handler进行请求的响应，传入name 序列化器 handlerChainBuilder调用方法
 	apiServerHandler := NewAPIServerHandler(name, c.Serializer, handlerChainBuilder, delegationTarget.UnprotectedHandler())
 
+	// 3. GenericAPIServer实例
 	s := &GenericAPIServer{
 		discoveryAddresses:             c.DiscoveryAddresses,
 		LoopbackClientConfig:           c.LoopbackClientConfig,
@@ -718,6 +721,8 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 		s.AggregatedDiscoveryGroupManager = manager
 		s.AggregatedLegacyDiscoveryGroupManager = discoveryendpoint.NewResourceManager()
 	}
+
+	// 4. 加载hook
 	for {
 		if c.JSONPatchMaxCopyBytes <= 0 {
 			break
@@ -850,6 +855,7 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 
 	// use the UnprotectedHandler from the delegation target to ensure that we don't attempt to double authenticator, authorize,
 	// or some other part of the filter chain in delegation cases.
+	// 5. 重要！ 使用UnprotectedHandler 使得请求不会进行多次 authenticator, authorize等 chain的步骤
 	if delegationTarget.UnprotectedHandler() == nil && c.EnableIndex {
 		s.Handler.NonGoRestfulMux.NotFoundHandler(routes.IndexLister{
 			StatusCode:   http.StatusNotFound,

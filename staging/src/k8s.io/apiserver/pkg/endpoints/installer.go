@@ -182,6 +182,9 @@ var toDiscoveryKubeVerb = map[string]string{
 
 // Install handlers for API resources.
 func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.ResourceInfo, *restful.WebService, []error) {
+	// 创建一个WebService，遍历group的REST stroage，
+	// 把stroage的path取出，排序，遍历path数组，
+	// 针对每个path，storage向WebService进行registerResourceHandlers注册
 	var apiResources []metav1.APIResource
 	var resourceInfos []*storageversion.ResourceInfo
 	var errors []error
@@ -196,6 +199,9 @@ func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.Resour
 	}
 	sort.Strings(paths)
 	for _, path := range paths {
+		// 是一个非常长的函数，对Storage进行类型转换，因为Storage实现了rest store的各种接口，
+		// 所以首先将其转换成getter, creater, lister, updater等类型，分别对应该API对象在数据库层面的增删查改等操作，
+		// 然后构造对应的Handler，然后再创建WebService的Route，最后将其添加到WebService中
 		apiResource, resourceInfo, err := a.registerResourceHandlers(path, a.group.Storage[path], ws)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("error in registering resource: %s, %v", path, err))
@@ -274,6 +280,7 @@ func GetResourceKind(groupVersion schema.GroupVersion, storage rest.Storage, typ
 }
 
 func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storage, ws *restful.WebService) (*metav1.APIResource, *storageversion.ResourceInfo, error) {
+	// 从path和APIInstaller对象中获取group version kind，并且分辨出cluster scope 或 namespace scope
 	admit := a.group.Admit
 
 	optionsExternalVersion := a.group.GroupVersion
@@ -302,6 +309,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	isSubresource := len(subresource) > 0
 
 	// If there is a subresource, namespace scoping is defined by the parent resource
+	// 区分是否是子资源
 	var namespaceScoped bool
 	if isSubresource {
 		parentStorage, ok := a.group.Storage[resource]
@@ -323,6 +331,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	}
 
 	// what verbs are supported by the storage, used to know what verbs we support per path
+	// 查看传入的资源是否支持不同的verb，用反射实现
 	creater, isCreater := storage.(rest.Creater)
 	namedCreater, isNamedCreater := storage.(rest.NamedCreater)
 	lister, isLister := storage.(rest.Lister)
@@ -366,6 +375,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		versionedList = indirectArbitraryPointer(versionedListPtr)
 	}
 
+	// 创建请求的Options
 	versionedListOptions, err := a.group.Creater.New(optionsExternalVersion.WithKind("ListOptions"))
 	if err != nil {
 		return nil, nil, err
@@ -481,6 +491,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		return nil, nil, fmt.Errorf("%q must implement TableConvertor", resource)
 	}
 
+	// 准备好 apiResource 用于返回
 	var apiResource metav1.APIResource
 	if utilfeature.DefaultFeatureGate.Enabled(features.StorageVersionHash) &&
 		isStorageVersionProvider &&
@@ -766,6 +777,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			}
 		}
 
+		// 遍历 不同verb 为了绑定路由，把它添加在集合中
 		switch action.Verb {
 		case "GET": // Get a resource.
 			var handler restful.RouteFunction

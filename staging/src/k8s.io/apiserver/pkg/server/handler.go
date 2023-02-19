@@ -70,12 +70,14 @@ type APIServerHandler struct {
 // It is normally used to apply filtering like authentication and authorization
 type HandlerChainBuilderFn func(apiHandler http.Handler) http.Handler
 
+// 构建restful 的 http服务
 func NewAPIServerHandler(name string, s runtime.NegotiatedSerializer, handlerChainBuilder HandlerChainBuilderFn, notFoundHandler http.Handler) *APIServerHandler {
 	nonGoRestfulMux := mux.NewPathRecorderMux(name)
 	if notFoundHandler != nil {
 		nonGoRestfulMux.NotFoundHandler(notFoundHandler)
 	}
-
+	
+	// go-restful库的路由创建方法
 	gorestfulContainer := restful.NewContainer()
 	gorestfulContainer.ServeMux = http.NewServeMux()
 	gorestfulContainer.Router(restful.CurlyRouter{}) // e.g. for proxy/{kind}/{name}/{*}
@@ -86,12 +88,14 @@ func NewAPIServerHandler(name string, s runtime.NegotiatedSerializer, handlerCha
 		serviceErrorHandler(s, serviceErr, request, response)
 	})
 
+	// Director对象，用来handler请求对象
 	director := director{
 		name:               name,
 		goRestfulContainer: gorestfulContainer,
 		nonGoRestfulMux:    nonGoRestfulMux,
 	}
 
+	// 使用director处理请求，用handlerChainBuilder加一层
 	return &APIServerHandler{
 		FullHandlerChain:   handlerChainBuilder(director),
 		GoRestfulContainer: gorestfulContainer,

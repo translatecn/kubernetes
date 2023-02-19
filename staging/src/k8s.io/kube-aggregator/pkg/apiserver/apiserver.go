@@ -108,6 +108,7 @@ type CompletedConfig struct {
 	*completedConfig
 }
 
+// preparedGenericAPIServer 注意这个对象实现的Run方法。
 type runnable interface {
 	Run(stopCh <-chan struct{}) error
 }
@@ -379,6 +380,7 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 
 // PrepareRun prepares the aggregator to run, by setting up the OpenAPI spec &
 // aggregated discovery document and calling the generic PrepareRun.
+// PrepareRun 完成健康检查、存活检查和openApi路由的注册工作
 func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
 	// add post start hook before generic PrepareRun in order to be before /healthz installation
 	if s.openAPIConfig != nil {

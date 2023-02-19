@@ -542,12 +542,14 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	// Start the audit backend before any request comes in. This means we must call Backend.Run
 	// before http server start serving. Otherwise the Backend.ProcessEvents call might block.
 	// AuditBackend.Run will stop as soon as all in-flight requests are drained.
+	// 1. 判断是否启动审计日志
 	if s.AuditBackend != nil {
 		if err := s.AuditBackend.Run(drainedCh.Signaled()); err != nil {
 			return fmt.Errorf("failed to run the audit backend: %v", err)
 		}
 	}
 
+	// 2. 重要！启动http server相关代码
 	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout)
 	if err != nil {
 		return err
@@ -634,11 +636,13 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 // NonBlockingRun spawns the secure http server. An error is
 // returned if the secure port cannot be listened on.
 // The returned channel is closed when the (asynchronous) termination is finished.
+// NonBlockingRun 启动http server相关动作
 func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdownTimeout time.Duration) (<-chan struct{}, <-chan struct{}, error) {
 	// Use an internal stop channel to allow cleanup of the listeners on error.
 	internalStopCh := make(chan struct{})
 	var stoppedCh <-chan struct{}
 	var listenerStoppedCh <-chan struct{}
+	// 1. 启动http server
 	if s.SecureServingInfo != nil && s.Handler != nil {
 		var err error
 		stoppedCh, listenerStoppedCh, err = s.SecureServingInfo.Serve(s.Handler, shutdownTimeout, internalStopCh)
@@ -656,8 +660,10 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 		close(internalStopCh)
 	}()
 
+	// 2. 执行postStartHooks
 	s.RunPostStartHooks(stopCh)
 
+	// 3. 发送ready信号
 	if _, err := systemd.SdNotify(true, "READY=1\n"); err != nil {
 		klog.Errorf("Unable to send systemd daemon successful start message: %v\n", err)
 	}
@@ -667,6 +673,10 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 
 // installAPIResources is a private method for installing the REST storage backing each api groupversionresource
 func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *APIGroupInfo, openAPIModels *spec.Swagger) error {
+
+	// 遍历 APIGroupInfo的 version来安装API对象，就是构建出一个apiGroupInfo
+	// 并把版本的Resource和REST storage存储到struct中，然后进行安装
+	// apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer)，并传入APIServerHandler的GoRestfulContainer
 	var resourceInfos []*storageversion.ResourceInfo
 	for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
 		if len(apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version]) == 0 {
@@ -692,7 +702,8 @@ func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *A
 		}
 
 		apiGroupVersion.MaxRequestBodyBytes = s.maxRequestBodyBytes
-
+	
+		// 重要方法
 		discoveryAPIResources, r, err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer)
 
 		if err != nil {

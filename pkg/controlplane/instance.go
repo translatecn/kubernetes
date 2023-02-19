@@ -351,6 +351,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		return nil, fmt.Errorf("Master.New() called with empty config.KubeletClientConfig")
 	}
 
+	// 1. 初始化GenericAPIServer，一样传入delegationTarget，把chain串起来
 	s, err := c.GenericConfig.New("kube-apiserver", delegationTarget)
 	if err != nil {
 		return nil, err
@@ -391,6 +392,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 			Install(s.Handler.GoRestfulContainer)
 	}
 
+	// api server实例
 	m := &Instance{
 		GenericAPIServer:          s,
 		ClusterAuthenticationInfo: c.ExtraConfig.ClusterAuthenticationInfo,
@@ -398,6 +400,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 
 	// install legacy rest storage
 
+	// 安装 LegacyAPI
 	if err := m.InstallLegacyAPI(&c, c.GenericConfig.RESTOptionsGetter); err != nil {
 		return nil, err
 	}
@@ -440,6 +443,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		eventsrest.RESTStorageProvider{TTL: c.ExtraConfig.EventTTL},
 		resourcerest.RESTStorageProvider{},
 	}
+	// 安装 APIs，与 LegacyAPI 流程相似
 	if err := m.InstallAPIs(c.ExtraConfig.APIResourceConfigSource, c.GenericConfig.RESTOptionsGetter, restStorageProviders...); err != nil {
 		return nil, err
 	}
@@ -577,7 +581,10 @@ func labelAPIServerHeartbeatFunc(identity string) lease.ProcessLeaseFunc {
 }
 
 // InstallLegacyAPI will install the legacy APIs for the restStorageProviders if they are enabled.
+// 把核心的core API 注册到路由中，重要方法
 func (m *Instance) InstallLegacyAPI(c *completedConfig, restOptionsGetter generic.RESTOptionsGetter) error {
+	// 1. 使用legacyRESTStorageProvider.NewLegacyRESTStorage 为 LegacyAPI的资源创建RESTStorage，
+	// RESTStorage的目的是把每个资源的访问路径and其后端的crud操作对应起来
 	legacyRESTStorageProvider := corerest.LegacyRESTStorageProvider{
 		StorageFactory:              c.ExtraConfig.StorageFactory,
 		ProxyTransport:              c.ExtraConfig.ProxyTransport,
@@ -600,6 +607,7 @@ func (m *Instance) InstallLegacyAPI(c *completedConfig, restOptionsGetter generi
 		return nil
 	}
 
+	// 初始化 bootstrap-controller，加入PostStartHook，其主要创建系统需要的namespace 与创建k8s service并定期触发sync操作
 	controllerName := "bootstrap-controller"
 	client := kubernetes.NewForConfigOrDie(c.GenericConfig.LoopbackClientConfig)
 	bootstrapController, err := c.NewBootstrapController(legacyRESTStorage, client)
@@ -609,6 +617,8 @@ func (m *Instance) InstallLegacyAPI(c *completedConfig, restOptionsGetter generi
 	m.GenericAPIServer.AddPostStartHookOrDie(controllerName, bootstrapController.PostStartHook)
 	m.GenericAPIServer.AddPreShutdownHookOrDie(controllerName, bootstrapController.PreShutdownHook)
 
+	// 创建好RESTStorage后，调用InstallLegacyAPIGroup为 APIGroup注册路由信息
+	// InstallLegacyAPIGroup -> installAPIResources -> InstallREST -> Install -> registerResourceHandlers
 	if err := m.GenericAPIServer.InstallLegacyAPIGroup(genericapiserver.DefaultLegacyAPIPrefix, &apiGroupInfo); err != nil {
 		return fmt.Errorf("error in registering group versions: %v", err)
 	}
