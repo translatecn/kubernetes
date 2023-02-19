@@ -101,6 +101,8 @@ func createAPIExtensionsConfig(
 	return apiextensionsConfig, nil
 }
 
+// Complete() 完成配置 New(delegateAPIServer) 完成 server实例
+// 注意：因为要把chain连接起来，后面的server都会在实例化时，传入上一次完成的genericapiserver.DelegationTarget对象
 func createAPIExtensionsServer(apiextensionsConfig *apiextensionsapiserver.Config, delegateAPIServer genericapiserver.DelegationTarget) (*apiextensionsapiserver.CustomResourceDefinitions, error) {
 	return apiextensionsConfig.Complete().New(delegateAPIServer)
 }

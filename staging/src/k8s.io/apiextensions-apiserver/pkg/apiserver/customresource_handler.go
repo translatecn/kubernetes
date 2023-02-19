@@ -198,6 +198,7 @@ func NewCustomResourceDefinitionHandler(
 		staticOpenAPISpec:       staticOpenAPISpec,
 		maxRequestBodyBytes:     maxRequestBodyBytes,
 	}
+	// 设置eventHandler
 	crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    ret.createCustomResourceDefinition,
 		UpdateFunc: ret.updateCustomResourceDefinition,

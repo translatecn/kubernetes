@@ -137,7 +137,7 @@ func (sched *Scheduler) schedulingCycle(
 	// pod队样
 	pod := podInfo.Pod
 
-	// 可以查看调度框架的流程，这一步执行到score操作结束
+	// 可以查看调度框架的流程，这一步执行到score操作结束，就是已经过滤与打分完毕，返回式调度结果。
 	scheduleResult, err := sched.SchedulePod(ctx, fwk, state, pod)
 	if err != nil {
 		if err == ErrNoNodesAvailable {
@@ -820,6 +820,7 @@ func (sched *Scheduler) assume(assumed *v1.Pod, host string) error {
 	// in the background.
 	// If the binding fails, scheduler will release resources allocated to assumed pod
 	// immediately.
+	// 修改pod中的node name
 	assumed.Spec.NodeName = host
 
 	if err := sched.Cache.AssumePod(assumed); err != nil {

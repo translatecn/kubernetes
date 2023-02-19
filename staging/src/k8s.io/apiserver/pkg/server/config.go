@@ -369,7 +369,7 @@ func NewConfig(codecs serializer.CodecFactory) *Config {
 
 	return &Config{
 		Serializer:                     codecs,
-		BuildHandlerChainFunc:          DefaultBuildHandlerChain,
+		BuildHandlerChainFunc:          DefaultBuildHandlerChain, // 中间件
 		NonLongRunningRequestWaitGroup: new(utilwaitgroup.SafeWaitGroup),
 		LegacyAPIGroupPrefixes:         sets.NewString(DefaultLegacyAPIPrefix),
 		DisabledPostStartHooks:         sets.NewString(),
@@ -866,6 +866,7 @@ func BuildHandlerChainWithStorageVersionPrecondition(apiHandler http.Handler, c 
 	return DefaultBuildHandlerChain(handler, c)
 }
 
+// 请求流入server后， 首先需要先经过下列的关卡
 func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 	handler := filterlatency.TrackCompleted(apiHandler)
 	handler = genericapifilters.WithAuthorization(handler, c.Authorization.Authorizer, c.Serializer)

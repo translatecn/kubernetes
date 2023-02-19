@@ -129,6 +129,7 @@ func (cfg *Config) Complete() CompletedConfig {
 
 // New returns a new instance of CustomResourceDefinitions from the given config.
 func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget) (*CustomResourceDefinitions, error) {
+	// 初始化 genericServer
 	genericServer, err := c.GenericConfig.New("apiextensions-apiserver", delegationTarget)
 	if err != nil {
 		return nil, err
@@ -141,10 +142,12 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		return nil, err
 	}
 
+	// server对象
 	s := &CustomResourceDefinitions{
 		GenericAPIServer: genericServer,
 	}
 
+	// 初始化 apiGroupInfo: 此对象需要对外暴露的api
 	apiResourceConfig := c.GenericConfig.MergedResourceConfig
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(apiextensions.GroupName, Scheme, metav1.ParameterCodec, Codecs)
 	storage := map[string]rest.Storage{}
@@ -161,10 +164,12 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		apiGroupInfo.VersionedResourcesStorageMap[v1.SchemeGroupVersion.Version] = storage
 	}
 
+	// 注册APIGroup
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
 		return nil, err
 	}
 
+	// 初始化需要监听的controller: informer机制。
 	crdClient, err := clientset.NewForConfig(s.GenericAPIServer.LoopbackClientConfig)
 	if err != nil {
 		// it's really bad that this is leaking here, but until we can fix the test (which I'm pretty sure isn't even testing what it wants to test),
@@ -187,6 +192,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		delegate:  delegateHandler,
 	}
 	establishingController := establish.NewEstablishingController(s.Informers.Apiextensions().V1().CustomResourceDefinitions(), crdClient.ApiextensionsV1())
+	// 重要方法，创建handler
 	crdHandler, err := NewCustomResourceDefinitionHandler(
 		versionDiscoveryHandler,
 		groupDiscoveryHandler,
@@ -206,6 +212,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 	if err != nil {
 		return nil, err
 	}
+	// handler的路由
 	s.GenericAPIServer.Handler.NonGoRestfulMux.Handle("/apis", crdHandler)
 	s.GenericAPIServer.Handler.NonGoRestfulMux.HandlePrefix("/apis/", crdHandler)
 	s.GenericAPIServer.RegisterDestroyFunc(crdHandler.destroy)
@@ -220,6 +227,8 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		crdHandler,
 	)
 
+	// 把informer 与controller 加入 PostStartHook
+	// 等到server启动后，才执行。
 	s.GenericAPIServer.AddPostStartHookOrDie("start-apiextensions-informers", func(context genericapiserver.PostStartHookContext) error {
 		s.Informers.Start(context.StopCh)
 		return nil

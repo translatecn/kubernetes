@@ -91,7 +91,7 @@ func init() {
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
 func NewAPIServerCommand() *cobra.Command {
-	// 完成配置文件
+	// 1. 完成配置文件
 	s := options.NewServerRunOptions()
 	// 下列使用cobra启动kube-apiserver
 	cmd := &cobra.Command{
@@ -184,12 +184,19 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 }
 
 // CreateServerChain creates the apiservers connected via delegation.
+// api-server主要有三个server，并且使用Chain串连起来。
+// 创建流程：option -> config -> server
+// notfoundhandler -> apiExtensionsServer -> kubeAPIServer -> aggregatorServer
+// 请求流入方向： aggregatorServer -> kubeAPIServer -> apiExtensionsServer -> notfoundhandler
 func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatorapiserver.APIAggregator, error) {
+
+	// 1. 创建kubeAPIServer配置
 	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions)
 	if err != nil {
 		return nil, err
 	}
 
+	// 2. 创建APIExtensionsServer配置，与crd资源有关的初始化
 	// If additional API servers are added, they should be gated.
 	apiExtensionsConfig, err := createAPIExtensionsConfig(*kubeAPIServerConfig.GenericConfig, kubeAPIServerConfig.ExtraConfig.VersionedInformers, pluginInitializer, completedOptions.ServerRunOptions, completedOptions.MasterCount,
 		serviceResolver, webhook.NewDefaultAuthenticationInfoResolverWrapper(kubeAPIServerConfig.ExtraConfig.ProxyTransport, kubeAPIServerConfig.GenericConfig.EgressSelector, kubeAPIServerConfig.GenericConfig.LoopbackClientConfig, kubeAPIServerConfig.GenericConfig.TracerProvider))
@@ -197,28 +204,36 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 		return nil, err
 	}
 
+	// 3. 创建notFoundHandler，用于请求发入api-server时，如果找不到的处理方法
 	notFoundHandler := notfoundhandler.New(kubeAPIServerConfig.GenericConfig.Serializer, genericapifilters.NoMuxAndDiscoveryIncompleteKey)
+
+	// 4. 创建APIExtensionsServer实例
 	apiExtensionsServer, err := createAPIExtensionsServer(apiExtensionsConfig, genericapiserver.NewEmptyDelegateWithCustomHandler(notFoundHandler))
 	if err != nil {
 		return nil, err
 	}
 
+	// 5. 创建KubeAPIServer实例
 	kubeAPIServer, err := CreateKubeAPIServer(kubeAPIServerConfig, apiExtensionsServer.GenericAPIServer)
 	if err != nil {
 		return nil, err
 	}
 
+	// 6. 创建AggregatorServer配置
 	// aggregator comes last in the chain
 	aggregatorConfig, err := createAggregatorConfig(*kubeAPIServerConfig.GenericConfig, completedOptions.ServerRunOptions, kubeAPIServerConfig.ExtraConfig.VersionedInformers, serviceResolver, kubeAPIServerConfig.ExtraConfig.ProxyTransport, pluginInitializer)
 	if err != nil {
 		return nil, err
 	}
+
+	// 7. 创建AggregatorServer实例
 	aggregatorServer, err := createAggregatorServer(aggregatorConfig, kubeAPIServer.GenericAPIServer, apiExtensionsServer.Informers)
 	if err != nil {
 		// we don't need special handling for innerStopCh because the aggregator server doesn't create any go routines
 		return nil, err
 	}
 
+	// 串联串起来了，所以直接返回头部即可。
 	return aggregatorServer, nil
 }
 
@@ -248,16 +263,19 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 ) {
 	proxyTransport := CreateProxyTransport()
 
+	// 1. 创建 GenericConfig，非常重要的方法
 	genericConfig, versionedInformers, serviceResolver, pluginInitializers, admissionPostStartHook, storageFactory, err := buildGenericConfig(s.ServerRunOptions, proxyTransport)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
+	// 初始化所有的capabilities
 	capabilities.Setup(s.AllowPrivileged, s.MaxConnectionBytesPerSec)
 
 	s.Metrics.Apply()
 	serviceaccount.RegisterMetrics()
 
+	// 完成master config实例
 	config := &controlplane.Config{
 		GenericConfig: genericConfig,
 		ExtraConfig: controlplane.ExtraConfig{
@@ -343,6 +361,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 }
 
 // BuildGenericConfig takes the master server options and produces the genericapiserver.Config associated with it
+// 主要配置chain流程：包括：认证 鉴权 准入(webhook)等
 func buildGenericConfig(
 	s *options.ServerRunOptions,
 	proxyTransport *http.Transport,
@@ -355,6 +374,8 @@ func buildGenericConfig(
 	storageFactory *serverstorage.DefaultStorageFactory,
 	lastErr error,
 ) {
+	// 1. 返回重要的genericapiserver.Config。
+	// 当中有个重要的方法：DefaultBuildHandlerChain，就是请求在进入api-server前，需要做的事情，可以想成中间件
 	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)
 	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource()
 
@@ -408,12 +429,15 @@ func buildGenericConfig(
 		return
 	}
 
+	// 2. 调用storageFactoryConfig.Complete(s.Etcd).New()，创建storageFactory实例
+	// 此对象为每个api resources 创建一个对应的RESTStorage
 	storageFactoryConfig := kubeapiserver.NewStorageFactoryConfig()
 	storageFactoryConfig.APIResourceConfig = genericConfig.MergedResourceConfig
 	storageFactory, lastErr = storageFactoryConfig.Complete(s.Etcd).New()
 	if lastErr != nil {
 		return
 	}
+	// 与etcd交互有关
 	if lastErr = s.Etcd.ApplyWithStorageFactoryTo(storageFactory, genericConfig); lastErr != nil {
 		return
 	}
@@ -427,6 +451,7 @@ func buildGenericConfig(
 	// on a fast local network
 	genericConfig.LoopbackClientConfig.DisableCompression = true
 
+	// 3. 创建clientSet
 	kubeClientConfig := genericConfig.LoopbackClientConfig
 	clientgoExternalClient, err := clientgoclientset.NewForConfig(kubeClientConfig)
 	if err != nil {
@@ -435,11 +460,13 @@ func buildGenericConfig(
 	}
 	versionedInformers = clientgoinformers.NewSharedInformerFactory(clientgoExternalClient, 10*time.Minute)
 
+	// 4. 创建认证实例，有多种认证方式
 	// Authentication.ApplyTo requires already applied OpenAPIConfig and EgressSelector if present
 	if lastErr = s.Authentication.ApplyTo(&genericConfig.Authentication, genericConfig.SecureServing, genericConfig.EgressSelector, genericConfig.OpenAPIConfig, genericConfig.OpenAPIV3Config, clientgoExternalClient, versionedInformers); lastErr != nil {
 		return
 	}
 
+	// 5. 创建鉴权实例，有多种鉴权方式
 	genericConfig.Authorization.Authorizer, genericConfig.RuleResolver, err = BuildAuthorizer(s, genericConfig.EgressSelector, versionedInformers)
 	if err != nil {
 		lastErr = fmt.Errorf("invalid authorization config: %v", err)
@@ -449,6 +476,7 @@ func buildGenericConfig(
 		genericConfig.DisabledPostStartHooks.Insert(rbacrest.PostStartHookName)
 	}
 
+	// 6. 审计插件相关
 	lastErr = s.Audit.ApplyTo(genericConfig)
 	if lastErr != nil {
 		return
@@ -466,6 +494,7 @@ func buildGenericConfig(
 		return
 	}
 
+	// 7. 准入插件实例化
 	err = s.Admission.ApplyTo(
 		genericConfig,
 		versionedInformers,
