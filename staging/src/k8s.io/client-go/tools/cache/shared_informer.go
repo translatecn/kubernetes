@@ -632,6 +632,7 @@ func (s *sharedIndexInformer) AddEventHandlerWithResyncPeriod(handler ResourceEv
 	return handle, nil
 }
 
+// 处理controller 从delta fifo拿到Deltas对象时的后续处理
 func (s *sharedIndexInformer) HandleDeltas(obj interface{}, isInInitialList bool) error {
 	s.blockDeltas.Lock()
 	defer s.blockDeltas.Unlock()
@@ -773,6 +774,7 @@ func (p *sharedProcessor) removeListener(handle ResourceEventHandlerRegistration
 	return nil
 }
 
+// 把obj对象放入 p.addCh 的chan中
 func (p *sharedProcessor) distribute(obj interface{}, sync bool) {
 	p.listenersLock.RLock()
 	defer p.listenersLock.RUnlock()
@@ -791,6 +793,7 @@ func (p *sharedProcessor) distribute(obj interface{}, sync bool) {
 	}
 }
 
+// processor启动了 listener的 run pop方法
 func (p *sharedProcessor) run(stopCh <-chan struct{}) {
 	func() {
 		p.listenersLock.RLock()
@@ -930,6 +933,7 @@ func (p *processorListener) add(notification interface{}) {
 	p.addCh <- notification
 }
 
+// pop方法 从p.addCh中把对象拿出来，并放入p.nextCh中
 func (p *processorListener) pop() {
 	defer utilruntime.HandleCrash()
 	defer close(p.nextCh) // Tell .run() to stop
@@ -938,6 +942,7 @@ func (p *processorListener) pop() {
 	var notification interface{}
 	for {
 		select {
+		// 放入nextCh中
 		case nextCh <- notification:
 			// Notification dispatched
 			var ok bool
@@ -945,6 +950,7 @@ func (p *processorListener) pop() {
 			if !ok { // Nothing to pop
 				nextCh = nil // Disable this select case
 			}
+		// 从addCh中把东西拿出来
 		case notificationToAdd, ok := <-p.addCh:
 			if !ok {
 				return
@@ -967,6 +973,7 @@ func (p *processorListener) run() {
 	// delivering again.
 	stopCh := make(chan struct{})
 	wait.Until(func() {
+		// 阻塞等待，从nextCh中拿东西出来，并分别调用 p.handler的方法
 		for next := range p.nextCh {
 			switch notification := next.(type) {
 			case updateNotification:

@@ -115,7 +115,9 @@ type Controller interface {
 }
 
 // New makes a new Controller from the given Config.
+// 创建新的Controller对象
 func New(c *Config) Controller {
+	// 设置配置文件 config
 	ctlr := &controller{
 		config: *c,
 		clock:  &clock.RealClock{},
@@ -126,16 +128,18 @@ func New(c *Config) Controller {
 // Run begins processing items, and will continue until a value is sent down stopCh or it is closed.
 // It's an error to call Run more than once.
 // Run blocks; call via go.
+// controller的重要方法 Run
 func (c *controller) Run(stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	go func() {
 		<-stopCh
 		c.config.Queue.Close()
 	}()
+	// 创建 Reflector对象
 	r := NewReflectorWithOptions(
-		c.config.ListerWatcher,
+		c.config.ListerWatcher, // 重要
 		c.config.ObjectType,
-		c.config.Queue,
+		c.config.Queue, // 重要
 		ReflectorOptions{
 			ResyncPeriod:    c.config.FullResyncPeriod,
 			TypeDescription: c.config.ObjectDescription,
@@ -154,8 +158,10 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 
 	var wg wait.Group
 
+	// reflector的Run方法
 	wg.StartWithChannel(stopCh, r.Run)
 
+	// 重要方法：启动controller时，会不断拉取delta fifo中的对象，执行后续的event handler操作
 	wait.Until(c.processLoop, time.Second, stopCh)
 	wg.Wait()
 }
@@ -183,6 +189,7 @@ func (c *controller) LastSyncResourceVersion() string {
 // actually exit when the controller is stopped. Or just give up on this stuff
 // ever being stoppable. Converting this whole package to use Context would
 // also be helpful.
+// 不断从delta fifo中取出对象，并调用 PopProcessFunc 执行eventHandler
 func (c *controller) processLoop() {
 	for {
 		obj, err := c.config.Queue.Pop(PopProcessFunc(c.config.Process))
@@ -214,6 +221,7 @@ func (c *controller) processLoop() {
 //     it will get an object of type DeletedFinalStateUnknown. This can
 //     happen if the watch is closed and misses the delete event and we don't
 //     notice the deletion until the subsequent re-list.
+// EventHandler 需要实现的三个方法。
 type ResourceEventHandler interface {
 	OnAdd(obj interface{}, isInInitialList bool)
 	OnUpdate(oldObj, newObj interface{})
@@ -444,6 +452,7 @@ func NewTransformingIndexerInformer(
 
 // Multiplexes updates in the form of a list of Deltas into a Store, and informs
 // a given handler of events OnUpdate, OnAdd, OnDelete
+// 区分不同事件的Deltas对象
 func processDeltas(
 	// Object which receives event notifications from the given deltas
 	handler ResourceEventHandler,
@@ -462,9 +471,10 @@ func processDeltas(
 				return err
 			}
 		}
-
+		// 区分事件，调用handler的不同方法
 		switch d.Type {
 		case Sync, Replaced, Added, Updated:
+			// 从缓存里取出
 			if old, exists, err := clientState.Get(obj); err == nil && exists {
 				if err := clientState.Update(obj); err != nil {
 					return err
@@ -503,25 +513,27 @@ func newInformer(
 	lw ListerWatcher,
 	objType runtime.Object,
 	resyncPeriod time.Duration,
-	h ResourceEventHandler,
-	clientState Store,
+	h ResourceEventHandler, // eventHandler 对象
+	clientState Store,  // indexers 对象
 	transformer TransformFunc,
 ) Controller {
 	// This will hold incoming changes. Note how we pass clientState in as a
 	// KeyLister, that way resync operations will result in the correct set
 	// of update/delete deltas.
+	// 实例化delta fifo
 	fifo := NewDeltaFIFOWithOptions(DeltaFIFOOptions{
-		KnownObjects:          clientState,
+		KnownObjects:          clientState, // 这里的KnownObjects 是indexers 对象
 		EmitDeltaTypeReplaced: true,
 	})
 
+	// 实例化controller的配置对象
 	cfg := &Config{
-		Queue:            fifo,
-		ListerWatcher:    lw,
-		ObjectType:       objType,
+		Queue:            fifo, // delta fifo
+		ListerWatcher:    lw,   // lw
+		ObjectType:       objType, // 资源对象
 		FullResyncPeriod: resyncPeriod,
 		RetryOnError:     false,
-
+		// 处理Process的方法
 		Process: func(obj interface{}, isInInitialList bool) error {
 			if deltas, ok := obj.(Deltas); ok {
 				return processDeltas(h, clientState, transformer, deltas, isInInitialList)
