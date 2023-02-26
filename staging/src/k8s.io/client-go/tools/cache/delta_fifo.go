@@ -101,11 +101,15 @@ type DeltaFIFO struct {
 
 	// `items` maps a key to a Deltas.
 	// Each such Deltas has at least one Delta.
+	// delta fifo的重要对象
+	// 一个object key会对应一个Deltas
+	// key 是根据资源对象计算而得，value是放入的Deltas队列
 	items map[string]Deltas
 
 	// `queue` maintains FIFO order of keys for consumption in Pop().
 	// There are no duplicates in `queue`.
 	// A key is in `queue` if and only if it is in `items`.
+	// 存储不同的key
 	queue []string
 
 	// populated is true if the first batch of items inserted by Replace() has been populated
@@ -116,6 +120,7 @@ type DeltaFIFO struct {
 
 	// keyFunc is used to make the key used for queued item
 	// insertion and retrieval, and should be deterministic.
+	// 计算资源对象的key func
 	keyFunc KeyFunc
 
 	// knownObjects list keys that are "known" --- affecting Delete(),
@@ -131,6 +136,7 @@ type DeltaFIFO struct {
 	emitDeltaTypeReplaced bool
 }
 
+// DeltaType 定义输入对象的事件：Added Updated Deleted
 // DeltaType is the type of a change (addition, deletion, etc)
 type DeltaType string
 
@@ -156,6 +162,7 @@ const (
 //
 // [*] Unless the change is a deletion, and then you'll get the final
 // state of the object before it was deleted.
+// 每次都放入DeltaFIFO中的对象，里头分别有 事件类型Type 与 资源对象Object
 type Delta struct {
 	Type   DeltaType
 	Object interface{}
@@ -163,6 +170,7 @@ type Delta struct {
 
 // Deltas is a list of one or more 'Delta's to an individual object.
 // The oldest delta is at index 0, the newest delta is the last one.
+// 同一个key的Delta会被放入相同的Deltas列表中，按照"顺序"
 type Deltas []Delta
 
 // NewDeltaFIFO returns a Queue which can be used to process changes to items.
@@ -215,11 +223,15 @@ func NewDeltaFIFO(keyFunc KeyFunc, knownObjects KeyListerGetter) *DeltaFIFO {
 
 // NewDeltaFIFOWithOptions returns a Queue which can be used to process changes to
 // items. See also the comment on DeltaFIFO.
+// 创建delta fifo对象
 func NewDeltaFIFOWithOptions(opts DeltaFIFOOptions) *DeltaFIFO {
+	// 如果没有设置 key func，默认都使用 MetaNamespaceKeyFunc
+	// MetaNamespaceKeyFunc 如果是namespace scope对象，都会返回 <namespace>/<name>的形式
 	if opts.KeyFunction == nil {
 		opts.KeyFunction = MetaNamespaceKeyFunc
 	}
 
+	// 实例化
 	f := &DeltaFIFO{
 		items:        map[string]Deltas{},
 		queue:        []string{},
@@ -253,6 +265,7 @@ func (f *DeltaFIFO) Close() {
 
 // KeyOf exposes f's keyFunc, but also detects the key of a Deltas object or
 // DeletedFinalStateUnknown objects.
+// 调用DeltaFIFO对象的 key func 计算object的key
 func (f *DeltaFIFO) KeyOf(obj interface{}) (string, error) {
 	if d, ok := obj.(Deltas); ok {
 		if len(d) == 0 {
@@ -278,8 +291,14 @@ func (f *DeltaFIFO) hasSynced_locked() bool {
 	return f.populated && f.initialPopulationCount == 0
 }
 
+/*
+	delta fifo最重要的几个方法： Add Update Delete Replace
+	其中：Add Update Delete 底层都是调用 queueActionLocked方法
+ */
+
 // Add inserts an item, and puts it in the queue. The item is only enqueued
 // if it doesn't already exist in the set.
+// add事件：加入delta fifo对象的方法
 func (f *DeltaFIFO) Add(obj interface{}) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -288,6 +307,7 @@ func (f *DeltaFIFO) Add(obj interface{}) error {
 }
 
 // Update is just like Add, but makes an Updated Delta.
+// update事件：加入delta fifo对象的方法
 func (f *DeltaFIFO) Update(obj interface{}) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -300,6 +320,7 @@ func (f *DeltaFIFO) Update(obj interface{}) error {
 // already been deleted by a Replace (re-list), for example.)  In this
 // method `f.knownObjects`, if not nil, provides (via GetByKey)
 // _additional_ objects that are considered to already exist.
+// delete事件：加入delta fifo对象的方法
 func (f *DeltaFIFO) Delete(obj interface{}) error {
 	id, err := f.KeyOf(obj)
 	if err != nil {
@@ -308,7 +329,9 @@ func (f *DeltaFIFO) Delete(obj interface{}) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	f.populated = true
+
 	if f.knownObjects == nil {
+		// 如果没找到，在informer对象中也不会有任何感知
 		if _, exists := f.items[id]; !exists {
 			// Presumably, this was deleted when a relist happened.
 			// Don't provide a second report of the same deletion.
@@ -371,6 +394,7 @@ func (f *DeltaFIFO) addIfNotPresent(id string, deltas Deltas) {
 
 // re-listing and watching can deliver the same update multiple times in any
 // order. This will combine the most recent two deltas if they are the same.
+// 可能在list watch时会同时更新相同的对象，因此进行合并
 func dedupDeltas(deltas Deltas) Deltas {
 	n := len(deltas)
 	if n < 2 {
@@ -410,21 +434,27 @@ func isDeletionDup(a, b *Delta) *Delta {
 
 // queueActionLocked appends to the delta list for the object.
 // Caller must lock first.
+// 重要方法
 func (f *DeltaFIFO) queueActionLocked(actionType DeltaType, obj interface{}) error {
+	// 计算 object key
 	id, err := f.KeyOf(obj)
 	if err != nil {
 		return KeyError{obj, err}
 	}
+	// 创建新的Deltas 放入尾部。
 	oldDeltas := f.items[id]
 	newDeltas := append(oldDeltas, Delta{actionType, obj})
+	// 合并前后两个的命令，去重
 	newDeltas = dedupDeltas(newDeltas)
 
 	if len(newDeltas) > 0 {
+		// 判断对象的key 是否在item队列中
+		// 不在就执行append id进去，在则直接重新赋值
 		if _, exists := f.items[id]; !exists {
 			f.queue = append(f.queue, id)
 		}
 		f.items[id] = newDeltas
-		f.cond.Broadcast()
+		f.cond.Broadcast()  // 通知
 	} else {
 		// This never happens, because dedupDeltas never returns an empty list
 		// when given a non-empty list (as it is here).
@@ -519,7 +549,9 @@ func (f *DeltaFIFO) IsClosed() bool {
 func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
+	// 不断从queue中取出
 	for {
+		// 判断f.queue是否为0，为0就阻塞
 		for len(f.queue) == 0 {
 			// When the queue is empty, invocation of Pop() is blocked until new item is enqueued.
 			// When Close() is called, the f.closed is set and the condition is broadcasted.
@@ -531,18 +563,22 @@ func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 			f.cond.Wait()
 		}
 		isInInitialList := !f.hasSynced_locked()
+		// 更新fifo的queue对象
+		// 取出队头
 		id := f.queue[0]
 		f.queue = f.queue[1:]
 		depth := len(f.queue)
 		if f.initialPopulationCount > 0 {
 			f.initialPopulationCount--
 		}
+		// 更新fifo的item map对象
 		item, ok := f.items[id]
 		if !ok {
 			// This should never happen
 			klog.Errorf("Inconceivable! %q was in f.queue but not f.items; ignoring.", id)
 			continue
 		}
+		// 删除
 		delete(f.items, id)
 		// Only log traces if the queue depth is greater than 10 and it takes more than
 		// 100 milliseconds to process one item from the queue.
@@ -556,6 +592,8 @@ func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 				utiltrace.Field{Key: "Reason", Value: "slow event handlers blocking the queue"})
 			defer trace.LogIfLong(100 * time.Millisecond)
 		}
+		// 重要方法：当把对象弹出后，需要进行的后续操作(可以看成消费者)
+		// 需要关注此方法何时被赋值。提示：在 k8s.io/client-go/tools/cache/controller.go当中
 		err := process(item, isInInitialList)
 		if e, ok := err.(ErrRequeue); ok {
 			f.addIfNotPresent(id, item)
@@ -577,29 +615,34 @@ func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 // of the Deltas associated with K.  Otherwise the pre-existing keys
 // are those listed by `f.knownObjects` and the current object of K is
 // what `f.knownObjects.GetByKey(K)` returns.
+// 在Refector的list操作后执行 Replace 或是 当有resync时也会执行 Replace
 func (f *DeltaFIFO) Replace(list []interface{}, _ string) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	keys := make(sets.String, len(list))
 
 	// keep backwards compat for old clients
+	// 用状态来区分动作
 	action := Sync
 	if f.emitDeltaTypeReplaced {
 		action = Replaced
 	}
 
 	// Add Sync/Replaced action for each new item.
+	// 加入item中
 	for _, item := range list {
 		key, err := f.KeyOf(item)
 		if err != nil {
 			return KeyError{item, err}
 		}
 		keys.Insert(key)
+		// 同样调用 queueActionLocked函数
 		if err := f.queueActionLocked(action, item); err != nil {
 			return fmt.Errorf("couldn't enqueue object: %v", err)
 		}
 	}
 
+	// 一般informer不会有这种情况
 	if f.knownObjects == nil {
 		// Do deletion detection against our own list.
 		queuedDeletions := 0
@@ -630,6 +673,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, _ string) error {
 		return nil
 	}
 
+	// 进行删除操作
 	// Detect deletions not already in the queue.
 	knownKeys := f.knownObjects.ListKeys()
 	queuedDeletions := 0
@@ -647,6 +691,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, _ string) error {
 			klog.Infof("Key %v does not exist in known objects store, placing DeleteFinalStateUnknown marker without object", k)
 		}
 		queuedDeletions++
+		// 删除操作
 		if err := f.queueActionLocked(Deleted, DeletedFinalStateUnknown{k, deletedObj}); err != nil {
 			return err
 		}
