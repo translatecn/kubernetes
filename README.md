@@ -16,6 +16,7 @@
 ```
 1. Scheduler: cmd/kube-scheduler/scheduler.go
 2. Apiserver: cmd/kube-apiserver/apiserver.go
+3. Controller-manager: cmd/kube-controller-manager/controller-manager.go
 ```
 
 ### 参考资料
