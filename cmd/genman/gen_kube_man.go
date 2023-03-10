@@ -115,6 +115,7 @@ func main() {
 	}
 }
 
+// 打印序言
 func preamble(out *bytes.Buffer, name, short, long string) {
 	out.WriteString(`% KUBERNETES(1) kubernetes User Manuals
 % Eric Paris
