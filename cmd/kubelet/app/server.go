@@ -182,7 +182,7 @@ is checked every 20 seconds (also configurable with a flag).`,
 			}
 
 			// short-circuit on verflag
-			verflag.PrintAndExitIfRequested()
+			verflag.PrintAndExitIfRequested() // 检查 --version
 
 			// set feature gates from initial flags-based config
 			if err := utilfeature.DefaultMutableFeatureGate.SetFromMap(kubeletConfig.FeatureGates); err != nil {
@@ -940,7 +940,8 @@ func updateDialer(clientConfig *restclient.Config) (func(), error) {
 	if clientConfig.Transport != nil || clientConfig.Dial != nil {
 		return nil, fmt.Errorf("there is already a transport or dialer configured")
 	}
-	d := connrotation.NewDialer((&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext)
+	a := net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
+	d := connrotation.NewDialer(a.DialContext)
 	clientConfig.Dial = d.DialContext
 	return d.CloseAll, nil
 }

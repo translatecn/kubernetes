@@ -160,7 +160,7 @@ func newHollowNodeCommand() *cobra.Command {
 		Use:  "kubemark",
 		Long: "kubemark",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			verflag.PrintAndExitIfRequested()
+			verflag.PrintAndExitIfRequested() // 检查 --version
 			return run(cmd, s)
 		},
 		Args: func(cmd *cobra.Command, args []string) error {

@@ -19,6 +19,8 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"k8s.io/kubernetes/debug/utils"
 	"os"
 	_ "time/tzdata" // for timeZone support in CronJob
 
@@ -30,6 +32,41 @@ import (
 )
 
 func main() {
+	os.Args = append(os.Args, fmt.Sprintf("--advertise-address=%s", utils.GetOutBoundIP()))
+	os.Args = append(os.Args, "--allow-privileged=true")
+	os.Args = append(os.Args, "--audit-log-format=json")
+	os.Args = append(os.Args, "--audit-log-maxage=7")
+	os.Args = append(os.Args, "--audit-log-maxbackup=10")
+	os.Args = append(os.Args, "--audit-log-maxsize=100")
+	os.Args = append(os.Args, "--audit-log-path=/tmp/audit.log")
+	//os.Args = append(os.Args, "--audit-policy-file=/etc/kubernetes/audit-policy.yml")
+	//os.Args = append(os.Args, "--authorization-mode=Node,RBAC")
+	//os.Args = append(os.Args, "--client-ca-file=/etc/kubernetes/pki/ca.crt")
+	//os.Args = append(os.Args, "--enable-admission-plugins=NodeRestriction")
+	//os.Args = append(os.Args, "--enable-aggregator-routing=true")
+	//os.Args = append(os.Args, "--enable-bootstrap-token-auth=true")
+	//os.Args = append(os.Args, "--etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt")
+	//os.Args = append(os.Args, "--etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt")
+	//os.Args = append(os.Args, "--etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key")
+	//os.Args = append(os.Args, "--etcd-servers=https://127.0.0.1:2379")
+	//os.Args = append(os.Args, "--feature-gates=EphemeralContainers=true")
+	//os.Args = append(os.Args, "--kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt")
+	//os.Args = append(os.Args, "--kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key")
+	//os.Args = append(os.Args, "--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname")
+	//os.Args = append(os.Args, "--proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt")
+	//os.Args = append(os.Args, "--proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key")
+	//os.Args = append(os.Args, "--requestheader-allowed-names=front-proxy-client")
+	//os.Args = append(os.Args, "--requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt")
+	//os.Args = append(os.Args, "--requestheader-extra-headers-prefix=X-Remote-Extra-")
+	//os.Args = append(os.Args, "--requestheader-group-headers=X-Remote-Group")
+	//os.Args = append(os.Args, "--requestheader-username-headers=X-Remote-User")
+	//os.Args = append(os.Args, "--secure-port=6443")
+	//os.Args = append(os.Args, "--service-account-issuer=https://kubernetes.default.svc.cluster.local")
+	//os.Args = append(os.Args, "--service-account-key-file=/etc/kubernetes/pki/sa.pub")
+	//os.Args = append(os.Args, "--service-account-signing-key-file=/etc/kubernetes/pki/sa.key")
+	//os.Args = append(os.Args, "--service-cluster-ip-range=10.96.0.0/22")
+	//os.Args = append(os.Args, "--tls-cert-file=/etc/kubernetes/pki/apiserver.crt")
+	//os.Args = append(os.Args, "--tls-private-key-file=/etc/kubernetes/pki/apiserver.key")
 	command := app.NewAPIServerCommand()
 	code := cli.Run(command)
 	os.Exit(code)

@@ -54,19 +54,15 @@ func NewLoggingConfiguration() *LoggingConfiguration {
 	return &c
 }
 
-// ValidateAndApply combines validation and application of the logging configuration.
-// This should be invoked as early as possible because then the rest of the program
-// startup (including validation of other options) will already run with the final
-// logging configuration.
-//
-// The optional FeatureGate controls logging features. If nil, the default for
-// these features is used.
+// ValidateAndApply 结合了日志配置的验证和应用。
+// 这应该尽可能早地调用，因为这样程序启动的其余部分(包括其他选项的验证)就已经使用最终的日志配置运行了。
+// 可选的FeatureGate控制日志功能。如果为nil，则使用这些特性的默认值。
 func ValidateAndApply(c *LoggingConfiguration, featureGate featuregate.FeatureGate) error {
 	return ValidateAndApplyAsField(c, featureGate, nil)
 }
 
 // ValidateAndApplyAsField is a variant of ValidateAndApply that should be used
-// when the LoggingConfiguration is embedded in some larger configuration
+// when the LoggingCt -monfiguration is embedded in some larger configuration
 // structure.
 func ValidateAndApplyAsField(c *LoggingConfiguration, featureGate featuregate.FeatureGate, fldPath *field.Path) error {
 	errs := Validate(c, featureGate, fldPath)
@@ -76,10 +72,10 @@ func ValidateAndApplyAsField(c *LoggingConfiguration, featureGate featuregate.Fe
 	return apply(c, featureGate)
 }
 
-// Validate can be used to check for invalid settings without applying them.
-// Most binaries should validate and apply the logging configuration as soon
-// as possible via ValidateAndApply. The field path is optional: nil
-// can be passed when the struct is not embedded in some larger struct.
+// Validate 可以用来检查无效的设置而不应用它们。
+// 大多数二进制文件应该尽快验证并应用日志配置
+// 通过ValidateAndApply。字段路径是可选的:nil
+// 可以在结构体未嵌入到更大的结构体时传递。
 func Validate(c *LoggingConfiguration, featureGate featuregate.FeatureGate, fldPath *field.Path) field.ErrorList {
 	errs := field.ErrorList{}
 	if c.Format != DefaultLogFormat {

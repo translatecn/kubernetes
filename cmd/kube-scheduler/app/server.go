@@ -119,7 +119,7 @@ for more information about scheduling and the kube-scheduler component.`,
 
 // runCommand runs the scheduler.
 func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Option) error {
-	verflag.PrintAndExitIfRequested()
+	verflag.PrintAndExitIfRequested() // 检查 --version
 
 	// Activate logging as soon as possible, after that
 	// show flags with the final logging configuration.

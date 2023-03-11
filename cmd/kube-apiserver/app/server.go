@@ -22,6 +22,7 @@ package app
 import (
 	"crypto/tls"
 	"fmt"
+	"k8s.io/klog/v2"
 	"net"
 	"net/http"
 	"net/url"
@@ -66,7 +67,6 @@ import (
 	"k8s.io/component-base/term"
 	"k8s.io/component-base/version"
 	"k8s.io/component-base/version/verflag"
-	"k8s.io/klog/v2"
 	aggregatorapiserver "k8s.io/kube-aggregator/pkg/apiserver"
 	aggregatorscheme "k8s.io/kube-aggregator/pkg/apiserver/scheme"
 	netutils "k8s.io/utils/net"
@@ -108,11 +108,10 @@ cluster's shared state through which all other components interact.`,
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			verflag.PrintAndExitIfRequested()
+			verflag.PrintAndExitIfRequested() // 检查 --version
 			fs := cmd.Flags()
 
-			// Activate logging as soon as possible, after that
-			// show flags with the final logging configuration.
+			// 尽快激活日志记录，然后用最终的日志记录配置显示标志。
 			if err := logsapi.ValidateAndApply(s.Logs, utilfeature.DefaultFeatureGate); err != nil {
 				return err
 			}

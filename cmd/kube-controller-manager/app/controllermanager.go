@@ -124,7 +124,7 @@ controller, and serviceaccounts controller.`,
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			verflag.PrintAndExitIfRequested()
+			verflag.PrintAndExitIfRequested() // 检查 --version
 
 			// Activate logging as soon as possible, after that
 			// show flags with the final logging configuration.

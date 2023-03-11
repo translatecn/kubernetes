@@ -21,38 +21,12 @@ import (
 )
 
 const (
-	// owner: @pohly
-	// kep: https://kep.k8s.io/3077
-	// alpha: v1.24
-	//
-	// Enables looking up a logger from a context.Context instead of using
-	// the global fallback logger and manipulating the logger that is
-	// used by a call chain.
-	ContextualLogging featuregate.Feature = "ContextualLogging"
-
-	// contextualLoggingDefault must remain false while in alpha. It can
-	// become true in beta.
-	contextualLoggingDefault = false
-
-	// Allow fine-tuning of experimental, alpha-quality logging options.
-	//
-	// Per https://groups.google.com/g/kubernetes-sig-architecture/c/Nxsc7pfe5rw/m/vF2djJh0BAAJ
-	// we want to avoid a proliferation of feature gates. This feature gate:
-	// - will guard *a group* of logging options whose quality level is alpha.
-	// - will never graduate to beta or stable.
-	LoggingAlphaOptions featuregate.Feature = "LoggingAlphaOptions"
-
-	// Allow fine-tuning of experimental, beta-quality logging options.
-	//
-	// Per https://groups.google.com/g/kubernetes-sig-architecture/c/Nxsc7pfe5rw/m/vF2djJh0BAAJ
-	// we want to avoid a proliferation of feature gates. This feature gate:
-	// - will guard *a group* of logging options whose quality level is beta.
-	// - is thus *introduced* as beta
-	// - will never graduate to stable.
-	LoggingBetaOptions featuregate.Feature = "LoggingBetaOptions"
-
-	// Stable logging options. Always enabled.
-	LoggingStableOptions featuregate.Feature = "LoggingStableOptions"
+	// ContextualLogging alpha: v1.24
+	ContextualLogging        featuregate.Feature = "ContextualLogging"    // 允许从上下文中查找记录器，而不是使用全局回退记录器和操作调用链使用的记录器。
+	contextualLoggingDefault                     = false                  // contextualLoggingDefault 在alpha中必须保持false。它可以在测试中成为true
+	LoggingAlphaOptions      featuregate.Feature = "LoggingAlphaOptions"  // 记录Alpha日志
+	LoggingBetaOptions       featuregate.Feature = "LoggingBetaOptions"   // 记录Beta日志
+	LoggingStableOptions     featuregate.Feature = "LoggingStableOptions" // 稳定的日志选项。总是启用。
 )
 
 func featureGates() map[featuregate.Feature]featuregate.FeatureSpec {

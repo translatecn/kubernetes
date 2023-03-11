@@ -472,7 +472,7 @@ environment variables specifying ports opened by the service proxy. There is an 
 addon that provides cluster DNS for these cluster IPs. The user must create a service
 with the apiserver API to configure the proxy.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			verflag.PrintAndExitIfRequested()
+			verflag.PrintAndExitIfRequested() // 检查 --version
 			cliflag.PrintFlags(cmd.Flags())
 
 			if err := initForOS(opts.WindowsService); err != nil {
