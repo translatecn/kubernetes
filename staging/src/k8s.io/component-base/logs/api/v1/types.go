@@ -31,31 +31,12 @@ const (
 	JSONLogFormat = "json"
 )
 
-// The alpha or beta level of structs is the highest stability level of any field
-// inside it. Feature gates will get checked during LoggingConfiguration.ValidateAndApply.
-
-// LoggingConfiguration contains logging options.
 type LoggingConfiguration struct {
-	// Format Flag specifies the structure of log messages.
-	// default value of format is `text`
-	Format string `json:"format,omitempty"`
-	// Maximum number of nanoseconds (i.e. 1s = 1000000000) between log
-	// flushes. Ignored if the selected logging backend writes log
-	// messages without buffering.
-	FlushFrequency time.Duration `json:"flushFrequency"`
-	// Verbosity is the threshold that determines which log messages are
-	// logged. Default is zero which logs only the most important
-	// messages. Higher values enable additional messages. Error messages
-	// are always logged.
-	Verbosity VerbosityLevel `json:"verbosity"`
-	// VModule overrides the verbosity threshold for individual files.
-	// Only supported for "text" log format.
-	VModule VModuleConfiguration `json:"vmodule,omitempty"`
-	// [Alpha] Options holds additional parameters that are specific
-	// to the different logging formats. Only the options for the selected
-	// format get used, but all of them get validated.
-	// Only available when the LoggingAlphaOptions feature gate is enabled.
-	Options FormatOptions `json:"options,omitempty"`
+	Format         string               `json:"format,omitempty"`  // 日志格式，默认t
+	FlushFrequency time.Duration        `json:"flushFrequency"`    // 两次日志刷新之间的最大纳秒数(即1s = 1000000000)。如果所选日志后端写入日志消息而没有缓冲，则忽略。
+	Verbosity      VerbosityLevel       `json:"verbosity"`         // 是决定记录哪些日志消息的阈值。默认为0，只记录最重要的消息。更高的值可以启用其他消息。错误消息总是被记录下来。
+	VModule        VModuleConfiguration `json:"vmodule,omitempty"` // VModule会覆盖单个文件的日志可见性k阈值。仅支持“文本”日志格式。
+	Options        FormatOptions        `json:"options,omitempty"` // [Alpha]选项包含特定于不同日志格式的附加参数。只使用所选格式的选项，但所有选项都将得到验证。仅在启用LoggingAlphaOptions特性门时可用。
 }
 
 // FormatOptions contains options for the different logging formats.
@@ -95,5 +76,5 @@ type VModuleItem struct {
 	Verbosity VerbosityLevel `json:"verbosity"`
 }
 
-// VerbosityLevel represents a klog or logr verbosity threshold.
+// VerbosityLevel 表示klog或logr 日志可见性k阈值。
 type VerbosityLevel uint32

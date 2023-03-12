@@ -110,7 +110,6 @@ cluster's shared state through which all other components interact.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			verflag.PrintAndExitIfRequested() // 检查 --version
 			fs := cmd.Flags()
-
 			// 尽快激活日志记录，然后用最终的日志记录配置显示标志。
 			if err := logsapi.ValidateAndApply(s.Logs, utilfeature.DefaultFeatureGate); err != nil {
 				return err

@@ -45,7 +45,7 @@ func ToPath(opts ...PathOption) *Path {
 	return c.path
 }
 
-// Path represents the path from some root to a particular field.
+// Path 表示从某个根到特定字段的路径。
 type Path struct {
 	name   string // the name of this field or "" if this is an index
 	index  string // if name == "", this is a subscript (index or map key) of the previous element

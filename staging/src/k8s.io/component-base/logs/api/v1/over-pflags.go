@@ -74,8 +74,6 @@ func (wrapper vmoduleConfigurationPFlag) Type() string {
 	return "pattern=N,..."
 }
 
-// VerbosityLevelPflag implements the pflag.Value interface for a verbosity
-// level value.
 func VerbosityLevelPflag(value *VerbosityLevel) pflag.Value {
 	return verbosityLevelPflag{value}
 }

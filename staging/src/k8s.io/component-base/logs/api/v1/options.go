@@ -69,7 +69,7 @@ func ValidateAndApplyAsField(c *LoggingConfiguration, featureGate featuregate.Fe
 	if len(errs) > 0 {
 		return errs.ToAggregate()
 	}
-	return apply(c, featureGate)
+	return apply(c, featureGate) // 将c应用到 klog配置
 }
 
 // Validate 可以用来检查无效的设置而不应用它们。
@@ -103,7 +103,7 @@ func Validate(c *LoggingConfiguration, featureGate featuregate.FeatureGate, fldP
 		}
 	}
 
-	// The type in our struct is uint32, but klog only accepts positive int32.
+	// struct的类型是uint32，但是klog只接受正的int32。
 	if c.Verbosity > math.MaxInt32 {
 		errs = append(errs, field.Invalid(fldPath.Child("verbosity"), c.Verbosity, fmt.Sprintf("Must be <= %d", math.MaxInt32)))
 	}
@@ -166,14 +166,16 @@ func apply(c *LoggingConfiguration, featureGate featuregate.FeatureGate) error {
 		log, flush := format.factory.Create(*c)
 		klog.SetLoggerWithOptions(log, klog.ContextualLogger(contextualLoggingEnabled), klog.FlushLogger(flush))
 	}
+	// 设置默认系统日志等级
 	if err := loggingFlags.Lookup("v").Value.Set(VerbosityLevelPflag(&c.Verbosity).String()); err != nil {
 		return fmt.Errorf("internal error while setting klog verbosity: %v", err)
 	}
+	// 设置默认vmodule配置
 	if err := loggingFlags.Lookup("vmodule").Value.Set(VModuleConfigurationPflag(&c.VModule).String()); err != nil {
 		return fmt.Errorf("internal error while setting klog vmodule: %v", err)
 	}
-	klog.StartFlushDaemon(c.FlushFrequency)
-	klog.EnableContextualLogging(contextualLoggingEnabled)
+	klog.StartFlushDaemon(c.FlushFrequency)                // 两次日志刷新之间的最大秒数
+	klog.EnableContextualLogging(contextualLoggingEnabled) // 是否记录上下文中的信息到日志
 	return nil
 }
 
