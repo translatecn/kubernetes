@@ -33,11 +33,10 @@ import (
 
 // ServerRunOptions contains the options while running a generic api server.
 type ServerRunOptions struct {
-	AdvertiseAddress net.IP
-
+	AdvertiseAddress            net.IP // --advertise-address=设置
 	CorsAllowedOriginList       []string
 	HSTSDirectives              []string
-	ExternalHost                string
+	ExternalHost                string // api-server对外提供访问的入口，  域名或者IP
 	MaxRequestsInFlight         int
 	MaxMutatingRequestsInFlight int
 	RequestTimeout              time.Duration
@@ -101,17 +100,16 @@ func (s *ServerRunOptions) ApplyTo(c *server.Config) error {
 	return nil
 }
 
-// DefaultAdvertiseAddress sets the field AdvertiseAddress if unset. The field will be set based on the SecureServingOptions.
+// DefaultAdvertiseAddress 如果未设置，则设置 AdvertiseAddress 字段。该字段将根据SecureServingOptions进行设置。
 func (s *ServerRunOptions) DefaultAdvertiseAddress(secure *SecureServingOptions) error {
 	if secure == nil {
 		return nil
 	}
 
-	if s.AdvertiseAddress == nil || s.AdvertiseAddress.IsUnspecified() {
+	if s.AdvertiseAddress == nil || s.AdvertiseAddress.IsUnspecified() { // 没有指定具体IP
 		hostIP, err := secure.DefaultExternalAddress()
 		if err != nil {
-			return fmt.Errorf("Unable to find suitable network address.error='%v'. "+
-				"Try to set the AdvertiseAddress directly or provide a valid BindAddress to fix this.", err)
+			return fmt.Errorf("无法找到合适的网络地址。错误='%v'。尝试直接设置AdvertiseAddress或提供有效的BindAddress来修复此问题。", err)
 		}
 		s.AdvertiseAddress = hostIP
 	}
@@ -121,7 +119,7 @@ func (s *ServerRunOptions) DefaultAdvertiseAddress(secure *SecureServingOptions)
 
 // Validate checks validation of ServerRunOptions
 func (s *ServerRunOptions) Validate() []error {
-	errors := []error{}
+	var errors []error
 
 	if s.LivezGracePeriod < 0 {
 		errors = append(errors, fmt.Errorf("--livez-grace-period can not be a negative value"))
@@ -183,16 +181,8 @@ func validateHSTSDirectives(hstsDirectives []string) error {
 	return errors.NewAggregate(allErrors)
 }
 
-// AddUniversalFlags adds flags for a specific APIServer to the specified FlagSet
 func (s *ServerRunOptions) AddUniversalFlags(fs *pflag.FlagSet) {
-	// Note: the weird ""+ in below lines seems to be the only way to get gofmt to
-	// arrange these text blocks sensibly. Grrr.
-
-	fs.IPVar(&s.AdvertiseAddress, "advertise-address", s.AdvertiseAddress, ""+
-		"The IP address on which to advertise the apiserver to members of the cluster. This "+
-		"address must be reachable by the rest of the cluster. If blank, the --bind-address "+
-		"will be used. If --bind-address is unspecified, the host's default interface will "+
-		"be used.")
+	fs.IPVar(&s.AdvertiseAddress, "advertise-address", s.AdvertiseAddress, "将apisserver通告给集群成员的IP地址。该地址必须能被集群的其他部分访问。如果为空，则使用--bind-address。如果没有指定--bind-address，则使用主机的默认接口。")
 
 	fs.StringSliceVar(&s.CorsAllowedOriginList, "cors-allowed-origins", s.CorsAllowedOriginList, ""+
 		"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular "+

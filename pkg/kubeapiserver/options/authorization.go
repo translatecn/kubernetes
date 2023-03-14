@@ -33,7 +33,7 @@ import (
 
 // BuiltInAuthorizationOptions contains all build-in authorization options for API Server
 type BuiltInAuthorizationOptions struct {
-	Modes                       []string
+	Modes                       []string // 授权模式
 	PolicyFile                  string
 	WebhookConfigFile           string
 	WebhookVersion              string
@@ -45,7 +45,7 @@ type BuiltInAuthorizationOptions struct {
 	WebhookRetryBackoff *wait.Backoff
 }
 
-// NewBuiltInAuthorizationOptions create a BuiltInAuthorizationOptions with default value
+// NewBuiltInAuthorizationOptions 内置授权
 func NewBuiltInAuthorizationOptions() *BuiltInAuthorizationOptions {
 	return &BuiltInAuthorizationOptions{
 		Modes:                       []string{authzmodes.ModeAlwaysAllow},

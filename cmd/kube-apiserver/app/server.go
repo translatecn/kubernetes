@@ -110,14 +110,13 @@ cluster's shared state through which all other components interact.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			verflag.PrintAndExitIfRequested() // 检查 --version
 			fs := cmd.Flags()
-			// 尽快激活日志记录，然后用最终的日志记录配置显示标志。
+			// 尽快激活日志记录，然后用最终的日志记录配置显示标志。将s.Logs设置到klog配置中
 			if err := logsapi.ValidateAndApply(s.Logs, utilfeature.DefaultFeatureGate); err != nil {
 				return err
 			}
 			cliflag.PrintFlags(fs)
 
-			// set default options
-			completedOptions, err := Complete(s)
+			completedOptions, err := Complete(s) // ✅
 			if err != nil {
 				return err
 			}
@@ -517,18 +516,16 @@ type completedServerRunOptions struct {
 	*options.ServerRunOptions
 }
 
-// Complete set default ServerRunOptions.
-// Should be called after kube-apiserver flags parsed.
+// Complete 设置默认参数
 func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 	var options completedServerRunOptions
-	// set defaults
+	// 设置默认的 AdvertiseAddress 地址
 	if err := s.GenericServerRunOptions.DefaultAdvertiseAddress(s.SecureServing.SecureServingOptions); err != nil {
 		return options, err
 	}
 
-	// process s.ServiceClusterIPRange from list to Primary and Secondary
-	// we process secondary only if provided by user
-	apiServerServiceIP, primaryServiceIPRange, secondaryServiceIPRange, err := getServiceIPAndRanges(s.ServiceClusterIPRanges)
+	// 我们只在用户提供的情况下才处理Secondary  定义的svc网络
+	apiServerServiceIP, primaryServiceIPRange, secondaryServiceIPRange, err := getServiceIPAndRanges(s.ServiceClusterIPRanges) // 10.96.0.1 ,10.96.0.0/22
 	if err != nil {
 		return options, err
 	}
@@ -536,13 +533,18 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 	s.SecondaryServiceClusterIPRange = secondaryServiceIPRange
 	s.APIServerServiceIP = apiServerServiceIP
 
-	if err := s.SecureServing.MaybeDefaultWithSelfSignedCerts(s.GenericServerRunOptions.AdvertiseAddress.String(), []string{"kubernetes.default.svc", "kubernetes.default", "kubernetes"}, []net.IP{apiServerServiceIP}); err != nil {
+	// pkg/kubeapiserver/options/over-serving.go:33 创建 apiserver.crt、apiserver.key
+	if err := s.SecureServing.MaybeDefaultWithSelfSignedCerts( // ✅
+		s.GenericServerRunOptions.AdvertiseAddress.String(), // 10.10.13.91
+		[]string{"kubernetes.default.svc", "kubernetes.default", "kubernetes"},
+		[]net.IP{apiServerServiceIP}, // 10.96.0.1
+	); err != nil {
 		return options, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
 
-	if len(s.GenericServerRunOptions.ExternalHost) == 0 {
+	if len(s.GenericServerRunOptions.ExternalHost) == 0 { // api-server对外提供访问的入口， 域名或者IP
 		if len(s.GenericServerRunOptions.AdvertiseAddress) > 0 {
-			s.GenericServerRunOptions.ExternalHost = s.GenericServerRunOptions.AdvertiseAddress.String()
+			s.GenericServerRunOptions.ExternalHost = s.GenericServerRunOptions.AdvertiseAddress.String() // 10.10.13.01
 		} else {
 			if hostname, err := os.Hostname(); err == nil {
 				s.GenericServerRunOptions.ExternalHost = hostname
@@ -553,15 +555,9 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 		klog.Infof("external host was not specified, using %v", s.GenericServerRunOptions.ExternalHost)
 	}
 
-	s.Authentication.ApplyAuthorization(s.Authorization)
+	s.Authentication.ApplyAuthorization(s.Authorization) // 授权
 
-	// Use (ServiceAccountSigningKeyFile != "") as a proxy to the user enabling
-	// TokenRequest functionality. This defaulting was convenient, but messed up
-	// a lot of people when they rotated their serving cert with no idea it was
-	// connected to their service account keys. We are taking this opportunity to
-	// remove this problematic defaulting.
 	if s.ServiceAccountSigningKeyFile == "" {
-		// Default to the private server key for service account token signing
 		if len(s.Authentication.ServiceAccounts.KeyFiles) == 0 && s.SecureServing.ServerCert.CertKey.KeyFile != "" {
 			if kubeauthenticator.IsValidServiceAccountKeyFile(s.SecureServing.ServerCert.CertKey.KeyFile) {
 				s.Authentication.ServiceAccounts.KeyFiles = []string{s.SecureServing.ServerCert.CertKey.KeyFile}
@@ -593,7 +589,7 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 			}
 		}
 
-		s.ServiceAccountIssuer, err = serviceaccount.JWTTokenGenerator(s.Authentication.ServiceAccounts.Issuers[0], sk)
+		s.ServiceAccountIssuer, err = serviceaccount.JWTTokenGenerator(s.Authentication.ServiceAccounts.Issuers[0], sk) // 创建jwt token生成器
 		if err != nil {
 			return options, fmt.Errorf("failed to build token generator: %v", err)
 		}
@@ -602,7 +598,7 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 
 	if s.Etcd.EnableWatchCache {
 		sizes := kubeapiserver.DefaultWatchCacheSizes()
-		// Ensure that overrides parse correctly.
+		// 确保重写正确解析
 		userSpecified, err := serveroptions.ParseWatchCacheSizes(s.Etcd.WatchCacheSizes)
 		if err != nil {
 			return options, err
@@ -616,6 +612,7 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 		}
 	}
 
+	// api 启用控制
 	for key, value := range s.APIEnablement.RuntimeConfig {
 		if key == "v1" || strings.HasPrefix(key, "v1/") ||
 			key == "api/v1" || strings.HasPrefix(key, "api/v1/") {
@@ -671,7 +668,7 @@ func buildServiceResolver(enabledAggregatorRouting bool, hostname string, inform
 }
 
 func getServiceIPAndRanges(serviceClusterIPRanges string) (net.IP, net.IPNet, net.IPNet, error) {
-	serviceClusterIPRangeList := []string{}
+	var serviceClusterIPRangeList []string
 	if serviceClusterIPRanges != "" {
 		serviceClusterIPRangeList = strings.Split(serviceClusterIPRanges, ",")
 	}
@@ -680,10 +677,10 @@ func getServiceIPAndRanges(serviceClusterIPRanges string) (net.IP, net.IPNet, ne
 	var primaryServiceIPRange net.IPNet
 	var secondaryServiceIPRange net.IPNet
 	var err error
-	// nothing provided by user, use default range (only applies to the Primary)
+	// 用户没有提供任何信息，使用默认范围(只适用于Primary)
 	if len(serviceClusterIPRangeList) == 0 {
 		var primaryServiceClusterCIDR net.IPNet
-		primaryServiceIPRange, apiServerServiceIP, err = controlplane.ServiceIPRange(primaryServiceClusterCIDR)
+		primaryServiceIPRange, apiServerServiceIP, err = controlplane.ServiceIPRange(primaryServiceClusterCIDR) // 选择CIDR块中第一个IP作为通信IP
 		if err != nil {
 			return net.IP{}, net.IPNet{}, net.IPNet{}, fmt.Errorf("error determining service IP ranges: %v", err)
 		}
@@ -700,8 +697,6 @@ func getServiceIPAndRanges(serviceClusterIPRanges string) (net.IP, net.IPNet, ne
 		return net.IP{}, net.IPNet{}, net.IPNet{}, fmt.Errorf("error determining service IP ranges for primary service cidr: %v", err)
 	}
 
-	// user provided at least two entries
-	// note: validation asserts that the list is max of two dual stack entries
 	if len(serviceClusterIPRangeList) > 1 {
 		_, secondaryServiceClusterCIDR, err := netutils.ParseCIDRSloppy(serviceClusterIPRangeList[1])
 		if err != nil {

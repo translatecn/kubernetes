@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 )
 
-// CanReadCertAndKey returns true if the certificate and key files already exists,
-// otherwise returns false. If lost one of cert and key, returns error.
+// CanReadCertAndKey 如果证书和密钥文件已经存在，则返回true，
+// 否则返回false。如果丢失一个证书和密钥，返回错误。
 func CanReadCertAndKey(certPath, keyPath string) (bool, error) {
 	certReadable := canReadFile(certPath)
 	keyReadable := canReadFile(keyPath)
@@ -57,10 +57,10 @@ func canReadFile(path string) bool {
 	return true
 }
 
-// WriteCert writes the pem-encoded certificate data to certPath.
-// The certificate file will be created with file mode 0644.
-// If the certificate file already exists, it will be overwritten.
-// The parent directory of the certPath will be created as needed with file mode 0755.
+// WriteCert 将pem编码的证书数据写入certPath。
+// 证书文件将以文件模式0644创建。
+// 如果证书文件已经存在，证书文件将被覆盖。
+// certPath的父目录将根据需要创建，文件模式0755。
 func WriteCert(certPath string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(certPath), os.FileMode(0755)); err != nil {
 		return err

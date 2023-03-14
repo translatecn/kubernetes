@@ -460,11 +460,11 @@ func chooseHostInterfaceFromRoute(routes []Route, nw networkInterfacer, addressF
 	return nil, fmt.Errorf("unable to select an IP from default routes.")
 }
 
-// ResolveBindAddress returns the IP address of a daemon, based on the given bindAddress:
-// If bindAddress is unset, it returns the host's default IP, as with ChooseHostInterface().
-// If bindAddress is unspecified or loopback, it returns the default IP of the same
-// address family as bindAddress.
-// Otherwise, it just returns bindAddress.
+// ResolveBindAddress 根据给定的bindAddress返回守护进程的IP地址:
+// 如果bindAddress未设置，它将返回主机的默认IP，与ChooseHostInterface()一样。
+// 如果bindAddress未指定或loopback，则返回bindAddress的默认IP地址
+// 地址族为bindAddress。
+// 否则，返回bindAddress。
 func ResolveBindAddress(bindAddress net.IP) (net.IP, error) {
 	addressFamilies := preferIPv4
 	if bindAddress != nil && memberOf(bindAddress, familyIPv6) {

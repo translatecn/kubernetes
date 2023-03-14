@@ -41,52 +41,41 @@ import (
 
 // ServerRunOptions runs a kubernetes api server.
 type ServerRunOptions struct {
-	GenericServerRunOptions *genericoptions.ServerRunOptions
-	Etcd                    *genericoptions.EtcdOptions
-	SecureServing           *genericoptions.SecureServingOptionsWithLoopback
-	Audit                   *genericoptions.AuditOptions
-	Features                *genericoptions.FeatureOptions
-	Admission               *kubeoptions.AdmissionOptions
-	Authentication          *kubeoptions.BuiltInAuthenticationOptions
-	Authorization           *kubeoptions.BuiltInAuthorizationOptions
-	CloudProvider           *kubeoptions.CloudProviderOptions
-	APIEnablement           *genericoptions.APIEnablementOptions
-	EgressSelector          *genericoptions.EgressSelectorOptions
-	Metrics                 *metrics.Options
-	Logs                    *logs.Options
-	Traces                  *genericoptions.TracingOptions
-
-	AllowPrivileged           bool
-	EnableLogsHandler         bool
-	EventTTL                  time.Duration
-	KubeletConfig             kubeletclient.KubeletClientConfig
-	KubernetesServiceNodePort int
-	MaxConnectionBytesPerSec  int64
-	// ServiceClusterIPRange is mapped to input provided by user
-	ServiceClusterIPRanges string
-	// PrimaryServiceClusterIPRange and SecondaryServiceClusterIPRange are the results
-	// of parsing ServiceClusterIPRange into actual values
-	PrimaryServiceClusterIPRange   net.IPNet
-	SecondaryServiceClusterIPRange net.IPNet
-	// APIServerServiceIP is the first valid IP from PrimaryServiceClusterIPRange
-	APIServerServiceIP net.IP
-
-	ServiceNodePortRange utilnet.PortRange
-
-	ProxyClientCertFile string
-	ProxyClientKeyFile  string
-
+	GenericServerRunOptions             *genericoptions.ServerRunOptions
+	Etcd                                *genericoptions.EtcdOptions
+	SecureServing                       *genericoptions.SecureServingOptionsWithLoopback
+	Audit                               *genericoptions.AuditOptions
+	Features                            *genericoptions.FeatureOptions
+	Admission                           *kubeoptions.AdmissionOptions
+	Authentication                      *kubeoptions.BuiltInAuthenticationOptions // 认证
+	Authorization                       *kubeoptions.BuiltInAuthorizationOptions  // 授权
+	CloudProvider                       *kubeoptions.CloudProviderOptions
+	APIEnablement                       *genericoptions.APIEnablementOptions
+	EgressSelector                      *genericoptions.EgressSelectorOptions
+	Metrics                             *metrics.Options
+	Logs                                *logs.Options
+	Traces                              *genericoptions.TracingOptions
+	AllowPrivileged                     bool
+	EnableLogsHandler                   bool
+	EventTTL                            time.Duration
+	KubeletConfig                       kubeletclient.KubeletClientConfig
+	KubernetesServiceNodePort           int
+	MaxConnectionBytesPerSec            int64
+	ServiceClusterIPRanges              string    // 是否映射到用户提供的输入
+	PrimaryServiceClusterIPRange        net.IPNet // 集群IP范围 主CIDR
+	SecondaryServiceClusterIPRange      net.IPNet // 集群IP范围 次CIDR
+	APIServerServiceIP                  net.IP    // ToDo api-server服务地址 与 AdvertiseAddress 有什么关系
+	ServiceNodePortRange                utilnet.PortRange
+	ProxyClientCertFile                 string
+	ProxyClientKeyFile                  string
 	EnableAggregatorRouting             bool
 	AggregatorRejectForwardingRedirects bool
-
-	MasterCount            int
-	EndpointReconcilerType string
-
-	ServiceAccountSigningKeyFile     string
-	ServiceAccountIssuer             serviceaccount.TokenGenerator
-	ServiceAccountTokenMaxExpiration time.Duration
-
-	ShowHiddenMetricsForVersion string
+	MasterCount                         int
+	EndpointReconcilerType              string
+	ServiceAccountSigningKeyFile        string
+	ServiceAccountIssuer                serviceaccount.TokenGenerator // 根据 /etc/kubernetes/pki/sa.key 生成对应的jwt token
+	ServiceAccountTokenMaxExpiration    time.Duration                 // token 过期时间
+	ShowHiddenMetricsForVersion         string
 }
 
 // NewServerRunOptions creates a new ServerRunOptions object with default parameters
@@ -187,9 +176,8 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 		"of type NodePort, using this as the value of the port. If zero, the Kubernetes master "+
 		"service will be of type ClusterIP.")
 
-	fs.StringVar(&s.ServiceClusterIPRanges, "service-cluster-ip-range", s.ServiceClusterIPRanges, ""+
-		"A CIDR notation IP range from which to assign service cluster IPs. This must not "+
-		"overlap with any IP ranges assigned to nodes or pods. Max of two dual-stack CIDRs is allowed.")
+	fs.StringVar(&s.ServiceClusterIPRanges, "service-cluster-ip-range", s.ServiceClusterIPRanges,
+		"集群服务的IP范围。这不能与分配给节点或pod的任何IP范围重叠。最多允许2个双栈cidr")
 
 	fs.Var(&s.ServiceNodePortRange, "service-node-port-range", ""+
 		"A port range to reserve for services with NodePort visibility.  This must not overlap with the ephemeral port range on nodes.  "+
@@ -239,7 +227,7 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 		"Aggregator reject forwarding redirect response back to client.")
 
 	fs.StringVar(&s.ServiceAccountSigningKeyFile, "service-account-signing-key-file", s.ServiceAccountSigningKeyFile, ""+
-		"Path to the file that contains the current private key of the service account token issuer. The issuer will sign issued ID tokens with this private key.")
+		"包含服务帐户令牌颁发者的当前私钥的文件的路径。发行者将使用此私钥对已发行的ID令牌进行签名。")
 
 	return fss
 }

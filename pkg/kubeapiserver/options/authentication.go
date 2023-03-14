@@ -43,25 +43,24 @@ import (
 	"k8s.io/kubernetes/plugin/pkg/auth/authenticator/token/bootstrap"
 )
 
-// BuiltInAuthenticationOptions contains all build-in authentication options for API Server
+// BuiltInAuthenticationOptions 包含API服务器的所有内置身份验证选项
 type BuiltInAuthenticationOptions struct {
-	APIAudiences    []string
-	Anonymous       *AnonymousAuthenticationOptions
-	BootstrapToken  *BootstrapTokenAuthenticationOptions
-	ClientCert      *genericoptions.ClientCertAuthenticationOptions
-	OIDC            *OIDCAuthenticationOptions
-	RequestHeader   *genericoptions.RequestHeaderAuthenticationOptions
-	ServiceAccounts *ServiceAccountAuthenticationOptions
-	TokenFile       *TokenFileAuthenticationOptions
-	WebHook         *WebHookAuthenticationOptions
-
+	APIAudiences         []string
+	Anonymous            *AnonymousAuthenticationOptions // 匿名授权
+	BootstrapToken       *BootstrapTokenAuthenticationOptions
+	ClientCert           *genericoptions.ClientCertAuthenticationOptions
+	OIDC                 *OIDCAuthenticationOptions
+	RequestHeader        *genericoptions.RequestHeaderAuthenticationOptions
+	ServiceAccounts      *ServiceAccountAuthenticationOptions
+	TokenFile            *TokenFileAuthenticationOptions
+	WebHook              *WebHookAuthenticationOptions
 	TokenSuccessCacheTTL time.Duration
 	TokenFailureCacheTTL time.Duration
 }
 
 // AnonymousAuthenticationOptions contains anonymous authentication options for API Server
 type AnonymousAuthenticationOptions struct {
-	Allow bool
+	Allow bool // 是否允许匿名访问
 }
 
 // BootstrapTokenAuthenticationOptions contains bootstrap token authentication options for API Server
@@ -86,7 +85,7 @@ type OIDCAuthenticationOptions struct {
 type ServiceAccountAuthenticationOptions struct {
 	KeyFiles         []string
 	Lookup           bool
-	Issuers          []string
+	Issuers          []string // 其全称为 “Issuer Identifier”，中文意思就是：颁发者身份标识，表示 Token 颁发者的唯一标识，一般是一个 http(s) url，如 https://www.baidu.com
 	JWKSURI          string
 	MaxExpiration    time.Duration
 	ExtendExpiration bool
@@ -322,17 +321,8 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup,
 			"If true, validate ServiceAccount tokens exist in etcd as part of authentication.")
 
-		fs.StringArrayVar(&o.ServiceAccounts.Issuers, "service-account-issuer", o.ServiceAccounts.Issuers, ""+
-			"Identifier of the service account token issuer. The issuer will assert this identifier "+
-			"in \"iss\" claim of issued tokens. This value is a string or URI. If this option is not "+
-			"a valid URI per the OpenID Discovery 1.0 spec, the ServiceAccountIssuerDiscovery feature "+
-			"will remain disabled, even if the feature gate is set to true. It is highly recommended "+
-			"that this value comply with the OpenID spec: https://openid.net/specs/openid-connect-discovery-1_0.html. "+
-			"In practice, this means that service-account-issuer must be an https URL. It is also highly "+
-			"recommended that this URL be capable of serving OpenID discovery documents at "+
-			"{service-account-issuer}/.well-known/openid-configuration. "+
-			"When this flag is specified multiple times, the first is used to generate tokens "+
-			"and all are used to determine which issuers are accepted.")
+		fs.StringArrayVar(&o.ServiceAccounts.Issuers, "service-account-issuer", o.ServiceAccounts.Issuers,
+			"服务帐户令牌发行者的标识符。发行者将在已发行令牌的\"iss\"声明中声明此标识符。")
 
 		fs.StringVar(&o.ServiceAccounts.JWKSURI, "service-account-jwks-uri", o.ServiceAccounts.JWKSURI, ""+
 			"Overrides the URI for the JSON Web Key Set in the discovery doc served at "+
@@ -341,14 +331,11 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 			"API server's external (as auto-detected or overridden with external-hostname). ")
 
 		fs.DurationVar(&o.ServiceAccounts.MaxExpiration, "service-account-max-token-expiration", o.ServiceAccounts.MaxExpiration, ""+
-			"The maximum validity duration of a token created by the service account token issuer. If an otherwise valid "+
-			"TokenRequest with a validity duration larger than this value is requested, a token will be issued with a validity duration of this value.")
+			"由服务帐户令牌颁发者创建的令牌的最大有效期。如果请求的TokenRequest有效时间大于此值，则将发出具有此值有效时间的令牌")
 
-		fs.BoolVar(&o.ServiceAccounts.ExtendExpiration, "service-account-extend-token-expiration", o.ServiceAccounts.ExtendExpiration, ""+
-			"Turns on projected service account expiration extension during token generation, "+
-			"which helps safe transition from legacy token to bound service account token feature. "+
-			"If this flag is enabled, admission injected tokens would be extended up to 1 year to "+
-			"prevent unexpected failure during transition, ignoring value of service-account-max-token-expiration.")
+		fs.BoolVar(&o.ServiceAccounts.ExtendExpiration, "service-account-extend-token-expiration", o.ServiceAccounts.ExtendExpiration,
+			"在令牌生成过程中打开预计的服务帐户过期扩展，这有助于从遗留令牌安全过渡到绑定服务帐户令牌功能。"+
+				"如果启用了该标志，则允许注入的令牌将被延长至1年，以防止转换期间出现意外故障，忽略 service-account-max-token-expiration 的值。")
 	}
 
 	if o.TokenFile != nil {
@@ -508,7 +495,7 @@ func (o *BuiltInAuthenticationOptions) ApplyTo(authInfo *genericapiserver.Authen
 	return nil
 }
 
-// ApplyAuthorization will conditionally modify the authentication options based on the authorization options
+// ApplyAuthorization 修改是否允许匿名访问标志位
 func (o *BuiltInAuthenticationOptions) ApplyAuthorization(authorization *BuiltInAuthorizationOptions) {
 	if o == nil || authorization == nil || o.Anonymous == nil {
 		return

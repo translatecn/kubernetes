@@ -38,27 +38,14 @@ import (
 )
 
 type SecureServingOptions struct {
-	BindAddress net.IP
-	// BindPort is ignored when Listener is set, will serve https even with 0.
-	BindPort int
-	// BindNetwork is the type of network to bind to - defaults to "tcp", accepts "tcp",
-	// "tcp4", and "tcp6".
-	BindNetwork string
-	// Required set to true means that BindPort cannot be zero.
-	Required bool
-	// ExternalAddress is the address advertised, even if BindAddress is a loopback. By default this
-	// is set to BindAddress if the later no loopback, or to the first host interface address.
-	ExternalAddress net.IP
-
-	// Listener is the secure server network listener.
-	// either Listener or BindAddress/BindPort/BindNetwork is set,
-	// if Listener is set, use it and omit BindAddress/BindPort/BindNetwork.
-	Listener net.Listener
-
-	// ServerCert is the TLS cert info for serving secure traffic
-	ServerCert GeneratableKeyCert
-	// SNICertKeys are named CertKeys for serving secure traffic with SNI support.
-	SNICertKeys []cliflag.NamedCertKey
+	BindAddress     net.IP                 // 0.0.0.0
+	BindPort        int                    // 设置Listener时忽略，即使设置为0也会提供https服务。 6443
+	BindNetwork     string                 // 是要绑定的网络类型-默认为"tcp"，接受"tcp"， "tcp4"和"tcp6"。
+	Required        bool                   // 设置为true表示BindPort不能为零。
+	ExternalAddress net.IP                 // 发布的地址，即使BindAddress是环回地址。默认情况下，如果后面没有环回，则设置为BindAddress，或者为第一个主机接口地址。
+	Listener        net.Listener           // Listener是安全服务器网络侦听器
+	ServerCert      GeneratableKeyCert     // TLS证书信息是否用于提供安全流量
+	SNICertKeys     []cliflag.NamedCertKey // 为SNI支持提供安全流量
 	// CipherSuites is the list of allowed cipher suites for the server.
 	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
 	CipherSuites []string
@@ -79,28 +66,16 @@ type SecureServingOptions struct {
 }
 
 type CertKey struct {
-	// CertFile is a file containing a PEM-encoded certificate, and possibly the complete certificate chain
-	CertFile string
-	// KeyFile is a file containing a PEM-encoded private key for the certificate specified by CertFile
-	KeyFile string
+	CertFile string // 是一个包含pem编码的证书的文件，可能还有完整的证书链
+	KeyFile  string // 文件中是否包含CertFile指定的pem编码的证书私钥
 }
 
 type GeneratableKeyCert struct {
-	// CertKey allows setting an explicit cert/key file to use.
-	CertKey CertKey
-
-	// CertDirectory specifies a directory to write generated certificates to if CertFile/KeyFile aren't explicitly set.
-	// PairName is used to determine the filenames within CertDirectory.
-	// If CertDirectory and PairName are not set, an in-memory certificate will be generated.
-	CertDirectory string
-	// PairName is the name which will be used with CertDirectory to make a cert and key filenames.
-	// It becomes CertDirectory/PairName.crt and CertDirectory/PairName.key
-	PairName string
-
-	// GeneratedCert holds an in-memory generated certificate if CertFile/KeyFile aren't explicitly set, and CertDirectory/PairName are not set.
-	GeneratedCert dynamiccertificates.CertKeyContentProvider
-
-	// FixtureDirectory is a directory that contains test fixture used to avoid regeneration of certs during tests.
+	CertKey       CertKey                                    // 设置要使用的显式证书/密钥文件。
+	CertDirectory string                                     // 证书路径
+	PairName      string                                     // 是与CertDirectory一起用于生成证书和密钥文件名的名称。
+	GeneratedCert dynamiccertificates.CertKeyContentProvider // 如果CertFile/KeyFile、CertDirectory/PairName没有设置，则将生成的证书保存在内存中。
+	// FixtureDirectory 是一个目录，其中包含用于避免在测试期间重新生成cert的测试工具。
 	// The format is:
 	// <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.crt
 	// <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.key
@@ -299,6 +274,7 @@ func (s *SecureServingOptions) ApplyTo(config **server.SecureServingInfo) error 
 	return nil
 }
 
+// MaybeDefaultWithSelfSignedCerts 共有地址,备用dns,备用ips
 func (s *SecureServingOptions) MaybeDefaultWithSelfSignedCerts(publicAddress string, alternateDNS []string, alternateIPs []net.IP) error {
 	if s == nil || (s.BindPort == 0 && s.Listener == nil) {
 		return nil
@@ -323,7 +299,7 @@ func (s *SecureServingOptions) MaybeDefaultWithSelfSignedCerts(publicAddress str
 	}
 
 	if !canReadCertAndKey {
-		// add either the bind address or localhost to the valid alternates
+		// 将绑定地址或localhost添加到有效的备用地址中
 		if s.BindAddress.IsUnspecified() {
 			alternateDNS = append(alternateDNS, "localhost")
 		} else {

@@ -25,7 +25,7 @@ import (
 type ConfigurationMap map[string]string
 
 func (m *ConfigurationMap) String() string {
-	pairs := []string{}
+	var pairs []string
 	for k, v := range *m {
 		pairs = append(pairs, fmt.Sprintf("%s=%s", k, v))
 	}

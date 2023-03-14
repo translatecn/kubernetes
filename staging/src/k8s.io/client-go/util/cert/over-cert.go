@@ -38,23 +38,21 @@ import (
 
 const duration365d = time.Hour * 24 * 365
 
-// Config contains the basic fields required for creating a certificate
+// Config 包含创建证书所需的基本字段  ,kube-apiserver 将提取的 User、Group 作为 RBAC 授权的用户标识；
 type Config struct {
-	CommonName   string
-	Organization []string
+	CommonName   string   // CN：Common Name：kube-apiserver 从证书中提取该字段作为请求的用户名 (User Name)，浏览器使用该字段验证网站是否合法；
+	Organization []string // O：Organization：kube-apiserver 从证书中提取该字段作为请求用户所属的组 (Group)；
 	AltNames     AltNames
 	Usages       []x509.ExtKeyUsage
 }
 
-// AltNames contains the domain names and IP addresses that will be added
-// to the API Server's x509 certificate SubAltNames field. The values will
-// be passed directly to the x509.Certificate object.
+// AltNames 包含域名和IP地址，将被添加到API server的x509证书SubAltNames字段。这些值将直接传递给 x509.cert 对象。
 type AltNames struct {
 	DNSNames []string
 	IPs      []net.IP
 }
 
-// NewSelfSignedCACert creates a CA certificate
+// NewSelfSignedCACert 创建CA证书
 func NewSelfSignedCACert(cfg Config, key crypto.Signer) (*x509.Certificate, error) {
 	now := time.Now()
 	tmpl := x509.Certificate{
@@ -78,24 +76,22 @@ func NewSelfSignedCACert(cfg Config, key crypto.Signer) (*x509.Certificate, erro
 	return x509.ParseCertificate(certDERBytes)
 }
 
-// GenerateSelfSignedCertKey creates a self-signed certificate and key for the given host.
-// Host may be an IP or a DNS name
-// You may also specify additional subject alt names (either ip or dns names) for the certificate.
+// GenerateSelfSignedCertKey 为指定主机创建自签名证书和密钥。
+// Host可以是IP或DNS名称
+// 您还可以为证书指定额外的主题alt名称(ip或dns名称)。
 func GenerateSelfSignedCertKey(host string, alternateIPs []net.IP, alternateDNS []string) ([]byte, []byte, error) {
 	return GenerateSelfSignedCertKeyWithFixtures(host, alternateIPs, alternateDNS, "")
 }
 
-// GenerateSelfSignedCertKeyWithFixtures creates a self-signed certificate and key for the given host.
-// Host may be an IP or a DNS name. You may also specify additional subject alt names (either ip or dns names)
-// for the certificate.
-//
+// GenerateSelfSignedCertKeyWithFixtures 为给定主机创建自签名证书和密钥。
+// Host可以是IP或DNS名称。您还可以指定额外的主题alt名称(ip或dns名称) 获取证书。
 // If fixtureDirectory is non-empty, it is a directory path which can contain pre-generated certs. The format is:
 // <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.crt
 // <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.key
 // Certs/keys not existing in that directory are created.
 func GenerateSelfSignedCertKeyWithFixtures(host string, alternateIPs []net.IP, alternateDNS []string, fixtureDirectory string) ([]byte, []byte, error) {
-	validFrom := time.Now().Add(-time.Hour) // valid an hour earlier to avoid flakes due to clock skew
-	maxAge := time.Hour * 24 * 365          // one year self-signed certs
+	validFrom := time.Now().Add(-time.Hour) // 提前一小时有效，以避免因时钟偏差而产生薄片
+	maxAge := time.Hour * 24 * 365          // 有效期一年的自签证书
 
 	baseName := fmt.Sprintf("%s_%s_%s", host, strings.Join(ipsToStrings(alternateIPs), "-"), strings.Join(alternateDNS, "-"))
 	certFixturePath := filepath.Join(fixtureDirectory, baseName+".crt")
@@ -125,11 +121,11 @@ func GenerateSelfSignedCertKeyWithFixtures(host string, alternateIPs []net.IP, a
 		NotBefore: validFrom,
 		NotAfter:  validFrom.Add(maxAge),
 
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign, // 加密证书、数字签名、证书签名
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 	}
-
+	// https://juejin.cn/post/6976125107143966750
 	caDERBytes, err := x509.CreateCertificate(cryptorand.Reader, &caTemplate, &caTemplate, &caKey.PublicKey, caKey)
 	if err != nil {
 		return nil, nil, err
@@ -140,7 +136,7 @@ func GenerateSelfSignedCertKeyWithFixtures(host string, alternateIPs []net.IP, a
 		return nil, nil, err
 	}
 
-	priv, err := rsa.GenerateKey(cryptorand.Reader, 2048)
+	priv, err := rsa.GenerateKey(cryptorand.Reader, 2048) // 生成秘钥
 	if err != nil {
 		return nil, nil, err
 	}
@@ -172,7 +168,7 @@ func GenerateSelfSignedCertKeyWithFixtures(host string, alternateIPs []net.IP, a
 		return nil, nil, err
 	}
 
-	// Generate cert, followed by ca
+	// 通过CA生成证书
 	certBuffer := bytes.Buffer{}
 	if err := pem.Encode(&certBuffer, &pem.Block{Type: CertificateBlockType, Bytes: derBytes}); err != nil {
 		return nil, nil, err
@@ -181,7 +177,7 @@ func GenerateSelfSignedCertKeyWithFixtures(host string, alternateIPs []net.IP, a
 		return nil, nil, err
 	}
 
-	// Generate key
+	// 生成密钥
 	keyBuffer := bytes.Buffer{}
 	if err := pem.Encode(&keyBuffer, &pem.Block{Type: keyutil.RSAPrivateKeyBlockType, Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
 		return nil, nil, err

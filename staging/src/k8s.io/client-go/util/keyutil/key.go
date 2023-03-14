@@ -60,10 +60,10 @@ func MakeEllipticPrivateKeyPEM() ([]byte, error) {
 	return pem.EncodeToMemory(privateKeyPemBlock), nil
 }
 
-// WriteKey writes the pem-encoded key data to keyPath.
-// The key file will be created with file mode 0600.
-// If the key file already exists, it will be overwritten.
-// The parent directory of the keyPath will be created as needed with file mode 0755.
+// WriteKey 将pem编码的密钥数据写入keyPath。
+// 密钥文件将以文件模式0600创建。
+// 如果密钥文件已经存在，它将被覆盖。
+// keyPath的父目录将根据需要创建，文件模式0755。
 func WriteKey(keyPath string, data []byte) error {
 	if err := os.MkdirAll(filepath.Dir(keyPath), os.FileMode(0755)); err != nil {
 		return err
@@ -118,8 +118,8 @@ func MarshalPrivateKeyToPEM(privateKey crypto.PrivateKey) ([]byte, error) {
 	}
 }
 
-// PrivateKeyFromFile returns the private key in rsa.PrivateKey or ecdsa.PrivateKey format from a given PEM-encoded file.
-// Returns an error if the file could not be read or if the private key could not be parsed.
+// PrivateKeyFromFile 返回rsa中的私钥。PrivateKey或ecdsa。PrivateKey格式从给定的pem编码文件。
+// 如果无法读取文件或无法解析私钥，则返回错误。
 func PrivateKeyFromFile(file string) (interface{}, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -132,8 +132,8 @@ func PrivateKeyFromFile(file string) (interface{}, error) {
 	return key, nil
 }
 
-// PublicKeysFromFile returns the public keys in rsa.PublicKey or ecdsa.PublicKey format from a given PEM-encoded file.
-// Reads public keys from both public and private key files.
+// PublicKeysFromFile 返回rsa中的公钥。PublicKey或ecdsa。从给定的pem编码文件中获取PublicKey格式。
+// 从公钥文件和私钥文件中读取公钥。
 func PublicKeysFromFile(file string) ([]interface{}, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {

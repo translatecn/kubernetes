@@ -55,13 +55,10 @@ type EtcdOptions struct {
 	DefaultStorageMediaType string
 	DeleteCollectionWorkers int
 	EnableGarbageCollection bool
-
-	// Set EnableWatchCache to false to disable all watch caches
-	EnableWatchCache bool
+	EnableWatchCache        bool // 是否启用监听缓存
 	// Set DefaultWatchCacheSize to zero to disable watch caches for those resources that have no explicit cache size set
 	DefaultWatchCacheSize int
-	// WatchCacheSizes represents override to a given resource
-	WatchCacheSizes []string
+	WatchCacheSizes       []string // 表示对给定etcd资源的重写
 
 	// complete guards fields that must be initialized via Complete before the Apply methods can be used.
 	complete               bool
@@ -388,8 +385,7 @@ func (f *StorageFactoryRestOptionsFactory) GetRESTOptions(resource schema.GroupR
 	return ret, nil
 }
 
-// ParseWatchCacheSizes turns a list of cache size values into a map of group resources
-// to requested sizes.
+// ParseWatchCacheSizes 将缓存大小值列表转换为组资源到所请求大小的映射。
 func ParseWatchCacheSizes(cacheSizes []string) (map[schema.GroupResource]int, error) {
 	watchCacheSizes := make(map[schema.GroupResource]int)
 	for _, c := range cacheSizes {
@@ -410,7 +406,7 @@ func ParseWatchCacheSizes(cacheSizes []string) (map[schema.GroupResource]int, er
 	return watchCacheSizes, nil
 }
 
-// WriteWatchCacheSizes turns a map of cache size values into a list of string specifications.
+// WriteWatchCacheSizes   ParseWatchCacheSizes 的反过程
 func WriteWatchCacheSizes(watchCacheSizes map[schema.GroupResource]int) ([]string, error) {
 	var cacheSizes []string
 

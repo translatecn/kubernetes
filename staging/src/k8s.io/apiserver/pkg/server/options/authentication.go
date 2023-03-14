@@ -38,8 +38,7 @@ import (
 	openapicommon "k8s.io/kube-openapi/pkg/common"
 )
 
-// DefaultAuthWebhookRetryBackoff is the default backoff parameters for
-// both authentication and authorization webhook used by the apiserver.
+// DefaultAuthWebhookRetryBackoff apiserver使用的认证和授权webhook的默认回退参数。
 func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	return &wait.Backoff{
 		Duration: 500 * time.Millisecond,

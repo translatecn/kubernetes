@@ -22,16 +22,15 @@ import (
 	netutils "k8s.io/utils/net"
 )
 
-// NewSecureServingOptions gives default values for the kube-apiserver which are not the options wanted by
-// "normal" API servers running on the platform
 func NewSecureServingOptions() *genericoptions.SecureServingOptionsWithLoopback {
 	o := genericoptions.SecureServingOptions{
 		BindAddress: netutils.ParseIPSloppy("0.0.0.0"),
 		BindPort:    6443,
 		Required:    true,
 		ServerCert: genericoptions.GeneratableKeyCert{
-			PairName:      "apiserver",
-			CertDirectory: "/var/run/kubernetes",
+			PairName: "apiserver",
+			//CertDirectory: "/var/run/kubernetes",
+			CertDirectory: "/tmp/kubernetes",
 		},
 	}
 	return o.WithLoopback()

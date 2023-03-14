@@ -28,10 +28,9 @@ import (
 	cliflag "k8s.io/component-base/cli/flag"
 )
 
-// APIEnablementOptions contains the options for which resources to turn on and off.
-// Given small aggregated API servers, this option isn't required for "normal" API servers
+// APIEnablementOptions 包含要打开和关闭哪些资源的选项。对于小型聚合API服务器，“普通”API服务器不需要此选项
 type APIEnablementOptions struct {
-	RuntimeConfig cliflag.ConfigurationMap
+	RuntimeConfig cliflag.ConfigurationMap // "用于启用或禁用内置api。例如 apps/v1=true "
 }
 
 func NewAPIEnablementOptions() *APIEnablementOptions {
@@ -40,17 +39,8 @@ func NewAPIEnablementOptions() *APIEnablementOptions {
 	}
 }
 
-// AddFlags adds flags for a specific APIServer to the specified FlagSet
 func (s *APIEnablementOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.Var(&s.RuntimeConfig, "runtime-config", ""+
-		"A set of key=value pairs that enable or disable built-in APIs. Supported options are:\n"+
-		"v1=true|false for the core API group\n"+
-		"<group>/<version>=true|false for a specific API group and version (e.g. apps/v1=true)\n"+
-		"api/all=true|false controls all API versions\n"+
-		"api/ga=true|false controls all API versions of the form v[0-9]+\n"+
-		"api/beta=true|false controls all API versions of the form v[0-9]+beta[0-9]+\n"+
-		"api/alpha=true|false controls all API versions of the form v[0-9]+alpha[0-9]+\n"+
-		"api/legacy is deprecated, and will be removed in a future version")
+	fs.Var(&s.RuntimeConfig, "runtime-config", "用于启用或禁用内置api。例如 apps/v1=true ")
 }
 
 // Validate validates RuntimeConfig with a list of registries.
