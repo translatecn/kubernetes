@@ -22,13 +22,14 @@ package app
 import (
 	"crypto/tls"
 	"fmt"
-	"k8s.io/klog/v2"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"k8s.io/klog/v2"
 
 	"github.com/spf13/cobra"
 
@@ -125,7 +126,7 @@ cluster's shared state through which all other components interact.`,
 			if errs := completedOptions.Validate(); len(errs) != 0 {
 				return utilerrors.NewAggregate(errs)
 			}
-			// add feature enablement metrics
+			// 添加特性度量指标
 			utilfeature.DefaultMutableFeatureGate.AddMetrics()
 			return Run(completedOptions, genericapiserver.SetupSignalHandler())
 		},
