@@ -57,8 +57,9 @@ func main() {
 	--service-cluster-ip-range=10.96.0.0/22
 	--tls-cert-file=/etc/kubernetes/pki/apiserver.crt
 	--tls-private-key-file=/etc/kubernetes/pki/apiserver.key`
-
-	for _, v := range strings.Split(strings.Replace(args, "\t\n", " ", -1), " ") {
+	args = strings.Replace(args, "\n", " ", -1)
+	args = strings.Replace(args, "\t", "", -1)
+	for _, v := range strings.Split(args, " ") {
 		os.Args = append(os.Args, v)
 	}
 	command := app.NewAPIServerCommand()

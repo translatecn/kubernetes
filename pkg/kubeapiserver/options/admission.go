@@ -98,7 +98,7 @@ func (a *AdmissionOptions) Validate() []error {
 		}
 	}
 
-	errs = append(errs, a.GenericAdmission.Validate()...)
+	errs = append(errs, a.GenericAdmission.Validate()...) // ✅
 
 	return errs
 }

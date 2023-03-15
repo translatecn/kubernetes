@@ -156,8 +156,12 @@ func (s *ServerRunOptions) Validate() []error {
 	errs = append(errs, s.Authentication.Validate()...)
 	errs = append(errs, s.Authorization.Validate()...)
 	errs = append(errs, s.Audit.Validate()...)
-	errs = append(errs, s.Admission.Validate()...)
-	errs = append(errs, s.APIEnablement.Validate(legacyscheme.Scheme, apiextensionsapiserver.Scheme, aggregatorscheme.Scheme)...)
+	errs = append(errs, s.Admission.Validate()...) // ✅
+	errs = append(errs, s.APIEnablement.Validate(
+		legacyscheme.Scheme,
+		apiextensionsapiserver.Scheme,
+		aggregatorscheme.Scheme,
+	)...) // 启用哪些api ,校验
 	errs = append(errs, validateTokenRequest(s)...)
 	errs = append(errs, s.Metrics.Validate()...)
 

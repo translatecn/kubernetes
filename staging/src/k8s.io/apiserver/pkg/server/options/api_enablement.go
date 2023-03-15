@@ -43,11 +43,11 @@ func (s *APIEnablementOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.Var(&s.RuntimeConfig, "runtime-config", "用于启用或禁用内置api。例如 apps/v1=true ")
 }
 
-// Validate validates RuntimeConfig with a list of registries.
-// Usually this list only has one element, the apiserver registry of the process.
-// But in the advanced (and usually not recommended) case of delegated apiservers there can be more.
-// Validate will filter out the known groups of each registry.
-// If anything is left over after that, an error is returned.
+// Validate 使用注册表列表验证RuntimeConfig。
+// 通常这个列表只有一个元素，进程的apiserver注册表。
+// 但是在高级(通常不推荐)委托apiservers的情况下可以有更多。
+// Validate将过滤出每个注册表的已知组。
+// 如果在此之后还剩下任何内容，则返回错误。
 func (s *APIEnablementOptions) Validate(registries ...GroupRegistry) []error {
 	if s == nil {
 		return nil

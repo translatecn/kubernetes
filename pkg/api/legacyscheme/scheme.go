@@ -22,16 +22,14 @@ import (
 )
 
 var (
-	// Scheme is the default instance of runtime.Scheme to which types in the Kubernetes API are already registered.
-	// NOTE: If you are copying this file to start a new api group, STOP! Copy the
-	// extensions group instead. This Scheme is special and should appear ONLY in
-	// the api group, unless you really know what you're doing.
+	// Scheme 是runtime的默认实例。Kubernetes API中已经注册的类型的方案。
+	// 如果你复制这个文件来创建一个新的api组，STOP!而是复制扩展组。这个Scheme是特殊的，应该只出现在api组中，除非你真的知道你在做什么。
 	// TODO(lavalamp): make the above error impossible.
 	Scheme = runtime.NewScheme()
 
-	// Codecs provides access to encoding and decoding for the scheme
+	// Codecs 提供对这个 scheme 的编码和解码的访问
 	Codecs = serializer.NewCodecFactory(Scheme)
 
-	// ParameterCodec handles versioning of objects that are converted to query parameters.
+	// ParameterCodec 处理转换为查询参数的对象的版本控制。
 	ParameterCodec = runtime.NewParameterCodec(Scheme)
 )

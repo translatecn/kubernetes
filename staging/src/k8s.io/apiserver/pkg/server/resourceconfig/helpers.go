@@ -206,10 +206,11 @@ func getRuntimeConfigValue(overrides cliflag.ConfigurationMap, apiKey string, de
 	return defaultValue, nil
 }
 
-// ParseGroups takes in resourceConfig and returns parsed groups.
+// ParseGroups 接收resourceConfig并返回已解析的组。
 func ParseGroups(resourceConfig cliflag.ConfigurationMap) ([]string, error) {
 	groups := []string{}
 	for key := range resourceConfig {
+		// apps/v1=true
 		if _, ok := groupVersionMatchers[key]; ok {
 			continue
 		}
