@@ -49,16 +49,14 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 type RequestHeaderAuthenticationOptions struct {
-	// ClientCAFile is the root certificate bundle to verify client certificates on incoming requests
-	// before trusting usernames in headers.
-	ClientCAFile string
-
+	ClientCAFile        string // 是根证书包，用于在信任头中的用户名之前对传入请求验证客户端证书。
 	UsernameHeaders     []string
 	GroupHeaders        []string
 	ExtraHeaderPrefixes []string
 	AllowedNames        []string
 }
 
+// Validate 👌🏻
 func (s *RequestHeaderAuthenticationOptions) Validate() []error {
 	allErrors := []error{}
 

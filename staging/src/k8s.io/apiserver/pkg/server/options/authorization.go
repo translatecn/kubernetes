@@ -121,6 +121,7 @@ func (s *DelegatingAuthorizationOptions) WithCustomRoundTripper(rt transport.Wra
 	s.CustomRoundTripperFn = rt
 }
 
+// Validate 👌🏻
 func (s *DelegatingAuthorizationOptions) Validate() []error {
 	if s == nil {
 		return nil

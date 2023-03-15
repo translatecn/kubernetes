@@ -42,8 +42,7 @@ const (
 
 // TransportConfig holds all connection related info,  i.e. equal TransportConfig means equal servers we talk to.
 type TransportConfig struct {
-	// ServerList is the list of storage servers to connect with.
-	ServerList []string
+	ServerList []string // 要连接的存储服务器的列表。
 	// TLS credentials
 	KeyFile       string
 	CertFile      string
@@ -56,12 +55,10 @@ type TransportConfig struct {
 
 // Config is configuration for creating a storage backend.
 type Config struct {
-	// Type defines the type of storage backend. Default ("") is "etcd3".
-	Type string
-	// Prefix is the prefix to all keys passed to storage.Interface methods.
-	Prefix string
-	// Transport holds all connection related info, i.e. equal TransportConfig means equal servers we talk to.
-	Transport TransportConfig
+	Type      string          // 定义了etcd 存储版本, 默认 '' 是etcd3
+	Prefix    string          // 定义了存储在etcd的key的前缀
+	Transport TransportConfig // 保存所有与连接相关的信息
+
 	// Paging indicates whether the server implementation should allow paging (if it is
 	// supported). This is generally configured by feature gating, or by a specific
 	// resource type not wishing to allow paging, and is not intended for end users to

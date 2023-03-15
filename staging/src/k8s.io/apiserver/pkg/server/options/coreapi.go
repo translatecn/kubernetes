@@ -85,6 +85,7 @@ func (o *CoreAPIOptions) ApplyTo(config *server.RecommendedConfig) error {
 	return nil
 }
 
+// Validate 👌🏻
 func (o *CoreAPIOptions) Validate() []error {
 	return nil
 }

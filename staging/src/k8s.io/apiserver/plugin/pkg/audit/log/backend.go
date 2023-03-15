@@ -28,16 +28,13 @@ import (
 )
 
 const (
-	// FormatLegacy saves event in 1-line text format.
 	FormatLegacy = "legacy"
-	// FormatJson saves event in structured json format.
-	FormatJson = "json"
+	FormatJson   = "json"
 
 	// PluginName is the name of this plugin, to be used in help and logs.
 	PluginName = "log"
 )
 
-// AllowedFormats are the formats known by log backend.
 var AllowedFormats = []string{
 	FormatLegacy,
 	FormatJson,

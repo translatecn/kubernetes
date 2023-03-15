@@ -42,10 +42,8 @@ func (o *FeatureOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.BoolVar(&o.EnableProfiling, "profiling", o.EnableProfiling,
-		"Enable profiling via web interface host:port/debug/pprof/")
-	fs.BoolVar(&o.EnableContentionProfiling, "contention-profiling", o.EnableContentionProfiling,
-		"Enable lock contention profiling, if profiling is enabled")
+	fs.BoolVar(&o.EnableProfiling, "profiling", o.EnableProfiling, "通过web界面主机:port/debug/pprof/启用分析")
+	fs.BoolVar(&o.EnableContentionProfiling, "contention-profiling", o.EnableContentionProfiling, "如果启用了分析，则启用锁争用分析")
 }
 
 func (o *FeatureOptions) ApplyTo(c *server.Config) error {
@@ -59,6 +57,7 @@ func (o *FeatureOptions) ApplyTo(c *server.Config) error {
 	return nil
 }
 
+// Validate 👌🏻
 func (o *FeatureOptions) Validate() []error {
 	if o == nil {
 		return nil

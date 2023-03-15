@@ -55,7 +55,7 @@ var (
 // PluginEnabledFunc is a function type that can provide an external check on whether an admission plugin may be enabled
 type PluginEnabledFunc func(name string, config io.Reader) bool
 
-// Registered enumerates the names of all registered plugins.
+// Registered 枚举所有已注册插件的名称。
 func (ps *Plugins) Registered() []string {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()

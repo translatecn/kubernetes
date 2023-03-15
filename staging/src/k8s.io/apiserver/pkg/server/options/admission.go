@@ -51,23 +51,14 @@ func init() {
 	utilruntime.Must(apiserverapiv1.AddToScheme(configScheme))
 }
 
-// AdmissionOptions holds the admission options
 type AdmissionOptions struct {
-	// RecommendedPluginOrder holds an ordered list of plugin names we recommend to use by default
-	RecommendedPluginOrder []string
-	// DefaultOffPlugins is a set of plugin names that is disabled by default
-	DefaultOffPlugins sets.String
-
-	// EnablePlugins indicates plugins to be enabled passed through `--enable-admission-plugins`.
-	EnablePlugins []string
-	// DisablePlugins indicates plugins to be disabled passed through `--disable-admission-plugins`.
-	DisablePlugins []string
-	// ConfigFile is the file path with admission control configuration.
-	ConfigFile string
-	// Plugins contains all registered plugins.
-	Plugins *admission.Plugins
-	// Decorators is a list of admission decorator to wrap around the admission plugins
-	Decorators admission.Decorators
+	RecommendedPluginOrder []string             // 保存我们建议默认使用的插件名称的有序列表
+	DefaultOffPlugins      sets.String          // 是一组插件名称，默认是禁用的
+	EnablePlugins          []string             // 表示要启用的插件 --enable-admission-plugins
+	DisablePlugins         []string             // 表示要禁用的插件 --disable-admission-plugins
+	ConfigFile             string               // 带有准入控制配置的文件路径。
+	Plugins                *admission.Plugins   // 包含所有已注册的插件。
+	Decorators             admission.Decorators // 是一个列表的录取装饰环绕录取插件
 }
 
 // NewAdmissionOptions creates a new instance of AdmissionOptions
@@ -164,7 +155,7 @@ func (a *AdmissionOptions) ApplyTo(
 	return nil
 }
 
-// Validate verifies flags passed to AdmissionOptions.
+// Validate 准入控制
 func (a *AdmissionOptions) Validate() []error {
 	if a == nil {
 		return nil
@@ -187,12 +178,11 @@ func (a *AdmissionOptions) Validate() []error {
 
 	enablePlugins := sets.NewString(a.EnablePlugins...)
 	disablePlugins := sets.NewString(a.DisablePlugins...)
-	if len(enablePlugins.Intersection(disablePlugins).List()) > 0 {
+	if len(enablePlugins.Intersection(disablePlugins).List()) > 0 { // 交集
 		errs = append(errs, fmt.Errorf("%v in enable-admission-plugins and disable-admission-plugins "+
 			"overlapped", enablePlugins.Intersection(disablePlugins).List()))
 	}
 
-	// Verify RecommendedPluginOrder.
 	recommendPlugins := sets.NewString(a.RecommendedPluginOrder...)
 	intersections := registeredPlugins.Intersection(recommendPlugins)
 	if !intersections.Equal(recommendPlugins) {

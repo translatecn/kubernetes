@@ -100,6 +100,7 @@ func (s *SecureServingOptions) DefaultExternalAddress() (net.IP, error) {
 	return utilnet.ResolveBindAddress(s.BindAddress)
 }
 
+// Validate 👌🏻
 func (s *SecureServingOptions) Validate() []error {
 	if s == nil {
 		return nil

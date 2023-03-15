@@ -45,8 +45,8 @@ type EtcdOptions struct {
 	// The value of Paging on StorageConfig will be overridden by the
 	// calculated feature gate value.
 	StorageConfig                           storagebackend.Config
-	EncryptionProviderConfigFilepath        string
-	EncryptionProviderConfigAutomaticReload bool
+	EncryptionProviderConfigFilepath        string // 加密提供者配置文件路径
+	EncryptionProviderConfigAutomaticReload bool   // 是否启用,默认不开启
 
 	EtcdServersOverrides []string
 
@@ -87,6 +87,7 @@ func NewEtcdOptions(backendConfig *storagebackend.Config) *EtcdOptions {
 	return options
 }
 
+// Validate 👌🏻
 func (s *EtcdOptions) Validate() []error {
 	if s == nil {
 		return nil
@@ -183,11 +184,10 @@ func (s *EtcdOptions) AddFlags(fs *pflag.FlagSet) {
 		"SSL Certificate Authority file used to secure etcd communication.")
 
 	fs.StringVar(&s.EncryptionProviderConfigFilepath, "encryption-provider-config", s.EncryptionProviderConfigFilepath,
-		"The file containing configuration for encryption providers to be used for storing secrets in etcd")
+		"包含用于在etcd中存储secret的加密程序的配置文件")
 
 	fs.BoolVar(&s.EncryptionProviderConfigAutomaticReload, "encryption-provider-config-automatic-reload", s.EncryptionProviderConfigAutomaticReload,
-		"Determines if the file set by --encryption-provider-config should be automatically reloaded if the disk contents change. "+
-			"Setting this to true disables the ability to uniquely identify distinct KMS plugins via the API server healthz endpoints.")
+		"确定在磁盘内容更改时 --encryption-provider-config设置的文件是否应自动重新加载。将此设置为true将禁用通过API服务器healthz端点唯一识别不同KMS插件的能力。")
 
 	fs.DurationVar(&s.StorageConfig.CompactionInterval, "etcd-compaction-interval", s.StorageConfig.CompactionInterval,
 		"The interval of compaction requests. If 0, the compaction request from apiserver is disabled.")

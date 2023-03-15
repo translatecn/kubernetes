@@ -164,7 +164,7 @@ func (o *RecommendedOptions) Validate() []error {
 	errors = append(errors, o.Audit.Validate()...)
 	errors = append(errors, o.Features.Validate()...)
 	errors = append(errors, o.CoreAPI.Validate()...)
-	errors = append(errors, o.Admission.Validate()...)
+	errors = append(errors, o.Admission.Validate()...) // 准入控制
 	errors = append(errors, o.EgressSelector.Validate()...)
 	errors = append(errors, o.Traces.Validate()...)
 

@@ -185,7 +185,7 @@ func NewAuditTruncateOptions() AuditTruncateOptions {
 	}
 }
 
-// Validate checks invalid config combination
+// Validate 👌🏻
 func (o *AuditOptions) Validate() []error {
 	if o == nil {
 		return nil
@@ -443,25 +443,18 @@ func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend, gv schema.Gro
 }
 
 func (o *AuditLogOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.Path, "audit-log-path", o.Path,
-		"If set, all requests coming to the apiserver will be logged to this file.  '-' means standard out.")
-	fs.IntVar(&o.MaxAge, "audit-log-maxage", o.MaxAge,
-		"The maximum number of days to retain old audit log files based on the timestamp encoded in their filename.")
-	fs.IntVar(&o.MaxBackups, "audit-log-maxbackup", o.MaxBackups,
-		"The maximum number of old audit log files to retain. Setting a value of 0 will mean there's no restriction on the number of files.")
-	fs.IntVar(&o.MaxSize, "audit-log-maxsize", o.MaxSize,
-		"The maximum size in megabytes of the audit log file before it gets rotated.")
+	fs.StringVar(&o.Path, "audit-log-path", o.Path, "如果设置了，所有到达apiserver的请求都将被记录到这个文件中。'-'表示标准输出。")
+	fs.IntVar(&o.MaxAge, "audit-log-maxage", o.MaxAge, "根据文件名中编码的时间戳保留旧审计日志文件的最大天数。")
+	fs.IntVar(&o.MaxBackups, "audit-log-maxbackup", o.MaxBackups, "保留旧审计日志文件的最大数量。将值设置为0意味着对文件数量没有限制。")
+	fs.IntVar(&o.MaxSize, "audit-log-maxsize", o.MaxSize, "审计日志文件旋转之前的最大大小(以兆字节为单位)。")
 	fs.StringVar(&o.Format, "audit-log-format", o.Format,
-		"Format of saved audits. \"legacy\" indicates 1-line text format for each event."+
-			" \"json\" indicates structured json format. Known formats are "+
-			strings.Join(pluginlog.AllowedFormats, ",")+".")
-	fs.StringVar(&o.GroupVersionString, "audit-log-version", o.GroupVersionString,
-		"API group and version used for serializing audit events written to log.")
-	fs.BoolVar(&o.Compress, "audit-log-compress", o.Compress, "If set, the rotated log files will be compressed using gzip.")
+		"审计日志的格式. legacy:为每个事件指定一行文本格式。 json:表示结构化json格式 . "+strings.Join(pluginlog.AllowedFormats, ",")+".")
+	fs.StringVar(&o.GroupVersionString, "audit-log-version", o.GroupVersionString, "用于序列化写入日志的审计事件的API组和版本")
+	fs.BoolVar(&o.Compress, "audit-log-compress", o.Compress, "如果设置，旋转的日志文件将使用gzip压缩。")
 }
 
 func (o *AuditLogOptions) Validate() []error {
-	// Check whether the log backend is enabled based on the options.
+	//根据选项检查日志后端是否开启。
 	if !o.enabled() {
 		return nil
 	}
@@ -498,7 +491,6 @@ func (o *AuditLogOptions) Validate() []error {
 	return allErrors
 }
 
-// Check whether the log backend is enabled based on the options.
 func (o *AuditLogOptions) enabled() bool {
 	return o != nil && o.Path != ""
 }
