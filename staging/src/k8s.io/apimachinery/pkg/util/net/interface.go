@@ -461,10 +461,10 @@ func chooseHostInterfaceFromRoute(routes []Route, nw networkInterfacer, addressF
 }
 
 // ResolveBindAddress 根据给定的bindAddress返回守护进程的IP地址:
-// 如果bindAddress未设置，它将返回主机的默认IP，与ChooseHostInterface()一样。
-// 如果bindAddress未指定或loopback，则返回bindAddress的默认IP地址
-// 地址族为bindAddress。
-// 否则，返回bindAddress。
+// 如果bindAddress未设置,它将返回主机的默认IP,与ChooseHostInterface()一样.
+// 如果bindAddress未指定或loopback,则返回bindAddress的默认IP地址
+// 地址族为bindAddress.
+// 否则,返回bindAddress.
 func ResolveBindAddress(bindAddress net.IP) (net.IP, error) {
 	addressFamilies := preferIPv4
 	if bindAddress != nil && memberOf(bindAddress, familyIPv6) {

@@ -30,12 +30,9 @@ const (
 	defaultLeaseMaxObjectCount       = 1000
 )
 
-// LeaseManagerConfig is configuration for creating a lease manager.
 type LeaseManagerConfig struct {
-	// ReuseDurationSeconds specifies time in seconds that each lease is reused
-	ReuseDurationSeconds int64
-	// MaxObjectCount specifies how many objects that a lease can attach
-	MaxObjectCount int64
+	ReuseDurationSeconds int64 // 指定重用每个租期的时间(以秒为单位)   60秒
+	MaxObjectCount       int64 // 指定一个租期可以附加多少个对象		 1000个
 }
 
 // NewDefaultLeaseManagerConfig creates a LeaseManagerConfig with default values

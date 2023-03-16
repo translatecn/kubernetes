@@ -33,23 +33,13 @@ const PluginName = "buffered"
 
 // BatchConfig represents batching delegate audit backend configuration.
 type BatchConfig struct {
-	// BufferSize defines a size of the buffering queue.
-	BufferSize int
-	// MaxBatchSize defines maximum size of a batch.
-	MaxBatchSize int
-	// MaxBatchWait indicates the maximum interval between two batches.
-	MaxBatchWait time.Duration
-
-	// ThrottleEnable defines whether throttling will be applied to the batching process.
-	ThrottleEnable bool
-	// ThrottleQPS defines the allowed rate of batches per second sent to the delegate backend.
-	ThrottleQPS float32
-	// ThrottleBurst defines the maximum number of requests sent to the delegate backend at the same moment in case
-	// the capacity defined by ThrottleQPS was not utilized.
-	ThrottleBurst int
-
-	// Whether the delegate backend should be called asynchronously.
-	AsyncDelegate bool
+	BufferSize     int           // 定义缓冲队列的大小.
+	MaxBatchSize   int           // 定义批处理的最大大小.
+	MaxBatchWait   time.Duration // 两个批次之间的最大时间间隔.
+	ThrottleEnable bool          // 定义是否将限流应用于批处理过程.
+	ThrottleQPS    float32       // 定义每秒发送到委托后端的批的速率.
+	ThrottleBurst  int           // 在ThrottleQPS定义的容量未被利用的情况下,定义同时发送到委托后端的最大请求数.
+	AsyncDelegate  bool          // 是否应该异步调用委托后端.
 }
 
 type bufferedBackend struct {

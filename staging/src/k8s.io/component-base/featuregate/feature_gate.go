@@ -65,18 +65,14 @@ var (
 )
 
 type FeatureSpec struct {
-	// Default is the default enablement state for the feature
-	Default bool
-	// LockToDefault indicates that the feature is locked to its default and cannot be changed
-	LockToDefault bool
-	// PreRelease indicates the maturity level of the feature
-	PreRelease prerelease
+	Default       bool       // 是该特性的默认启用状态
+	LockToDefault bool       // 表示该特性被锁定为默认值,不能更改
+	PreRelease    prerelease // 反映特性的成熟度级别
 }
 
 type prerelease string
 
 const (
-	// Values for PreRelease.
 	Alpha = prerelease("ALPHA")
 	Beta  = prerelease("BETA")
 	GA    = prerelease("")
@@ -85,7 +81,7 @@ const (
 	Deprecated = prerelease("DEPRECATED")
 )
 
-// FeatureGate indicates whether a given feature is enabled or not
+// FeatureGate 指示是否启用给定的特性
 type FeatureGate interface {
 	// Enabled returns true if the key is enabled.
 	Enabled(key Feature) bool
@@ -97,40 +93,25 @@ type FeatureGate interface {
 	DeepCopy() MutableFeatureGate
 }
 
-// MutableFeatureGate parses and stores flag gates for known features from
-// a string like feature1=true,feature2=false,...
+// MutableFeatureGate 从字符串中解析和存储已知特性,例如feature1=true,feature2=false,…
 type MutableFeatureGate interface {
 	FeatureGate
-
-	// AddFlag adds a flag for setting global feature gates to the specified FlagSet.
-	AddFlag(fs *pflag.FlagSet)
-	// Set parses and stores flag gates for known features
-	// from a string like feature1=true,feature2=false,...
-	Set(value string) error
-	// SetFromMap stores flag gates for known features from a map[string]bool or returns an error
-	SetFromMap(m map[string]bool) error
-	// Add adds features to the featureGate.
-	Add(features map[Feature]FeatureSpec) error
-	// GetAll returns a copy of the map of known feature names to feature specs.
-	GetAll() map[Feature]FeatureSpec
-	// AddMetrics adds feature enablement metrics
-	AddMetrics()
+	AddFlag(fs *pflag.FlagSet)                  // 为指定的 FlagSet 添加一个设置 功能开关 的flag.
+	Set(value string) error                     // 为已知的特性设置解析值  feature1=true,feature2=false,...
+	SetFromMap(m map[string]bool) error         // 为已知的特性设置解析值
+	Add(features map[Feature]FeatureSpec) error // 添加特性
+	GetAll() map[Feature]FeatureSpec            // 返回已知特性名称到特性规格的映射的副本
+	AddMetrics()                                // 添加特性度量指标
 }
 
-// featureGate implements FeatureGate as well as pflag.Value for flag parsing.
+// featureGate
 type featureGate struct {
 	featureGateName string
-
-	special map[Feature]func(map[Feature]FeatureSpec, map[Feature]bool, bool)
-
-	// lock guards writes to known, enabled, and reads/writes of closed
-	lock sync.Mutex
-	// known holds a map[Feature]FeatureSpec
-	known *atomic.Value
-	// enabled holds a map[Feature]bool
-	enabled *atomic.Value
-	// closed is set to true when AddFlag is called, and prevents subsequent calls to Add
-	closed bool
+	special         map[Feature]func(map[Feature]FeatureSpec, map[Feature]bool, bool)
+	lock            sync.Mutex
+	known           *atomic.Value // 已知的特性
+	enabled         *atomic.Value // 已启用的特性
+	closed          bool          // 当AddFlag被调用时,closed被设置为true,并阻止后续对Add的调用
 }
 
 func setUnsetAlphaGates(known map[Feature]FeatureSpec, enabled map[Feature]bool, val bool) {
@@ -236,9 +217,9 @@ func (f *featureGate) SetFromMap(m map[string]bool) error {
 		}
 
 		if featureSpec.PreRelease == Deprecated {
-			klog.Warningf("Setting deprecated feature gate %s=%t. It will be removed in a future release.", k, v)
+			klog.Warningf("设置 弃用的功能开关 %s=%t. 它将在未来的版本中被删除.", k, v)
 		} else if featureSpec.PreRelease == GA {
-			klog.Warningf("Setting GA feature gate %s=%t. It will be removed in a future release.", k, v)
+			klog.Warningf("设置 GA 功能开关 %s=%t. 它将在未来的版本中被删除.", k, v)
 		}
 	}
 
@@ -296,7 +277,7 @@ func (f *featureGate) Add(features map[Feature]FeatureSpec) error {
 	return nil
 }
 
-// GetAll returns a copy of the map of known feature names to feature specs.
+// GetAll 返回已知特性名称到特性规格的映射的副本
 func (f *featureGate) GetAll() map[Feature]FeatureSpec {
 	retval := map[Feature]FeatureSpec{}
 	for k, v := range f.known.Load().(map[Feature]FeatureSpec) {
@@ -305,7 +286,7 @@ func (f *featureGate) GetAll() map[Feature]FeatureSpec {
 	return retval
 }
 
-// Enabled returns true if the key is enabled.  If the key is not known, this call will panic.
+// Enabled 该特性是否启用
 func (f *featureGate) Enabled(key Feature) bool {
 	if v, ok := f.enabled.Load().(map[Feature]bool)[key]; ok {
 		return v
@@ -328,11 +309,10 @@ func (f *featureGate) AddFlag(fs *pflag.FlagSet) {
 	f.lock.Unlock()
 
 	known := f.KnownFeatures()
-	fs.Var(f, flagName, ""+
-		"A set of key=value pairs that describe feature gates for alpha/experimental features. "+
-		"Options are:\n"+strings.Join(known, "\n"))
+	fs.Var(f, flagName, "key=value 键值对集合,描述了特性功能\n"+strings.Join(known, "\n"))
 }
 
+// AddMetrics 初始化指标的计数器
 func (f *featureGate) AddMetrics() {
 	for feature, featureSpec := range f.GetAll() {
 		featuremetrics.RecordFeatureInfo(context.Background(), string(feature), string(featureSpec.PreRelease), f.Enabled(feature))

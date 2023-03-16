@@ -23,11 +23,9 @@ import (
 	apimachineryversion "k8s.io/apimachinery/pkg/version"
 )
 
-// Get returns the overall codebase version. It's for detecting
-// what code a binary was built from.
+// Get 返回整个代码的 版本.它是用来检测二进制代码是由什么代码构建的.
 func Get() apimachineryversion.Info {
-	// These variables typically come from -ldflags settings and in
-	// their absence fallback to the settings in ./base.go
+	//
 	return apimachineryversion.Info{
 		Major:        gitMajor,
 		Minor:        gitMinor,

@@ -400,31 +400,31 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.Int32Var(&c.ReadOnlyPort, "read-only-port", c.ReadOnlyPort, "The read-only port for the Kubelet to serve on with no authentication/authorization (set to 0 to disable)")
 
 	// Authentication
-	fs.BoolVar(&c.Authentication.Anonymous.Enabled, "anonymous-auth", c.Authentication.Anonymous.Enabled, ""+
+	fs.BoolVar(&c.Authentication.Anonymous.Enabled, "anonymous-auth", c.Authentication.Anonymous.Enabled,
 		"Enables anonymous requests to the Kubelet server. Requests that are not rejected by another "+
-		"authentication method are treated as anonymous requests. Anonymous requests have a username "+
-		"of system:anonymous, and a group name of system:unauthenticated.")
-	fs.BoolVar(&c.Authentication.Webhook.Enabled, "authentication-token-webhook", c.Authentication.Webhook.Enabled, ""+
+			"authentication method are treated as anonymous requests. Anonymous requests have a username "+
+			"of system:anonymous, and a group name of system:unauthenticated.")
+	fs.BoolVar(&c.Authentication.Webhook.Enabled, "authentication-token-webhook", c.Authentication.Webhook.Enabled,
 		"Use the TokenReview API to determine authentication for bearer tokens.")
-	fs.DurationVar(&c.Authentication.Webhook.CacheTTL.Duration, "authentication-token-webhook-cache-ttl", c.Authentication.Webhook.CacheTTL.Duration, ""+
+	fs.DurationVar(&c.Authentication.Webhook.CacheTTL.Duration, "authentication-token-webhook-cache-ttl", c.Authentication.Webhook.CacheTTL.Duration,
 		"The duration to cache responses from the webhook token authenticator.")
-	fs.StringVar(&c.Authentication.X509.ClientCAFile, "client-ca-file", c.Authentication.X509.ClientCAFile, ""+
+	fs.StringVar(&c.Authentication.X509.ClientCAFile, "client-ca-file", c.Authentication.X509.ClientCAFile,
 		"If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file "+
-		"is authenticated with an identity corresponding to the CommonName of the client certificate.")
+			"is authenticated with an identity corresponding to the CommonName of the client certificate.")
 
 	// Authorization
-	fs.StringVar((*string)(&c.Authorization.Mode), "authorization-mode", string(c.Authorization.Mode), ""+
+	fs.StringVar((*string)(&c.Authorization.Mode), "authorization-mode", string(c.Authorization.Mode),
 		"Authorization mode for Kubelet server. Valid options are AlwaysAllow or Webhook. "+
-		"Webhook mode uses the SubjectAccessReview API to determine authorization.")
-	fs.DurationVar(&c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "authorization-webhook-cache-authorized-ttl", c.Authorization.Webhook.CacheAuthorizedTTL.Duration, ""+
+			"Webhook mode uses the SubjectAccessReview API to determine authorization.")
+	fs.DurationVar(&c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "authorization-webhook-cache-authorized-ttl", c.Authorization.Webhook.CacheAuthorizedTTL.Duration,
 		"The duration to cache 'authorized' responses from the webhook authorizer.")
-	fs.DurationVar(&c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "authorization-webhook-cache-unauthorized-ttl", c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, ""+
+	fs.DurationVar(&c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "authorization-webhook-cache-unauthorized-ttl", c.Authorization.Webhook.CacheUnauthorizedTTL.Duration,
 		"The duration to cache 'unauthorized' responses from the webhook authorizer.")
 
-	fs.StringVar(&c.TLSCertFile, "tls-cert-file", c.TLSCertFile, ""+
+	fs.StringVar(&c.TLSCertFile, "tls-cert-file", c.TLSCertFile,
 		"File containing x509 Certificate used for serving HTTPS (with intermediate certs, if any, concatenated after server cert). "+
-		"If --tls-cert-file and --tls-private-key-file are not provided, a self-signed certificate and key "+
-		"are generated for the public address and saved to the directory passed to --cert-dir.")
+			"If --tls-cert-file and --tls-private-key-file are not provided, a self-signed certificate and key "+
+			"are generated for the public address and saved to the directory passed to --cert-dir.")
 	fs.StringVar(&c.TLSPrivateKeyFile, "tls-private-key-file", c.TLSPrivateKeyFile, "File containing x509 private key matching --tls-cert-file.")
 	fs.BoolVar(&c.ServerTLSBootstrap, "rotate-server-certificates", c.ServerTLSBootstrap, "Auto-request and rotate the kubelet serving certificates by requesting new certificates from the kube-apiserver when the certificate expiration approaches. Requires the RotateKubeletServerCertificate feature gate to be enabled, and approval of the submitted CertificateSigningRequest objects.")
 

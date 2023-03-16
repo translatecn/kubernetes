@@ -22,14 +22,14 @@ import (
 )
 
 var (
-	// Scheme 是runtime的默认实例。Kubernetes API中已经注册的类型的方案。
-	// 如果你复制这个文件来创建一个新的api组，STOP!而是复制扩展组。这个Scheme是特殊的，应该只出现在api组中，除非你真的知道你在做什么。
+	// Scheme 是runtime的默认实例.Kubernetes API中已经注册的类型的方案.
+	// 如果你复制这个文件来创建一个新的api组,STOP!而是复制扩展组.这个Scheme是特殊的,应该只出现在api组中,除非你真的知道你在做什么.
 	// TODO(lavalamp): make the above error impossible.
 	Scheme = runtime.NewScheme()
 
 	// Codecs 提供对这个 scheme 的编码和解码的访问
 	Codecs = serializer.NewCodecFactory(Scheme)
 
-	// ParameterCodec 处理转换为查询参数的对象的版本控制。
+	// ParameterCodec 处理转换为查询参数的对象的版本控制.
 	ParameterCodec = runtime.NewParameterCodec(Scheme)
 )

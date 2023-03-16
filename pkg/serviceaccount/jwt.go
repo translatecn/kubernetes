@@ -55,8 +55,8 @@ type TokenGenerator interface {
 	GenerateToken(claims *jwt.Claims, privateClaims interface{}) (string, error)
 }
 
-// JWTTokenGenerator 返回一个TokenGenerator，使用给定的privateKey生成有签名的JWT令牌。
-// privateKey是RSA私钥的pem编码字节数组。
+// JWTTokenGenerator 返回一个TokenGenerator,使用给定的privateKey生成有签名的JWT令牌.
+// privateKey是RSA私钥的pem编码字节数组.
 func JWTTokenGenerator(iss string, privateKey interface{}) (TokenGenerator, error) {
 	var signer jose.Signer
 	var err error

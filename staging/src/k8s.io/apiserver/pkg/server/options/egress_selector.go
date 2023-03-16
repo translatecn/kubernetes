@@ -26,18 +26,12 @@ import (
 	"k8s.io/apiserver/pkg/server/egressselector"
 )
 
-// EgressSelectorOptions holds the api server egress selector options.
-// See https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/1281-network-proxy/README.md
 type EgressSelectorOptions struct {
 	// ConfigFile is the file path with api-server egress selector configuration.
 	ConfigFile string
 }
 
-// NewEgressSelectorOptions creates a new instance of EgressSelectorOptions
-//
-// The option is to point to a configuration file for egress/konnectivity.
-// This determines which types of requests use egress/konnectivity and how they use it.
-// If empty the API Server will attempt to connect directly using the network.
+// NewEgressSelectorOptions 选项是指向用于出口/连接的配置文件.这决定了哪些类型的请求使用出口/连接以及如何使用它.如果为空,API服务器将尝试直接使用网络连接.
 func NewEgressSelectorOptions() *EgressSelectorOptions {
 	return &EgressSelectorOptions{}
 }
@@ -48,8 +42,7 @@ func (o *EgressSelectorOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringVar(&o.ConfigFile, "egress-selector-config-file", o.ConfigFile,
-		"File with apiserver egress selector configuration.")
+	fs.StringVar(&o.ConfigFile, "egress-selector-config-file", o.ConfigFile, "apiserver出口选择器配置文件")
 }
 
 // ApplyTo adds the egress selector settings to the server configuration.

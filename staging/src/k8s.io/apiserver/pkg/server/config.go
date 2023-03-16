@@ -119,7 +119,7 @@ type Config struct {
 	// AdmissionControl performs deep inspection of a given request (including content)
 	// to set values and determine whether its allowed
 	AdmissionControl      admission.Interface
-	CorsAllowedOriginList []string
+	CorsAllowedOriginList []string // CORS允许的源列表
 	HSTSDirectives        []string
 	// FlowControl, if not nil, gives priority and fairness to request handling
 	FlowControl utilflowcontrol.Interface
@@ -128,8 +128,7 @@ type Config struct {
 	EnableProfiling bool
 	EnableDiscovery bool
 
-	// Requires generic profiling enabled
-	EnableContentionProfiling bool
+	EnableContentionProfiling bool // todo 需要启用通用概要分析
 	EnableMetrics             bool
 
 	DisabledPostStartHooks sets.String
@@ -146,8 +145,7 @@ type Config struct {
 	// Will default to a value based on secure serving info and available ipv4 IPs.
 	ExternalAddress string
 
-	// TracerProvider can provide a tracer, which records spans for distributed tracing.
-	TracerProvider tracing.TracerProvider
+	TracerProvider tracing.TracerProvider // 可以提供跟踪程序,用于记录用于分布式跟踪的范围.
 
 	//===========================================================================
 	// Fields you probably don't care about changing
@@ -208,13 +206,9 @@ type Config struct {
 	JSONPatchMaxCopyBytes int64
 	// The limit on the request size that would be accepted and decoded in a write request
 	// 0 means no limit.
-	MaxRequestBodyBytes int64
-	// MaxRequestsInFlight is the maximum number of parallel non-long-running requests. Every further
-	// request has to wait. Applies only to non-mutating requests.
-	MaxRequestsInFlight int
-	// MaxMutatingRequestsInFlight is the maximum number of parallel mutating requests. Every further
-	// request has to wait.
-	MaxMutatingRequestsInFlight int
+	MaxRequestBodyBytes         int64
+	MaxRequestsInFlight         int // 运行中的请求的最大数目.仅适用于非突变请求.400
+	MaxMutatingRequestsInFlight int // 运行中的请求的最大数目.适用于突变请求. 200
 	// Predicate which is true for paths of long-running http requests
 	LongRunningFunc apirequest.LongRunningRequestCheck
 
@@ -224,10 +218,7 @@ type Config struct {
 	// Default to 0, means never send GOAWAY. Max is 0.02 to prevent break the apiserver.
 	GoawayChance float64
 
-	// MergedResourceConfig indicates which groupVersion enabled and its resources enabled/disabled.
-	// This is composed of genericapiserver defaultAPIResourceConfig and those parsed from flags.
-	// If not specify any in flags, then genericapiserver will only enable defaultAPIResourceConfig.
-	MergedResourceConfig *serverstore.ResourceConfig
+	MergedResourceConfig *serverstore.ResourceConfig // 表示哪个groupVersion启用,其资源启用/禁用.
 
 	// lifecycleSignals provides access to the various signals
 	// that happen during lifecycle of the apiserver.
@@ -263,8 +254,7 @@ type Config struct {
 	// APIServerID is the ID of this API server
 	APIServerID string
 
-	// StorageVersionManager holds the storage versions of the API resources installed by this server.
-	StorageVersionManager storageversion.Manager
+	StorageVersionManager storageversion.Manager // 保存该服务器安装的API资源
 
 	// AggregatedDiscoveryGroupManager serves /apis in an aggregated form.
 	AggregatedDiscoveryGroupManager discoveryendpoint.ResourceManager
@@ -336,7 +326,7 @@ func init() {
 func NewConfig(codecs serializer.CodecFactory) *Config {
 	defaultHealthChecks := []healthz.HealthChecker{healthz.PingHealthz, healthz.LogHealthz}
 	var id string
-	if utilfeature.DefaultFeatureGate.Enabled(genericfeatures.APIServerIdentity) {
+	if utilfeature.DefaultFeatureGate.Enabled(genericfeatures.APIServerIdentity) { // 在集群中为每个kube-apiserver分配一个ID
 		hostname, err := os.Hostname()
 		if err != nil {
 			klog.Fatalf("error getting hostname for apiserver identity: %v", err)
@@ -367,33 +357,16 @@ func NewConfig(codecs serializer.CodecFactory) *Config {
 		MinRequestTimeout:           1800,
 		LivezGracePeriod:            time.Duration(0),
 		ShutdownDelayDuration:       time.Duration(0),
-		// 1.5MB is the default client request size in bytes
-		// the etcd server should accept. See
-		// https://github.com/etcd-io/etcd/blob/release-3.4/embed/config.go#L56.
-		// A request body might be encoded in json, and is converted to
-		// proto when persisted in etcd, so we allow 2x as the largest size
-		// increase the "copy" operations in a json patch may cause.
-		JSONPatchMaxCopyBytes: int64(3 * 1024 * 1024),
-		// 1.5MB is the recommended client request size in byte
-		// the etcd server should accept. See
-		// https://github.com/etcd-io/etcd/blob/release-3.4/embed/config.go#L56.
-		// A request body might be encoded in json, and is converted to
-		// proto when persisted in etcd, so we allow 2x as the largest request
-		// body size to be accepted and decoded in a write request.
-		// If this constant is changed, DefaultMaxRequestSizeBytes in k8s.io/apiserver/pkg/cel/limits.go
-		// should be changed to reflect the new value, if the two haven't
-		// been wired together already somehow.
-		MaxRequestBodyBytes: int64(3 * 1024 * 1024),
-
+		JSONPatchMaxCopyBytes:       int64(3 * 1024 * 1024), //  1.5MB是默认的客户端请求大小,以字节为单位 etcd服务器应该接受. 因为请求是json, 最终以proto 存储在etcd ,所以可以大小*2
+		MaxRequestBodyBytes:         int64(3 * 1024 * 1024),
 		// Default to treating watch as a long-running operation
 		// Generic API servers have no inherent long-running subresources
 		LongRunningFunc:           genericfilters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString()),
 		lifecycleSignals:          lifecycleSignals,
-		StorageObjectCountTracker: flowcontrolrequest.NewStorageObjectCountTracker(),
-
-		APIServerID:           id,
-		StorageVersionManager: storageversion.NewDefaultManager(),
-		TracerProvider:        tracing.NewNoopTracerProvider(),
+		StorageObjectCountTracker: flowcontrolrequest.NewStorageObjectCountTracker(), // 跟踪每个资源的对象总数
+		APIServerID:               id,
+		StorageVersionManager:     storageversion.NewDefaultManager(),
+		TracerProvider:            tracing.NewNoopTracerProvider(),
 	}
 }
 

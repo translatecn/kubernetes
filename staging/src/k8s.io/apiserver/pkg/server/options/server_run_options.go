@@ -33,40 +33,26 @@ import (
 
 // ServerRunOptions contains the options while running a generic api server.
 type ServerRunOptions struct {
-	AdvertiseAddress            net.IP // --advertise-address=设置
-	CorsAllowedOriginList       []string
-	HSTSDirectives              []string
-	ExternalHost                string // api-server对外提供访问的入口，  域名或者IP
-	MaxRequestsInFlight         int
-	MaxMutatingRequestsInFlight int
-	RequestTimeout              time.Duration
-	GoawayChance                float64
-	LivezGracePeriod            time.Duration
-	MinRequestTimeout           int
-	ShutdownDelayDuration       time.Duration
-	// We intentionally did not add a flag for this option. Users of the
-	// apiserver library can wire it to a flag.
-	JSONPatchMaxCopyBytes int64
-	// The limit on the request body size that would be accepted and
-	// decoded in a write request. 0 means no limit.
-	// We intentionally did not add a flag for this option. Users of the
-	// apiserver library can wire it to a flag.
-	MaxRequestBodyBytes       int64
-	EnablePriorityAndFairness bool
-
-	// ShutdownSendRetryAfter dictates when to initiate shutdown of the HTTP
-	// Server during the graceful termination of the apiserver. If true, we wait
-	// for non longrunning requests in flight to be drained and then initiate a
-	// shutdown of the HTTP Server. If false, we initiate a shutdown of the HTTP
-	// Server as soon as ShutdownDelayDuration has elapsed.
-	// If enabled, after ShutdownDelayDuration elapses, any incoming request is
-	// rejected with a 429 status code and a 'Retry-After' response.
-	ShutdownSendRetryAfter bool
+	AdvertiseAddress            net.IP        // --advertise-address=设置
+	CorsAllowedOriginList       []string      //
+	HSTSDirectives              []string      //
+	ExternalHost                string        // api-server对外提供访问的入口,  域名或者IP
+	MaxRequestsInFlight         int           //
+	MaxMutatingRequestsInFlight int           //
+	RequestTimeout              time.Duration //
+	GoawayChance                float64       //
+	LivezGracePeriod            time.Duration //
+	MinRequestTimeout           int           //
+	ShutdownDelayDuration       time.Duration //
+	JSONPatchMaxCopyBytes       int64         // 我们故意没有为这个选项添加flag。
+	MaxRequestBodyBytes         int64         //
+	EnablePriorityAndFairness   bool          //
+	ShutdownSendRetryAfter      bool          //
 }
 
 func NewServerRunOptions() *ServerRunOptions {
-	defaults := server.NewConfig(serializer.CodecFactory{})
-	return &ServerRunOptions{
+	defaults := server.NewConfig(serializer.CodecFactory{}) // ✅
+	return &ServerRunOptions{                               // 程序运行初的默认值
 		MaxRequestsInFlight:         defaults.MaxRequestsInFlight,
 		MaxMutatingRequestsInFlight: defaults.MaxMutatingRequestsInFlight,
 		RequestTimeout:              defaults.RequestTimeout,
@@ -100,7 +86,7 @@ func (s *ServerRunOptions) ApplyTo(c *server.Config) error {
 	return nil
 }
 
-// DefaultAdvertiseAddress 如果未设置，则设置 AdvertiseAddress 字段。该字段将根据SecureServingOptions进行设置。
+// DefaultAdvertiseAddress 如果未设置,则设置 AdvertiseAddress 字段.该字段将根据SecureServingOptions进行设置.
 func (s *ServerRunOptions) DefaultAdvertiseAddress(secure *SecureServingOptions) error {
 	if secure == nil {
 		return nil
@@ -109,7 +95,7 @@ func (s *ServerRunOptions) DefaultAdvertiseAddress(secure *SecureServingOptions)
 	if s.AdvertiseAddress == nil || s.AdvertiseAddress.IsUnspecified() { // 没有指定具体IP
 		hostIP, err := secure.DefaultExternalAddress()
 		if err != nil {
-			return fmt.Errorf("无法找到合适的网络地址。错误='%v'。尝试直接设置AdvertiseAddress或提供有效的BindAddress来修复此问题。", err)
+			return fmt.Errorf("无法找到合适的网络地址.错误='%v'.尝试直接设置AdvertiseAddress或提供有效的BindAddress来修复此问题.", err)
 		}
 		s.AdvertiseAddress = hostIP
 	}
@@ -181,71 +167,42 @@ func validateHSTSDirectives(hstsDirectives []string) error {
 	return errors.NewAggregate(allErrors)
 }
 
+// AddUniversalFlags 通用flag
 func (s *ServerRunOptions) AddUniversalFlags(fs *pflag.FlagSet) {
-	fs.IPVar(&s.AdvertiseAddress, "advertise-address", s.AdvertiseAddress, "将apisserver通告给集群成员的IP地址。该地址必须能被集群的其他部分访问。如果为空，则使用--bind-address。如果没有指定--bind-address，则使用主机的默认接口。")
-
-	fs.StringSliceVar(&s.CorsAllowedOriginList, "cors-allowed-origins", s.CorsAllowedOriginList, ""+
-		"List of allowed origins for CORS, comma separated.  An allowed origin can be a regular "+
-		"expression to support subdomain matching. If this list is empty CORS will not be enabled.")
-
-	fs.StringSliceVar(&s.HSTSDirectives, "strict-transport-security-directives", s.HSTSDirectives, ""+
-		"List of directives for HSTS, comma separated. If this list is empty, then HSTS directives will not "+
-		"be added. Example: 'max-age=31536000,includeSubDomains,preload'")
-
-	fs.StringVar(&s.ExternalHost, "external-hostname", s.ExternalHost,
-		"The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs or OpenID Discovery).")
-
+	fs.IPVar(&s.AdvertiseAddress, "advertise-address", s.AdvertiseAddress, "将apisserver通告给集群成员的IP地址.该地址必须能被集群的其他部分访问.如果为空,则使用--bind-address.如果没有指定--bind-address,则使用主机的默认接口.")
+	fs.StringSliceVar(&s.CorsAllowedOriginList, "cors-allowed-origins", s.CorsAllowedOriginList, "CORS允许的源列表,以逗号分隔.允许的原点可以是支持子域匹配的正则表达式.如果此列表为空,则CORS将不会启用.")
+	// https://zhuanlan.zhihu.com/p/130946490
+	fs.StringSliceVar(&s.HSTSDirectives, "strict-transport-security-directives", s.HSTSDirectives,
+		"HSTS指令列表,逗号分隔.例如:'max-age=31536000,includeSubDomains,preload'")
+	fs.StringVar(&s.ExternalHost, "external-hostname", s.ExternalHost, "为主机生成外部化url时使用的主机名(例如Swagger API Docs或OpenID Discovery).")
 	deprecatedMasterServiceNamespace := metav1.NamespaceDefault
-	fs.StringVar(&deprecatedMasterServiceNamespace, "master-service-namespace", deprecatedMasterServiceNamespace, ""+
-		"DEPRECATED: the namespace from which the Kubernetes master services should be injected into pods.")
-	fs.MarkDeprecated("master-service-namespace", "This flag will be removed in v1.27")
+	fs.StringVar(&deprecatedMasterServiceNamespace, "master-service-namespace", deprecatedMasterServiceNamespace, "DEPRECATED:将Kubernetes主服务注入pod的命名空间.")
+	fs.MarkDeprecated("master-service-namespace", "这个标志将在v1.27中被移除")
 
-	fs.IntVar(&s.MaxRequestsInFlight, "max-requests-inflight", s.MaxRequestsInFlight, ""+
-		"This and --max-mutating-requests-inflight are summed to determine the server's total concurrency limit "+
-		"(which must be positive) if --enable-priority-and-fairness is true. "+
-		"Otherwise, this flag limits the maximum number of non-mutating requests in flight, "+
-		"or a zero value disables the limit completely.")
+	fs.DurationVar(&s.RequestTimeout, "request-timeout", s.RequestTimeout, "这是请求的默认请求超时,但对于特定类型的请求,可能会被诸如--min-request-timeout之类的标志覆盖.")
+	fs.IntVar(&s.MinRequestTimeout, "min-request-timeout", s.MinRequestTimeout, "请求最小超时时间")
 
-	fs.IntVar(&s.MaxMutatingRequestsInFlight, "max-mutating-requests-inflight", s.MaxMutatingRequestsInFlight, ""+
-		"This and --max-requests-inflight are summed to determine the server's total concurrency limit "+
-		"(which must be positive) if --enable-priority-and-fairness is true. "+
-		"Otherwise, this flag limits the maximum number of mutating requests in flight, "+
-		"or a zero value disables the limit completely.")
+	fs.Float64Var(&s.GoawayChance, "goaway-chance", s.GoawayChance,
+		"多apiserver 时,为了防止HTTP/2客户端卡在单个apisserver上,随机关闭一个连接(超时)."+
+			"此参数设置将发送超时的请求的百分比.最小值是0(关闭),最大值是0.02(1/50请求);.001(1/1000)是推荐的起始点.")
 
-	fs.DurationVar(&s.RequestTimeout, "request-timeout", s.RequestTimeout, ""+
-		"An optional field indicating the duration a handler must keep a request open before timing "+
-		"it out. This is the default request timeout for requests but may be overridden by flags such as "+
-		"--min-request-timeout for specific types of requests.")
+	fs.DurationVar(&s.LivezGracePeriod, "livez-grace-period", s.LivezGracePeriod,
+		"该选项表示apiserver完成其启动序列并启动所需的最大时间."+
+			"从apiserver的开始时间到这个时间已经过去,/livez将假设未完成的启动后钩子将成功完成,因此返回true.")
 
-	fs.Float64Var(&s.GoawayChance, "goaway-chance", s.GoawayChance, ""+
-		"To prevent HTTP/2 clients from getting stuck on a single apiserver, randomly close a connection (GOAWAY). "+
-		"The client's other in-flight requests won't be affected, and the client will reconnect, likely landing on a different apiserver after going through the load balancer again. "+
-		"This argument sets the fraction of requests that will be sent a GOAWAY. Clusters with single apiservers, or which don't use a load balancer, should NOT enable this. "+
-		"Min is 0 (off), Max is .02 (1/50 requests); .001 (1/1000) is a recommended starting point.")
+	fs.BoolVar(&s.EnablePriorityAndFairness, "enable-priority-and-fairness", s.EnablePriorityAndFairness,
+		"如果为true并且APIPriorityAndFairness特性已启用,则将max-in-flight处理程序替换为具有优先级和公平性的队列和调度增强处理程序")
+	fs.IntVar(&s.MaxRequestsInFlight, "max-requests-inflight", s.MaxRequestsInFlight,
+		"如果--enable-priority-and-fairness为真,--max-requests-inflight 和 --max-mutating-requests-inflight 相加以确定服务器的总并发限制(必须为正)."+
+			"否则,该标志将限制运行中的非突变请求的最大数量,如果值为零则完全禁用该限制.")
+	fs.IntVar(&s.MaxMutatingRequestsInFlight, "max-mutating-requests-inflight", s.MaxMutatingRequestsInFlight, "突发流量上限")
 
-	fs.DurationVar(&s.LivezGracePeriod, "livez-grace-period", s.LivezGracePeriod, ""+
-		"This option represents the maximum amount of time it should take for apiserver to complete its startup sequence "+
-		"and become live. From apiserver's start time to when this amount of time has elapsed, /livez will assume "+
-		"that unfinished post-start hooks will complete successfully and therefore return true.")
+	fs.DurationVar(&s.ShutdownDelayDuration, "shutdown-delay-duration", s.ShutdownDelayDuration,
+		"延迟终止时间。在此期间，服务器继续正常地为请求提供服务。 /healthz和/livez  返回成功，但是/readyz立即返回失败。")
 
-	fs.IntVar(&s.MinRequestTimeout, "min-request-timeout", s.MinRequestTimeout, ""+
-		"An optional field indicating the minimum number of seconds a handler must keep "+
-		"a request open before timing it out. Currently only honored by the watch request "+
-		"handler, which picks a randomized value above this number as the connection timeout, "+
-		"to spread out load.")
-
-	fs.BoolVar(&s.EnablePriorityAndFairness, "enable-priority-and-fairness", s.EnablePriorityAndFairness, ""+
-		"If true and the APIPriorityAndFairness feature gate is enabled, replace the max-in-flight handler with an enhanced one that queues and dispatches with priority and fairness")
-
-	fs.DurationVar(&s.ShutdownDelayDuration, "shutdown-delay-duration", s.ShutdownDelayDuration, ""+
-		"Time to delay the termination. During that time the server keeps serving requests normally. The endpoints /healthz and /livez "+
-		"will return success, but /readyz immediately returns failure. Graceful termination starts after this delay "+
-		"has elapsed. This can be used to allow load balancer to stop sending traffic to this server.")
-
-	fs.BoolVar(&s.ShutdownSendRetryAfter, "shutdown-send-retry-after", s.ShutdownSendRetryAfter, ""+
-		"If true the HTTP Server will continue listening until all non long running request(s) in flight have been drained, "+
-		"during this window all incoming requests will be rejected with a status code 429 and a 'Retry-After' response header, "+
-		"in addition 'Connection: close' response header is set in order to tear down the TCP connection when idle.")
+	fs.BoolVar(&s.ShutdownSendRetryAfter, "shutdown-send-retry-after", s.ShutdownSendRetryAfter,
+		"如果为true, HTTP服务器将继续监听，直到所有非长时间运行的请求被耗尽，在此窗口期间，所有传入的请求将被拒绝，"+
+			"状态码为429，响应头为'Retry-After'，此外还设置了'Connection: close'响应头，以便在空闲时断开TCP连接。")
 
 	utilfeature.DefaultMutableFeatureGate.AddFlag(fs)
 }

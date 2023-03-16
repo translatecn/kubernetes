@@ -39,10 +39,10 @@ import (
 
 type SecureServingOptions struct {
 	BindAddress     net.IP                 // 0.0.0.0
-	BindPort        int                    // 设置Listener时忽略，即使设置为0也会提供https服务。 6443
-	BindNetwork     string                 // 是要绑定的网络类型-默认为"tcp"，接受"tcp"， "tcp4"和"tcp6"。
-	Required        bool                   // 设置为true表示BindPort不能为零。
-	ExternalAddress net.IP                 // 发布的地址，即使BindAddress是环回地址。默认情况下，如果后面没有环回，则设置为BindAddress，或者为第一个主机接口地址。
+	BindPort        int                    // 设置Listener时忽略,即使设置为0也会提供https服务. 6443
+	BindNetwork     string                 // 是要绑定的网络类型-默认为"tcp",接受"tcp", "tcp4"和"tcp6".
+	Required        bool                   // 设置为true表示BindPort不能为零.
+	ExternalAddress net.IP                 // 发布的地址,即使BindAddress是环回地址.默认情况下,如果后面没有环回,则设置为BindAddress,或者为第一个主机接口地址.
 	Listener        net.Listener           // Listener是安全服务器网络侦听器
 	ServerCert      GeneratableKeyCert     // TLS证书信息是否用于提供安全流量
 	SNICertKeys     []cliflag.NamedCertKey // 为SNI支持提供安全流量
@@ -66,16 +66,16 @@ type SecureServingOptions struct {
 }
 
 type CertKey struct {
-	CertFile string // 是一个包含pem编码的证书的文件，可能还有完整的证书链
+	CertFile string // 是一个包含pem编码的证书的文件,可能还有完整的证书链
 	KeyFile  string // 文件中是否包含CertFile指定的pem编码的证书私钥
 }
 
 type GeneratableKeyCert struct {
-	CertKey       CertKey                                    // 设置要使用的显式证书/密钥文件。
+	CertKey       CertKey                                    // 设置要使用的显式证书/密钥文件.
 	CertDirectory string                                     // 证书路径
-	PairName      string                                     // 是与CertDirectory一起用于生成证书和密钥文件名的名称。
-	GeneratedCert dynamiccertificates.CertKeyContentProvider // 如果CertFile/KeyFile、CertDirectory/PairName没有设置，则将生成的证书保存在内存中。
-	// FixtureDirectory 是一个目录，其中包含用于避免在测试期间重新生成cert的测试工具。
+	PairName      string                                     // 是与CertDirectory一起用于生成证书和密钥文件名的名称.
+	GeneratedCert dynamiccertificates.CertKeyContentProvider // 如果CertFile/KeyFile、CertDirectory/PairName没有设置,则将生成的证书保存在内存中.
+	// FixtureDirectory 是一个目录,其中包含用于避免在测试期间重新生成cert的测试工具.
 	// The format is:
 	// <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.crt
 	// <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.key
@@ -126,69 +126,42 @@ func (s *SecureServingOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.IPVar(&s.BindAddress, "bind-address", s.BindAddress, ""+
-		"The IP address on which to listen for the --secure-port port. The "+
-		"associated interface(s) must be reachable by the rest of the cluster, and by CLI/web "+
-		"clients. If blank or an unspecified address (0.0.0.0 or ::), all interfaces will be used.")
-
-	desc := "The port on which to serve HTTPS with authentication and authorization."
+	fs.IPVar(&s.BindAddress, "bind-address", s.BindAddress, "对外监听的IP")
+	desc := "通过认证和授权提供HTTPS服务的端口。"
 	if s.Required {
-		desc += " It cannot be switched off with 0."
+		desc += "不能用0来关闭。"
 	} else {
-		desc += " If 0, don't serve HTTPS at all."
+		desc += "如果是0，则完全不提供HTTPS服务。"
 	}
 	fs.IntVar(&s.BindPort, "secure-port", s.BindPort, desc)
-
-	fs.StringVar(&s.ServerCert.CertDirectory, "cert-dir", s.ServerCert.CertDirectory, ""+
-		"The directory where the TLS certs are located. "+
-		"If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.")
-
-	fs.StringVar(&s.ServerCert.CertKey.CertFile, "tls-cert-file", s.ServerCert.CertKey.CertFile, ""+
-		"File containing the default x509 Certificate for HTTPS. (CA cert, if any, concatenated "+
-		"after server cert). If HTTPS serving is enabled, and --tls-cert-file and "+
-		"--tls-private-key-file are not provided, a self-signed certificate and key "+
-		"are generated for the public address and saved to the directory specified by --cert-dir.")
-
-	fs.StringVar(&s.ServerCert.CertKey.KeyFile, "tls-private-key-file", s.ServerCert.CertKey.KeyFile,
-		"File containing the default x509 private key matching --tls-cert-file.")
+	fs.StringVar(&s.ServerCert.CertDirectory, "cert-dir", s.ServerCert.CertDirectory,
+		"TLS证书所在的目录。如果提供了-tls-cert-file和-tls-private-key-file，这个标志将被忽略。")
+	fs.StringVar(&s.ServerCert.CertKey.CertFile, "tls-cert-file", s.ServerCert.CertKey.CertFile,
+		"包含HTTPS默认x509证书的文件。(如果有CA证书，则在服务器证书之后串联)。"+
+			"如果启用了HTTPS服务，并且没有提供--tls-cert-file和--tls-private-key-file，将为public地址生成一个自签名的证书和密钥，并保存在由--cert-dir指定的目录中。")
+	fs.StringVar(&s.ServerCert.CertKey.KeyFile, "tls-private-key-file", s.ServerCert.CertKey.KeyFile, "包含默认x509私钥匹配的文件 --tls-cert-file。")
 
 	tlsCipherPreferredValues := cliflag.PreferredTLSCipherNames()
 	tlsCipherInsecureValues := cliflag.InsecureTLSCipherNames()
 	fs.StringSliceVar(&s.CipherSuites, "tls-cipher-suites", s.CipherSuites,
-		"Comma-separated list of cipher suites for the server. "+
-			"If omitted, the default Go cipher suites will be used. \n"+
-			"Preferred values: "+strings.Join(tlsCipherPreferredValues, ", ")+". \n"+
-			"Insecure values: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
+		"以逗号分隔的服务器密码套件列表。 如果省略，将使用默认的Go密码套件。"+
+			"首选值: "+strings.Join(tlsCipherPreferredValues, ", ")+". \n"+
+			"不安全的值: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
 
 	tlsPossibleVersions := cliflag.TLSPossibleVersions()
 	fs.StringVar(&s.MinTLSVersion, "tls-min-version", s.MinTLSVersion,
-		"Minimum TLS version supported. "+
-			"Possible values: "+strings.Join(tlsPossibleVersions, ", "))
+		"支持的最小TLS版本。可能的值:"+strings.Join(tlsPossibleVersions, ", "))
 
-	fs.Var(cliflag.NewNamedCertKeyArray(&s.SNICertKeys), "tls-sni-cert-key", ""+
-		"A pair of x509 certificate and private key file paths, optionally suffixed with a list of "+
-		"domain patterns which are fully qualified domain names, possibly with prefixed wildcard "+
-		"segments. The domain patterns also allow IP addresses, but IPs should only be used if "+
-		"the apiserver has visibility to the IP address requested by a client. "+
-		"If no domain patterns are provided, the names of the certificate are "+
-		"extracted. Non-wildcard matches trump over wildcard matches, explicit domain patterns "+
-		"trump over extracted names. For multiple key/certificate pairs, use the "+
-		"--tls-sni-cert-key multiple times. "+
-		"Examples: \"example.crt,example.key\" or \"foo.crt,foo.key:*.foo.com,foo.com\".")
+	fs.Var(cliflag.NewNamedCertKeyArray(&s.SNICertKeys), "tls-sni-cert-key", "一对x509证书和私钥文件路径")
 
-	fs.IntVar(&s.HTTP2MaxStreamsPerConnection, "http2-max-streams-per-connection", s.HTTP2MaxStreamsPerConnection, ""+
-		"The limit that the server gives to clients for "+
-		"the maximum number of streams in an HTTP/2 connection. "+
-		"Zero means to use golang's default.")
+	fs.IntVar(&s.HTTP2MaxStreamsPerConnection, "http2-max-streams-per-connection", s.HTTP2MaxStreamsPerConnection,
+		"服务器给客户的 HTTP/2连接中的最大流数量 的限制。0 意味着使用golang的默认值。")
 
 	fs.BoolVar(&s.PermitPortSharing, "permit-port-sharing", s.PermitPortSharing,
-		"If true, SO_REUSEPORT will be used when binding the port, which allows "+
-			"more than one instance to bind on the same address and port. [default=false]")
+		"如果为真，则在绑定端口时将使用SO_REUSEPORT，这允许多个实例在相同的地址和端口上绑定。(default=false)")
 
 	fs.BoolVar(&s.PermitAddressSharing, "permit-address-sharing", s.PermitAddressSharing,
-		"If true, SO_REUSEADDR will be used when binding the port. This allows binding "+
-			"to wildcard IPs like 0.0.0.0 and specific IPs in parallel, and it avoids waiting "+
-			"for the kernel to release sockets in TIME_WAIT state. [default=false]")
+		"如果为true，绑定端口时将使用SO_REUSEADDR。这允许与通配符ip(如0.0.0.0)和特定ip并行绑定，并且避免等待内核在TIME_WAIT状态下释放套接字。(default=false)")
 }
 
 // ApplyTo fills up serving information in the server configuration.

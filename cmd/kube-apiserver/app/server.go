@@ -92,13 +92,10 @@ func init() {
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
 func NewAPIServerCommand() *cobra.Command {
-	s := options.NewServerRunOptions()
+	s := options.NewServerRunOptions() // 程序参数的默认值 cmd/kube-apiserver/app/server.go:95
 	cmd := &cobra.Command{
-		Use: "kube-apiserver",
-		Long: `The Kubernetes API server validates and configures data
-for the api objects which include pods, services, replicationcontrollers, and
-others. The API Server services REST operations and provides the frontend to the
-cluster's shared state through which all other components interact.`,
+		Use:  "kube-apiserver",
+		Long: `Kubernetes API服务器为API对象(包括pods、services、replicationcontrollers等)验证和配置数据.API Server为REST操作提供服务,并提供集群共享状态的前端,所有其他组件都通过该共享状态进行交互.`,
 
 		// stop printing usage when the command errors
 		SilenceUsage: true,
@@ -111,7 +108,7 @@ cluster's shared state through which all other components interact.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			verflag.PrintAndExitIfRequested() // 检查 --version
 			fs := cmd.Flags()
-			// 尽快激活日志记录，然后用最终的日志记录配置显示标志。将s.Logs设置到klog配置中
+			// 尽快激活日志记录,然后用最终的日志记录配置显示标志.将s.Logs设置到klog配置中
 			if err := logsapi.ValidateAndApply(s.Logs, utilfeature.DefaultFeatureGate); err != nil {
 				return err
 			}
@@ -122,12 +119,11 @@ cluster's shared state through which all other components interact.`,
 				return err
 			}
 
-			// validate options
-			if errs := completedOptions.Validate(); len(errs) != 0 {
+			if errs := completedOptions.Validate(); len(errs) != 0 { // kube-apiserver 👌🏻
 				return utilerrors.NewAggregate(errs)
 			}
 			// 添加特性度量指标
-			utilfeature.DefaultMutableFeatureGate.AddMetrics()
+			utilfeature.DefaultMutableFeatureGate.AddMetrics() // defaultKubernetesFeatureGates
 			return Run(completedOptions, genericapiserver.SetupSignalHandler())
 		},
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -141,8 +137,8 @@ cluster's shared state through which all other components interact.`,
 	}
 
 	fs := cmd.Flags()
-	namedFlagSets := s.Flags()
-	verflag.AddFlags(namedFlagSets.FlagSet("global"))
+	namedFlagSets := s.Flags()                        // kube-apiserver
+	verflag.AddFlags(namedFlagSets.FlagSet("global")) // version
 	globalflag.AddGlobalFlags(namedFlagSets.FlagSet("global"), cmd.Name(), logs.SkipLoggingConfigurationFlags())
 	options.AddCustomGlobalFlags(namedFlagSets.FlagSet("generic"))
 	for _, f := range namedFlagSets.FlagSets {
@@ -155,14 +151,14 @@ cluster's shared state through which all other components interact.`,
 	return cmd
 }
 
-// Run runs the specified APIServer.  This should never exit.
+// Run api-server 主逻辑
 func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) error {
 	// To help debugging, immediately log version
 	klog.Infof("Version: %+v", version.Get())
 
 	klog.InfoS("Golang settings", "GOGC", os.Getenv("GOGC"), "GOMAXPROCS", os.Getenv("GOMAXPROCS"), "GOTRACEBACK", os.Getenv("GOTRACEBACK"))
 
-	server, err := CreateServerChain(completeOptions)
+	server, err := CreateServerChain(completeOptions) // ✈️
 	if err != nil {
 		return err
 	}
@@ -353,7 +349,7 @@ func buildGenericConfig(
 	lastErr error,
 ) {
 	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)
-	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource()
+	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource() // 表示哪个groupVersion启用,其资源启用/禁用.
 
 	if lastErr = s.GenericServerRunOptions.ApplyTo(genericConfig); lastErr != nil {
 		return
@@ -543,7 +539,7 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 		return options, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
 
-	if len(s.GenericServerRunOptions.ExternalHost) == 0 { // api-server对外提供访问的入口， 域名或者IP
+	if len(s.GenericServerRunOptions.ExternalHost) == 0 { // api-server对外提供访问的入口, 域名或者IP
 		if len(s.GenericServerRunOptions.AdvertiseAddress) > 0 {
 			s.GenericServerRunOptions.ExternalHost = s.GenericServerRunOptions.AdvertiseAddress.String() // 10.10.13.01
 		} else {
@@ -678,7 +674,7 @@ func getServiceIPAndRanges(serviceClusterIPRanges string) (net.IP, net.IPNet, ne
 	var primaryServiceIPRange net.IPNet
 	var secondaryServiceIPRange net.IPNet
 	var err error
-	// 用户没有提供任何信息，使用默认范围(只适用于Primary)
+	// 用户没有提供任何信息,使用默认范围(只适用于Primary)
 	if len(serviceClusterIPRangeList) == 0 {
 		var primaryServiceClusterCIDR net.IPNet
 		primaryServiceIPRange, apiServerServiceIP, err = controlplane.ServiceIPRange(primaryServiceClusterCIDR) // 选择CIDR块中第一个IP作为通信IP

@@ -33,23 +33,12 @@ import (
 
 // KubeletClientConfig defines config parameters for the kubelet client
 type KubeletClientConfig struct {
-	// Port specifies the default port - used if no information about Kubelet port can be found in Node.NodeStatus.DaemonEndpoints.
-	Port uint
-
-	// ReadOnlyPort specifies the Port for ReadOnly communications.
-	ReadOnlyPort uint
-
-	// PreferredAddressTypes - used to select an address from Node.NodeStatus.Addresses
-	PreferredAddressTypes []string
-
-	// TLSClientConfig contains settings to enable transport layer security
-	TLSClientConfig KubeletTLSConfig
-
-	// HTTPTimeout is used by the client to timeout http requests to Kubelet.
-	HTTPTimeout time.Duration
-
-	// Lookup will give us a dialer if the egress selector is configured for it
-	Lookup egressselector.Lookup
+	Port                  uint                  //
+	ReadOnlyPort          uint                  //
+	PreferredAddressTypes []string              // 用于从Node.NodeStatus.Addresses中选择地址
+	TLSClientConfig       KubeletTLSConfig      // 包含启用传输层安全性的设置
+	HTTPTimeout           time.Duration         // Kubelet的http请求超时
+	Lookup                egressselector.Lookup // Lookup will give us a dialer if the egress selector is configured for it
 }
 
 type KubeletTLSConfig struct {

@@ -28,9 +28,9 @@ import (
 	cliflag "k8s.io/component-base/cli/flag"
 )
 
-// APIEnablementOptions 包含要打开和关闭哪些资源的选项。对于小型聚合API服务器，“普通”API服务器不需要此选项
+// APIEnablementOptions 包含要打开和关闭哪些资源的选项.对于小型聚合API服务器,“普通”API服务器不需要此选项
 type APIEnablementOptions struct {
-	RuntimeConfig cliflag.ConfigurationMap // "用于启用或禁用内置api。例如 apps/v1=true "
+	RuntimeConfig cliflag.ConfigurationMap // "用于启用或禁用内置api.例如 apps/v1=true "
 }
 
 func NewAPIEnablementOptions() *APIEnablementOptions {
@@ -40,14 +40,14 @@ func NewAPIEnablementOptions() *APIEnablementOptions {
 }
 
 func (s *APIEnablementOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.Var(&s.RuntimeConfig, "runtime-config", "用于启用或禁用内置api。例如 apps/v1=true ")
+	fs.Var(&s.RuntimeConfig, "runtime-config", "用于启用或禁用内置api.例如 apps/v1=true")
 }
 
-// Validate 使用注册表列表验证RuntimeConfig。
-// 通常这个列表只有一个元素，进程的apiserver注册表。
-// 但是在高级(通常不推荐)委托apiservers的情况下可以有更多。
-// Validate将过滤出每个注册表的已知组。
-// 如果在此之后还剩下任何内容，则返回错误。
+// Validate 使用注册表列表验证RuntimeConfig.
+// 通常这个列表只有一个元素,进程的apiserver注册表.
+// 但是在高级(通常不推荐)委托apiservers的情况下可以有更多.
+// Validate将过滤出每个注册表的已知组.
+// 如果在此之后还剩下任何内容,则返回错误.
 func (s *APIEnablementOptions) Validate(registries ...GroupRegistry) []error {
 	if s == nil {
 		return nil

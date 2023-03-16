@@ -102,52 +102,24 @@ type lifecycleSignal interface {
 	Name() string
 }
 
-// lifecycleSignals provides an abstraction of the events that
-// transpire during the lifecycle of the apiserver. This abstraction makes it easy
-// for us to write unit tests that can verify expected graceful termination behavior.
+// lifecycleSignals 提供 apisserver 生命周期中发生的事件的抽象.这种抽象使我们很容易编写能够验证预期的优雅终止行为的单元测试.
 //
-// GenericAPIServer can use these to either:
-//   - signal that a particular termination event has transpired
-//   - wait for a designated termination event to transpire and do some action.
+// GenericAPIServer :
+//   - 发出特定终止事件从而产生的信号
+//   - 等待指定的终止事件发生并执行一些操作.
 type lifecycleSignals struct {
-	// ShutdownInitiated event is signaled when an apiserver shutdown has been initiated.
-	// It is signaled when the `stopCh` provided by the main goroutine
-	// receives a KILL signal and is closed as a consequence.
-	ShutdownInitiated lifecycleSignal
-
-	// AfterShutdownDelayDuration event is signaled as soon as ShutdownDelayDuration
-	// has elapsed since the ShutdownInitiated event.
-	// ShutdownDelayDuration allows the apiserver to delay shutdown for some time.
-	AfterShutdownDelayDuration lifecycleSignal
-
-	// PreShutdownHooksStopped event is signaled when all registered
-	// preshutdown hook(s) have finished running.
-	PreShutdownHooksStopped lifecycleSignal
-
-	// NotAcceptingNewRequest event is signaled when the server is no
-	// longer accepting any new request, from this point on any new
-	// request will receive an error.
-	NotAcceptingNewRequest lifecycleSignal
-
-	// InFlightRequestsDrained event is signaled when the existing requests
-	// in flight have completed. This is used as signal to shut down the audit backends
-	InFlightRequestsDrained lifecycleSignal
-
-	// HTTPServerStoppedListening termination event is signaled when the
-	// HTTP Server has stopped listening to the underlying socket.
-	HTTPServerStoppedListening lifecycleSignal
-
-	// HasBeenReady is signaled when the readyz endpoint succeeds for the first time.
-	HasBeenReady lifecycleSignal
-
-	// MuxAndDiscoveryComplete is signaled when all known HTTP paths have been installed.
-	// It exists primarily to avoid returning a 404 response when a resource actually exists but we haven't installed the path to a handler.
-	// The actual logic is implemented by an APIServer using the generic server library.
-	MuxAndDiscoveryComplete lifecycleSignal
+	ShutdownInitiated          lifecycleSignal // 当apisserver 关闭时,会发出ShutdownInitiated事件的信号.
+	AfterShutdownDelayDuration lifecycleSignal // ShutdownInitiated 事件结束后立即发出信号.ShutdownDelayDuration允许apisserver延迟关闭一段时间.
+	PreShutdownHooksStopped    lifecycleSignal // 在所有注册的 预关闭钩子 完成运行时发出信号.
+	NotAcceptingNewRequest     lifecycleSignal // 当服务器不再接受任何新请求时,就会发出信号,从此时开始,任何新请求都将收到一个错误.
+	InFlightRequestsDrained    lifecycleSignal // 当飞行中的现有请求已经完成时,inflightrequestsdrain事件将发出信号.这被用作关闭审计后端的信号
+	HTTPServerStoppedListening lifecycleSignal // HTTP服务器停止侦听底层套接字时发出信号.
+	HasBeenReady               lifecycleSignal // 在readyz端点第一次成功时发出信号.
+	MuxAndDiscoveryComplete    lifecycleSignal // 当所有已知的HTTP router 都已安装时发出信号.它的存在主要是为了避免在资源实际存在但我们没有安装到处理程序的路径时返回404响应.
 }
 
 // newLifecycleSignals returns an instance of lifecycleSignals interface to be used
-// to coordinate lifecycle of the apiserver
+// to coordinate:协调 lifecycle of the apiserver
 func newLifecycleSignals() lifecycleSignals {
 	return lifecycleSignals{
 		ShutdownInitiated:          newNamedChannelWrapper("ShutdownInitiated"),

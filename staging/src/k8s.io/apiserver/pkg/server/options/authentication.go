@@ -38,7 +38,7 @@ import (
 	openapicommon "k8s.io/kube-openapi/pkg/common"
 )
 
-// DefaultAuthWebhookRetryBackoff apiserver使用的认证和授权webhook的默认回退参数。
+// DefaultAuthWebhookRetryBackoff apiserver使用的认证和授权webhook的默认回退参数.
 func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 	return &wait.Backoff{
 		Duration: 500 * time.Millisecond,
@@ -49,7 +49,7 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 type RequestHeaderAuthenticationOptions struct {
-	ClientCAFile        string // 是根证书包，用于在信任头中的用户名之前对传入请求验证客户端证书。
+	ClientCAFile        string // 是根证书包,用于在信任头中的用户名之前对传入请求验证客户端证书.
 	UsernameHeaders     []string
 	GroupHeaders        []string
 	ExtraHeaderPrefixes []string
@@ -91,24 +91,14 @@ func (s *RequestHeaderAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringSliceVar(&s.UsernameHeaders, "requestheader-username-headers", s.UsernameHeaders, ""+
-		"List of request headers to inspect for usernames. X-Remote-User is common.")
+	fs.StringSliceVar(&s.UsernameHeaders, "requestheader-username-headers", s.UsernameHeaders, "要检查用户名的请求头列表。“X-Remote-User”为常见参数。")
+	fs.StringSliceVar(&s.GroupHeaders, "requestheader-group-headers", s.GroupHeaders, "要检查组的请求头列表。建议使用X-Remote-Group。")
+	fs.StringSliceVar(&s.ExtraHeaderPrefixes, "requestheader-extra-headers-prefix", s.ExtraHeaderPrefixes, "要检查的请求头前缀列表。建议使用X-Remote-Extra-")
+	fs.StringVar(&s.ClientCAFile, "requestheader-client-ca-file", s.ClientCAFile, "在信任 --requesttheader-username-headers 指定的头中的用户名之前，用于验证传入请求上的客户端证书的根证书包。警告:通常不依赖于对传入请求已经完成的授权。")
 
-	fs.StringSliceVar(&s.GroupHeaders, "requestheader-group-headers", s.GroupHeaders, ""+
-		"List of request headers to inspect for groups. X-Remote-Group is suggested.")
-
-	fs.StringSliceVar(&s.ExtraHeaderPrefixes, "requestheader-extra-headers-prefix", s.ExtraHeaderPrefixes, ""+
-		"List of request header prefixes to inspect. X-Remote-Extra- is suggested.")
-
-	fs.StringVar(&s.ClientCAFile, "requestheader-client-ca-file", s.ClientCAFile, ""+
-		"Root certificate bundle to use to verify client certificates on incoming requests "+
-		"before trusting usernames in headers specified by --requestheader-username-headers. "+
-		"WARNING: generally do not depend on authorization being already done for incoming requests.")
-
-	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames, ""+
-		"List of client certificate common names to allow to provide usernames in headers "+
-		"specified by --requestheader-username-headers. If empty, any client certificate validated "+
-		"by the authorities in --requestheader-client-ca-file is allowed.")
+	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames,
+		"允许在--requesttheader-username-headers指定的头中提供用户名的客户端证书公共名称列表。"+
+			"如果为空，则允许在——requestheader-client-ca-file中通过权威机构验证的任何客户端证书。")
 }
 
 // ToAuthenticationRequestHeaderConfig returns a RequestHeaderConfig config object for these options
@@ -158,10 +148,7 @@ func (s *ClientCertAuthenticationOptions) GetClientCAContentProvider() (dynamicc
 }
 
 func (s *ClientCertAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&s.ClientCA, "client-ca-file", s.ClientCA, ""+
-		"If set, any request presenting a client certificate signed by one of "+
-		"the authorities in the client-ca-file is authenticated with an identity "+
-		"corresponding to the CommonName of the client certificate.")
+	fs.StringVar(&s.ClientCA, "client-ca-file", s.ClientCA, "如果设置了该值，则任何提供客户端证书的请求都将使用与客户端证书的CommonName对应的标识进行身份验证。")
 }
 
 // DelegatingAuthenticationOptions provides an easy way for composing API servers to delegate their authentication to
@@ -258,9 +245,9 @@ func (s *DelegatingAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	if s.RemoteKubeConfigFileOptional {
 		optionalKubeConfigSentence = " This is optional. If empty, all token requests are considered to be anonymous and no client CA is looked up in the cluster."
 	}
-	fs.StringVar(&s.RemoteKubeConfigFile, "authentication-kubeconfig", s.RemoteKubeConfigFile, ""+
+	fs.StringVar(&s.RemoteKubeConfigFile, "authentication-kubeconfig", s.RemoteKubeConfigFile,
 		"kubeconfig file pointing at the 'core' kubernetes server with enough rights to create "+
-		"tokenreviews.authentication.k8s.io."+optionalKubeConfigSentence)
+			"tokenreviews.authentication.k8s.io."+optionalKubeConfigSentence)
 
 	fs.DurationVar(&s.CacheTTL, "authentication-token-webhook-cache-ttl", s.CacheTTL,
 		"The duration to cache responses from the webhook token authenticator.")
@@ -268,12 +255,12 @@ func (s *DelegatingAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	s.ClientCert.AddFlags(fs)
 	s.RequestHeader.AddFlags(fs)
 
-	fs.BoolVar(&s.SkipInClusterLookup, "authentication-skip-lookup", s.SkipInClusterLookup, ""+
+	fs.BoolVar(&s.SkipInClusterLookup, "authentication-skip-lookup", s.SkipInClusterLookup,
 		"If false, the authentication-kubeconfig will be used to lookup missing authentication "+
-		"configuration from the cluster.")
-	fs.BoolVar(&s.TolerateInClusterLookupFailure, "authentication-tolerate-lookup-failure", s.TolerateInClusterLookupFailure, ""+
+			"configuration from the cluster.")
+	fs.BoolVar(&s.TolerateInClusterLookupFailure, "authentication-tolerate-lookup-failure", s.TolerateInClusterLookupFailure,
 		"If true, failures to look up missing authentication configuration from the cluster are not considered fatal. "+
-		"Note that this can result in authentication that treats all requests as anonymous.")
+			"Note that this can result in authentication that treats all requests as anonymous.")
 }
 
 func (s *DelegatingAuthenticationOptions) ApplyTo(authenticationInfo *server.AuthenticationInfo, servingInfo *server.SecureServingInfo, openAPIConfig *openapicommon.Config) error {

@@ -35,9 +35,7 @@ import (
 )
 
 const (
-	// LogFlushFreqDefault is the default for the corresponding command line
-	// parameter.
-	LogFlushFreqDefault = 5 * time.Second
+	LogFlushFreqDefault = 5 * time.Second // 对应命令行参数的默认值.
 )
 
 const (
@@ -54,9 +52,9 @@ func NewLoggingConfiguration() *LoggingConfiguration {
 	return &c
 }
 
-// ValidateAndApply 结合了日志配置的验证和应用。
-// 这应该尽可能早地调用，因为这样程序启动的其余部分(包括其他选项的验证)就已经使用最终的日志配置运行了。
-// 可选的FeatureGate控制日志功能。如果为nil，则使用这些特性的默认值。
+// ValidateAndApply 结合了日志配置的验证和应用.
+// 这应该尽可能早地调用,因为这样程序启动的其余部分(包括其他选项的验证)就已经使用最终的日志配置运行了.
+// 可选的FeatureGate控制日志功能.如果为nil,则使用这些特性的默认值.
 func ValidateAndApply(c *LoggingConfiguration, featureGate featuregate.FeatureGate) error {
 	return ValidateAndApplyAsField(c, featureGate, nil)
 }
@@ -72,10 +70,10 @@ func ValidateAndApplyAsField(c *LoggingConfiguration, featureGate featuregate.Fe
 	return apply(c, featureGate) // 将c应用到 klog配置
 }
 
-// Validate 可以用来检查无效的设置而不应用它们。
+// Validate 可以用来检查无效的设置而不应用它们.
 // 大多数二进制文件应该尽快验证并应用日志配置
-// 通过ValidateAndApply。字段路径是可选的:nil
-// 可以在结构体未嵌入到更大的结构体时传递。
+// 通过ValidateAndApply.字段路径是可选的:nil
+// 可以在结构体未嵌入到更大的结构体时传递.
 func Validate(c *LoggingConfiguration, featureGate featuregate.FeatureGate, fldPath *field.Path) field.ErrorList {
 	errs := field.ErrorList{}
 	if c.Format != DefaultLogFormat {
@@ -103,7 +101,7 @@ func Validate(c *LoggingConfiguration, featureGate featuregate.FeatureGate, fldP
 		}
 	}
 
-	// struct的类型是uint32，但是klog只接受正的int32。
+	// struct的类型是uint32,但是klog只接受正的int32.
 	if c.Verbosity > math.MaxInt32 {
 		errs = append(errs, field.Invalid(fldPath.Child("verbosity"), c.Verbosity, fmt.Sprintf("Must be <= %d", math.MaxInt32)))
 	}
@@ -182,19 +180,16 @@ func apply(c *LoggingConfiguration, featureGate featuregate.FeatureGate) error {
 // AddFlags adds command line flags for the configuration.
 func AddFlags(c *LoggingConfiguration, fs *pflag.FlagSet) {
 	formats := logRegistry.list()
-	fs.StringVar(&c.Format, "logging-format", c.Format, fmt.Sprintf("Sets the log format. Permitted formats: %s.", formats))
-	// No new log formats should be added after generation is of flag options
+	fs.StringVar(&c.Format, "logging-format", c.Format, fmt.Sprintf("设置日志格式.允许的格式: %s.", formats))
 	logRegistry.freeze()
 
-	fs.DurationVar(&c.FlushFrequency, LogFlushFreqFlagName, c.FlushFrequency, "Maximum number of seconds between log flushes")
-	fs.VarP(VerbosityLevelPflag(&c.Verbosity), "v", "v", "number for the log level verbosity")
-	fs.Var(VModuleConfigurationPflag(&c.VModule), "vmodule", "comma-separated list of pattern=N settings for file-filtered logging (only works for text log format)")
+	fs.DurationVar(&c.FlushFrequency, LogFlushFreqFlagName, c.FlushFrequency, "两次日志刷新之间的最大秒数")
+	fs.VarP(VerbosityLevelPflag(&c.Verbosity), "v", "v", "日志级别详细信息的编号")
+	fs.Var(VModuleConfigurationPflag(&c.VModule), "vmodule", "以逗号分隔的pattern=N设置列表,用于文件过滤日志记录(仅适用于文本日志格式)")
 
-	// JSON options. We only register them if "json" is a valid format. The
-	// config file API however always has them.
 	if _, err := logRegistry.get("json"); err == nil {
-		fs.BoolVar(&c.Options.JSON.SplitStream, "log-json-split-stream", false, "[Alpha] In JSON format, write error messages to stderr and info messages to stdout. The default is to write a single stream to stdout. Enable the LoggingAlphaOptions feature gate to use this.")
-		fs.Var(&c.Options.JSON.InfoBufferSize, "log-json-info-buffer-size", "[Alpha] In JSON format with split output streams, the info messages can be buffered for a while to increase performance. The default value of zero bytes disables buffering. The size can be specified as number of bytes (512), multiples of 1000 (1K), multiples of 1024 (2Ki), or powers of those (3M, 4G, 5Mi, 6Gi). Enable the LoggingAlphaOptions feature gate to use this.")
+		fs.BoolVar(&c.Options.JSON.SplitStream, "log-json-split-stream", false, "[Alpha] JSON格式，将错误消息写入stderr，将info消息写入stdout。默认情况下是将单个流写入标准输出。启用LoggingAlphaOptions特性开关来使用它。")
+		fs.Var(&c.Options.JSON.InfoBufferSize, "log-json-info-buffer-size", "[Alpha] 在带有分割输出流的JSON格式中，info消息可以被缓冲一段时间以提高性能。默认值为0字节禁用缓冲。大小可以指定为字节数(512)，1000的倍数(1K)， 1024的倍数(2Ki)，或这些的幂(3M, 4G, 5Mi, 6Gi)。启用LoggingAlphaOptions特性开关来使用它。")
 	}
 }
 
@@ -214,9 +209,7 @@ func SetRecommendedLoggingConfiguration(c *LoggingConfiguration) {
 	var empty resource.QuantityValue
 	if c.Options.JSON.InfoBufferSize == empty {
 		c.Options.JSON.InfoBufferSize = resource.QuantityValue{
-			// This is similar, but not quite the same as a default
-			// constructed instance.
-			Quantity: *resource.NewQuantity(0, resource.DecimalSI),
+			Quantity: *resource.NewQuantity(0, resource.DecimalSI), // 10进制
 		}
 		// This sets the unexported Quantity.s which will be compared
 		// by reflect.DeepEqual in some tests.

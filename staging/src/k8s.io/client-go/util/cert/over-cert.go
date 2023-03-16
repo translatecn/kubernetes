@@ -40,13 +40,13 @@ const duration365d = time.Hour * 24 * 365
 
 // Config 包含创建证书所需的基本字段  ,kube-apiserver 将提取的 User、Group 作为 RBAC 授权的用户标识；
 type Config struct {
-	CommonName   string   // CN：Common Name：kube-apiserver 从证书中提取该字段作为请求的用户名 (User Name)，浏览器使用该字段验证网站是否合法；
+	CommonName   string   // CN：Common Name：kube-apiserver 从证书中提取该字段作为请求的用户名 (User Name),浏览器使用该字段验证网站是否合法；
 	Organization []string // O：Organization：kube-apiserver 从证书中提取该字段作为请求用户所属的组 (Group)；
 	AltNames     AltNames
 	Usages       []x509.ExtKeyUsage
 }
 
-// AltNames 包含域名和IP地址，将被添加到API server的x509证书SubAltNames字段。这些值将直接传递给 x509.cert 对象。
+// AltNames 包含域名和IP地址,将被添加到API server的x509证书SubAltNames字段.这些值将直接传递给 x509.cert 对象.
 type AltNames struct {
 	DNSNames []string
 	IPs      []net.IP
@@ -76,21 +76,21 @@ func NewSelfSignedCACert(cfg Config, key crypto.Signer) (*x509.Certificate, erro
 	return x509.ParseCertificate(certDERBytes)
 }
 
-// GenerateSelfSignedCertKey 为指定主机创建自签名证书和密钥。
+// GenerateSelfSignedCertKey 为指定主机创建自签名证书和密钥.
 // Host可以是IP或DNS名称
-// 您还可以为证书指定额外的主题alt名称(ip或dns名称)。
+// 您还可以为证书指定额外的主题alt名称(ip或dns名称).
 func GenerateSelfSignedCertKey(host string, alternateIPs []net.IP, alternateDNS []string) ([]byte, []byte, error) {
 	return GenerateSelfSignedCertKeyWithFixtures(host, alternateIPs, alternateDNS, "")
 }
 
-// GenerateSelfSignedCertKeyWithFixtures 为给定主机创建自签名证书和密钥。
-// Host可以是IP或DNS名称。您还可以指定额外的主题alt名称(ip或dns名称) 获取证书。
+// GenerateSelfSignedCertKeyWithFixtures 为给定主机创建自签名证书和密钥.
+// Host可以是IP或DNS名称.您还可以指定额外的主题alt名称(ip或dns名称) 获取证书.
 // If fixtureDirectory is non-empty, it is a directory path which can contain pre-generated certs. The format is:
 // <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.crt
 // <host>_<ip>-<ip>_<alternateDNS>-<alternateDNS>.key
 // Certs/keys not existing in that directory are created.
 func GenerateSelfSignedCertKeyWithFixtures(host string, alternateIPs []net.IP, alternateDNS []string, fixtureDirectory string) ([]byte, []byte, error) {
-	validFrom := time.Now().Add(-time.Hour) // 提前一小时有效，以避免因时钟偏差而产生薄片
+	validFrom := time.Now().Add(-time.Hour) // 提前一小时有效,以避免因时钟偏差而产生薄片
 	maxAge := time.Hour * 24 * 365          // 有效期一年的自签证书
 
 	baseName := fmt.Sprintf("%s_%s_%s", host, strings.Join(ipsToStrings(alternateIPs), "-"), strings.Join(alternateDNS, "-"))

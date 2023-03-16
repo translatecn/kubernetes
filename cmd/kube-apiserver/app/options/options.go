@@ -69,10 +69,10 @@ type ServerRunOptions struct {
 	ProxyClientCertFile                 string
 	ProxyClientKeyFile                  string
 	EnableAggregatorRouting             bool
-	AggregatorRejectForwardingRedirects bool
+	AggregatorRejectForwardingRedirects bool // 聚合器拒绝将重定向响应转发回客户端.
 	MasterCount                         int
 	EndpointReconcilerType              string
-	ServiceAccountSigningKeyFile        string
+	ServiceAccountSigningKeyFile        string                        // 对sa用户进行jwt签名使用的 密钥文件
 	ServiceAccountIssuer                serviceaccount.TokenGenerator // 根据 /etc/kubernetes/pki/sa.key 生成对应的jwt token
 	ServiceAccountTokenMaxExpiration    time.Duration                 // token 过期时间
 	ShowHiddenMetricsForVersion         string
@@ -81,37 +81,33 @@ type ServerRunOptions struct {
 // NewServerRunOptions creates a new ServerRunOptions object with default parameters
 func NewServerRunOptions() *ServerRunOptions {
 	s := ServerRunOptions{
-		GenericServerRunOptions: genericoptions.NewServerRunOptions(),
-		Etcd:                    genericoptions.NewEtcdOptions(storagebackend.NewDefaultConfig(kubeoptions.DefaultEtcdPathPrefix, nil)),
-		SecureServing:           kubeoptions.NewSecureServingOptions(),
-		Audit:                   genericoptions.NewAuditOptions(),
-		Features:                genericoptions.NewFeatureOptions(),
-		Admission:               kubeoptions.NewAdmissionOptions(),
-		Authentication:          kubeoptions.NewBuiltInAuthenticationOptions().WithAll(),
-		Authorization:           kubeoptions.NewBuiltInAuthorizationOptions(),
-		CloudProvider:           kubeoptions.NewCloudProviderOptions(),
-		APIEnablement:           genericoptions.NewAPIEnablementOptions(),
-		EgressSelector:          genericoptions.NewEgressSelectorOptions(),
-		Metrics:                 metrics.NewOptions(),
-		Logs:                    logs.NewOptions(),
-		Traces:                  genericoptions.NewTracingOptions(),
+		GenericServerRunOptions: genericoptions.NewServerRunOptions(),                                                                   // kube-api-server ✅
+		Etcd:                    genericoptions.NewEtcdOptions(storagebackend.NewDefaultConfig(kubeoptions.DefaultEtcdPathPrefix, nil)), // kube-api-server ✅
+		SecureServing:           kubeoptions.NewSecureServingOptions(),                                                                  // kube-api-server ✅
+		Audit:                   genericoptions.NewAuditOptions(),                                                                       // kube-api-server ✅
+		Features:                genericoptions.NewFeatureOptions(),                                                                     // kube-api-server ✅
+		Admission:               kubeoptions.NewAdmissionOptions(),                                                                      // kube-api-server ✅
+		Authentication:          kubeoptions.NewBuiltInAuthenticationOptions().WithAll(),                                                // kube-api-server ✅
+		Authorization:           kubeoptions.NewBuiltInAuthorizationOptions(),                                                           // kube-api-server ✅
+		CloudProvider:           kubeoptions.NewCloudProviderOptions(),                                                                  // kube-api-server ✅
+		APIEnablement:           genericoptions.NewAPIEnablementOptions(),                                                               // kube-api-server ✅
+		EgressSelector:          genericoptions.NewEgressSelectorOptions(),                                                              // kube-api-server ✅
+		Metrics:                 metrics.NewOptions(),                                                                                   // kube-api-server ✅
+		Logs:                    logs.NewOptions(),                                                                                      // kube-api-server ✅
+		Traces:                  genericoptions.NewTracingOptions(),                                                                     // kube-api-server ✅
 
 		EnableLogsHandler:      true,
 		EventTTL:               1 * time.Hour,
 		MasterCount:            1,
 		EndpointReconcilerType: string(reconcilers.LeaseEndpointReconcilerType),
 		KubeletConfig: kubeletclient.KubeletClientConfig{
-			Port:         ports.KubeletPort,
-			ReadOnlyPort: ports.KubeletReadOnlyPort,
+			Port:         ports.KubeletPort,         // 10250
+			ReadOnlyPort: ports.KubeletReadOnlyPort, //
 			PreferredAddressTypes: []string{
 				// --override-hostname
 				string(api.NodeHostName),
-
-				// internal, preferring DNS if reported
 				string(api.NodeInternalDNS),
 				string(api.NodeInternalIP),
-
-				// external, preferring DNS if reported
 				string(api.NodeExternalDNS),
 				string(api.NodeExternalIP),
 			},
@@ -120,8 +116,6 @@ func NewServerRunOptions() *ServerRunOptions {
 		ServiceNodePortRange:                kubeoptions.DefaultServiceNodePortRange,
 		AggregatorRejectForwardingRedirects: true,
 	}
-
-	// Overwrite the default for storage data format.
 	s.Etcd.DefaultStorageMediaType = "application/vnd.kubernetes.protobuf"
 
 	return &s
@@ -130,104 +124,51 @@ func NewServerRunOptions() *ServerRunOptions {
 // Flags returns flags for a specific APIServer by section name
 func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	// Add the generic flags.
-	s.GenericServerRunOptions.AddUniversalFlags(fss.FlagSet("generic"))
-	s.Etcd.AddFlags(fss.FlagSet("etcd"))
-	s.SecureServing.AddFlags(fss.FlagSet("secure serving"))
-	s.Audit.AddFlags(fss.FlagSet("auditing"))
-	s.Features.AddFlags(fss.FlagSet("features"))
-	s.Authentication.AddFlags(fss.FlagSet("authentication"))
-	s.Authorization.AddFlags(fss.FlagSet("authorization"))
-	s.CloudProvider.AddFlags(fss.FlagSet("cloud provider"))
-	s.APIEnablement.AddFlags(fss.FlagSet("API enablement"))
-	s.EgressSelector.AddFlags(fss.FlagSet("egress selector"))
-	s.Admission.AddFlags(fss.FlagSet("admission"))
-	s.Metrics.AddFlags(fss.FlagSet("metrics"))
-	logsapi.AddFlags(s.Logs, fss.FlagSet("logs"))
-	s.Traces.AddFlags(fss.FlagSet("traces"))
+	s.GenericServerRunOptions.AddUniversalFlags(fss.FlagSet("generic")) // ✅api server
+	s.Etcd.AddFlags(fss.FlagSet("etcd"))                                // ✅api server
+	s.SecureServing.AddFlags(fss.FlagSet("secure serving"))             // ✅api server
+	s.Audit.AddFlags(fss.FlagSet("auditing"))                           // ✅api server
+	s.Features.AddFlags(fss.FlagSet("features"))                        // ✅api server
+	s.Authentication.AddFlags(fss.FlagSet("authentication"))            // ✅api server
+	s.Authorization.AddFlags(fss.FlagSet("authorization"))              // ✅api server
+	s.CloudProvider.AddFlags(fss.FlagSet("cloud provider"))             // ✅api server
+	s.APIEnablement.AddFlags(fss.FlagSet("API enablement"))             // ✅api server
+	s.EgressSelector.AddFlags(fss.FlagSet("egress selector"))           // ✅api server
+	s.Admission.AddFlags(fss.FlagSet("admission"))                      // ✅api server
+	s.Metrics.AddFlags(fss.FlagSet("metrics"))                          // ✅api server
+	logsapi.AddFlags(s.Logs, fss.FlagSet("logs"))                       // ✅api server
+	s.Traces.AddFlags(fss.FlagSet("traces"))                            // ✅api server
 
-	// Note: the weird ""+ in below lines seems to be the only way to get gofmt to
-	// arrange these text blocks sensibly. Grrr.
 	fs := fss.FlagSet("misc")
-	fs.DurationVar(&s.EventTTL, "event-ttl", s.EventTTL,
-		"Amount of time to retain events.")
-
-	fs.BoolVar(&s.AllowPrivileged, "allow-privileged", s.AllowPrivileged,
-		"If true, allow privileged containers. [default=false]")
-
-	fs.BoolVar(&s.EnableLogsHandler, "enable-logs-handler", s.EnableLogsHandler,
-		"If true, install a /logs handler for the apiserver logs.")
-	fs.MarkDeprecated("enable-logs-handler", "This flag will be removed in v1.19")
-
-	fs.Int64Var(&s.MaxConnectionBytesPerSec, "max-connection-bytes-per-sec", s.MaxConnectionBytesPerSec, ""+
-		"If non-zero, throttle each user connection to this number of bytes/sec. "+
-		"Currently only applies to long-running requests.")
-
-	fs.IntVar(&s.MasterCount, "apiserver-count", s.MasterCount,
-		"The number of apiservers running in the cluster, must be a positive number. (In use when --endpoint-reconciler-type=master-count is enabled.)")
+	fs.DurationVar(&s.EventTTL, "event-ttl", s.EventTTL, "保留事件的时间.")
+	fs.BoolVar(&s.AllowPrivileged, "allow-privileged", s.AllowPrivileged, "如果为真,则允许特权容器.(default=false)")
+	fs.BoolVar(&s.EnableLogsHandler, "enable-logs-handler", s.EnableLogsHandler, "如果是,为apiserver日志添加一个 /logs 处理程序.")
+	fs.MarkDeprecated("enable-logs-handler", "这个标志将在v1.19中被移除")
+	fs.Int64Var(&s.MaxConnectionBytesPerSec, "max-connection-bytes-per-sec", s.MaxConnectionBytesPerSec, "如果非零,将每个用户连接限制为这个字节/秒数.目前仅适用于长时间运行的请求.")
+	fs.IntVar(&s.MasterCount, "apiserver-count", s.MasterCount, "集群中运行的apiservers的数量必须为正数.(在启用--end-reconciler-type=master-count时使用.)")
 	fs.MarkDeprecated("apiserver-count", "apiserver-count is deprecated and will be removed in a future version.")
-
-	fs.StringVar(&s.EndpointReconcilerType, "endpoint-reconciler-type", s.EndpointReconcilerType,
-		"Use an endpoint reconciler ("+strings.Join(reconcilers.AllTypes.Names(), ", ")+") master-count is deprecated, and will be removed in a future version.")
-
+	fs.StringVar(&s.EndpointReconcilerType, "endpoint-reconciler-type", s.EndpointReconcilerType, "使用端点协调器("+strings.Join(reconcilers.AllTypes.Names(), ", ")+") master-count 已弃用,并将在未来的版本中删除.")
 	// See #14282 for details on how to test/try this option out.
 	// TODO: remove this comment once this option is tested in CI.
-	fs.IntVar(&s.KubernetesServiceNodePort, "kubernetes-service-node-port", s.KubernetesServiceNodePort, ""+
-		"If non-zero, the Kubernetes master service (which apiserver creates/maintains) will be "+
-		"of type NodePort, using this as the value of the port. If zero, the Kubernetes master "+
-		"service will be of type ClusterIP.")
-
-	fs.StringVar(&s.ServiceClusterIPRanges, "service-cluster-ip-range", s.ServiceClusterIPRanges,
-		"集群服务的IP范围。这不能与分配给节点或pod的任何IP范围重叠。最多允许2个双栈cidr")
-
-	fs.Var(&s.ServiceNodePortRange, "service-node-port-range", ""+
-		"A port range to reserve for services with NodePort visibility.  This must not overlap with the ephemeral port range on nodes.  "+
-		"Example: '30000-32767'. Inclusive at both ends of the range.")
+	fs.IntVar(&s.KubernetesServiceNodePort, "kubernetes-service-node-port", s.KubernetesServiceNodePort, "如果非零，Kubernetes主服务(apiserver创建/维护的主服务)将是NodePort类型，使用这个作为端口的值。如果为0，则Kubernetes主服务的类型为ClusterIP。")
+	fs.StringVar(&s.ServiceClusterIPRanges, "service-cluster-ip-range", s.ServiceClusterIPRanges, "集群服务的IP范围.这不能与分配给节点或pod的任何IP范围重叠.最多允许2个双栈cidr")
+	fs.Var(&s.ServiceNodePortRange, "service-node-port-range", "为具有NodePort可见性的服务保留的端口范围  30000 - 32767")
 
 	// Kubelet related flags:
-	fs.StringSliceVar(&s.KubeletConfig.PreferredAddressTypes, "kubelet-preferred-address-types", s.KubeletConfig.PreferredAddressTypes,
-		"List of the preferred NodeAddressTypes to use for kubelet connections.")
-
-	fs.UintVar(&s.KubeletConfig.Port, "kubelet-port", s.KubeletConfig.Port,
-		"DEPRECATED: kubelet port.")
-	fs.MarkDeprecated("kubelet-port", "kubelet-port is deprecated and will be removed.")
-
-	fs.UintVar(&s.KubeletConfig.ReadOnlyPort, "kubelet-read-only-port", s.KubeletConfig.ReadOnlyPort,
-		"DEPRECATED: kubelet read only port.")
-	fs.MarkDeprecated("kubelet-read-only-port", "kubelet-read-only-port is deprecated and will be removed.")
-
-	fs.DurationVar(&s.KubeletConfig.HTTPTimeout, "kubelet-timeout", s.KubeletConfig.HTTPTimeout,
-		"Timeout for kubelet operations.")
-
-	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CertFile, "kubelet-client-certificate", s.KubeletConfig.TLSClientConfig.CertFile,
-		"Path to a client cert file for TLS.")
-
-	fs.StringVar(&s.KubeletConfig.TLSClientConfig.KeyFile, "kubelet-client-key", s.KubeletConfig.TLSClientConfig.KeyFile,
-		"Path to a client key file for TLS.")
-
-	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CAFile, "kubelet-certificate-authority", s.KubeletConfig.TLSClientConfig.CAFile,
-		"Path to a cert file for the certificate authority.")
-
-	fs.StringVar(&s.ProxyClientCertFile, "proxy-client-cert-file", s.ProxyClientCertFile, ""+
-		"Client certificate used to prove the identity of the aggregator or kube-apiserver "+
-		"when it must call out during a request. This includes proxying requests to a user "+
-		"api-server and calling out to webhook admission plugins. It is expected that this "+
-		"cert includes a signature from the CA in the --requestheader-client-ca-file flag. "+
-		"That CA is published in the 'extension-apiserver-authentication' configmap in "+
-		"the kube-system namespace. Components receiving calls from kube-aggregator should "+
-		"use that CA to perform their half of the mutual TLS verification.")
-	fs.StringVar(&s.ProxyClientKeyFile, "proxy-client-key-file", s.ProxyClientKeyFile, ""+
-		"Private key for the client certificate used to prove the identity of the aggregator or kube-apiserver "+
-		"when it must call out during a request. This includes proxying requests to a user "+
-		"api-server and calling out to webhook admission plugins.")
-
-	fs.BoolVar(&s.EnableAggregatorRouting, "enable-aggregator-routing", s.EnableAggregatorRouting,
-		"Turns on aggregator routing requests to endpoints IP rather than cluster IP.")
-
-	fs.BoolVar(&s.AggregatorRejectForwardingRedirects, "aggregator-reject-forwarding-redirect", s.AggregatorRejectForwardingRedirects,
-		"Aggregator reject forwarding redirect response back to client.")
-
-	fs.StringVar(&s.ServiceAccountSigningKeyFile, "service-account-signing-key-file", s.ServiceAccountSigningKeyFile, ""+
-		"包含服务帐户令牌颁发者的当前私钥的文件的路径。发行者将使用此私钥对已发行的ID令牌进行签名。")
+	fs.StringSliceVar(&s.KubeletConfig.PreferredAddressTypes, "kubelet-preferred-address-types", s.KubeletConfig.PreferredAddressTypes, "用于kubelet连接的首选node address type列表。")
+	fs.UintVar(&s.KubeletConfig.Port, "kubelet-port", s.KubeletConfig.Port, "弃用: kubelet port.")
+	fs.MarkDeprecated("kubelet-port", "kubelet-port 已弃用并将被删除。")
+	fs.UintVar(&s.KubeletConfig.ReadOnlyPort, "kubelet-read-only-port", s.KubeletConfig.ReadOnlyPort, "弃用: kubelet 只读端口")
+	fs.MarkDeprecated("kubelet-read-only-port", "kubelet-read-only-port 已弃用并将被删除。")
+	fs.DurationVar(&s.KubeletConfig.HTTPTimeout, "kubelet-timeout", s.KubeletConfig.HTTPTimeout, "kubelet操作超时.")
+	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CertFile, "kubelet-client-certificate", s.KubeletConfig.TLSClientConfig.CertFile, "TLS的客户端证书文件的路径。")
+	fs.StringVar(&s.KubeletConfig.TLSClientConfig.KeyFile, "kubelet-client-key", s.KubeletConfig.TLSClientConfig.KeyFile, "TLS的客户端密钥文件的路径。")
+	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CAFile, "kubelet-certificate-authority", s.KubeletConfig.TLSClientConfig.CAFile, "证书颁发机构的证书文件的路径。")
+	fs.StringVar(&s.ProxyClientCertFile, "proxy-client-cert-file", s.ProxyClientCertFile, "客户端证书，用于在请求期间必须调用聚合器或kube-apiserver时证明它的身份。这包括代理请求到用户api服务器和调用webhook许可插件。")
+	fs.StringVar(&s.ProxyClientKeyFile, "proxy-client-key-file", s.ProxyClientKeyFile, "客户端证书的私钥，用于在请求期间必须调用聚合器或kube-apiserver时证明聚合器的身份。这包括代理请求到用户api服务器和调用webhook许可插件。")
+	fs.BoolVar(&s.EnableAggregatorRouting, "enable-aggregator-routing", s.EnableAggregatorRouting, "打开聚合器将请求路由到端点IP而不是集群IP。")
+	fs.BoolVar(&s.AggregatorRejectForwardingRedirects, "aggregator-reject-forwarding-redirect", s.AggregatorRejectForwardingRedirects, "聚合器拒绝将重定向响应转发回客户端.")
+	fs.StringVar(&s.ServiceAccountSigningKeyFile, "service-account-signing-key-file", s.ServiceAccountSigningKeyFile, "对sa用户进行jwt签名使用的 密钥文件.")
 
 	return fss
 }

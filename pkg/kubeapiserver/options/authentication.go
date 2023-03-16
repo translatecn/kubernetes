@@ -45,17 +45,17 @@ import (
 
 // BuiltInAuthenticationOptions 包含API服务器的所有内置身份验证选项
 type BuiltInAuthenticationOptions struct {
-	APIAudiences         []string
-	Anonymous            *AnonymousAuthenticationOptions // 匿名授权
-	BootstrapToken       *BootstrapTokenAuthenticationOptions
-	ClientCert           *genericoptions.ClientCertAuthenticationOptions
-	OIDC                 *OIDCAuthenticationOptions
-	RequestHeader        *genericoptions.RequestHeaderAuthenticationOptions
-	ServiceAccounts      *ServiceAccountAuthenticationOptions
-	TokenFile            *TokenFileAuthenticationOptions
-	WebHook              *WebHookAuthenticationOptions
-	TokenSuccessCacheTTL time.Duration
-	TokenFailureCacheTTL time.Duration
+	APIAudiences         []string                                           //
+	Anonymous            *AnonymousAuthenticationOptions                    // 匿名授权
+	BootstrapToken       *BootstrapTokenAuthenticationOptions               //
+	ClientCert           *genericoptions.ClientCertAuthenticationOptions    //
+	OIDC                 *OIDCAuthenticationOptions                         //
+	RequestHeader        *genericoptions.RequestHeaderAuthenticationOptions //
+	ServiceAccounts      *ServiceAccountAuthenticationOptions               //
+	TokenFile            *TokenFileAuthenticationOptions                    //
+	WebHook              *WebHookAuthenticationOptions                      //
+	TokenSuccessCacheTTL time.Duration                                      //
+	TokenFailureCacheTTL time.Duration                                      //
 }
 
 // AnonymousAuthenticationOptions contains anonymous authentication options for API Server
@@ -85,7 +85,7 @@ type OIDCAuthenticationOptions struct {
 type ServiceAccountAuthenticationOptions struct {
 	KeyFiles         []string
 	Lookup           bool
-	Issuers          []string // 其全称为 “Issuer Identifier”，中文意思就是：颁发者身份标识，表示 Token 颁发者的唯一标识，一般是一个 http(s) url，如 https://www.baidu.com
+	Issuers          []string // 其全称为 “Issuer Identifier”,中文意思就是：颁发者身份标识,表示 Token 颁发者的唯一标识,一般是一个 http(s) url,如 https://www.baidu.com
 	JWKSURI          string
 	MaxExpiration    time.Duration
 	ExtendExpiration bool
@@ -98,14 +98,10 @@ type TokenFileAuthenticationOptions struct {
 
 // WebHookAuthenticationOptions contains web hook authentication options for API Server
 type WebHookAuthenticationOptions struct {
-	ConfigFile string
-	Version    string
-	CacheTTL   time.Duration
-
-	// RetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
-	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
-	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
-	RetryBackoff *wait.Backoff
+	ConfigFile   string        //
+	Version      string        //
+	CacheTTL     time.Duration //
+	RetryBackoff *wait.Backoff // 认证webhook重试逻辑的回退参数
 }
 
 // NewBuiltInAuthenticationOptions create a new BuiltInAuthenticationOptions, just set default token cache TTL
@@ -241,23 +237,16 @@ func (o *BuiltInAuthenticationOptions) Validate() []error {
 
 // AddFlags returns flags of authentication for a API Server
 func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringSliceVar(&o.APIAudiences, "api-audiences", o.APIAudiences, ""+
-		"Identifiers of the API. The service account token authenticator will validate that "+
-		"tokens used against the API are bound to at least one of these audiences. If the "+
-		"--service-account-issuer flag is configured and this flag is not, this field "+
-		"defaults to a single element list containing the issuer URL.")
+	fs.StringSliceVar(&o.APIAudiences, "api-audiences", o.APIAudiences,
+		"API的标识符.sa 令牌验证器将验证针对API使用的令牌是否绑定到这些使用者的至少一个.如果配置了 --service-account-issuer 标志而没有配置该标志,则该字段默认为包含发行者URL的单个元素列表.",
+	)
 
 	if o.Anonymous != nil {
-		fs.BoolVar(&o.Anonymous.Allow, "anonymous-auth", o.Anonymous.Allow, ""+
-			"Enables anonymous requests to the secure port of the API server. "+
-			"Requests that are not rejected by another authentication method are treated as anonymous requests. "+
-			"Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated.")
+		fs.BoolVar(&o.Anonymous.Allow, "anonymous-auth", o.Anonymous.Allow, "启用匿名请求到API服务器的安全端口。未被其他身份验证方法拒绝的请求被视为匿名请求。匿名请求的用户名为system: Anonymous，组名为system:unauthenticated。")
 	}
 
 	if o.BootstrapToken != nil {
-		fs.BoolVar(&o.BootstrapToken.Enable, "enable-bootstrap-token-auth", o.BootstrapToken.Enable, ""+
-			"Enable to allow secrets of type 'bootstrap.kubernetes.io/token' in the 'kube-system' "+
-			"namespace to be used for TLS bootstrapping authentication.")
+		fs.BoolVar(&o.BootstrapToken.Enable, "enable-bootstrap-token-auth", o.BootstrapToken.Enable, "启用允许'bootstrap.kubernetes类型的secret io/token'在'kube-system'命名空间中用于TLS引导身份验证。")
 	}
 
 	if o.ClientCert != nil {
@@ -265,45 +254,17 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	if o.OIDC != nil {
-		fs.StringVar(&o.OIDC.IssuerURL, "oidc-issuer-url", o.OIDC.IssuerURL, ""+
-			"The URL of the OpenID issuer, only HTTPS scheme will be accepted. "+
-			"If set, it will be used to verify the OIDC JSON Web Token (JWT).")
-
-		fs.StringVar(&o.OIDC.ClientID, "oidc-client-id", o.OIDC.ClientID,
-			"The client ID for the OpenID Connect client, must be set if oidc-issuer-url is set.")
-
-		fs.StringVar(&o.OIDC.CAFile, "oidc-ca-file", o.OIDC.CAFile, ""+
-			"If set, the OpenID server's certificate will be verified by one of the authorities "+
-			"in the oidc-ca-file, otherwise the host's root CA set will be used.")
-
-		fs.StringVar(&o.OIDC.UsernameClaim, "oidc-username-claim", "sub", ""+
-			"The OpenID claim to use as the user name. Note that claims other than the default ('sub') "+
-			"is not guaranteed to be unique and immutable. This flag is experimental, please see "+
-			"the authentication documentation for further details.")
-
-		fs.StringVar(&o.OIDC.UsernamePrefix, "oidc-username-prefix", "", ""+
-			"If provided, all usernames will be prefixed with this value. If not provided, "+
-			"username claims other than 'email' are prefixed by the issuer URL to avoid "+
-			"clashes. To skip any prefixing, provide the value '-'.")
-
-		fs.StringVar(&o.OIDC.GroupsClaim, "oidc-groups-claim", "", ""+
-			"If provided, the name of a custom OpenID Connect claim for specifying user groups. "+
-			"The claim value is expected to be a string or array of strings. This flag is experimental, "+
-			"please see the authentication documentation for further details.")
-
-		fs.StringVar(&o.OIDC.GroupsPrefix, "oidc-groups-prefix", "", ""+
-			"If provided, all groups will be prefixed with this value to prevent conflicts with "+
-			"other authentication strategies.")
-
-		fs.StringSliceVar(&o.OIDC.SigningAlgs, "oidc-signing-algs", []string{"RS256"}, ""+
-			"Comma-separated list of allowed JOSE asymmetric signing algorithms. JWTs with a "+
-			"supported 'alg' header values are: RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512. "+
-			"Values are defined by RFC 7518 https://tools.ietf.org/html/rfc7518#section-3.1.")
-
-		fs.Var(cliflag.NewMapStringStringNoSplit(&o.OIDC.RequiredClaims), "oidc-required-claim", ""+
-			"A key=value pair that describes a required claim in the ID Token. "+
-			"If set, the claim is verified to be present in the ID Token with a matching value. "+
-			"Repeat this flag to specify multiple claims.")
+		// 如果设置了，OpenID服务器的证书将由oidc- CA文件中的一个权威机构进行验证，否则将使用主机的根CA集。
+		// https://www.jianshu.com/p/cb50363a47be
+		fs.StringVar(&o.OIDC.IssuerURL, "oidc-issuer-url", o.OIDC.IssuerURL, "OpenID颁发者的URL，只接受HTTPS方案。如果设置了，它将用于验证OIDC JSON Web令牌(JWT)。")
+		fs.StringVar(&o.OIDC.ClientID, "oidc-client-id", o.OIDC.ClientID, "如果设置了oidc-issuer-url，则必须设置OpenID Connect客户端的客户端ID。")
+		fs.StringVar(&o.OIDC.CAFile, "oidc-ca-file", o.OIDC.CAFile, "如果设置了，OpenID服务器的证书将由 oidc-ca-file 中的一个权威机构进行验证，否则将使用主机的根CA集。")
+		fs.StringVar(&o.OIDC.UsernameClaim, "oidc-username-claim", "sub", "OpenID声明用作用户名。注意，除了默认值('sub')之外的声明并不保证是唯一的和不可变的。")
+		fs.StringVar(&o.OIDC.UsernamePrefix, "oidc-username-prefix", "", "如果提供，所有用户名都将以该值作为前缀。")
+		fs.StringVar(&o.OIDC.GroupsClaim, "oidc-groups-claim", "", "如果提供，则指定用户组的自定义OpenID Connect声明的名称。")
+		fs.StringVar(&o.OIDC.GroupsPrefix, "oidc-groups-prefix", "", "如果提供，所有组都将以该值作为前缀，以防止与其他身份验证策略冲突。")
+		fs.StringSliceVar(&o.OIDC.SigningAlgs, "oidc-signing-algs", []string{"RS256"}, "允许的JOSE非对称签名算法的逗号分隔列表。")
+		fs.Var(cliflag.NewMapStringStringNoSplit(&o.OIDC.RequiredClaims), "oidc-required-claim", "在ID令牌中描述必需声明的键=值对。如果设置了，则验证该声明是否存在于具有匹配值的ID令牌中。可指定多个声明。")
 	}
 
 	if o.RequestHeader != nil {
@@ -311,49 +272,37 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	if o.ServiceAccounts != nil {
-		fs.StringArrayVar(&o.ServiceAccounts.KeyFiles, "service-account-key-file", o.ServiceAccounts.KeyFiles, ""+
-			"File containing PEM-encoded x509 RSA or ECDSA private or public keys, used to verify "+
-			"ServiceAccount tokens. The specified file can contain multiple keys, and the flag can "+
-			"be specified multiple times with different files. If unspecified, "+
-			"--tls-private-key-file is used. Must be specified when "+
-			"--service-account-signing-key-file is provided")
+		fs.StringArrayVar(&o.ServiceAccounts.KeyFiles, "service-account-key-file", o.ServiceAccounts.KeyFiles,
+			"包含pem编码的x509 RSA或ECDSA私钥或公钥的文件，用于验证ServiceAccount令牌。"+
+				"指定的文件可以包含多个键，并且该标志可以在不同的文件中指定多次。"+
+				"如果未指定，则使用——tls-private-key-file。提供——service-account-signing-key-file时必须指定")
 
 		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup,
-			"If true, validate ServiceAccount tokens exist in etcd as part of authentication.")
+			"如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。")
 
 		fs.StringArrayVar(&o.ServiceAccounts.Issuers, "service-account-issuer", o.ServiceAccounts.Issuers,
-			"服务帐户令牌发行者的标识符。发行者将在已发行令牌的\"iss\"声明中声明此标识符。")
+			"服务帐户令牌发行者的标识符.发行者将在已发行令牌的\"iss\"声明中声明此标识符.")
 
-		fs.StringVar(&o.ServiceAccounts.JWKSURI, "service-account-jwks-uri", o.ServiceAccounts.JWKSURI, ""+
-			"Overrides the URI for the JSON Web Key Set in the discovery doc served at "+
-			"/.well-known/openid-configuration. This flag is useful if the discovery doc"+
-			"and key set are served to relying parties from a URL other than the "+
-			"API server's external (as auto-detected or overridden with external-hostname). ")
+		fs.StringVar(&o.ServiceAccounts.JWKSURI, "service-account-jwks-uri", o.ServiceAccounts.JWKSURI,
+			"覆盖在/.famous/openid-configuration swagger文档中JSON Web Key Set的URI。"+
+				"如果发现文档和密钥集是从API服务器的外部URL(自动检测或用外部主机名覆盖)以外的URL提供给依赖方，则此标志很有用。")
 
-		fs.DurationVar(&o.ServiceAccounts.MaxExpiration, "service-account-max-token-expiration", o.ServiceAccounts.MaxExpiration, ""+
-			"由服务帐户令牌颁发者创建的令牌的最大有效期。如果请求的TokenRequest有效时间大于此值，则将发出具有此值有效时间的令牌")
+		fs.DurationVar(&o.ServiceAccounts.MaxExpiration, "service-account-max-token-expiration", o.ServiceAccounts.MaxExpiration,
+			"由服务帐户令牌颁发者创建的令牌的最大有效期.如果请求的TokenRequest有效时间大于此值,则将发出具有此值有效时间的令牌")
 
 		fs.BoolVar(&o.ServiceAccounts.ExtendExpiration, "service-account-extend-token-expiration", o.ServiceAccounts.ExtendExpiration,
-			"在令牌生成过程中打开预计的服务帐户过期扩展，这有助于从遗留令牌安全过渡到绑定服务帐户令牌功能。"+
-				"如果启用了该标志，则允许注入的令牌将被延长至1年，以防止转换期间出现意外故障，忽略 service-account-max-token-expiration 的值。")
+			"在令牌生成过程中打开预计的服务帐户过期扩展,这有助于从遗留令牌安全过渡到绑定服务帐户令牌功能."+
+				"如果启用了该标志,则允许注入的令牌将被延长至1年,以防止转换期间出现意外故障,忽略 service-account-max-token-expiration 的值.")
 	}
 
 	if o.TokenFile != nil {
-		fs.StringVar(&o.TokenFile.TokenFile, "token-auth-file", o.TokenFile.TokenFile, ""+
-			"If set, the file that will be used to secure the secure port of the API server "+
-			"via token authentication.")
+		fs.StringVar(&o.TokenFile.TokenFile, "token-auth-file", o.TokenFile.TokenFile, "如果设置了，将用于通过令牌身份验证保护API服务器安全端口的文件。")
 	}
 
 	if o.WebHook != nil {
-		fs.StringVar(&o.WebHook.ConfigFile, "authentication-token-webhook-config-file", o.WebHook.ConfigFile, ""+
-			"File with webhook configuration for token authentication in kubeconfig format. "+
-			"The API server will query the remote service to determine authentication for bearer tokens.")
-
-		fs.StringVar(&o.WebHook.Version, "authentication-token-webhook-version", o.WebHook.Version, ""+
-			"The API version of the authentication.k8s.io TokenReview to send to and expect from the webhook.")
-
-		fs.DurationVar(&o.WebHook.CacheTTL, "authentication-token-webhook-cache-ttl", o.WebHook.CacheTTL,
-			"The duration to cache responses from the webhook token authenticator.")
+		fs.StringVar(&o.WebHook.ConfigFile, "authentication-token-webhook-config-file", o.WebHook.ConfigFile, "kubecconfig格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。")
+		fs.StringVar(&o.WebHook.Version, "authentication-token-webhook-version", o.WebHook.Version, "authentication.k8s的API版本。io TokenReview发送到webhook和期望收到的。")
+		fs.DurationVar(&o.WebHook.CacheTTL, "authentication-token-webhook-cache-ttl", o.WebHook.CacheTTL, "缓存webhook令牌验证器响应的持续时间。")
 	}
 }
 
@@ -504,7 +453,7 @@ func (o *BuiltInAuthenticationOptions) ApplyAuthorization(authorization *BuiltIn
 	// authorization ModeAlwaysAllow cannot be combined with AnonymousAuth.
 	// in such a case the AnonymousAuth is stomped to false and you get a message
 	if o.Anonymous.Allow && sets.NewString(authorization.Modes...).Has(authzmodes.ModeAlwaysAllow) {
-		klog.Warningf("AnonymousAuth is not allowed with the AlwaysAllow authorizer. Resetting AnonymousAuth to false. You should use a different authorizer")
+		klog.Warningf("AlwaysAllow授权器不允许使用AnonymousAuth。将AnonymousAuth重置为false。您应该使用不同的授权程序")
 		o.Anonymous.Allow = false
 	}
 }

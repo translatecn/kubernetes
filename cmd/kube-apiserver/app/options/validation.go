@@ -102,6 +102,7 @@ func validateServiceNodePort(options *ServerRunOptions) []error {
 	return errs
 }
 
+// 验证sa token生成的必要参数
 func validateTokenRequest(options *ServerRunOptions) []error {
 	var errs []error
 
@@ -163,7 +164,7 @@ func (s *ServerRunOptions) Validate() []error {
 		aggregatorscheme.Scheme,
 	)...) // 启用哪些api ,校验
 	errs = append(errs, validateTokenRequest(s)...)
-	errs = append(errs, s.Metrics.Validate()...)
+	errs = append(errs, s.Metrics.Validate()...) // 额外启用的指标监控
 
 	return errs
 }

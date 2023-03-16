@@ -8,11 +8,11 @@ sure that no new API rule violation is introduced into our code base.
 
 The report file [violation\_exceptions.list](./violation_exceptions.list) is in format of:
 
- * ***API rule violation: \<RULE\>,\<PACKAGE\>,\<TYPE\>,\<FIELD\>***
+* ***API rule violation: \<RULE\>,\<PACKAGE\>,\<TYPE\>,\<FIELD\>***
 
 e.g.
 
- * ***API rule violation: names_match,k8s.io/api/core/v1,Event,ReportingController***
+* ***API rule violation: names_match,k8s.io/api/core/v1,Event,ReportingController***
 
 And the violation list is sorted alphabetically in each of the \<RULE\>, \<PACKAGE\>, \<TYPE\>, \<FIELD\> levels.
 
@@ -29,7 +29,7 @@ exception.
 If you're removing violations from the exception list, or if you have good
 reasons to add new violations to this list, please update the file using:
 
- - `UPDATE_API_KNOWN_VIOLATIONS=true ./hack/update-codegen.sh`
+- `UPDATE_API_KNOWN_VIOLATIONS=true ./hack/update-codegen.sh`
 
 It is up to API reviewers to review the list and make sure new APIs follow our API conventions.
 

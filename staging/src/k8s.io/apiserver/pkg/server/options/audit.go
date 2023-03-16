@@ -65,31 +65,17 @@ func appendBackend(existing, newBackend audit.Backend) audit.Backend {
 }
 
 type AuditOptions struct {
-	// Policy configuration file for filtering audit events that are captured.
-	// If unspecified, a default is provided.
-	PolicyFile string
-
-	// Plugin options
+	PolicyFile     string // 用于过滤捕获的审计事件的配置文件.如果未指定,则提供默认值.
 	LogOptions     AuditLogOptions
 	WebhookOptions AuditWebhookOptions
 }
 
 const (
-	// ModeBatch indicates that the audit backend should buffer audit events
-	// internally, sending batch updates either once a certain number of
-	// events have been received or a certain amount of time has passed.
-	ModeBatch = "batch"
-	// ModeBlocking causes the audit backend to block on every attempt to process
-	// a set of events. This causes requests to the API server to wait for the
-	// flush before sending a response.
-	ModeBlocking = "blocking"
-	// ModeBlockingStrict is the same as ModeBlocking, except when there is
-	// a failure during audit logging at RequestReceived stage, the whole
-	// request to apiserver will fail.
-	ModeBlockingStrict = "blocking-strict"
+	ModeBatch          = "batch"           // 审计后端应该在内部缓冲审计事件,在接收到一定数量的事件或经过一定时间后发送批量更新.
+	ModeBlocking       = "blocking"        // 审计后端在每次尝试处理一组事件时阻塞.这会导致对API服务器的请求在发送响应之前等待刷新.
+	ModeBlockingStrict = "blocking-strict" // 和ModeBlocking是一样的,除了在RequestReceived阶段的审计日志中有一个失败,整个请求到apiserver将失败.
 )
 
-// AllowedModes is the modes known for audit backends.
 var AllowedModes = []string{
 	ModeBatch,
 	ModeBlocking,
@@ -97,13 +83,8 @@ var AllowedModes = []string{
 }
 
 type AuditBatchOptions struct {
-	// Should the backend asynchronous batch events to the webhook backend or
-	// should the backend block responses?
-	//
-	// Defaults to asynchronous batch events.
-	Mode string
-	// Configuration for batching backend. Only used in batch mode.
-	BatchConfig pluginbuffered.BatchConfig
+	Mode        string                     //后端应该异步批处理事件到webhook后端或后端应该阻止响应? 默认为异步批处理事件.
+	BatchConfig pluginbuffered.BatchConfig // 只有在batch模式时使用
 }
 
 type AuditTruncateOptions struct {
@@ -114,31 +95,26 @@ type AuditTruncateOptions struct {
 	TruncateConfig plugintruncate.Config
 }
 
-// AuditLogOptions determines the output of the structured audit log by default.
+// AuditLogOptions 默认情况下确定结构化审计日志的输出.
 type AuditLogOptions struct {
-	Path       string
-	MaxAge     int
-	MaxBackups int
-	MaxSize    int
-	Format     string
-	Compress   bool
-
+	Path            string
+	MaxAge          int
+	MaxBackups      int
+	MaxSize         int
+	Format          string
+	Compress        bool
 	BatchOptions    AuditBatchOptions
 	TruncateOptions AuditTruncateOptions
-
 	// API group version used for serializing audit events.
 	GroupVersionString string
 }
 
 // AuditWebhookOptions control the webhook configuration for audit events.
 type AuditWebhookOptions struct {
-	ConfigFile     string
-	InitialBackoff time.Duration
-
-	BatchOptions    AuditBatchOptions
-	TruncateOptions AuditTruncateOptions
-
-	// API group version used for serializing audit events.
+	ConfigFile         string
+	InitialBackoff     time.Duration
+	BatchOptions       AuditBatchOptions
+	TruncateOptions    AuditTruncateOptions
 	GroupVersionString string
 }
 
@@ -152,10 +128,11 @@ type AuditDynamicOptions struct {
 	BatchConfig *pluginbuffered.BatchConfig
 }
 
+// NewAuditOptions 👌🏻
 func NewAuditOptions() *AuditOptions {
 	return &AuditOptions{
 		WebhookOptions: AuditWebhookOptions{
-			InitialBackoff: pluginwebhook.DefaultInitialBackoffDelay,
+			InitialBackoff: pluginwebhook.DefaultInitialBackoffDelay, //初始补偿时间 10s
 			BatchOptions: AuditBatchOptions{
 				Mode:        ModeBatch,
 				BatchConfig: defaultWebhookBatchConfig(),
@@ -265,9 +242,7 @@ func (o *AuditOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringVar(&o.PolicyFile, "audit-policy-file", o.PolicyFile,
-		"Path to the file that defines the audit policy configuration.")
-
+	fs.StringVar(&o.PolicyFile, "audit-policy-file", o.PolicyFile, "定义审计策略配置的文件的路径。")
 	o.LogOptions.AddFlags(fs)
 	o.LogOptions.BatchOptions.AddFlags(pluginlog.PluginName, fs)
 	o.LogOptions.TruncateOptions.AddFlags(pluginlog.PluginName, fs)
@@ -365,26 +340,13 @@ func (o *AuditOptions) newPolicyRuleEvaluator() (audit.PolicyRuleEvaluator, erro
 }
 
 func (o *AuditBatchOptions) AddFlags(pluginName string, fs *pflag.FlagSet) {
-	fs.StringVar(&o.Mode, fmt.Sprintf("audit-%s-mode", pluginName), o.Mode,
-		"Strategy for sending audit events. Blocking indicates sending events should block"+
-			" server responses. Batch causes the backend to buffer and write events"+
-			" asynchronously. Known modes are "+strings.Join(AllowedModes, ",")+".")
-	fs.IntVar(&o.BatchConfig.BufferSize, fmt.Sprintf("audit-%s-batch-buffer-size", pluginName),
-		o.BatchConfig.BufferSize, "The size of the buffer to store events before "+
-			"batching and writing. Only used in batch mode.")
-	fs.IntVar(&o.BatchConfig.MaxBatchSize, fmt.Sprintf("audit-%s-batch-max-size", pluginName),
-		o.BatchConfig.MaxBatchSize, "The maximum size of a batch. Only used in batch mode.")
-	fs.DurationVar(&o.BatchConfig.MaxBatchWait, fmt.Sprintf("audit-%s-batch-max-wait", pluginName),
-		o.BatchConfig.MaxBatchWait, "The amount of time to wait before force writing the "+
-			"batch that hadn't reached the max size. Only used in batch mode.")
-	fs.BoolVar(&o.BatchConfig.ThrottleEnable, fmt.Sprintf("audit-%s-batch-throttle-enable", pluginName),
-		o.BatchConfig.ThrottleEnable, "Whether batching throttling is enabled. Only used in batch mode.")
-	fs.Float32Var(&o.BatchConfig.ThrottleQPS, fmt.Sprintf("audit-%s-batch-throttle-qps", pluginName),
-		o.BatchConfig.ThrottleQPS, "Maximum average number of batches per second. "+
-			"Only used in batch mode.")
-	fs.IntVar(&o.BatchConfig.ThrottleBurst, fmt.Sprintf("audit-%s-batch-throttle-burst", pluginName),
-		o.BatchConfig.ThrottleBurst, "Maximum number of requests sent at the same "+
-			"moment if ThrottleQPS was not utilized before. Only used in batch mode.")
+	fs.StringVar(&o.Mode, fmt.Sprintf("audit-%s-mode", pluginName), o.Mode, "发送审计事件的策略。阻塞表示发送事件应该阻塞服务器响应。批处理使后端异步缓冲和写入事件。已知模式： "+strings.Join(AllowedModes, ",")+".")
+	fs.IntVar(&o.BatchConfig.BufferSize, fmt.Sprintf("audit-%s-batch-buffer-size", pluginName), o.BatchConfig.BufferSize, "在批处理和写入之前用于存储事件的缓冲区的大小。仅用于批处理模式。")
+	fs.IntVar(&o.BatchConfig.MaxBatchSize, fmt.Sprintf("audit-%s-batch-max-size", pluginName), o.BatchConfig.MaxBatchSize, "批处理的最大大小。仅用于批处理模式。")
+	fs.DurationVar(&o.BatchConfig.MaxBatchWait, fmt.Sprintf("audit-%s-batch-max-wait", pluginName), o.BatchConfig.MaxBatchWait, "未达到最大大小的批处理之前强制写入的等待时间量。仅用于批处理模式。")
+	fs.BoolVar(&o.BatchConfig.ThrottleEnable, fmt.Sprintf("audit-%s-batch-throttle-enable", pluginName), o.BatchConfig.ThrottleEnable, "是否启用批量限流。仅用于批处理模式。")
+	fs.Float32Var(&o.BatchConfig.ThrottleQPS, fmt.Sprintf("audit-%s-batch-throttle-qps", pluginName), o.BatchConfig.ThrottleQPS, "每秒最大平均批次数。仅用于批处理模式。")
+	fs.IntVar(&o.BatchConfig.ThrottleBurst, fmt.Sprintf("audit-%s-batch-throttle-burst", pluginName), o.BatchConfig.ThrottleBurst, "如果之前没有使用ThrottleQPS，则同一时刻发送的最大请求数。仅用于批处理模式。")
 }
 
 type ignoreErrorsBackend struct {
@@ -423,16 +385,9 @@ func (o *AuditTruncateOptions) Validate(pluginName string) error {
 }
 
 func (o *AuditTruncateOptions) AddFlags(pluginName string, fs *pflag.FlagSet) {
-	fs.BoolVar(&o.Enabled, fmt.Sprintf("audit-%s-truncate-enabled", pluginName),
-		o.Enabled, "Whether event and batch truncating is enabled.")
-	fs.Int64Var(&o.TruncateConfig.MaxBatchSize, fmt.Sprintf("audit-%s-truncate-max-batch-size", pluginName),
-		o.TruncateConfig.MaxBatchSize, "Maximum size of the batch sent to the underlying backend. "+
-			"Actual serialized size can be several hundreds of bytes greater. If a batch exceeds this limit, "+
-			"it is split into several batches of smaller size.")
-	fs.Int64Var(&o.TruncateConfig.MaxEventSize, fmt.Sprintf("audit-%s-truncate-max-event-size", pluginName),
-		o.TruncateConfig.MaxEventSize, "Maximum size of the audit event sent to the underlying backend. "+
-			"If the size of an event is greater than this number, first request and response are removed, and "+
-			"if this doesn't reduce the size enough, event is discarded.")
+	fs.BoolVar(&o.Enabled, fmt.Sprintf("audit-%s-truncate-enabled", pluginName), o.Enabled, "是否启用事件和批量截断功能。")
+	fs.Int64Var(&o.TruncateConfig.MaxBatchSize, fmt.Sprintf("audit-%s-truncate-max-batch-size", pluginName), o.TruncateConfig.MaxBatchSize, "发送到底层后台的批次的最大尺寸。实际序列化的大小可以多出几百字节。如果一个批次超过了这个限制，它就会被分成几个尺寸较小的批次。")
+	fs.Int64Var(&o.TruncateConfig.MaxEventSize, fmt.Sprintf("audit-%s-truncate-max-event-size", pluginName), o.TruncateConfig.MaxEventSize, "发送给底层后端的审计事件的最大尺寸。如果一个事件的大小大于这个数字，第一个请求和响应就会被删除，如果这还不能减少足够的大小，事件就会被丢弃。")
 }
 
 func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend, gv schema.GroupVersion) audit.Backend {
@@ -443,18 +398,17 @@ func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend, gv schema.Gro
 }
 
 func (o *AuditLogOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.Path, "audit-log-path", o.Path, "如果设置了，所有到达apiserver的请求都将被记录到这个文件中。'-'表示标准输出。")
-	fs.IntVar(&o.MaxAge, "audit-log-maxage", o.MaxAge, "根据文件名中编码的时间戳保留旧审计日志文件的最大天数。")
-	fs.IntVar(&o.MaxBackups, "audit-log-maxbackup", o.MaxBackups, "保留旧审计日志文件的最大数量。将值设置为0意味着对文件数量没有限制。")
-	fs.IntVar(&o.MaxSize, "audit-log-maxsize", o.MaxSize, "审计日志文件旋转之前的最大大小(以兆字节为单位)。")
-	fs.StringVar(&o.Format, "audit-log-format", o.Format,
-		"审计日志的格式. legacy:为每个事件指定一行文本格式。 json:表示结构化json格式 . "+strings.Join(pluginlog.AllowedFormats, ",")+".")
+	fs.StringVar(&o.Path, "audit-log-path", o.Path, "如果设置了,所有到达apiserver的请求都将被记录到这个文件中.'-'表示标准输出.")
+	fs.IntVar(&o.MaxAge, "audit-log-maxage", o.MaxAge, "根据文件名中编码的时间戳保留旧审计日志文件的最大天数.")
+	fs.IntVar(&o.MaxBackups, "audit-log-maxbackup", o.MaxBackups, "保留旧审计日志文件的最大数量.将值设置为0意味着对文件数量没有限制.")
+	fs.IntVar(&o.MaxSize, "audit-log-maxsize", o.MaxSize, "审计日志文件旋转之前的最大大小(以兆字节为单位).")
+	fs.StringVar(&o.Format, "audit-log-format", o.Format, "审计日志的格式. legacy:为每个事件指定一行文本格式. json:表示结构化json格式 . "+strings.Join(pluginlog.AllowedFormats, ",")+".")
 	fs.StringVar(&o.GroupVersionString, "audit-log-version", o.GroupVersionString, "用于序列化写入日志的审计事件的API组和版本")
-	fs.BoolVar(&o.Compress, "audit-log-compress", o.Compress, "如果设置，旋转的日志文件将使用gzip压缩。")
+	fs.BoolVar(&o.Compress, "audit-log-compress", o.Compress, "如果设置,旋转的日志文件将使用gzip压缩.")
 }
 
 func (o *AuditLogOptions) Validate() []error {
-	//根据选项检查日志后端是否开启。
+	//根据选项检查日志后端是否开启.
 	if !o.enabled() {
 		return nil
 	}
@@ -538,16 +492,11 @@ func (o *AuditLogOptions) newBackend(w io.Writer) audit.Backend {
 }
 
 func (o *AuditWebhookOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.ConfigFile, "audit-webhook-config-file", o.ConfigFile,
-		"Path to a kubeconfig formatted file that defines the audit webhook configuration.")
-	fs.DurationVar(&o.InitialBackoff, "audit-webhook-initial-backoff",
-		o.InitialBackoff, "The amount of time to wait before retrying the first failed request.")
-	fs.DurationVar(&o.InitialBackoff, "audit-webhook-batch-initial-backoff",
-		o.InitialBackoff, "The amount of time to wait before retrying the first failed request.")
-	fs.MarkDeprecated("audit-webhook-batch-initial-backoff",
-		"Deprecated, use --audit-webhook-initial-backoff instead.")
-	fs.StringVar(&o.GroupVersionString, "audit-webhook-version", o.GroupVersionString,
-		"API group and version used for serializing audit events written to webhook.")
+	fs.StringVar(&o.ConfigFile, "audit-webhook-config-file", o.ConfigFile, "定义审计webhook配置的kubeconfig格式文件的路径。")
+	fs.DurationVar(&o.InitialBackoff, "audit-webhook-initial-backoff", o.InitialBackoff, "在重试第一个失败的请求之前要等待的时间。")
+	fs.DurationVar(&o.InitialBackoff, "audit-webhook-batch-initial-backoff", o.InitialBackoff, "在重试第一个失败的请求之前要等待的时间。")
+	fs.MarkDeprecated("audit-webhook-batch-initial-backoff", "已废弃，请使用 --audit-webhook-initial-backoff 来代替。")
+	fs.StringVar(&o.GroupVersionString, "audit-webhook-version", o.GroupVersionString, "用于序列化写入webhook的审计事件的API组和版本。")
 }
 
 func (o *AuditWebhookOptions) Validate() []error {
@@ -603,12 +552,9 @@ func defaultWebhookBatchConfig() pluginbuffered.BatchConfig {
 // defaultLogBatchConfig returns the default BatchConfig used by the Log backend.
 func defaultLogBatchConfig() pluginbuffered.BatchConfig {
 	return pluginbuffered.BatchConfig{
-		BufferSize: defaultBatchBufferSize,
-		// Batching is not useful for the log-file backend.
-		// MaxBatchWait ignored.
-		MaxBatchSize:   1,
+		BufferSize:     defaultBatchBufferSize,
+		MaxBatchSize:   1, // 批处理对于日志文件无效
 		ThrottleEnable: false,
-		// Asynchronous log threads just create lock contention.
-		AsyncDelegate: false,
+		AsyncDelegate:  false, // 异步日志线程只是创建锁争用.
 	}
 }

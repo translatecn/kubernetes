@@ -52,36 +52,24 @@ func init() {
 }
 
 type AdmissionOptions struct {
-	RecommendedPluginOrder []string             // 保存我们建议默认使用的插件名称的有序列表
-	DefaultOffPlugins      sets.String          // 是一组插件名称，默认是禁用的
+	RecommendedPluginOrder []string             // 保存我们推荐默认使用的插件名称的有序列表
+	DefaultOffPlugins      sets.String          // 是一组插件名称,默认是禁用的
 	EnablePlugins          []string             // 表示要启用的插件 --enable-admission-plugins
 	DisablePlugins         []string             // 表示要禁用的插件 --disable-admission-plugins
-	ConfigFile             string               // 带有准入控制配置的文件路径。
-	Plugins                *admission.Plugins   // 包含所有已注册的插件。
-	Decorators             admission.Decorators // 是一个列表的录取装饰环绕录取插件
+	ConfigFile             string               // 带有准入控制配置的文件路径.
+	Plugins                *admission.Plugins   // 包含所有已注册的插件.
+	Decorators             admission.Decorators // 插件 装饰器
 }
 
-// NewAdmissionOptions creates a new instance of AdmissionOptions
-// Note:
-//
-//	In addition it calls RegisterAllAdmissionPlugins to register
-//	all generic admission plugins.
-//
-//	Provides the list of RecommendedPluginOrder that holds sane values
-//	that can be used by servers that don't care about admission chain.
-//	Servers that do care can overwrite/append that field after creation.
 func NewAdmissionOptions() *AdmissionOptions {
 	options := &AdmissionOptions{
 		Plugins:    admission.NewPlugins(),
 		Decorators: admission.Decorators{admission.DecoratorFunc(admissionmetrics.WithControllerMetrics)},
-		// This list is mix of mutating admission plugins and validating
-		// admission plugins. The apiserver always runs the validating ones
-		// after all the mutating ones, so their relative order in this list
-		// doesn't matter.
+		// 这个列表混合了突变许可插件和验证许可插件.apiserver总是在所有突变的之后运行验证的,所以它们在这个列表中的相对顺序并不重要.
 		RecommendedPluginOrder: []string{lifecycle.PluginName, mutatingwebhook.PluginName, validatingadmissionpolicy.PluginName, validatingwebhook.PluginName},
 		DefaultOffPlugins:      sets.NewString(),
 	}
-	server.RegisterAllAdmissionPlugins(options.Plugins)
+	server.RegisterAllAdmissionPlugins(options.Plugins) // 会调用admission.NewPlugins().Register()
 	return options
 }
 
@@ -91,18 +79,14 @@ func (a *AdmissionOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringSliceVar(&a.EnablePlugins, "enable-admission-plugins", a.EnablePlugins, ""+
-		"admission plugins that should be enabled in addition to default enabled ones ("+
-		strings.Join(a.defaultEnabledPluginNames(), ", ")+"). "+
-		"Comma-delimited list of admission plugins: "+strings.Join(a.Plugins.Registered(), ", ")+". "+
-		"The order of plugins in this flag does not matter.")
-	fs.StringSliceVar(&a.DisablePlugins, "disable-admission-plugins", a.DisablePlugins, ""+
-		"admission plugins that should be disabled although they are in the default enabled plugins list ("+
-		strings.Join(a.defaultEnabledPluginNames(), ", ")+"). "+
-		"Comma-delimited list of admission plugins: "+strings.Join(a.Plugins.Registered(), ", ")+". "+
-		"The order of plugins in this flag does not matter.")
-	fs.StringVar(&a.ConfigFile, "admission-control-config-file", a.ConfigFile,
-		"File with admission control configuration.")
+	fs.StringSliceVar(&a.EnablePlugins, "enable-admission-plugins", a.EnablePlugins,
+		"除默认启用的插件外,应启用的许可插件("+strings.Join(a.defaultEnabledPluginNames(), ", ")+"). "+
+			"以逗号分隔的准入插件列表:"+strings.Join(a.Plugins.Registered(), ", ")+". "+"这个标志中插件的顺序并不重要.")
+	fs.StringSliceVar(&a.DisablePlugins, "disable-admission-plugins", a.DisablePlugins,
+		"应该禁用的允许插件,尽管它们在默认启用的插件列表中("+
+			strings.Join(a.defaultEnabledPluginNames(), ", ")+"). "+
+			"以逗号分隔的准入插件列表: "+strings.Join(a.Plugins.Registered(), ", ")+". "+"这个标志中插件的顺序并不重要.")
+	fs.StringVar(&a.ConfigFile, "admission-control-config-file", a.ConfigFile, "带有准入控制配置的文件.")
 }
 
 // ApplyTo adds the admission chain to the server configuration.

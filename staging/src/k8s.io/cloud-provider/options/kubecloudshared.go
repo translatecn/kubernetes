@@ -62,9 +62,9 @@ func (o *KubeCloudSharedOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.CIDRAllocatorType, "cidr-allocator-type", "RangeAllocator", "Type of CIDR allocator to use")
 	fs.BoolVar(&o.ConfigureCloudRoutes, "configure-cloud-routes", true, "Should CIDRs allocated by allocate-node-cidrs be configured on the cloud provider.")
 
-	fs.DurationVar(&o.NodeSyncPeriod.Duration, "node-sync-period", 0, ""+
+	fs.DurationVar(&o.NodeSyncPeriod.Duration, "node-sync-period", 0,
 		"This flag is deprecated and will be removed in future releases. See node-monitor-period for Node health checking or "+
-		"route-reconciliation-period for cloud provider's route configuration settings.")
+			"route-reconciliation-period for cloud provider's route configuration settings.")
 	fs.MarkDeprecated("node-sync-period", "This flag is currently no-op and will be deleted.")
 }
 

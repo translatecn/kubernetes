@@ -30,7 +30,7 @@ import (
 type Options struct {
 	ShowHiddenMetricsForVersion string
 	DisabledMetrics             []string
-	AllowListMapping            map[string]string
+	AllowListMapping            map[string]string // 要显示的指标 <MetricName>,<LabelName>=<allowed_value>,<allowed_value>..
 }
 
 // NewOptions returns default metrics options
@@ -38,10 +38,10 @@ func NewOptions() *Options {
 	return &Options{}
 }
 
-// Validate validates metrics flags options.
+// Validate 👌🏻
 func (o *Options) Validate() []error {
 	var errs []error
-	err := validateShowHiddenMetricsVersion(parseVersion(version.Get()), o.ShowHiddenMetricsForVersion)
+	err := validateShowHiddenMetricsVersion(parseVersion(version.Get()), o.ShowHiddenMetricsForVersion) // 校验显示 隐藏指标的版本号 是不是前一个版本号
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -61,22 +61,9 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	if o == nil {
 		return
 	}
-	fs.StringVar(&o.ShowHiddenMetricsForVersion, "show-hidden-metrics-for-version", o.ShowHiddenMetricsForVersion,
-		"The previous version for which you want to show hidden metrics. "+
-			"Only the previous minor version is meaningful, other values will not be allowed. "+
-			"The format is <major>.<minor>, e.g.: '1.16'. "+
-			"The purpose of this format is make sure you have the opportunity to notice if the next release hides additional metrics, "+
-			"rather than being surprised when they are permanently removed in the release after that.")
-	fs.StringSliceVar(&o.DisabledMetrics,
-		"disabled-metrics",
-		o.DisabledMetrics,
-		"This flag provides an escape hatch for misbehaving metrics. "+
-			"You must provide the fully qualified metric name in order to disable it. "+
-			"Disclaimer: disabling metrics is higher in precedence than showing hidden metrics.")
-	fs.StringToStringVar(&o.AllowListMapping, "allow-metric-labels", o.AllowListMapping,
-		"The map from metric-label to value allow-list of this label. The key's format is <MetricName>,<LabelName>. "+
-			"The value's format is <allowed_value>,<allowed_value>..."+
-			"e.g. metric1,label1='v1,v2,v3', metric1,label2='v1,v2,v3' metric2,label1='v1,v2,v3'.")
+	fs.StringVar(&o.ShowHiddenMetricsForVersion, "show-hidden-metrics-for-version", o.ShowHiddenMetricsForVersion, "显示隐藏指标的前一个版本号 '1.16'. ")
+	fs.StringSliceVar(&o.DisabledMetrics, "disabled-metrics", o.DisabledMetrics, "禁用哪些指标，免责声明:禁用指标优先级高于显示隐藏指标。")
+	fs.StringToStringVar(&o.AllowListMapping, "allow-metric-labels", o.AllowListMapping, "要显示的指标 <MetricName>,<LabelName>=<allowed_value>,<allowed_value>...")
 }
 
 // Apply applies parameters into global configuration of metrics.
@@ -110,6 +97,7 @@ func validateShowHiddenMetricsVersion(currentVersion semver.Version, targetVersi
 }
 
 func validateAllowMetricLabel(allowListMapping map[string]string) error {
+	// 要显示的指标 <MetricName>,<LabelName>=<allowed_value>,<allowed_value>..
 	if allowListMapping == nil {
 		return nil
 	}

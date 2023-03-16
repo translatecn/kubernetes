@@ -21,15 +21,8 @@ package ports
 const (
 	// ProxyStatusPort is the default port for the proxy metrics server.
 	// May be overridden by a flag at startup.
-	ProxyStatusPort = 10249
-	// KubeletPort is the default port for the kubelet server on each host machine.
-	// May be overridden by a flag at startup.
-	KubeletPort = 10250
-	// KubeletReadOnlyPort exposes basic read-only services from the kubelet.
-	// May be overridden by a flag at startup.
-	// This is necessary for heapster to collect monitoring stats from the kubelet
-	// until heapster can transition to using the SSL endpoint.
-	// TODO(roberthbailey): Remove this once we have a better solution for heapster.
+	ProxyStatusPort     = 10249
+	KubeletPort         = 10250
 	KubeletReadOnlyPort = 10255
 	// KubeletHealthzPort exposes a healthz endpoint from the kubelet.
 	// May be overridden by a flag at startup.

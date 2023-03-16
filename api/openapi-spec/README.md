@@ -10,8 +10,8 @@ extensions have been added.
 ### `x-kubernetes-group-version-kind`
 
 Operations and Definitions may have `x-kubernetes-group-version-kind` if they
-are associated with a [kubernetes resource](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources).
-
+are associated with
+a [kubernetes resource](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources).
 
 For example:
 
@@ -35,9 +35,10 @@ For example:
 ### `x-kubernetes-action`
 
 Operations and Definitions may have `x-kubernetes-action` if they
-are associated with a [kubernetes resource](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources).
-Action can be one of `get`, `list`, `put`, `patch`, `post`, `delete`, `deletecollection`, `watch`, `watchlist`, `proxy`, or `connect`.
-
+are associated with
+a [kubernetes resource](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources).
+Action can be one of `get`, `list`, `put`, `patch`, `post`, `delete`, `deletecollection`, `watch`, `watchlist`, `proxy`,
+or `connect`.
 
 For example:
 

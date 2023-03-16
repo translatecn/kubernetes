@@ -1,19 +1,20 @@
 - [IPVS](#ipvs)
-  - [What is IPVS](#what-is-ipvs)
-  - [IPVS vs. IPTABLES](#ipvs-vs-iptables)
-    - [When IPVS falls back to IPTABLES](#when-ipvs-falls-back-to-iptables)
-  - [Run kube-proxy in IPVS mode](#run-kube-proxy-in-ipvs-mode)
-    - [Prerequisite](#prerequisite)
-    - [Local UP Cluster](#local-up-cluster)
-    - [GCE Cluster](#gce-cluster)
-    - [Cluster Created by Kubeadm](#cluster-created-by-kubeadm)
-  - [Debug](#debug)
-    - [Check IPVS proxy rules](#check-ipvs-proxy-rules)
-    - [Why kube-proxy can't start IPVS mode](#why-kube-proxy-cant-start-ipvs-mode)
+    - [What is IPVS](#what-is-ipvs)
+    - [IPVS vs. IPTABLES](#ipvs-vs-iptables)
+        - [When IPVS falls back to IPTABLES](#when-ipvs-falls-back-to-iptables)
+    - [Run kube-proxy in IPVS mode](#run-kube-proxy-in-ipvs-mode)
+        - [Prerequisite](#prerequisite)
+        - [Local UP Cluster](#local-up-cluster)
+        - [GCE Cluster](#gce-cluster)
+        - [Cluster Created by Kubeadm](#cluster-created-by-kubeadm)
+    - [Debug](#debug)
+        - [Check IPVS proxy rules](#check-ipvs-proxy-rules)
+        - [Why kube-proxy can't start IPVS mode](#why-kube-proxy-cant-start-ipvs-mode)
 
 # IPVS
 
 This document intends to show users
+
 - what is IPVS
 - difference between IPVS and IPTABLES
 - how to run kube-proxy in IPVS mode and info on debugging
@@ -24,45 +25,51 @@ This document intends to show users
 Linux kernel.
 
 IPVS runs on a host and acts as a load balancer in front of a cluster of real servers. IPVS can direct requests for TCP
-and UDP-based services to the real servers, and make services of real servers appear as virtual services on a single IP address.
+and UDP-based services to the real servers, and make services of real servers appear as virtual services on a single IP
+address.
 
 ## IPVS vs. IPTABLES
-IPVS mode was introduced in Kubernetes v1.8, goes beta in v1.9 and GA in v1.11. IPTABLES mode was added in v1.1 and become the default operating mode since v1.2. Both IPVS and IPTABLES are based on `netfilter`.
+
+IPVS mode was introduced in Kubernetes v1.8, goes beta in v1.9 and GA in v1.11. IPTABLES mode was added in v1.1 and
+become the default operating mode since v1.2. Both IPVS and IPTABLES are based on `netfilter`.
 Differences between IPVS mode and IPTABLES mode are as follows:
 
 1. IPVS provides better scalability and performance for large clusters.
 
-2. IPVS supports more sophisticated load balancing algorithms than IPTABLES (least load, least connections, locality, weighted, etc.).
+2. IPVS supports more sophisticated load balancing algorithms than IPTABLES (least load, least connections, locality,
+   weighted, etc.).
 
 3. IPVS supports server health checking and connection retries, etc.
 
 ### When IPVS falls back to IPTABLES
-IPVS proxier will employ IPTABLES in doing packet filtering, SNAT or masquerade.
-Specifically, IPVS proxier will use ipset to store source or destination address of traffics that need DROP or do masquerade, to make sure the number of IPTABLES rules be constant, no matter how many services we have.
 
+IPVS proxier will employ IPTABLES in doing packet filtering, SNAT or masquerade.
+Specifically, IPVS proxier will use ipset to store source or destination address of traffics that need DROP or do
+masquerade, to make sure the number of IPTABLES rules be constant, no matter how many services we have.
 
 Here is the table of ipset sets that IPVS proxier used.
 
-| set name                       | members                                  | usage                                    |
-| :----------------------------- | ---------------------------------------- | ---------------------------------------- |
-| KUBE-CLUSTER-IP                | All service IP + port                    | Mark-Masq for cases that `masquerade-all=true` or `clusterCIDR` specified |
-| KUBE-LOOP-BACK                 | All service IP + port + IP               | masquerade for solving hairpin purpose   |
-| KUBE-EXTERNAL-IP               | service external IP + port               | masquerade for packages to external IPs  |
-| KUBE-LOAD-BALANCER             | load balancer ingress IP + port          | masquerade for packages to load balancer type service  |
-| KUBE-LOAD-BALANCER-LOCAL       | LB ingress IP + port with `externalTrafficPolicy=local` | accept packages to load balancer with `externalTrafficPolicy=local` |
-| KUBE-LOAD-BALANCER-FW          | load balancer ingress IP + port with `loadBalancerSourceRanges` | package filter for load balancer with `loadBalancerSourceRanges` specified |
-| KUBE-LOAD-BALANCER-SOURCE-CIDR | load balancer ingress IP + port + source CIDR | package filter for load balancer with `loadBalancerSourceRanges` specified |
-| KUBE-NODE-PORT-TCP             | nodeport type service TCP port           | masquerade for packets to nodePort(TCP)  |
-| KUBE-NODE-PORT-LOCAL-TCP       | nodeport type service TCP port with `externalTrafficPolicy=local` | accept packages to nodeport service with `externalTrafficPolicy=local` |
-| KUBE-NODE-PORT-UDP             | nodeport type service UDP port           | masquerade for packets to nodePort(UDP)  |
-| KUBE-NODE-PORT-LOCAL-UDP       | nodeport type service UDP port with `externalTrafficPolicy=local` | accept packages to nodeport service with `externalTrafficPolicy=local` |
-
+| set name                       | members                                                           | usage                                                                      |
+|:-------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------------------|
+| KUBE-CLUSTER-IP                | All service IP + port                                             | Mark-Masq for cases that `masquerade-all=true` or `clusterCIDR` specified  |
+| KUBE-LOOP-BACK                 | All service IP + port + IP                                        | masquerade for solving hairpin purpose                                     |
+| KUBE-EXTERNAL-IP               | service external IP + port                                        | masquerade for packages to external IPs                                    |
+| KUBE-LOAD-BALANCER             | load balancer ingress IP + port                                   | masquerade for packages to load balancer type service                      |
+| KUBE-LOAD-BALANCER-LOCAL       | LB ingress IP + port with `externalTrafficPolicy=local`           | accept packages to load balancer with `externalTrafficPolicy=local`        |
+| KUBE-LOAD-BALANCER-FW          | load balancer ingress IP + port with `loadBalancerSourceRanges`   | package filter for load balancer with `loadBalancerSourceRanges` specified |
+| KUBE-LOAD-BALANCER-SOURCE-CIDR | load balancer ingress IP + port + source CIDR                     | package filter for load balancer with `loadBalancerSourceRanges` specified |
+| KUBE-NODE-PORT-TCP             | nodeport type service TCP port                                    | masquerade for packets to nodePort(TCP)                                    |
+| KUBE-NODE-PORT-LOCAL-TCP       | nodeport type service TCP port with `externalTrafficPolicy=local` | accept packages to nodeport service with `externalTrafficPolicy=local`     |
+| KUBE-NODE-PORT-UDP             | nodeport type service UDP port                                    | masquerade for packets to nodePort(UDP)                                    |
+| KUBE-NODE-PORT-LOCAL-UDP       | nodeport type service UDP port with `externalTrafficPolicy=local` | accept packages to nodeport service with `externalTrafficPolicy=local`     |
 
 IPVS proxier will fall back on IPTABLES in the following scenarios.
 
 **1. kube-proxy starts with --masquerade-all=true**
 
-If kube-proxy starts with `--masquerade-all=true`, IPVS proxier will masquerade all traffic accessing service Cluster IP, which behaves the same as what IPTABLES proxier. Suppose kube-proxy has flag `--masquerade-all=true` specified, then the IPTABLES installed by IPVS proxier should be like what is shown below.
+If kube-proxy starts with `--masquerade-all=true`, IPVS proxier will masquerade all traffic accessing service Cluster
+IP, which behaves the same as what IPTABLES proxier. Suppose kube-proxy has flag `--masquerade-all=true` specified, then
+the IPTABLES installed by IPVS proxier should be like what is shown below.
 
 ```shell
 # iptables -t nat -nL
@@ -96,7 +103,9 @@ ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLU
 
 **2. Specify cluster CIDR in kube-proxy startup**
 
-If kube-proxy starts with `--cluster-cidr=<cidr>`, IPVS proxier will masquerade off-cluster traffic accessing service Cluster IP, which behaves the same as what IPTABLES proxier. Suppose kube-proxy is provided with the cluster cidr `10.244.16.0/24`, then the IPTABLES installed by IPVS proxier should be like what is shown below.
+If kube-proxy starts with `--cluster-cidr=<cidr>`, IPVS proxier will masquerade off-cluster traffic accessing service
+Cluster IP, which behaves the same as what IPTABLES proxier. Suppose kube-proxy is provided with the cluster
+cidr `10.244.16.0/24`, then the IPTABLES installed by IPVS proxier should be like what is shown below.
 
 ```shell
 # iptables -t nat -nL
@@ -182,8 +191,10 @@ ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOA
 
 **4. NodePort type service**
 
-For NodePort type service, IPVS proxier will install IPTABLES with match of ipset `KUBE-NODE-PORT-TCP/KUBE-NODE-PORT-UDP`.
-When specified `externalTrafficPolicy=local`, IPVS proxier will create ipset sets `KUBE-NODE-PORT-LOCAL-TCP/KUBE-NODE-PORT-LOCAL-UDP`
+For NodePort type service, IPVS proxier will install IPTABLES with match of
+ipset `KUBE-NODE-PORT-TCP/KUBE-NODE-PORT-UDP`.
+When specified `externalTrafficPolicy=local`, IPVS proxier will create ipset
+sets `KUBE-NODE-PORT-LOCAL-TCP/KUBE-NODE-PORT-LOCAL-UDP`
 and install IPTABLES accordingly, which should look like what is shown below.
 
 Suppose service with TCP type nodePort.
@@ -256,10 +267,14 @@ ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXT
 
 ## Run kube-proxy in IPVS mode
 
-Currently, local-up scripts, GCE scripts and kubeadm support switching IPVS proxy mode via exporting environment variables or specifying flags.
+Currently, local-up scripts, GCE scripts and kubeadm support switching IPVS proxy mode via exporting environment
+variables or specifying flags.
 
 ### Prerequisite
-Ensure IPVS required kernel modules (**Notes**: use `nf_conntrack` instead of `nf_conntrack_ipv4` for Linux kernel 4.19 and later)
+
+Ensure IPVS required kernel modules (**Notes**: use `nf_conntrack` instead of `nf_conntrack_ipv4` for Linux kernel 4.19
+and later)
+
 ```shell
 ip_vs
 ip_vs_rr
@@ -267,11 +282,13 @@ ip_vs_wrr
 ip_vs_sh
 nf_conntrack_ipv4
 ```
+
 1. have been compiled into the node kernel. Use
 
 `grep -e ipvs -e nf_conntrack_ipv4 /lib/modules/$(uname -r)/modules.builtin`
 
 and get results like the followings if compiled into kernel.
+
 ```
 kernel/net/ipv4/netfilter/nf_conntrack_ipv4.ko
 kernel/net/netfilter/ipvs/ip_vs.ko
@@ -293,6 +310,7 @@ kernel/net/netfilter/ipvs/ip_vs_ftp.ko
 OR
 
 2. have been loaded.
+
 ```shell
 # load module <module_name>
 modprobe -- ip_vs
@@ -313,9 +331,12 @@ Kube-proxy will fall back to IPTABLES mode if those requirements are not met.
 
 ### Local UP Cluster
 
-Kube-proxy will run in IPTABLES mode by default in a [local-up cluster](https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md).
+Kube-proxy will run in IPTABLES mode by default in
+a [local-up cluster](https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md).
 
-To use IPVS mode, users should export the env `KUBE_PROXY_MODE=ipvs` to specify the IPVS mode before [starting the cluster](https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md#starting-the-cluster):
+To use IPVS mode, users should export the env `KUBE_PROXY_MODE=ipvs` to specify the IPVS mode
+before [starting the cluster](https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md#starting-the-cluster):
+
 ```shell
 # before running `hack/local-up-cluster.sh`
 export KUBE_PROXY_MODE=ipvs
@@ -323,7 +344,11 @@ export KUBE_PROXY_MODE=ipvs
 
 ### GCE Cluster
 
-Similar to local-up cluster, kube-proxy in [clusters running on GCE](https://kubernetes.io/docs/getting-started-guides/gce/) run in IPTABLES mode by default. Users need to export the env `KUBE_PROXY_MODE=ipvs` before [starting a cluster](https://kubernetes.io/docs/getting-started-guides/gce/#starting-a-cluster):
+Similar to local-up cluster, kube-proxy
+in [clusters running on GCE](https://kubernetes.io/docs/getting-started-guides/gce/) run in IPTABLES mode by default.
+Users need to export the env `KUBE_PROXY_MODE=ipvs`
+before [starting a cluster](https://kubernetes.io/docs/getting-started-guides/gce/#starting-a-cluster):
+
 ```shell
 #before running one of the commands chosen to start a cluster:
 # curl -sS https://get.k8s.io | bash
@@ -334,7 +359,9 @@ export KUBE_PROXY_MODE=ipvs
 
 ### Cluster Created by Kubeadm
 
-If you are using kubeadm with a [configuration file](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file), you have to add mode: ipvs in a KubeProxyConfiguration (separated by -- that is also passed to kubeadm init).
+If you are using kubeadm with
+a [configuration file](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file), you have to
+add mode: ipvs in a KubeProxyConfiguration (separated by -- that is also passed to kubeadm init).
 
 ```yaml
 ...
@@ -352,6 +379,7 @@ to specify the ipvs mode before deploying the cluster.
 
 **Notes**
 If ipvs mode is successfully on, you should see IPVS proxy rules (use `ipvsadm`) like
+
 ```shell
  # ipvsadm -ln
 IP Virtual Server version 1.2.1 (size=4096)
@@ -360,23 +388,29 @@ Prot LocalAddress:Port Scheduler Flags
 TCP  10.0.0.1:443 rr persistent 10800
   -> 192.168.0.1:6443             Masq    1      1          0
 ```
-or similar logs occur in kube-proxy logs (for example, `/tmp/kube-proxy.log` for local-up cluster) when the local cluster is running:
+
+or similar logs occur in kube-proxy logs (for example, `/tmp/kube-proxy.log` for local-up cluster) when the local
+cluster is running:
+
 ```
 Using ipvs Proxier.
 ```
 
 While there is no IPVS proxy rules or the following logs occurs indicate that the kube-proxy fails to use IPVS mode:
+
 ```
 Can't use ipvs proxier, trying iptables proxier
 Using iptables Proxier.
 ```
+
 See the following section for more details on debugging.
 
 ## Debug
 
 ### Check IPVS proxy rules
 
-Users can use `ipvsadm` tool to check whether kube-proxy are maintaining IPVS rules correctly. For example, we have the following services in the cluster:
+Users can use `ipvsadm` tool to check whether kube-proxy are maintaining IPVS rules correctly. For example, we have the
+following services in the cluster:
 
 ```
  # kubectl get svc --all-namespaces
@@ -384,6 +418,7 @@ NAMESPACE     NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)       
 default       kubernetes   ClusterIP   10.0.0.1     <none>        443/TCP         1d
 kube-system   kube-dns     ClusterIP   10.0.0.10    <none>        53/UDP,53/TCP   1d
 ```
+
 We may get IPVS proxy rules like:
 
 ```shell
@@ -409,4 +444,5 @@ Check whether the kube-proxy mode has been set to `ipvs`.
 
 **2. Install required kernel modules and packages**
 
-Check whether the IPVS required kernel modules have been compiled into the kernel and packages installed. (see Prerequisite)
+Check whether the IPVS required kernel modules have been compiled into the kernel and packages installed. (see
+Prerequisite)

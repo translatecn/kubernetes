@@ -24,15 +24,14 @@ import (
 )
 
 var (
-	// featureInfo is a Prometheus Gauge metrics used for recording the enablement of a k8s feature.
 	featureInfo = k8smetrics.NewGaugeVec(
 		&k8smetrics.GaugeOpts{
 			Namespace:      "kubernetes",
 			Name:           "feature_enabled",
-			Help:           "This metric records the data about the stage and enablement of a k8s feature.",
+			Help:           "这个指标记录了关于k8s特性的数据",
 			StabilityLevel: k8smetrics.ALPHA,
 		},
-		[]string{"name", "stage"},
+		[]string{"name", "stage"}, // 当前指标计数器
 	)
 )
 
@@ -50,4 +49,5 @@ func RecordFeatureInfo(ctx context.Context, name string, stage string, enabled b
 		value = 1.0
 	}
 	featureInfo.WithContext(ctx).WithLabelValues(name, stage).Set(value)
+
 }

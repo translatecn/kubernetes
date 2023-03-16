@@ -70,8 +70,7 @@ func (o *TracingOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringVar(&o.ConfigFile, "tracing-config-file", o.ConfigFile,
-		"File with apiserver tracing configuration.")
+	fs.StringVar(&o.ConfigFile, "tracing-config-file", o.ConfigFile, "带有apiserver跟踪配置的文件。")
 }
 
 // ApplyTo fills up Tracing config with options.

@@ -16,9 +16,8 @@ limitations under the License.
 
 package options
 
-// This file exists to force the desired plugin implementations to be linked.
-// This should probably be part of some configuration fed into the build for a
-// given binary target.
+// 该文件的存在是为了强制链接所需的插件实现.
+// 对于给定的二进制目标,这可能是输入到构建中的某些配置的一部分.
 import (
 	"k8s.io/apiserver/pkg/admission/plugin/validatingadmissionpolicy"
 	// Admission policies
@@ -61,7 +60,7 @@ import (
 	validatingwebhook "k8s.io/apiserver/pkg/admission/plugin/webhook/validating"
 )
 
-// AllOrderedPlugins is the list of all the plugins in order.
+// AllOrderedPlugins 所有插件
 var AllOrderedPlugins = []string{
 	admit.PluginName,                        // AlwaysAdmit
 	autoprovision.PluginName,                // NamespaceAutoProvision
@@ -94,9 +93,7 @@ var AllOrderedPlugins = []string{
 	defaultingressclass.PluginName,          // DefaultIngressClass
 	denyserviceexternalips.PluginName,       // DenyServiceExternalIPs
 
-	// new admission plugins should generally be inserted above here
-	// webhook, resourcequota, and deny plugins must go at the end
-
+	// 新的准入插件一般应该插在webhook,resourcequota上面 ；而deny插件必须走在最后
 	mutatingwebhook.PluginName,           // MutatingAdmissionWebhook
 	validatingadmissionpolicy.PluginName, // ValidatingAdmissionPolicy
 	validatingwebhook.PluginName,         // ValidatingAdmissionWebhook
@@ -104,9 +101,10 @@ var AllOrderedPlugins = []string{
 	deny.PluginName,                      // AlwaysDeny
 }
 
-// RegisterAllAdmissionPlugins registers all admission plugins.
-// The order of registration is irrelevant, see AllOrderedPlugins for execution order.
+// RegisterAllAdmissionPlugins 所有的准入插件
+// 注册的顺序是不相关的,请参阅AllOrderedPlugins以了解执行顺序.
 func RegisterAllAdmissionPlugins(plugins *admission.Plugins) {
+	// ToDo 需要看
 	admit.Register(plugins) // DEPRECATED as no real meaning
 	alwayspullimages.Register(plugins)
 	antiaffinity.Register(plugins)
@@ -140,7 +138,7 @@ func RegisterAllAdmissionPlugins(plugins *admission.Plugins) {
 	certsubjectrestriction.Register(plugins)
 }
 
-// DefaultOffAdmissionPlugins get admission plugins off by default for kube-apiserver.
+// DefaultOffAdmissionPlugins 默认情况下关闭kube-apiserver的准入插件.
 func DefaultOffAdmissionPlugins() sets.String {
 	defaultOnPlugins := sets.NewString(
 		lifecycle.PluginName,                    // NamespaceLifecycle

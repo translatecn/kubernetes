@@ -31,51 +31,28 @@ import (
 	"k8s.io/component-base/featuregate"
 )
 
-// AdmissionOptions holds the admission options.
-// It is a wrap of generic AdmissionOptions.
 type AdmissionOptions struct {
-	// GenericAdmission holds the generic admission options.
 	GenericAdmission *genericoptions.AdmissionOptions
-	// DEPRECATED flag, should use EnabledAdmissionPlugins and DisabledAdmissionPlugins.
-	// They are mutually exclusive, specify both will lead to an error.
-	PluginNames []string
+	PluginNames      []string
 }
 
-// NewAdmissionOptions creates a new instance of AdmissionOptions
-// Note:
-//
-//	In addition it calls RegisterAllAdmissionPlugins to register
-//	all kube-apiserver admission plugins.
-//
-//	Provides the list of RecommendedPluginOrder that holds sane values
-//	that can be used by servers that don't care about admission chain.
-//	Servers that do care can overwrite/append that field after creation.
 func NewAdmissionOptions() *AdmissionOptions {
-	options := genericoptions.NewAdmissionOptions()
-	// register all admission plugins
-	RegisterAllAdmissionPlugins(options.Plugins)
-	// set RecommendedPluginOrder
+	options := genericoptions.NewAdmissionOptions() // ✅
+	RegisterAllAdmissionPlugins(options.Plugins)    // 注册所有准入插件到options.Plugins
 	options.RecommendedPluginOrder = AllOrderedPlugins
-	// set DefaultOffPlugins
 	options.DefaultOffPlugins = DefaultOffAdmissionPlugins()
 
 	return &AdmissionOptions{
+		// 调用RegisterAllAdmissionPlugins来注册所有kube-apiserver的准入插件
 		GenericAdmission: options,
 	}
 }
 
 // AddFlags adds flags related to admission for kube-apiserver to the specified FlagSet
 func (a *AdmissionOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringSliceVar(&a.PluginNames, "admission-control", a.PluginNames, ""+
-		"Admission is divided into two phases. "+
-		"In the first phase, only mutating admission plugins run. "+
-		"In the second phase, only validating admission plugins run. "+
-		"The names in the below list may represent a validating plugin, a mutating plugin, or both. "+
-		"The order of plugins in which they are passed to this flag does not matter. "+
-		"Comma-delimited list of: "+strings.Join(a.GenericAdmission.Plugins.Registered(), ", ")+".")
-	fs.MarkDeprecated("admission-control", "Use --enable-admission-plugins or --disable-admission-plugins instead. Will be removed in a future version.")
+	fs.StringSliceVar(&a.PluginNames, "admission-control", a.PluginNames, "准入分为两个阶段,1:变异,2校验.  插件列表："+strings.Join(a.GenericAdmission.Plugins.Registered(), ", ")+".")
+	fs.MarkDeprecated("admission-control", "Use --enable-admission-plugins or --disable-admission-plugins instead. 将在未来的版本中删除。")
 	fs.Lookup("admission-control").Hidden = false
-
 	a.GenericAdmission.AddFlags(fs)
 }
 

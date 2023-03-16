@@ -16,7 +16,6 @@ there.
 
 This socket filename should not start with a '.' as it will be ignored.
 
-
 ## gRPC Service Lifecycle
 
 For any discovered plugin, kubelet will issue a Registration.GetInfo gRPC call
@@ -24,6 +23,7 @@ to get plugin type, name, endpoint and supported service API versions.
 
 If any of the following steps in registration fails, on retry registration will
 start from scratch:
+
 - Registration.GetInfo is called against socket.
 - Validate is called against internal plugin type handler.
 - Register is called against internal plugin type handler.
@@ -38,13 +38,14 @@ Registration.NotifyRegistrationStatus gRPC call.
 If the plugin removes its socket from the PluginDir this will be interpreted
 as a plugin Deregistration. If any of the following steps in deregistration fails,
 on retry deregistration will start from scratch:
+
 - Registration.GetInfo is called against socket.
 - DeRegisterPlugin is called against internal plugin type handler.
-
 
 ## gRPC Service Overview
 
 Here are the general rules that Kubelet plugin developers should follow:
+
 - Run plugin as 'root' user. Currently creating socket under PluginsDir, a root owned
   directory, requires plugin process to be running as 'root'.
 
@@ -64,7 +65,6 @@ Here are the general rules that Kubelet plugin developers should follow:
 - For an example plugin implementation, take a look at example_plugin.go
   included in this directory.
 
-
 # Kubelet Interface
 
 For any kubelet components using the pluginwatcher module, you will need to
@@ -72,7 +72,6 @@ implement the PluginHandler interface defined in the types.go file.
 
 The interface is documented and the implementations are registered with the
 pluginwatcher module in kubelet.go by calling AddHandler(pluginType, handler).
-
 
 The lifecycle follows a simple state machine:
 

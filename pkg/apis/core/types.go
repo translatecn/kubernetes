@@ -2823,9 +2823,7 @@ const (
 	TaintEffectNoExecute TaintEffect = "NoExecute"
 )
 
-// Toleration represents the toleration object that can be attached to a pod.
-// The pod this Toleration is attached to tolerates any taint that matches
-// the triple <key,value,effect> using the matching operator <operator>.
+// Toleration POD 容忍污点
 type Toleration struct {
 	// Key is the taint key that the toleration applies to. Empty means match all taint keys.
 	// If the key is empty, operator must be Exists; this combination means to match all values and all keys.
@@ -4550,46 +4548,13 @@ type NodeCondition struct {
 // NodeAddressType defines the node's address type
 type NodeAddressType string
 
-// These are valid values of node address type
+// 节点地址类型
 const (
-	// NodeHostName identifies a name of the node. Although every node can be assumed
-	// to have a NodeAddress of this type, its exact syntax and semantics are not
-	// defined, and are not consistent between different clusters.
-	NodeHostName NodeAddressType = "Hostname"
-
-	// NodeInternalIP identifies an IP address which is assigned to one of the node's
-	// network interfaces. Every node should have at least one address of this type.
-	//
-	// An internal IP is normally expected to be reachable from every other node, but
-	// may not be visible to hosts outside the cluster. By default it is assumed that
-	// kube-apiserver can reach node internal IPs, though it is possible to configure
-	// clusters where this is not the case.
-	//
-	// NodeInternalIP is the default type of node IP, and does not necessarily imply
-	// that the IP is ONLY reachable internally. If a node has multiple internal IPs,
-	// no specific semantics are assigned to the additional IPs.
-	NodeInternalIP NodeAddressType = "InternalIP"
-
-	// NodeExternalIP identifies an IP address which is, in some way, intended to be
-	// more usable from outside the cluster then an internal IP, though no specific
-	// semantics are defined. It may be a globally routable IP, though it is not
-	// required to be.
-	//
-	// External IPs may be assigned directly to an interface on the node, like a
-	// NodeInternalIP, or alternatively, packets sent to the external IP may be NAT'ed
-	// to an internal node IP rather than being delivered directly (making the IP less
-	// efficient for node-to-node traffic than a NodeInternalIP).
-	NodeExternalIP NodeAddressType = "ExternalIP"
-
-	// NodeInternalDNS identifies a DNS name which resolves to an IP address which has
-	// the characteristics of a NodeInternalIP. The IP it resolves to may or may not
-	// be a listed NodeInternalIP address.
-	NodeInternalDNS NodeAddressType = "InternalDNS"
-
-	// NodeExternalDNS identifies a DNS name which resolves to an IP address which has
-	// the characteristics of a NodeExternalIP. The IP it resolves to may or may not
-	// be a listed NodeExternalIP address.
-	NodeExternalDNS NodeAddressType = "ExternalDNS"
+	NodeHostName    NodeAddressType = "Hostname"    // 标明了节点的名称
+	NodeInternalIP  NodeAddressType = "InternalIP"  // 集群内部节点IP,不一定意味着该IP只在内部可达.
+	NodeExternalIP  NodeAddressType = "ExternalIP"  // 集群外部节点IP
+	NodeInternalDNS NodeAddressType = "InternalDNS" // 标识了一个DNS名称,该名称解析到一个IP地址
+	NodeExternalDNS NodeAddressType = "ExternalDNS" // 标识了一个DNS名称,该名称解析到一个IP地址
 )
 
 // NodeAddress represents node's address

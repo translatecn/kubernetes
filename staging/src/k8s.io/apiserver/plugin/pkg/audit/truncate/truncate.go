@@ -38,14 +38,8 @@ const (
 
 // Config represents truncating backend configuration.
 type Config struct {
-	// MaxEventSize defines max allowed size of the event. If the event is larger,
-	// truncating will be performed.
-	MaxEventSize int64
-
-	// MaxBatchSize defined max allowed size of the batch of events, passed to the backend.
-	// If the total size of the batch is larger than this number, batch will be split. Actual
-	// size of the serialized request might be slightly higher, on the order of hundreds of bytes.
-	MaxBatchSize int64
+	MaxBatchSize int64 // 定义了传递给后端事件批的最大允许大小.如果批处理的总大小大于此数字,则批处理将被分割.序列化请求的实际大小可能略高,大约为数百字节.
+	MaxEventSize int64 // 定义事件允许的最大大小.如果事件较大,则执行截断.
 }
 
 type backend struct {

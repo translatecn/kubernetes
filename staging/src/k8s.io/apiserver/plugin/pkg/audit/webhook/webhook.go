@@ -19,7 +19,6 @@ package webhook
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -36,12 +35,8 @@ import (
 )
 
 const (
-	// PluginName is the name of this plugin, to be used in help and logs.
-	PluginName = "webhook"
-
-	// DefaultInitialBackoffDelay is the default amount of time to wait before
-	// retrying sending audit events through a webhook.
-	DefaultInitialBackoffDelay = 10 * time.Second
+	PluginName                 = "webhook"        // 插件名称
+	DefaultInitialBackoffDelay = 10 * time.Second // 重试通过webhook发送审计事件之前的默认等待时间.
 )
 
 func init() {
@@ -82,19 +77,6 @@ func loadWebhook(configFile string, groupVersion schema.GroupVersion, retryBacko
 type backend struct {
 	w    *webhook.GenericWebhook
 	name string
-}
-
-// NewDynamicBackend returns an audit backend configured from a REST client that
-// sends events over HTTP to an external service.
-func NewDynamicBackend(rc *rest.RESTClient, retryBackoff wait.Backoff) audit.Backend {
-	return &backend{
-		w: &webhook.GenericWebhook{
-			RestClient:   rc,
-			RetryBackoff: retryBackoff,
-			ShouldRetry:  retryOnError,
-		},
-		name: fmt.Sprintf("dynamic_%s", PluginName),
-	}
 }
 
 // NewBackend returns an audit backend that sends events over HTTP to an external service.

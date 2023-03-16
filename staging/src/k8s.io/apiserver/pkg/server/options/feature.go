@@ -33,7 +33,7 @@ func NewFeatureOptions() *FeatureOptions {
 
 	return &FeatureOptions{
 		EnableProfiling:           defaults.EnableProfiling,
-		EnableContentionProfiling: defaults.EnableContentionProfiling,
+		EnableContentionProfiling: defaults.EnableContentionProfiling, // 默认false
 	}
 }
 
@@ -41,9 +41,8 @@ func (o *FeatureOptions) AddFlags(fs *pflag.FlagSet) {
 	if o == nil {
 		return
 	}
-
 	fs.BoolVar(&o.EnableProfiling, "profiling", o.EnableProfiling, "通过web界面主机:port/debug/pprof/启用分析")
-	fs.BoolVar(&o.EnableContentionProfiling, "contention-profiling", o.EnableContentionProfiling, "如果启用了分析，则启用锁争用分析")
+	fs.BoolVar(&o.EnableContentionProfiling, "contention-profiling", o.EnableContentionProfiling, "如果启用了分析,则启用锁争用分析")
 }
 
 func (o *FeatureOptions) ApplyTo(c *server.Config) error {

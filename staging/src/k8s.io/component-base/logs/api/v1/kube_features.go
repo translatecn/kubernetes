@@ -22,11 +22,11 @@ import (
 
 const (
 	// ContextualLogging alpha: v1.24
-	ContextualLogging        featuregate.Feature = "ContextualLogging"    // 允许从上下文中查找记录器，而不是使用全局回退记录器和操作调用链使用的记录器。
-	contextualLoggingDefault                     = false                  // contextualLoggingDefault 在alpha中必须保持false。它可以在测试中成为true
+	ContextualLogging        featuregate.Feature = "ContextualLogging"    // 允许从上下文中查找记录器,而不是使用全局回退记录器和操作调用链使用的记录器.
+	contextualLoggingDefault                     = false                  // contextualLoggingDefault 在alpha中必须保持false.它可以在测试中成为true
 	LoggingAlphaOptions      featuregate.Feature = "LoggingAlphaOptions"  // 记录Alpha日志
 	LoggingBetaOptions       featuregate.Feature = "LoggingBetaOptions"   // 记录Beta日志
-	LoggingStableOptions     featuregate.Feature = "LoggingStableOptions" // 稳定的日志选项。总是启用。
+	LoggingStableOptions     featuregate.Feature = "LoggingStableOptions" // 稳定的日志选项.总是启用.
 )
 
 func featureGates() map[featuregate.Feature]featuregate.FeatureSpec {

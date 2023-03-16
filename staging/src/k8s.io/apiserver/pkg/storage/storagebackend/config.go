@@ -42,7 +42,7 @@ const (
 
 // TransportConfig holds all connection related info,  i.e. equal TransportConfig means equal servers we talk to.
 type TransportConfig struct {
-	ServerList []string // 要连接的存储服务器的列表。
+	ServerList []string // 要连接的存储服务器的列表.
 	// TLS credentials
 	KeyFile       string
 	CertFile      string
@@ -74,23 +74,14 @@ type Config struct {
 	// Transformer allows the value to be transformed prior to persisting into etcd.
 	Transformer value.Transformer
 
-	// CompactionInterval is an interval of requesting compaction from apiserver.
-	// If the value is 0, no compaction will be issued.
-	CompactionInterval time.Duration
-	// CountMetricPollPeriod specifies how often should count metric be updated
-	CountMetricPollPeriod time.Duration
-	// DBMetricPollInterval specifies how often should storage backend metric be updated.
-	DBMetricPollInterval time.Duration
-	// HealthcheckTimeout specifies the timeout used when checking health
-	HealthcheckTimeout time.Duration
-	// ReadycheckTimeout specifies the timeout used when checking readiness
-	ReadycheckTimeout time.Duration
+	CompactionInterval    time.Duration // etcd数据压缩间隔  5m
+	CountMetricPollPeriod time.Duration // 计数指标 1m 更新一次
+	DBMetricPollInterval  time.Duration // 30s 指定存储后端指标应该多久更新一次.
+	HealthcheckTimeout    time.Duration // 健康检查超时时间 2s
+	ReadycheckTimeout     time.Duration // 可用性检查 2s一次
 
-	LeaseManagerConfig etcd3.LeaseManagerConfig
-
-	// StorageObjectCountTracker is used to keep track of the total
-	// number of objects in the storage per resource.
-	StorageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker
+	LeaseManagerConfig        etcd3.LeaseManagerConfig                     // 租约管理
+	StorageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker // 用于跟踪每个资源中存储的对象总数.
 }
 
 // ConfigForResource is a Config specialized to a particular `schema.GroupResource`

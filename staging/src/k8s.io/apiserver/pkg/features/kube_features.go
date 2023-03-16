@@ -59,26 +59,24 @@ const (
 	// was not really implemented before 1.18.
 	APIPriorityAndFairness featuregate.Feature = "APIPriorityAndFairness"
 
-	// owner: @ilackams
+	// APIResponseCompression owner: @ilackams
 	// alpha: v1.7
 	// beta: v1.16
-	//
 	// Enables compression of REST responses (GET and LIST only)
 	APIResponseCompression featuregate.Feature = "APIResponseCompression"
 
-	// owner: @roycaihw
+	// APIServerIdentity owner: @roycaihw
 	// alpha: v1.20
-	//
-	// Assigns each kube-apiserver an ID in a cluster.
+	// 在集群中为每个kube-apiserver分配一个ID.
 	APIServerIdentity featuregate.Feature = "APIServerIdentity"
 
-	// owner: @dashpole
+	// APIServerTracing owner: @dashpole
 	// alpha: v1.22
 	//
 	// Add support for distributed tracing in the API Server
 	APIServerTracing featuregate.Feature = "APIServerTracing"
 
-	// owner: @tallclair
+	// AdvancedAuditing owner: @tallclair
 	// alpha: v1.7
 	// beta: v1.8
 	// GA: v1.12

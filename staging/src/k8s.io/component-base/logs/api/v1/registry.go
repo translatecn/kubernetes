@@ -31,7 +31,7 @@ var logRegistry = newLogFormatRegistry()
 // logFormatRegistry stores factories for all supported logging formats.
 type logFormatRegistry struct {
 	registry map[string]logFormat
-	frozen   bool
+	frozen   bool // 冻结
 }
 
 type logFormat struct {

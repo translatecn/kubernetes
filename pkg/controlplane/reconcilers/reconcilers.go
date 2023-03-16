@@ -50,12 +50,10 @@ type EndpointReconciler interface {
 type Type string
 
 const (
-	// MasterCountReconcilerType will select the original reconciler
-	MasterCountReconcilerType Type = "master-count"
-	// LeaseEndpointReconcilerType will select a storage based reconciler
-	LeaseEndpointReconcilerType Type = "lease"
-	// NoneEndpointReconcilerType will turn off the endpoint reconciler
-	NoneEndpointReconcilerType Type = "none"
+	// MasterCountReconcilerType will
+	MasterCountReconcilerType   Type = "master-count" // 选择一个最早的协调器
+	LeaseEndpointReconcilerType Type = "lease"        // 选择一个基于存储的协调器
+	NoneEndpointReconcilerType  Type = "none"         // 关闭端点协调器
 )
 
 // Types an array of reconciler types

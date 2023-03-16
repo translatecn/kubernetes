@@ -47,7 +47,7 @@ var SpecialDefaultResourcePrefixes = map[schema.GroupResource]string{
 	{Group: "policy", Resource: "podsecuritypolicies"}:     "podsecuritypolicy",
 }
 
-// DefaultWatchCacheSizes 禁用watchcache的默认资源。
+// DefaultWatchCacheSizes 禁用watchcache的默认资源.
 func DefaultWatchCacheSizes() map[schema.GroupResource]int {
 	return map[schema.GroupResource]int{
 		{Resource: "events"}:                         0,

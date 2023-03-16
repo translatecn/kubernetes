@@ -21,7 +21,7 @@ package v1beta1;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 option (gogoproto.goproto_stringer_all) = false;
-option (gogoproto.stringer_all) =  true;
+option (gogoproto.stringer_all) = true;
 option (gogoproto.goproto_getters_all) = true;
 option (gogoproto.marshaler_all) = true;
 option (gogoproto.sizer_all) = true;
@@ -29,16 +29,16 @@ option (gogoproto.unmarshaler_all) = true;
 option (gogoproto.goproto_unrecognized_all) = false;
 
 message ExampleRequest {
-	string request = 1;
-	string v1beta1_field = 2;
+  string request = 1;
+  string v1beta1_field = 2;
 }
 
 message ExampleResponse {
-	string error  = 1;
+  string error = 1;
 }
 
 // Example is a simple example service for general reference on the recommended
 // kubelet plugin model and plugin watcher testing.
 service Example {
-	rpc GetExampleInfo(ExampleRequest) returns (ExampleResponse) {}
+  rpc GetExampleInfo(ExampleRequest) returns (ExampleResponse) {}
 }

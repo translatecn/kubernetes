@@ -24,7 +24,7 @@ const (
 	ModeABAC        string = "ABAC"        // 是否使用基于属性的访问控制进行授权
 	ModeWebhook     string = "Webhook"     // 外部webhook调用模式是否授权
 	ModeRBAC        string = "RBAC"        // 是否使用基于角色的访问控制进行授权
-	ModeNode        string = "Node"        // 是一种授权模式，用于授权kubelets发出的API请求。
+	ModeNode        string = "Node"        // 是一种授权模式,用于授权kubelets发出的API请求.
 )
 
 // AuthorizationModeChoices is the list of supported authorization modes

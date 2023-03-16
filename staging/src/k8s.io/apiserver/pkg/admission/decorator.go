@@ -22,6 +22,7 @@ type Decorator interface {
 
 type DecoratorFunc func(handler Interface, name string) Interface
 
+// Decorate 装修
 func (d DecoratorFunc) Decorate(handler Interface, name string) Interface {
 	return d(handler, name)
 }

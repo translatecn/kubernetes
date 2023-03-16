@@ -30,7 +30,7 @@ var _ APIResourceConfigSource = &ResourceConfig{}
 
 type ResourceConfig struct {
 	GroupVersionConfigs map[schema.GroupVersion]bool
-	ResourceConfigs     map[schema.GroupVersionResource]bool
+	ResourceConfigs     map[schema.GroupVersionResource]bool // GVK  GVR 通过REST映射的RESTMappers实现
 }
 
 func NewResourceConfig() *ResourceConfig {
@@ -66,10 +66,9 @@ func resourceMatcherForVersion(gv schema.GroupVersion) func(gvr schema.GroupVers
 	}
 }
 
-// removeMatchingResourcePreferences removes individual resource preferences that match.  This is useful when an override of a version or level enablement should
-// override the previously individual preferences.
+// removeMatchingResourcePreferences 删除匹配的单个资源首选项.当版本或级别启用的覆盖应该覆盖先前的单个首选项时,这是有用的.
 func (o *ResourceConfig) removeMatchingResourcePreferences(matcher func(gvr schema.GroupVersionResource) bool) {
-	keysToRemove := []schema.GroupVersionResource{}
+	var keysToRemove []schema.GroupVersionResource
 	for k := range o.ResourceConfigs {
 		if matcher(k) {
 			keysToRemove = append(keysToRemove, k)
@@ -96,9 +95,8 @@ func (o *ResourceConfig) DisableVersions(versions ...schema.GroupVersion) {
 func (o *ResourceConfig) EnableVersions(versions ...schema.GroupVersion) {
 	for _, version := range versions {
 		o.GroupVersionConfigs[version] = true
-
 		// a preference about a version takes priority over the previously set resources
-		o.removeMatchingResourcePreferences(resourceMatcherForVersion(version))
+		o.removeMatchingResourcePreferences(resourceMatcherForVersion(version)) // 删除o.ResourceConfigs 中相应的版本
 	}
 
 }

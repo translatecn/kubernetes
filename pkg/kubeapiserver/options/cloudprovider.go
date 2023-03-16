@@ -39,9 +39,6 @@ func (s *CloudProviderOptions) Validate() []error {
 
 // AddFlags returns flags of cloud provider for a API Server
 func (s *CloudProviderOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&s.CloudProvider, "cloud-provider", s.CloudProvider,
-		"The provider for cloud services. Empty string for no provider.")
-
-	fs.StringVar(&s.CloudConfigFile, "cloud-config", s.CloudConfigFile,
-		"The path to the cloud provider configuration file. Empty string for no configuration file.")
+	fs.StringVar(&s.CloudProvider, "cloud-provider", s.CloudProvider, "云服务的提供商。没有提供程序是空字符串。")
+	fs.StringVar(&s.CloudConfigFile, "cloud-config", s.CloudConfigFile, "云提供程序配置文件的路径。没有配置文件是空字符串")
 }

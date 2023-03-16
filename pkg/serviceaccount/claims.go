@@ -31,10 +31,10 @@ import (
 )
 
 const (
-	// WarnOnlyBoundTokenExpirationSeconds 注入绑定服务帐户令牌过期，触发对其时间绑定特性的监控。
+	// WarnOnlyBoundTokenExpirationSeconds 注入绑定服务帐户令牌过期,触发对其时间绑定特性的监控.
 	WarnOnlyBoundTokenExpirationSeconds = 60*60 + 7
 
-	// ExpirationExtensionSeconds 如果有时间限制的特性，将延长安全推出中涉及的那些修改过的令牌的过期时间。
+	// ExpirationExtensionSeconds 如果有时间限制的特性,将延长安全推出中涉及的那些修改过的令牌的过期时间.
 	ExpirationExtensionSeconds = 24 * 365 * 60 * 60
 )
 

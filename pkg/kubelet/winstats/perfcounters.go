@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"time"
 	"unsafe"
-
-	"github.com/JeffAshton/win_pdh"
 )
 
 const (

@@ -42,23 +42,20 @@ import (
 )
 
 type EtcdOptions struct {
+	EtcdServersOverrides    []string
+	DefaultStorageMediaType string   // 后台存储的数据类型
+	DeleteCollectionWorkers int      //
+	EnableGarbageCollection bool     //
+	EnableWatchCache        bool     // 是否启用监听缓存
+	DefaultWatchCacheSize   int      // 0禁用
+	WatchCacheSizes         []string // 表示对给定etcd资源的重写
+
 	// The value of Paging on StorageConfig will be overridden by the
 	// calculated feature gate value.
-	StorageConfig                           storagebackend.Config
+	StorageConfig storagebackend.Config //
+
 	EncryptionProviderConfigFilepath        string // 加密提供者配置文件路径
 	EncryptionProviderConfigAutomaticReload bool   // 是否启用,默认不开启
-
-	EtcdServersOverrides []string
-
-	// To enable protobuf as storage format, it is enough
-	// to set it to "application/vnd.kubernetes.protobuf".
-	DefaultStorageMediaType string
-	DeleteCollectionWorkers int
-	EnableGarbageCollection bool
-	EnableWatchCache        bool // 是否启用监听缓存
-	// Set DefaultWatchCacheSize to zero to disable watch caches for those resources that have no explicit cache size set
-	DefaultWatchCacheSize int
-	WatchCacheSizes       []string // 表示对给定etcd资源的重写
 
 	// complete guards fields that must be initialized via Complete before the Apply methods can be used.
 	complete               bool
@@ -126,86 +123,34 @@ func (s *EtcdOptions) Validate() []error {
 
 // AddFlags adds flags related to etcd storage for a specific APIServer to the specified FlagSet
 func (s *EtcdOptions) AddFlags(fs *pflag.FlagSet) {
+	_ = NewEtcdOptions
 	if s == nil {
 		return
 	}
-
-	fs.StringSliceVar(&s.EtcdServersOverrides, "etcd-servers-overrides", s.EtcdServersOverrides, ""+
-		"Per-resource etcd servers overrides, comma separated. The individual override "+
-		"format: group/resource#servers, where servers are URLs, semicolon separated. "+
-		"Note that this applies only to resources compiled into this server binary. ")
-
-	fs.StringVar(&s.DefaultStorageMediaType, "storage-media-type", s.DefaultStorageMediaType, ""+
-		"The media type to use to store objects in storage. "+
-		"Some resources or storage backends may only support a specific media type and will ignore this setting. "+
-		"Supported media types: [application/json, application/yaml, application/vnd.kubernetes.protobuf]")
-	fs.IntVar(&s.DeleteCollectionWorkers, "delete-collection-workers", s.DeleteCollectionWorkers,
-		"Number of workers spawned for DeleteCollection call. These are used to speed up namespace cleanup.")
-
-	fs.BoolVar(&s.EnableGarbageCollection, "enable-garbage-collector", s.EnableGarbageCollection, ""+
-		"Enables the generic garbage collector. MUST be synced with the corresponding flag "+
-		"of the kube-controller-manager.")
-
-	fs.BoolVar(&s.EnableWatchCache, "watch-cache", s.EnableWatchCache,
-		"Enable watch caching in the apiserver")
-
-	fs.IntVar(&s.DefaultWatchCacheSize, "default-watch-cache-size", s.DefaultWatchCacheSize,
-		"Default watch cache size. If zero, watch cache will be disabled for resources that do not have a default watch size set.")
-
-	fs.MarkDeprecated("default-watch-cache-size",
-		"watch caches are sized automatically and this flag will be removed in a future version")
-
-	fs.StringSliceVar(&s.WatchCacheSizes, "watch-cache-sizes", s.WatchCacheSizes, ""+
-		"Watch cache size settings for some resources (pods, nodes, etc.), comma separated. "+
-		"The individual setting format: resource[.group]#size, where resource is lowercase plural (no version), "+
-		"group is omitted for resources of apiVersion v1 (the legacy core API) and included for others, "+
-		"and size is a number. This option is only meaningful for resources built into the apiserver, "+
-		"not ones defined by CRDs or aggregated from external servers, and is only consulted if the "+
-		"watch-cache is enabled. The only meaningful size setting to supply here is zero, which means to "+
-		"disable watch caching for the associated resource; all non-zero values are equivalent and mean "+
-		"to not disable watch caching for that resource")
-
-	fs.StringVar(&s.StorageConfig.Type, "storage-backend", s.StorageConfig.Type,
-		"The storage backend for persistence. Options: 'etcd3' (default).")
-
-	fs.StringSliceVar(&s.StorageConfig.Transport.ServerList, "etcd-servers", s.StorageConfig.Transport.ServerList,
-		"List of etcd servers to connect with (scheme://ip:port), comma separated.")
-
-	fs.StringVar(&s.StorageConfig.Prefix, "etcd-prefix", s.StorageConfig.Prefix,
-		"The prefix to prepend to all resource paths in etcd.")
-
-	fs.StringVar(&s.StorageConfig.Transport.KeyFile, "etcd-keyfile", s.StorageConfig.Transport.KeyFile,
-		"SSL key file used to secure etcd communication.")
-
-	fs.StringVar(&s.StorageConfig.Transport.CertFile, "etcd-certfile", s.StorageConfig.Transport.CertFile,
-		"SSL certification file used to secure etcd communication.")
-
-	fs.StringVar(&s.StorageConfig.Transport.TrustedCAFile, "etcd-cafile", s.StorageConfig.Transport.TrustedCAFile,
-		"SSL Certificate Authority file used to secure etcd communication.")
-
-	fs.StringVar(&s.EncryptionProviderConfigFilepath, "encryption-provider-config", s.EncryptionProviderConfigFilepath,
-		"包含用于在etcd中存储secret的加密程序的配置文件")
-
+	fs.StringSliceVar(&s.EtcdServersOverrides, "etcd-servers-overrides", s.EtcdServersOverrides, "覆盖每组资源etcd服务器,逗号分隔.单独重写格式:group/resource#servers,其中servers是url,分号分隔")
+	fs.StringVar(&s.DefaultStorageMediaType, "storage-media-type", s.DefaultStorageMediaType, "后端存储时的数据类型.某些资源或存储后端可能只支持特定的媒体类型,并将忽略此设置.支持的类型: [application/json, application/yaml, application/vnd.kubernetes.protobuf]")
+	fs.IntVar(&s.DeleteCollectionWorkers, "delete-collection-workers", s.DeleteCollectionWorkers, "删除etcd无用数据的worker数")
+	fs.BoolVar(&s.EnableGarbageCollection, "enable-garbage-collector", s.EnableGarbageCollection, "启用通用垃圾回收器.必须与 kube-controller-manager 的相应标志同步.")
+	fs.BoolVar(&s.EnableWatchCache, "watch-cache", s.EnableWatchCache, "在apisserver中启用监视缓存")
+	fs.IntVar(&s.DefaultWatchCacheSize, "default-watch-cache-size", s.DefaultWatchCacheSize, "默认的watch缓存大小.如果为零,watch缓存将被禁用")
+	fs.MarkDeprecated("default-watch-cache-size", "watch缓存是自动大小,这个标志将被删除在未来的版本")
+	fs.StringSliceVar(&s.WatchCacheSizes, "watch-cache-sizes", s.WatchCacheSizes, "注意某些资源(pod、节点等)的缓存大小设置,用逗号分隔.此选项仅对内置于apiserver中的资源有意义")
+	fs.StringVar(&s.StorageConfig.Type, "storage-backend", s.StorageConfig.Type, "用于持久性的存储后端.选项:'etcd3'(默认值).")
+	fs.StringSliceVar(&s.StorageConfig.Transport.ServerList, "etcd-servers", s.StorageConfig.Transport.ServerList, "要连接的etcd服务器列表(scheme://ip:port),逗号分隔.")
+	fs.StringVar(&s.StorageConfig.Prefix, "etcd-prefix", s.StorageConfig.Prefix, "etcd中所有资源路径的前缀.")
+	fs.StringVar(&s.StorageConfig.Transport.KeyFile, "etcd-keyfile", s.StorageConfig.Transport.KeyFile, "用于保护etcd通信的SSL密钥文件.")
+	fs.StringVar(&s.StorageConfig.Transport.CertFile, "etcd-certfile", s.StorageConfig.Transport.CertFile, "用于etcd通信安全的SSL认证文件.")
+	fs.StringVar(&s.StorageConfig.Transport.TrustedCAFile, "etcd-cafile", s.StorageConfig.Transport.TrustedCAFile, "SSL证书颁发机构文件,用于保护etcd通信.")
+	fs.DurationVar(&s.StorageConfig.CompactionInterval, "etcd-compaction-interval", s.StorageConfig.CompactionInterval, "压缩请求的间隔.如果是0,表示apiserver的压缩请求被禁用.")
+	fs.DurationVar(&s.StorageConfig.CountMetricPollPeriod, "etcd-count-metric-poll-period", s.StorageConfig.CountMetricPollPeriod, "对每种类型的资源数量轮询etcd的频率.0禁用度量收集.")
+	fs.DurationVar(&s.StorageConfig.DBMetricPollInterval, "etcd-db-metric-poll-interval", s.StorageConfig.DBMetricPollInterval, "轮询etcd和更新度量的请求间隔.0禁用度量收集")
+	fs.DurationVar(&s.StorageConfig.HealthcheckTimeout, "etcd-healthcheck-timeout", s.StorageConfig.HealthcheckTimeout, "检查etcd运行状况时使用的超时.")
+	fs.DurationVar(&s.StorageConfig.ReadycheckTimeout, "etcd-readycheck-timeout", s.StorageConfig.ReadycheckTimeout, "检查etcd准备就绪时使用的超时")
+	fs.Int64Var(&s.StorageConfig.LeaseManagerConfig.ReuseDurationSeconds, "lease-reuse-duration-seconds", s.StorageConfig.LeaseManagerConfig.ReuseDurationSeconds, "每个租约被重用的时间(以秒为单位).较低的值可以避免大量对象重用同一租期.请注意,过小的值可能会导致存储层的性能问题.")
+	fs.StringVar(&s.EncryptionProviderConfigFilepath, "encryption-provider-config", s.EncryptionProviderConfigFilepath, "包含用于在etcd中存储secret的加密程序的配置文件")
 	fs.BoolVar(&s.EncryptionProviderConfigAutomaticReload, "encryption-provider-config-automatic-reload", s.EncryptionProviderConfigAutomaticReload,
-		"确定在磁盘内容更改时 --encryption-provider-config设置的文件是否应自动重新加载。将此设置为true将禁用通过API服务器healthz端点唯一识别不同KMS插件的能力。")
+		"确定在磁盘内容更改时 --encryption-provider-config设置的文件是否应自动重新加载.将此设置为true将禁用通过API服务器healthz端点唯一识别不同KMS插件的能力.")
 
-	fs.DurationVar(&s.StorageConfig.CompactionInterval, "etcd-compaction-interval", s.StorageConfig.CompactionInterval,
-		"The interval of compaction requests. If 0, the compaction request from apiserver is disabled.")
-
-	fs.DurationVar(&s.StorageConfig.CountMetricPollPeriod, "etcd-count-metric-poll-period", s.StorageConfig.CountMetricPollPeriod, ""+
-		"Frequency of polling etcd for number of resources per type. 0 disables the metric collection.")
-
-	fs.DurationVar(&s.StorageConfig.DBMetricPollInterval, "etcd-db-metric-poll-interval", s.StorageConfig.DBMetricPollInterval,
-		"The interval of requests to poll etcd and update metric. 0 disables the metric collection")
-
-	fs.DurationVar(&s.StorageConfig.HealthcheckTimeout, "etcd-healthcheck-timeout", s.StorageConfig.HealthcheckTimeout,
-		"The timeout to use when checking etcd health.")
-
-	fs.DurationVar(&s.StorageConfig.ReadycheckTimeout, "etcd-readycheck-timeout", s.StorageConfig.ReadycheckTimeout,
-		"The timeout to use when checking etcd readiness")
-
-	fs.Int64Var(&s.StorageConfig.LeaseManagerConfig.ReuseDurationSeconds, "lease-reuse-duration-seconds", s.StorageConfig.LeaseManagerConfig.ReuseDurationSeconds,
-		"The time in seconds that each lease is reused. A lower value could avoid large number of objects reusing the same lease. Notice that a too small value may cause performance problems at storage layer.")
 }
 
 // Complete must be called exactly once before using any of the Apply methods.  It is responsible for setting
@@ -385,7 +330,7 @@ func (f *StorageFactoryRestOptionsFactory) GetRESTOptions(resource schema.GroupR
 	return ret, nil
 }
 
-// ParseWatchCacheSizes 将缓存大小值列表转换为组资源到所请求大小的映射。
+// ParseWatchCacheSizes 将缓存大小值列表转换为组资源到所请求大小的映射.
 func ParseWatchCacheSizes(cacheSizes []string) (map[schema.GroupResource]int, error) {
 	watchCacheSizes := make(map[schema.GroupResource]int)
 	for _, c := range cacheSizes {

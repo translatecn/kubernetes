@@ -88,7 +88,7 @@ func Version(name string, value versionValue, usage string) *versionValue {
 const versionFlagName = "version"
 
 var (
-	versionFlag = Version(versionFlagName, VersionFalse, "Print version information and quit")
+	versionFlag = Version(versionFlagName, VersionFalse, "打印版本信息并退出")
 	programName = "Kubernetes"
 )
 

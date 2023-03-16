@@ -23,7 +23,7 @@ import (
 	netutils "k8s.io/utils/net"
 )
 
-// DefaultServiceNodePortRange 是NodePort服务的默认端口范围。2768-32768
+// DefaultServiceNodePortRange 是NodePort服务的默认端口范围.2768-32768
 var DefaultServiceNodePortRange = utilnet.PortRange{Base: 30000, Size: 2768}
 
 // DefaultServiceIPCIDR CIDR是用于分配服务集群IP的IP范围的符号

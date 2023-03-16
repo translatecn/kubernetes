@@ -51,7 +51,7 @@ func MergeResourceEncodingConfigs(
 	return resourceEncodingConfig
 }
 
-// Recognized values for the --runtime-config parameter to enable/disable groups of APIs
+// Recognized 注册了一些参数,用来全局启用、弃用API  --runtime-config
 const (
 	APIAll   = "api/all"
 	APIGA    = "api/ga"
@@ -65,14 +65,10 @@ var (
 	alphaPattern = regexp.MustCompile(`^v\d+alpha\d+$`)
 
 	groupVersionMatchers = map[string]func(gv schema.GroupVersion) bool{
-		// allows users to address all api versions
-		APIAll: func(gv schema.GroupVersion) bool { return true },
-		// allows users to address all api versions in the form v[0-9]+
-		APIGA: func(gv schema.GroupVersion) bool { return gaPattern.MatchString(gv.Version) },
-		// allows users to address all beta api versions
-		APIBeta: func(gv schema.GroupVersion) bool { return betaPattern.MatchString(gv.Version) },
-		// allows users to address all alpha api versions
-		APIAlpha: func(gv schema.GroupVersion) bool { return alphaPattern.MatchString(gv.Version) },
+		APIAll:   func(gv schema.GroupVersion) bool { return true },                                 // 允许用户访问所有API版本
+		APIGA:    func(gv schema.GroupVersion) bool { return gaPattern.MatchString(gv.Version) },    // 允许用户以v[0-9]+的形式处理所有API版本
+		APIBeta:  func(gv schema.GroupVersion) bool { return betaPattern.MatchString(gv.Version) },  // 允许用户访问所有beta API版本
+		APIAlpha: func(gv schema.GroupVersion) bool { return alphaPattern.MatchString(gv.Version) }, // 允许用户处理所有alpha API版本
 	}
 
 	groupVersionMatchersOrder = []string{APIAll, APIGA, APIBeta, APIAlpha}
@@ -206,11 +202,11 @@ func getRuntimeConfigValue(overrides cliflag.ConfigurationMap, apiKey string, de
 	return defaultValue, nil
 }
 
-// ParseGroups 接收resourceConfig并返回已解析的组。
+// ParseGroups 接收resourceConfig并返回可以解析的组
 func ParseGroups(resourceConfig cliflag.ConfigurationMap) ([]string, error) {
 	groups := []string{}
 	for key := range resourceConfig {
-		// apps/v1=true
+		// apps/v1
 		if _, ok := groupVersionMatchers[key]; ok {
 			continue
 		}

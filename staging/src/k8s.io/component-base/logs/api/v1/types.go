@@ -32,11 +32,11 @@ const (
 )
 
 type LoggingConfiguration struct {
-	Format         string               `json:"format,omitempty"`  // 日志格式，默认t
-	FlushFrequency time.Duration        `json:"flushFrequency"`    // 两次日志刷新之间的最大纳秒数(即1s = 1000000000)。如果所选日志后端写入日志消息而没有缓冲，则忽略。
-	Verbosity      VerbosityLevel       `json:"verbosity"`         // 是决定记录哪些日志消息的阈值。默认为0，只记录最重要的消息。更高的值可以启用其他消息。错误消息总是被记录下来。
-	VModule        VModuleConfiguration `json:"vmodule,omitempty"` // VModule会覆盖单个文件的日志可见性k阈值。仅支持“文本”日志格式。
-	Options        FormatOptions        `json:"options,omitempty"` // [Alpha]选项包含特定于不同日志格式的附加参数。只使用所选格式的选项，但所有选项都将得到验证。仅在启用LoggingAlphaOptions特性门时可用。
+	Format         string               `json:"format,omitempty"`  // 日志格式,默认t
+	FlushFrequency time.Duration        `json:"flushFrequency"`    // 两次日志刷新之间的最大纳秒数(即1s = 1000000000).如果所选日志后端写入日志消息而没有缓冲,则忽略.
+	Verbosity      VerbosityLevel       `json:"verbosity"`         // 是决定记录哪些日志消息的阈值.默认为0,只记录最重要的消息.更高的值可以启用其他消息.错误消息总是被记录下来.
+	VModule        VModuleConfiguration `json:"vmodule,omitempty"` // VModule会覆盖单个文件的日志可见性k阈值.仅支持“文本”日志格式.
+	Options        FormatOptions        `json:"options,omitempty"` // [Alpha]选项包含特定于不同日志格式的附加参数.只使用所选格式的选项,但所有选项都将得到验证.仅在启用LoggingAlphaOptions特性开关时可用.
 }
 
 // FormatOptions contains options for the different logging formats.
@@ -48,14 +48,9 @@ type FormatOptions struct {
 
 // JSONOptions contains options for logging format "json".
 type JSONOptions struct {
-	// [Alpha] SplitStream redirects error messages to stderr while
-	// info messages go to stdout, with buffering. The default is to write
-	// both to stdout, without buffering. Only available when
-	// the LoggingAlphaOptions feature gate is enabled.
+	// [Alpha] SplitStream重定向错误消息到stderr,而info消息到stdout,带有缓冲.默认情况下,将两者都写入标准输出,而不进行缓冲.仅在启用LoggingAlphaOptions 特性开关 时可用.
 	SplitStream bool `json:"splitStream,omitempty"`
-	// [Alpha] InfoBufferSize sets the size of the info stream when
-	// using split streams. The default is zero, which disables buffering.
-	// Only available when the LoggingAlphaOptions feature gate is enabled.
+	// [Alpha] InfoBufferSize设置使用分割流时信息流的大小.默认值为0,这将禁用缓冲.仅在启用LoggingAlphaOptions特性开关时可用.
 	InfoBufferSize resource.QuantityValue `json:"infoBufferSize,omitempty"`
 }
 
@@ -76,5 +71,5 @@ type VModuleItem struct {
 	Verbosity VerbosityLevel `json:"verbosity"`
 }
 
-// VerbosityLevel 表示klog或logr 日志可见性k阈值。
+// VerbosityLevel 表示klog或logr 日志可见性k阈值.
 type VerbosityLevel uint32

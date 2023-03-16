@@ -69,9 +69,7 @@ type StorageObjectCountTracker interface {
 	RunUntil(stopCh <-chan struct{})
 }
 
-// NewStorageObjectCountTracker returns an instance of
-// StorageObjectCountTracker interface that can be used to
-// keep track of the total number of objects for each resource.
+// NewStorageObjectCountTracker 跟踪每个资源的对象总数
 func NewStorageObjectCountTracker() StorageObjectCountTracker {
 	return &objectCountTracker{
 		clock:  &clock.RealClock{},

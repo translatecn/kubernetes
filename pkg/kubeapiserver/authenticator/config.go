@@ -226,7 +226,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	return authenticator, &securityDefinitions, nil
 }
 
-// IsValidServiceAccountKeyFile 如果可以从给定文件中读取有效的RSA公钥，则返回true
+// IsValidServiceAccountKeyFile 如果可以从给定文件中读取有效的RSA公钥,则返回true
 func IsValidServiceAccountKeyFile(file string) bool {
 	_, err := keyutil.PublicKeysFromFile(file)
 	return err == nil

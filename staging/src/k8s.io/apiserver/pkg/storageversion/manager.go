@@ -81,7 +81,6 @@ type updateStatus struct {
 	lastErr error
 }
 
-// NewDefaultManager creates a new defaultManager.
 func NewDefaultManager() Manager {
 	s := &defaultManager{}
 	s.completed.Store(false)
