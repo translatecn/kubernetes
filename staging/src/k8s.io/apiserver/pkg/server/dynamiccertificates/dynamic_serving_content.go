@@ -32,28 +32,21 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// DynamicCertKeyPairContent provides a CertKeyContentProvider that can dynamically react to new file content
+// DynamicCertKeyPairContent 提供一个可以动态响应新文件内容的CertKeyContentProvider
 type DynamicCertKeyPairContent struct {
-	name string
+	name        string                          //
+	certFile    string                          // 证书文件
+	keyFile     string                          // 私钥文件
+	certKeyPair atomic.Value                    // 是一个certKeyContent，它包含密钥和证书的最后一次读取的非零长度内容
+	listeners   []Listener                      //
+	queue       workqueue.RateLimitingInterface // 只有一个项，但是它有很好的错误处理后退/重试语义
 
-	// certFile is the name of the certificate file to read.
-	certFile string
-	// keyFile is the name of the key file to read.
-	keyFile string
-
-	// certKeyPair is a certKeyContent that contains the last read, non-zero length content of the key and cert
-	certKeyPair atomic.Value
-
-	listeners []Listener
-
-	// queue only ever has one item, but it has nice error handling backoff/retry semantics
-	queue workqueue.RateLimitingInterface
 }
 
 var _ CertKeyContentProvider = &DynamicCertKeyPairContent{}
 var _ ControllerRunner = &DynamicCertKeyPairContent{}
 
-// NewDynamicServingContentFromFiles returns a dynamic CertKeyContentProvider based on a cert and key filename
+// NewDynamicServingContentFromFiles 返回一个基于证书和密钥文件名的动态CertKeyContentProvider
 func NewDynamicServingContentFromFiles(purpose, certFile, keyFile string) (*DynamicCertKeyPairContent, error) {
 	if len(certFile) == 0 || len(keyFile) == 0 {
 		return nil, fmt.Errorf("missing filename for serving cert")
@@ -73,12 +66,12 @@ func NewDynamicServingContentFromFiles(purpose, certFile, keyFile string) (*Dyna
 	return ret, nil
 }
 
-// AddListener adds a listener to be notified when the serving cert content changes.
+// AddListener 添加一个侦听器，以便在服务证书内容更改时得到通知。
 func (c *DynamicCertKeyPairContent) AddListener(listener Listener) {
 	c.listeners = append(c.listeners, listener)
 }
 
-// loadCertKeyPair determines the next set of content for the file.
+// loadCertKeyPair 确定文件的下一组内容。
 func (c *DynamicCertKeyPairContent) loadCertKeyPair() error {
 	cert, err := ioutil.ReadFile(c.certFile)
 	if err != nil {
@@ -119,7 +112,7 @@ func (c *DynamicCertKeyPairContent) loadCertKeyPair() error {
 	return nil
 }
 
-// RunOnce runs a single sync loop
+// RunOnce 运行一个同步循环
 func (c *DynamicCertKeyPairContent) RunOnce(ctx context.Context) error {
 	return c.loadCertKeyPair()
 }

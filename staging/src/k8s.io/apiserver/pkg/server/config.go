@@ -275,33 +275,14 @@ type RecommendedConfig struct {
 }
 
 type SecureServingInfo struct {
-	// Listener is the secure server network listener.
-	Listener net.Listener
-
-	// Cert is the main server cert which is used if SNI does not match. Cert must be non-nil and is
-	// allowed to be in SNICerts.
-	Cert dynamiccertificates.CertKeyContentProvider
-
-	// SNICerts are the TLS certificates used for SNI.
-	SNICerts []dynamiccertificates.SNICertKeyContentProvider
-
-	// ClientCA is the certificate bundle for all the signers that you'll recognize for incoming client certificates
-	ClientCA dynamiccertificates.CAContentProvider
-
-	// MinTLSVersion optionally overrides the minimum TLS version supported.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	MinTLSVersion uint16
-
-	// CipherSuites optionally overrides the list of allowed cipher suites for the server.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	CipherSuites []uint16
-
-	// HTTP2MaxStreamsPerConnection is the limit that the api server imposes on each client.
-	// A value of zero means to use the default provided by golang's HTTP/2 support.
-	HTTP2MaxStreamsPerConnection int
-
-	// DisableHTTP2 indicates that http2 should not be enabled.
-	DisableHTTP2 bool
+	Listener                     net.Listener                                    // 安全服务器是网络监听器
+	Cert                         dynamiccertificates.CertKeyContentProvider      // Cert是主服务器证书，如果SNI不匹配，将使用该证书。Cert必须是非nil，并且允许在SNICerts中。
+	SNICerts                     []dynamiccertificates.SNICertKeyContentProvider // 是用于SNI的TLS证书。
+	ClientCA                     dynamiccertificates.CAContentProvider           // 证书包是否包含您将为传入的客户端证书识别的所有签名者
+	MinTLSVersion                uint16                                          // 支持的最小TLS版本。
+	CipherSuites                 []uint16                                        // 服务器允许的密码套件列表。
+	HTTP2MaxStreamsPerConnection int                                             // 是API服务器对每个客户机施加的限制。值为0意味着使用golang的HTTP/2支持提供的默认值。
+	DisableHTTP2                 bool                                            // 表示http2不应该被启用。
 }
 
 type AuthenticationInfo struct {

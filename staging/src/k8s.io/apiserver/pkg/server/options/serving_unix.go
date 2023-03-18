@@ -27,6 +27,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
+// 允许端口重用
 func permitPortReuse(network, addr string, conn syscall.RawConn) error {
 	return conn.Control(func(fd uintptr) {
 		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEPORT, 1); err != nil {
@@ -35,6 +36,7 @@ func permitPortReuse(network, addr string, conn syscall.RawConn) error {
 	})
 }
 
+// 允许地址重用
 func permitAddressReuse(network, addr string, conn syscall.RawConn) error {
 	return conn.Control(func(fd uintptr) {
 		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEADDR, 1); err != nil {
