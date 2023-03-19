@@ -125,21 +125,14 @@ func ValidateEgressSelectorConfiguration(config *apiserver.EgressSelectorConfigu
 func validateHTTPConnectTransport(transport *apiserver.Transport, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if transport == nil {
-		allErrs = append(allErrs, field.Required(
-			fldPath.Child("transport"),
-			"transport must be set for HTTPConnect"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("transport"), "transport must be set for HTTPConnect"))
 		return allErrs
 	}
 
 	if transport.TCP != nil && transport.UDS != nil {
-		allErrs = append(allErrs, field.Invalid(
-			fldPath.Child("tcp"),
-			transport.TCP,
-			"TCP and UDS cannot both be set"))
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("tcp"), transport.TCP, "TCP and UDS cannot both be set"))
 	} else if transport.TCP == nil && transport.UDS == nil {
-		allErrs = append(allErrs, field.Required(
-			fldPath.Child("tcp"),
-			"One of TCP or UDS must be set"))
+		allErrs = append(allErrs, field.Required(fldPath.Child("tcp"), "One of TCP or UDS must be set"))
 	} else if transport.TCP != nil {
 		allErrs = append(allErrs, validateTCPConnection(transport.TCP, fldPath)...)
 	} else if transport.UDS != nil {

@@ -173,7 +173,7 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 
 // CreateServerChain creates the apiservers connected via delegation.
 func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatorapiserver.APIAggregator, error) {
-	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions)
+	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions) // kube-api-server
 	if err != nil {
 		return nil, err
 	}
@@ -348,34 +348,40 @@ func buildGenericConfig(
 	storageFactory *serverstorage.DefaultStorageFactory,
 	lastErr error,
 ) {
-	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)
+	// 1、为 genericConfig 设置默认值
+	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)                    // ✅
 	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource() // 表示哪个groupVersion启用,其资源启用/禁用.
 
 	if lastErr = s.GenericServerRunOptions.ApplyTo(genericConfig); lastErr != nil {
 		return
 	}
 
-	if lastErr = s.SecureServing.ApplyTo(&genericConfig.SecureServing, &genericConfig.LoopbackClientConfig); lastErr != nil {
+	if lastErr = s.SecureServing.ApplyTo(&genericConfig.SecureServing, &genericConfig.LoopbackClientConfig); lastErr != nil { // ✅
 		return
 	}
-	if lastErr = s.Features.ApplyTo(genericConfig); lastErr != nil {
+	if lastErr = s.Features.ApplyTo(genericConfig); lastErr != nil { // ✅
 		return
 	}
-	if lastErr = s.APIEnablement.ApplyTo(genericConfig, controlplane.DefaultAPIResourceConfigSource(), legacyscheme.Scheme); lastErr != nil {
+	if lastErr = s.APIEnablement.ApplyTo(genericConfig, controlplane.DefaultAPIResourceConfigSource(), legacyscheme.Scheme); lastErr != nil { // ✅
 		return
 	}
-	if lastErr = s.EgressSelector.ApplyTo(genericConfig); lastErr != nil {
+	if lastErr = s.EgressSelector.ApplyTo(genericConfig); lastErr != nil { // todo 后面需要重看
 		return
 	}
 	if utilfeature.DefaultFeatureGate.Enabled(genericfeatures.APIServerTracing) {
 		if lastErr = s.Traces.ApplyTo(genericConfig.EgressSelector, genericConfig); lastErr != nil {
 			return
-		}
+		} // todo 后面需要重看
 	}
-	// wrap the definitions to revert any changes from disabled features
+	//包装定义以从禁用的特性中恢复任何更改
 	getOpenAPIDefinitions := openapi.GetOpenAPIDefinitionsWithoutDisabledFeatures(generatedopenapi.GetOpenAPIDefinitions)
-	genericConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(getOpenAPIDefinitions, openapinamer.NewDefinitionNamer(legacyscheme.Scheme, extensionsapiserver.Scheme, aggregatorscheme.Scheme))
+
+	genericConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(
+		getOpenAPIDefinitions,
+		openapinamer.NewDefinitionNamer(legacyscheme.Scheme, extensionsapiserver.Scheme, aggregatorscheme.Scheme),
+	)
 	genericConfig.OpenAPIConfig.Info.Title = "Kubernetes"
+
 	if utilfeature.DefaultFeatureGate.Enabled(genericfeatures.OpenAPIV3) {
 		genericConfig.OpenAPIV3Config = genericapiserver.DefaultOpenAPIV3Config(getOpenAPIDefinitions, openapinamer.NewDefinitionNamer(legacyscheme.Scheme, extensionsapiserver.Scheme, aggregatorscheme.Scheme))
 		genericConfig.OpenAPIV3Config.Info.Title = "Kubernetes"
@@ -403,10 +409,12 @@ func buildGenericConfig(
 
 	storageFactoryConfig := kubeapiserver.NewStorageFactoryConfig()
 	storageFactoryConfig.APIResourceConfig = genericConfig.MergedResourceConfig
+	// 初始化 storageFactory
 	storageFactory, lastErr = storageFactoryConfig.Complete(s.Etcd).New()
 	if lastErr != nil {
 		return
 	}
+	// 2、初始化 RESTOptionsGetter，后期根据其获取操作 Etcd 的句柄，同时添加 etcd 的健康检查方法
 	if lastErr = s.Etcd.ApplyWithStorageFactoryTo(storageFactory, genericConfig); lastErr != nil {
 		return
 	}
@@ -415,11 +423,12 @@ func buildGenericConfig(
 	// Since not every generic apiserver has to support protobufs, we
 	// cannot default to it in generic apiserver and need to explicitly
 	// set it in kube-apiserver.
+	// 3、设置使用 protobufs 用来内部交互，并且禁用压缩功能
 	genericConfig.LoopbackClientConfig.ContentConfig.ContentType = "application/vnd.kubernetes.protobuf"
 	// Disable compression for self-communication, since we are going to be
 	// on a fast local network
 	genericConfig.LoopbackClientConfig.DisableCompression = true
-
+	// 4、创建 clientset
 	kubeClientConfig := genericConfig.LoopbackClientConfig
 	clientgoExternalClient, err := clientgoclientset.NewForConfig(kubeClientConfig)
 	if err != nil {
@@ -433,6 +442,7 @@ func buildGenericConfig(
 		return
 	}
 
+	// 6、创建鉴权实例，包含：Node、RBAC、Webhook、ABAC、AlwaysAllow、AlwaysDeny
 	genericConfig.Authorization.Authorizer, genericConfig.RuleResolver, err = BuildAuthorizer(s, genericConfig.EgressSelector, versionedInformers)
 	if err != nil {
 		lastErr = fmt.Errorf("invalid authorization config: %v", err)
@@ -441,7 +451,7 @@ func buildGenericConfig(
 	if !sets.NewString(s.Authorization.Modes...).Has(modes.ModeRBAC) {
 		genericConfig.DisabledPostStartHooks.Insert(rbacrest.PostStartHookName)
 	}
-
+	// 7、审计插件的初始化
 	lastErr = s.Audit.ApplyTo(genericConfig)
 	if lastErr != nil {
 		return
@@ -453,18 +463,14 @@ func buildGenericConfig(
 		CloudConfigFile:      s.CloudProvider.CloudConfigFile,
 	}
 	serviceResolver = buildServiceResolver(s.EnableAggregatorRouting, genericConfig.LoopbackClientConfig.Host, versionedInformers)
+	// 8、准入插件的初始化
 	pluginInitializers, admissionPostStartHook, err = admissionConfig.New(proxyTransport, genericConfig.EgressSelector, serviceResolver, genericConfig.TracerProvider)
 	if err != nil {
 		lastErr = fmt.Errorf("failed to create admission plugin initializer: %v", err)
 		return
 	}
 
-	err = s.Admission.ApplyTo(
-		genericConfig,
-		versionedInformers,
-		kubeClientConfig,
-		utilfeature.DefaultFeatureGate,
-		pluginInitializers...)
+	err = s.Admission.ApplyTo(genericConfig, versionedInformers, kubeClientConfig, utilfeature.DefaultFeatureGate, pluginInitializers...)
 	if err != nil {
 		lastErr = fmt.Errorf("failed to initialize admission: %v", err)
 		return

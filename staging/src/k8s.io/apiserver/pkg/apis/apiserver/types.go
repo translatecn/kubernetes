@@ -61,36 +61,25 @@ type EgressSelectorConfiguration struct {
 
 // EgressSelection provides the configuration for a single egress selection client.
 type EgressSelection struct {
-	// Name is the name of the egress selection.
-	// Currently supported values are "controlplane", "etcd" and "cluster"
-	Name string
-
-	// Connection is the exact information used to configure the egress selection
-	Connection Connection
+	Name       string     // 目前支持的值为controlplane、etcd和cluster。
+	Connection Connection // 用于配置Egress的确切信息
 }
 
 // Connection provides the configuration for a single egress selection client.
 type Connection struct {
-	// Protocol is the protocol used to connect from client to the konnectivity server.
-	ProxyProtocol ProtocolType
+	ProxyProtocol ProtocolType // 协议是用于从客户端连接到连接服务器的协议。
+	Transport     *Transport   // 定义用于拨号到连接服务器的传输配置。如果ProxyProtocol是HTTPConnect或GRPC，这是必需的。
 
-	// Transport defines the transport configurations we use to dial to the konnectivity server.
-	// This is required if ProxyProtocol is HTTPConnect or GRPC.
-	// +optional
-	Transport *Transport
 }
 
 // ProtocolType is a set of valid values for Connection.ProtocolType
 type ProtocolType string
 
-// Valid types for ProtocolType for konnectivity server
+// 链接到konnectivity服务器的协议方式
 const (
-	// Use HTTPConnect to connect to konnectivity server
 	ProtocolHTTPConnect ProtocolType = "HTTPConnect"
-	// Use grpc to connect to konnectivity server
-	ProtocolGRPC ProtocolType = "GRPC"
-	// Connect directly (skip konnectivity server)
-	ProtocolDirect ProtocolType = "Direct"
+	ProtocolGRPC        ProtocolType = "GRPC"
+	ProtocolDirect      ProtocolType = "Direct"
 )
 
 // Transport defines the transport configurations we use to dial to the konnectivity server

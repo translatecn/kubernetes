@@ -42,7 +42,7 @@ func (o *EgressSelectorOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringVar(&o.ConfigFile, "egress-selector-config-file", o.ConfigFile, "apiserver出口选择器配置文件")
+	fs.StringVar(&o.ConfigFile, "egress-selector-config-file", o.ConfigFile, "apiserver egress 选择器配置文件")
 }
 
 // ApplyTo adds the egress selector settings to the server configuration.
@@ -53,16 +53,16 @@ func (o *EgressSelectorOptions) ApplyTo(c *server.Config) error {
 		return nil
 	}
 
-	npConfig, err := egressselector.ReadEgressSelectorConfiguration(o.ConfigFile)
+	npConfig, err := egressselector.ReadEgressSelectorConfiguration(o.ConfigFile) // ✅
 	if err != nil {
 		return fmt.Errorf("failed to read egress selector config: %v", err)
 	}
-	errs := egressselector.ValidateEgressSelectorConfiguration(npConfig)
+	errs := egressselector.ValidateEgressSelectorConfiguration(npConfig) // ✅
 	if len(errs) > 0 {
 		return fmt.Errorf("failed to validate egress selector configuration: %v", errs.ToAggregate())
 	}
 
-	cs, err := egressselector.NewEgressSelector(npConfig)
+	cs, err := egressselector.NewEgressSelector(npConfig) // todo 后面需要重看
 	if err != nil {
 		return fmt.Errorf("failed to setup egress selector with config %#v: %v", npConfig, err)
 	}

@@ -33,7 +33,7 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153
-	github.com/emicklei/go-restful/v3 v3.9.0
+	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/evanphx/json-patch v4.12.0+incompatible
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-logr/logr v1.2.3

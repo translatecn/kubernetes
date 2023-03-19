@@ -72,8 +72,7 @@ const (
 
 	// APIServerTracing owner: @dashpole
 	// alpha: v1.22
-	//
-	// Add support for distributed tracing in the API Server
+	// 在API服务器中添加对分布式跟踪的支持
 	APIServerTracing featuregate.Feature = "APIServerTracing"
 
 	// AdvancedAuditing owner: @tallclair
@@ -126,13 +125,10 @@ const (
 	// Enables KMS v2 API for encryption at rest.
 	KMSv2 featuregate.Feature = "KMSv2"
 
-	// owner: @jiahuif
-	// kep: https://kep.k8s.io/2887
+	// OpenAPIEnums kep: https://kep.k8s.io/2887
 	// alpha: v1.23
 	// beta: v1.24
-	//
-	// Enables populating "enum" field of OpenAPI schemas
-	// in the spec returned from kube-apiserver.
+	// 允许在kube-apiserver返回的规范中填充OpenAPI模式的“enum”字段。
 	OpenAPIEnums featuregate.Feature = "OpenAPIEnums"
 
 	// owner: @jefftree

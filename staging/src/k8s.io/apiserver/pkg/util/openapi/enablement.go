@@ -39,7 +39,7 @@ func GetOpenAPIDefinitionsWithoutDisabledFeatures(GetOpenAPIDefinitions common.G
 	}
 }
 
-// restoreDefinitions restores any changes by disabled features from definition map.
+// restoreDefinitions 从定义映射中恢复被禁用特性的任何更改。
 func restoreDefinitions(defs map[string]common.OpenAPIDefinition) {
 	// revert changes from OpenAPIEnums
 	if !utilfeature.DefaultFeatureGate.Enabled(genericfeatures.OpenAPIEnums) {
@@ -53,14 +53,15 @@ func restoreDefinitions(defs map[string]common.OpenAPIDefinition) {
 	}
 }
 
+// 修剪enum
 func pruneEnums(schema *spec.Schema) *spec.Schema {
 	walker := schemamutation.Walker{
 		SchemaCallback: func(schema *spec.Schema) *spec.Schema {
 			orig := schema
 			clone := func() {
-				if orig == schema { // if schema has not been mutated yet
+				if orig == schema {
 					schema = new(spec.Schema)
-					*schema = *orig // make a clone from orig to schema
+					*schema = *orig
 				}
 			}
 			if headerIndex := strings.Index(schema.Description, enumTypeDescriptionHeader); headerIndex != -1 {
