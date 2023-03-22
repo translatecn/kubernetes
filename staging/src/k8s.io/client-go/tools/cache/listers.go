@@ -30,7 +30,7 @@ import (
 // AppendFunc is used to add a matching item to whatever list the caller is using
 type AppendFunc func(interface{})
 
-// ListAll calls appendFn with each value retrieved from store which matches the selector.
+// ListAll calls appendFn with each value retrieved from reflectorStore which matches the selector.
 func ListAll(store Store, selector labels.Selector, appendFn AppendFunc) error {
 	selectAll := selector.Empty()
 	for _, m := range store.List() {

@@ -20,11 +20,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"k8s.io/klog/v2"
 	"math/rand"
 	"sync"
 	"time"
-
-	"k8s.io/klog/v2"
 )
 
 var klogV = func(lvl klog.Level) bool {

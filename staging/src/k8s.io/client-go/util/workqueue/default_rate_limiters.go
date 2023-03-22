@@ -25,13 +25,10 @@ import (
 )
 
 type RateLimiter interface {
-	// When gets an item and gets to decide how long that item should wait
-	When(item interface{}) time.Duration
-	// Forget indicates that an item is finished being retried.  Doesn't matter whether it's for failing
-	// or for success, we'll stop tracking it
-	Forget(item interface{})
-	// NumRequeues returns back how many failures the item has had
-	NumRequeues(item interface{}) int
+	When(item interface{}) time.Duration // 获取一个项目并决定该项目应该等待多长时间
+	Forget(item interface{})             // 指示项已完成重试。不管是成功还是失败，我们都会停止追踪
+	NumRequeues(item interface{}) int    // 返回项目失败的次数
+
 }
 
 // DefaultControllerRateLimiter is a no-arg constructor for a default rate limiter for a workqueue.  It has
@@ -39,7 +36,6 @@ type RateLimiter interface {
 func DefaultControllerRateLimiter() RateLimiter {
 	return NewMaxOfRateLimiter(
 		NewItemExponentialFailureRateLimiter(5*time.Millisecond, 1000*time.Second),
-		// 10 qps, 100 bucket size.  This is only for retry speed and its only the overall factor (not per item)
 		&BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
 	)
 }

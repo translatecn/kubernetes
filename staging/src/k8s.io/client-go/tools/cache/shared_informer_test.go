@@ -290,7 +290,7 @@ func TestSharedInformerInitializationRace(t *testing.T) {
 }
 
 // TestSharedInformerWatchDisruption simulates a watch that was closed
-// with updates to the store during that time. We ensure that handlers with
+// with updates to the reflectorStore during that time. We ensure that handlers with
 // resync and no resync see the expected state.
 func TestSharedInformerWatchDisruption(t *testing.T) {
 	// source simulates an apiserver object endpoint.

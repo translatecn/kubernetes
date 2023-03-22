@@ -46,7 +46,7 @@ func TestTTLExpirationBasic(t *testing.T) {
 	}
 	item, exists, err := ttlStore.Get(testObj)
 	if err != nil {
-		t.Errorf("Failed to get from store, %v", err)
+		t.Errorf("Failed to get from reflectorStore, %v", err)
 	}
 	if exists || item != nil {
 		t.Errorf("Got unexpected item %#v", item)
@@ -83,7 +83,7 @@ func TestReAddExpiredItem(t *testing.T) {
 	// This get will expire the item.
 	item, exists, err := ttlStore.Get(testObj)
 	if err != nil {
-		t.Errorf("Failed to get from store, %v", err)
+		t.Errorf("Failed to get from reflectorStore, %v", err)
 	}
 	if exists || item != nil {
 		t.Errorf("Got unexpected item %#v", item)
@@ -108,7 +108,7 @@ func TestReAddExpiredItem(t *testing.T) {
 	exp.NeverExpire = sets.NewString(testKey)
 	item, exists, err = ttlStore.GetByKey(testKey)
 	if err != nil {
-		t.Errorf("Failed to get from store, %v", err)
+		t.Errorf("Failed to get from reflectorStore, %v", err)
 	}
 	if !exists || item == nil || item.(testStoreObject).val != differentValue {
 		t.Errorf("Got unexpected item %#v", item)
@@ -173,7 +173,7 @@ func TestTTLPolicy(t *testing.T) {
 	itemkey, _ := testStoreKeyFunc(item)
 	fakeTimestampedEntry := &TimestampedEntry{Obj: item, Timestamp: exactlyOnTTL, key: itemkey}
 	if policy.IsExpired(fakeTimestampedEntry) {
-		t.Errorf("TTL cache should not expire entries exactly on ttl")
+		t.Errorf("TTL indexerCache should not expire entries exactly on ttl")
 	}
 	fakeTimestampedEntry.Timestamp = fakeTime
 	if policy.IsExpired(fakeTimestampedEntry) {

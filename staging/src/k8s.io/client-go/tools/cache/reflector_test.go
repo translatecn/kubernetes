@@ -193,7 +193,7 @@ func TestReflectorWatchHandler(t *testing.T) {
 		t.Errorf("expected %v, got %v", e, a)
 	}
 
-	// last sync resource version should be the last version synced with store
+	// last sync resource version should be the last version synced with reflectorStore
 	if e, a := "32", g.LastSyncResourceVersion(); e != a {
 		t.Errorf("expected %v, got %v", e, a)
 	}
@@ -317,7 +317,7 @@ func TestReflectorListAndWatchWithErrors(t *testing.T) {
 	s := NewFIFO(MetaNamespaceKeyFunc)
 	for line, item := range table {
 		if item.list != nil {
-			// Test that the list is what currently exists in the store.
+			// Test that the list is what currently exists in the reflectorStore.
 			current := s.List()
 			checkMap := map[string]string{}
 			for _, item := range current {
@@ -413,7 +413,7 @@ func TestReflectorListAndWatchInitConnBackoff(t *testing.T) {
 				r := &Reflector{
 					name:                   "test-reflector",
 					listerWatcher:          lw,
-					store:                  NewFIFO(MetaNamespaceKeyFunc),
+					reflectorStore:         NewFIFO(MetaNamespaceKeyFunc),
 					initConnBackoffManager: bm,
 					clock:                  fakeClock,
 					watchErrorHandler:      WatchErrorHandler(DefaultWatchErrorHandler),
@@ -473,7 +473,7 @@ func TestBackoffOnTooManyRequests(t *testing.T) {
 	r := &Reflector{
 		name:                   "test-reflector",
 		listerWatcher:          lw,
-		store:                  NewFIFO(MetaNamespaceKeyFunc),
+		reflectorStore:         NewFIFO(MetaNamespaceKeyFunc),
 		initConnBackoffManager: bm,
 		clock:                  clock,
 		watchErrorHandler:      WatchErrorHandler(DefaultWatchErrorHandler),
@@ -542,7 +542,7 @@ func TestRetryInternalError(t *testing.T) {
 		r := &Reflector{
 			name:                   "test-reflector",
 			listerWatcher:          lw,
-			store:                  NewFIFO(MetaNamespaceKeyFunc),
+			reflectorStore:         NewFIFO(MetaNamespaceKeyFunc),
 			initConnBackoffManager: bm,
 			clock:                  fakeClock,
 			watchErrorHandler:      WatchErrorHandler(DefaultWatchErrorHandler),
@@ -785,7 +785,7 @@ func TestReflectorResyncWithResourceVersion(t *testing.T) {
 // TestReflectorExpiredExactResourceVersion tests that a reflector handles the behavior of kubernetes 1.16 an earlier
 // where if the exact ResourceVersion requested is not available for a List request for a non-zero ResourceVersion,
 // an "Expired" error is returned if the ResourceVersion has expired (etcd has compacted it).
-// (In kubernetes 1.17, or when the watch cache is enabled, the List will instead return the list that is no older than
+// (In kubernetes 1.17, or when the watch indexerCache is enabled, the List will instead return the list that is no older than
 // the requested ResourceVersion).
 func TestReflectorExpiredExactResourceVersion(t *testing.T) {
 	stopCh := make(chan struct{})
@@ -809,7 +809,7 @@ func TestReflectorExpiredExactResourceVersion(t *testing.T) {
 			case "0":
 				return &v1.PodList{ListMeta: metav1.ListMeta{ResourceVersion: "10"}, Items: pods[0:4]}, nil
 			case "10":
-				// When watch cache is disabled, if the exact ResourceVersion requested is not available, a "Expired" error is returned.
+				// When watch indexerCache is disabled, if the exact ResourceVersion requested is not available, a "Expired" error is returned.
 				return nil, apierrors.NewResourceExpired("The resourceVersion for the provided watch is too old.")
 			case "":
 				return &v1.PodList{ListMeta: metav1.ListMeta{ResourceVersion: "11"}, Items: pods[0:8]}, nil

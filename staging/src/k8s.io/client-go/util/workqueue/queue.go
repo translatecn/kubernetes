@@ -29,7 +29,7 @@ type Interface interface {
 	Get() (item interface{}, shutdown bool)
 	Done(item interface{})
 	ShutDown()
-	ShutDownWithDrain()
+	ShutDownWithDrain() // 关闭队列，但是等待队列中元素处理完
 	ShuttingDown() bool
 }
 
@@ -70,27 +70,15 @@ const defaultUnfinishedWorkUpdatePeriod = 500 * time.Millisecond
 
 // Type is a work queue (see the package comment).
 type Type struct {
-	// queue defines the order in which we will work on items. Every
-	// element of queue should be in the dirty set and not in the
-	// processing set.
-	queue []t
+	queue      []t // 需要被处理的
+	dirty      set // 定义需要处理的所有项。
+	processing set // 当前正在处理的东西都在queue集中。这些东西可能同时在dirty集合中。
+	// 当我们处理完某样东西并将它从这个集合中移除时，我们会检查它是否在dirty集合中，如果是，就将它添加到队列中。
 
-	// dirty defines all of the items that need to be processed.
-	dirty set
-
-	// Things that are currently being processed are in the processing set.
-	// These things may be simultaneously in the dirty set. When we finish
-	// processing something and remove it from this set, we'll check if
-	// it's in the dirty set, and if so, add it to the queue.
-	processing set
-
-	cond *sync.Cond
-
-	shuttingDown bool
-	drain        bool
-
-	metrics queueMetrics
-
+	cond                       *sync.Cond
+	shuttingDown               bool
+	drain                      bool
+	metrics                    queueMetrics
 	unfinishedWorkUpdatePeriod time.Duration
 	clock                      clock.WithTicker
 }
@@ -130,12 +118,12 @@ func (q *Type) Add(item interface{}) {
 	q.metrics.add(item)
 
 	q.dirty.insert(item)
-	if q.processing.has(item) {
+	if q.processing.has(item) { // 正在被处理
 		return
 	}
 
 	q.queue = append(q.queue, item)
-	q.cond.Signal()
+	q.cond.Signal() // 通知getter 有新元素到来
 }
 
 // Len returns the current queue length, for informational purposes only. You
@@ -165,6 +153,9 @@ func (q *Type) Get() (item interface{}, shutdown bool) {
 	// The underlying array still exists and reference this object, so the object will not be garbage collected.
 	q.queue[0] = nil
 	q.queue = q.queue[1:]
+	if len(q.queue) != 0 && cap(q.queue)/len(q.queue) > 2 {
+		q.queue = append([]t{}, q.queue...)
+	}
 
 	q.metrics.get(item)
 

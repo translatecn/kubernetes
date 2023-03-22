@@ -15494,33 +15494,33 @@ func schema_k8sio_api_coordination_v1_LeaseSpec(ref common.ReferenceCallback) co
 				Properties: map[string]spec.Schema{
 					"holderIdentity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "holderIdentity contains the identity of the holder of a current lease.",
+							Description: "holderIdentity 包含当前租约持有者的标识。",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"leaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
+							Description: "leaseDurationSeconds 是一个租期的候选人需要租约的时间。这是根据最后观察到的RenewTime的时间来衡量的。",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"acquireTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "acquireTime is a time when the current lease was acquired.",
+							Description: "acquireTime是acquire当前租约的时间.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"renewTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "renewTime is a time when the current holder of a lease has last updated the lease.",
+							Description: "renewTime 是当前租约持有人上次更新租约的时间.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions is the number of transitions of a lease between holders.",
+							Description: "leaseTransitions 租约被多少人持有过.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -15636,33 +15636,33 @@ func schema_k8sio_api_coordination_v1beta1_LeaseSpec(ref common.ReferenceCallbac
 				Properties: map[string]spec.Schema{
 					"holderIdentity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "holderIdentity contains the identity of the holder of a current lease.",
+							Description: "holderIdentity 包含当前租约持有者的标识。",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"leaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
+							Description: "leaseDurationSeconds 是一个租期的候选人需要租约的时间。这是根据最后观察到的RenewTime的时间来衡量的。",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"acquireTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "acquireTime is a time when the current lease was acquired.",
+							Description: "acquireTime是acquire当前租约的时间.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"renewTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "renewTime is a time when the current holder of a lease has last updated the lease.",
+							Description: "renewTime 是当前租约持有人上次更新租约的时间.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions is the number of transitions of a lease between holders.",
+							Description: "leaseTransitions 租约被多少人持有过.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},

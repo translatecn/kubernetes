@@ -46,31 +46,25 @@ func SimplePageFunc(fn func(opts metav1.ListOptions) (runtime.Object, error)) Li
 // metav1.ListOptions that supports paging and return a list. The pager does
 // not alter the field or label selectors on the initial options list.
 type ListPager struct {
-	PageSize int64
-	PageFn   ListPageFunc
-
+	PageSize          int64 // 每页
+	PageFn            ListPageFunc
 	FullListIfExpired bool
-
-	// Number of pages to buffer
-	PageBufferSize int32
+	PageBufferSize    int32 // 要缓冲的页数
 }
 
-// New creates a new pager from the provided pager function using the default
-// options. It will fall back to a full list if an expiration error is encountered
-// as a last resort.
 func New(fn ListPageFunc) *ListPager {
 	return &ListPager{
-		PageSize:          defaultPageSize,
-		PageFn:            fn,
-		FullListIfExpired: true,
-		PageBufferSize:    defaultPageBufferSize,
+		PageSize:          defaultPageSize,       // 500
+		PageFn:            fn,                    // ✅
+		FullListIfExpired: true,                  //
+		PageBufferSize:    defaultPageBufferSize, // 10
 	}
 }
 
 // TODO: introduce other types of paging functions - such as those that retrieve from a list
 // of namespaces.
 
-// List returns a single list object, but attempts to retrieve smaller chunks from the
+// List ✅ returns a single list object, but attempts to retrieve smaller chunks from the
 // server to reduce the impact on the server. If the chunk attempt fails, it will load
 // the full list instead. The Limit field on options, if unset, will default to the page size.
 func (p *ListPager) List(ctx context.Context, options metav1.ListOptions) (runtime.Object, bool, error) {
@@ -89,7 +83,7 @@ func (p *ListPager) List(ctx context.Context, options metav1.ListOptions) (runti
 		default:
 		}
 
-		obj, err := p.PageFn(ctx, options)
+		obj, err := p.PageFn(ctx, options) // 实际就是调用的clientset.CoreV1().RESTClient().Get().VersionedParams(&options, metav1.ParameterCodec).Do(context.TODO()).Get()
 		if err != nil {
 			// Only fallback to full list if an "Expired" errors is returned, FullListIfExpired is true, and
 			// the "Expired" error occurred in page 2 or later (since full list is intended to prevent a pager.List from

@@ -42,40 +42,25 @@ type Config struct {
 	// assumptions in the implementation. Your Process() function
 	// should accept the output of this Queue's Pop() method.
 	Queue
-
-	// Something that can list and watch your objects.
 	ListerWatcher
-
-	// Something that can process a popped Deltas.
 	Process ProcessFunc
-
 	// ObjectType is an example object of the type this controller is
 	// expected to handle.  Only the type needs to be right, except
 	// that when that is `unstructured.Unstructured` the object's
 	// `"apiVersion"` and `"kind"` must also be right.
 	ObjectType runtime.Object
 
-	// FullResyncPeriod is the period at which ShouldResync is considered.
-	FullResyncPeriod time.Duration
-
-	// ShouldResync is periodically used by the reflector to determine
-	// whether to Resync the Queue. If ShouldResync is `nil` or
-	// returns true, it means the reflector should proceed with the
-	// resync.
-	ShouldResync ShouldResyncFunc
+	FullResyncPeriod time.Duration    // 是考虑ShouldResync的周期。
+	ShouldResync     ShouldResyncFunc // 是否重新同步队列
 
 	// If true, when Process() returns an error, re-enqueue the object.
 	// TODO: add interface to let you inject a delay/backoff or drop
 	//       the object completely if desired. Pass the object in
 	//       question to this interface as a parameter.  This is probably moot
 	//       now that this functionality appears at a higher level.
-	RetryOnError bool
-
-	// Called whenever the ListAndWatch drops the connection with an error.
+	RetryOnError      bool
 	WatchErrorHandler WatchErrorHandler
-
-	// WatchListPageSize is the requested chunk size of initial and relist watch lists.
-	WatchListPageSize int64
+	WatchListPageSize int64 // 初始 list 列表和 relist 列表的请求块大小。
 }
 
 // ShouldResyncFunc is a type of function that indicates if a reflector should perform a
@@ -83,7 +68,6 @@ type Config struct {
 // resync periods.
 type ShouldResyncFunc func() bool
 
-// ProcessFunc processes a single object.
 type ProcessFunc func(obj interface{}) error
 
 // `*controller` implements Controller
@@ -97,17 +81,10 @@ type controller struct {
 // Controller is a low-level controller that is parameterized by a
 // Config and used in sharedIndexInformer.
 type Controller interface {
-	// Run does two things.  One is to construct and run a Reflector
-	// to pump objects/notifications from the Config's ListerWatcher
-	// to the Config's Queue and possibly invoke the occasional Resync
-	// on that Queue.  The other is to repeatedly Pop from the Queue
-	// and process with the Config's ProcessFunc.  Both of these
-	// continue until `stopCh` is closed.
+	// Run 1) 构造Reflector利用ListerWatcher的能力将对象事件更新到DeltaFIFO。
+	// 2) 从DeltaFIFO中Pop对象后调用ProcessFunc来处理。
 	Run(stopCh <-chan struct{})
-
-	// HasSynced delegates to the Config's Queue
-	HasSynced() bool
-
+	HasSynced() bool // 是否有委托队列
 	// LastSyncResourceVersion delegates to the Reflector when there
 	// is one, otherwise returns the empty string
 	LastSyncResourceVersion() string
@@ -131,10 +108,11 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 		<-stopCh
 		c.config.Queue.Close()
 	}()
-	r := NewReflector(
+	_ = newInformer
+	r := NewReflector( // ✅
 		c.config.ListerWatcher,
 		c.config.ObjectType,
-		c.config.Queue,
+		c.config.Queue, // newInformer    fifo
 		c.config.FullResyncPeriod,
 	)
 	r.ShouldResync = c.config.ShouldResync
@@ -150,13 +128,14 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 
 	var wg wait.Group
 
-	wg.StartWithChannel(stopCh, r.Run)
+	wg.StartWithChannel(stopCh, r.Run) // 重复使用反射器的ListAndWatch来获取所有对象和后续增量。
 
-	wait.Until(c.processLoop, time.Second, stopCh)
+	_ = newInformer
+	wait.Until(c.processLoop, time.Second, stopCh) // 取出数据，回调 informer.Process   newInformer
 	wg.Wait()
 }
 
-// Returns true once this controller has completed an initial resource listing
+// HasSynced 当控制器完成初始资源列表时返回true
 func (c *controller) HasSynced() bool {
 	return c.config.Queue.HasSynced()
 }
@@ -170,25 +149,21 @@ func (c *controller) LastSyncResourceVersion() string {
 	return c.reflector.LastSyncResourceVersion()
 }
 
-// processLoop drains the work queue.
-// TODO: Consider doing the processing in parallel. This will require a little thought
-// to make sure that we don't end up processing the same object multiple times
-// concurrently.
-//
-// TODO: Plumb through the stopCh here (and down to the queue) so that this can
-// actually exit when the controller is stopped. Or just give up on this stuff
-// ever being stoppable. Converting this whole package to use Context would
-// also be helpful.
-func (c *controller) processLoop() {
+// processLoop 耗尽工作队列。
+// TODO:考虑并行处理。这将需要考虑一些问题，以确保我们不会并发地多次处理同一个对象。
+// TODO:通过这里的stopCh(和下到队列)，这样当控制器停止时，它可以实际退出。或者干脆放弃这一切。将整个包转换为使用Context也很有帮助。
+func (c *controller) processLoop() { // 对应 3. Pop Obj from fifo
 	for {
-		obj, err := c.config.Queue.Pop(PopProcessFunc(c.config.Process))
+		_ = newInformer
+		_ = processDeltas
+		obj, err := c.config.Queue.Pop(PopProcessFunc(c.config.Process)) // 会执行 processDeltas 这个函数
 		if err != nil {
 			if err == ErrFIFOClosed {
 				return
 			}
 			if c.config.RetryOnError {
 				// This is the safe way to re-enqueue.
-				c.config.Queue.AddIfNotPresent(obj)
+				c.config.Queue.AddIfNotPresent(obj) // 重新入队
 			}
 		}
 	}
@@ -299,7 +274,7 @@ func DeletionHandlingMetaNamespaceKeyFunc(obj interface{}) (string, error) {
 	return MetaNamespaceKeyFunc(obj)
 }
 
-// NewInformer returns a Store and a controller for populating the store
+// NewInformer returns a Store and a controller for populating the reflectorStore
 // while also providing event notifications. You should only used the returned
 // Store for Get/List operations; Add/Modify/Deletes will cause the event
 // notifications to be faulty.
@@ -350,11 +325,11 @@ func NewIndexerInformer(
 	// This will hold the client state, as we know it.
 	clientState := NewIndexer(DeletionHandlingMetaNamespaceKeyFunc, indexers)
 
-	return clientState, newInformer(lw, objType, resyncPeriod, h, clientState, nil)
+	return clientState, newInformer(lw, objType, resyncPeriod, h, clientState, nil) // ✅
 }
 
 // TransformFunc allows for transforming an object before it will be processed
-// and put into the controller cache and before the corresponding handlers will
+// and put into the controller indexerCache and before the corresponding handlers will
 // be called on it.
 // TransformFunc (similarly to ResourceEventHandler functions) should be able
 // to correctly handle the tombstone of type cache.DeletedFinalStateUnknown
@@ -365,7 +340,7 @@ func NewIndexerInformer(
 type TransformFunc func(interface{}) (interface{}, error)
 
 // NewTransformingInformer returns a Store and a controller for populating
-// the store while also providing event notifications. You should only used
+// the reflectorStore while also providing event notifications. You should only used
 // the returned Store for Get/List operations; Add/Modify/Deletes will cause
 // the event notifications to be faulty.
 // The given transform function will be called on all objects before they will
@@ -384,30 +359,9 @@ func NewTransformingInformer(
 	return clientState, newInformer(lw, objType, resyncPeriod, h, clientState, transformer)
 }
 
-// NewTransformingIndexerInformer returns an Indexer and a controller for
-// populating the index while also providing event notifications. You should
-// only used the returned Index for Get/List operations; Add/Modify/Deletes
-// will cause the event notifications to be faulty.
-// The given transform function will be called on all objects before they will
-// be put into the Index and corresponding Add/Modify/Delete handlers will
-// be invoked for them.
-func NewTransformingIndexerInformer(
-	lw ListerWatcher,
-	objType runtime.Object,
-	resyncPeriod time.Duration,
-	h ResourceEventHandler,
-	indexers Indexers,
-	transformer TransformFunc,
-) (Indexer, Controller) {
-	// This will hold the client state, as we know it.
-	clientState := NewIndexer(DeletionHandlingMetaNamespaceKeyFunc, indexers)
-
-	return clientState, newInformer(lw, objType, resyncPeriod, h, clientState, transformer)
-}
-
 // Multiplexes updates in the form of a list of Deltas into a Store, and informs
 // a given handler of events OnUpdate, OnAdd, OnDelete
-func processDeltas(
+func processDeltas( // 对应 3. Pop Obj from fifo
 	// Object which receives event notifications from the given deltas
 	handler ResourceEventHandler,
 	clientState Store,
@@ -424,31 +378,33 @@ func processDeltas(
 				return err
 			}
 		}
-
+		_ = clientState.(*indexerCache).Delete
+		_ = clientState.(*indexerCache).Update
+		_ = clientState.(*indexerCache).Add
 		switch d.Type {
 		case Sync, Replaced, Added, Updated:
 			if old, exists, err := clientState.Get(obj); err == nil && exists {
-				if err := clientState.Update(obj); err != nil {
+				if err := clientState.Update(obj); err != nil { // 对应 4. Store Obj & Key
 					return err
 				}
-				handler.OnUpdate(old, obj)
+				handler.OnUpdate(old, obj) // ✅ 对应 5. Dispatch Event
 			} else {
-				if err := clientState.Add(obj); err != nil {
+				if err := clientState.Add(obj); err != nil { // 对应 4. Store Obj & Key
 					return err
 				}
-				handler.OnAdd(obj)
+				handler.OnAdd(obj) // ✅ 对应 5. Dispatch Event
 			}
 		case Deleted:
-			if err := clientState.Delete(obj); err != nil {
+			if err := clientState.Delete(obj); err != nil { // 对应 4. Store Obj & Key
 				return err
 			}
-			handler.OnDelete(obj)
+			handler.OnDelete(obj) // ✅ 对应 5. Dispatch Event
 		}
 	}
 	return nil
 }
 
-// newInformer returns a controller for populating the store while also
+// newInformer returns a controller for populating the reflectorStore while also
 // providing event notifications.
 //
 // Parameters
@@ -460,7 +416,7 @@ func processDeltas(
 //     long as possible (until the upstream source closes the watch or times out,
 //     or you stop the controller).
 //   - h is the object you want notifications sent to.
-//   - clientState is the store you want to populate
+//   - clientState is the reflectorStore you want to populate
 func newInformer(
 	lw ListerWatcher,
 	objType runtime.Object,
@@ -469,9 +425,7 @@ func newInformer(
 	clientState Store,
 	transformer TransformFunc,
 ) Controller {
-	// This will hold incoming changes. Note how we pass clientState in as a
-	// KeyLister, that way resync operations will result in the correct set
-	// of update/delete deltas.
+	// 这将保存传入的更改。请注意我们是如何将clientState作为KeyLister传入的，这样resync操作将导致正确的更新/删除增量集。
 	fifo := NewDeltaFIFOWithOptions(DeltaFIFOOptions{
 		KnownObjects:          clientState,
 		EmitDeltaTypeReplaced: true,
@@ -486,10 +440,10 @@ func newInformer(
 
 		Process: func(obj interface{}) error {
 			if deltas, ok := obj.(Deltas); ok {
-				return processDeltas(h, clientState, transformer, deltas)
+				return processDeltas(h, clientState, transformer, deltas) // 对应 3. Pop Obj from fifo
 			}
 			return errors.New("object given as Process argument is not Deltas")
 		},
 	}
-	return New(cfg)
+	return New(cfg) // ✅
 }

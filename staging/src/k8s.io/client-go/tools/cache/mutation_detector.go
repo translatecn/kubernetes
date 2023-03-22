@@ -156,7 +156,7 @@ func (d *defaultCacheMutationDetector) CompareObjects() {
 	}
 
 	if altered {
-		msg := fmt.Sprintf("cache %s modified", d.name)
+		msg := fmt.Sprintf("indexerCache %s modified", d.name)
 		if d.failureFunc != nil {
 			d.failureFunc(msg)
 			return

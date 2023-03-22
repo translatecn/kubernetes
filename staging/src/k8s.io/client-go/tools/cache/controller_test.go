@@ -67,7 +67,7 @@ func Example() {
 			newest := obj.(Deltas).Newest()
 
 			if newest.Type != Deleted {
-				// Update our downstream store.
+				// Update our downstream reflectorStore.
 				err := downstream.Add(newest.Object)
 				if err != nil {
 					return err
@@ -76,7 +76,7 @@ func Example() {
 				// Delete this object.
 				source.Delete(newest.Object.(runtime.Object))
 			} else {
-				// Update our downstream store.
+				// Update our downstream reflectorStore.
 				err := downstream.Delete(newest.Object)
 				if err != nil {
 					return err

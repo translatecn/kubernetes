@@ -50,32 +50,13 @@ type Indexer interface {
 	// GetIndexers return the indexers
 	GetIndexers() Indexers
 
-	// AddIndexers adds more indexers to this store.  If you call this after you already have data
-	// in the store, the results are undefined.
+	// AddIndexers adds more indexers to this reflectorStore.  If you call this after you already have data
+	// in the reflectorStore, the results are undefined.
 	AddIndexers(newIndexers Indexers) error
 }
 
-// IndexFunc knows how to compute the set of indexed values for an object.
+// IndexFunc 知道如何计算对象的索引值。
 type IndexFunc func(obj interface{}) ([]string, error)
-
-// IndexFuncToKeyFuncAdapter adapts an indexFunc to a keyFunc.  This is only useful if your index function returns
-// unique values for every object.  This conversion can create errors when more than one key is found.  You
-// should prefer to make proper key and index functions.
-func IndexFuncToKeyFuncAdapter(indexFunc IndexFunc) KeyFunc {
-	return func(obj interface{}) (string, error) {
-		indexKeys, err := indexFunc(obj)
-		if err != nil {
-			return "", err
-		}
-		if len(indexKeys) > 1 {
-			return "", fmt.Errorf("too many keys: %v", indexKeys)
-		}
-		if len(indexKeys) == 0 {
-			return "", fmt.Errorf("unexpected empty indexKeys")
-		}
-		return indexKeys[0], nil
-	}
-}
 
 const (
 	// NamespaceIndex is the lookup name for the most common index function, which is to index by the namespace field.
@@ -91,7 +72,7 @@ func MetaNamespaceIndexFunc(obj interface{}) ([]string, error) {
 	return []string{meta.GetNamespace()}, nil
 }
 
-// Index maps the indexed value to a set of keys in the store that match on that value
+// Index 将索引值映射到存储区中与该值匹配的一组键
 type Index map[string]sets.String
 
 // Indexers maps a name to an IndexFunc

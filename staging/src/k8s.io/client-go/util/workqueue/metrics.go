@@ -73,20 +73,15 @@ func (noopMetric) Observe(float64) {}
 type defaultQueueMetrics struct {
 	clock clock.Clock
 
-	// current depth of a workqueue
-	depth GaugeMetric
-	// total number of adds handled by a workqueue
-	adds CounterMetric
-	// how long an item stays in a workqueue
-	latency HistogramMetric
-	// how long processing an item from a workqueue takes
-	workDuration         HistogramMetric
+	depth                GaugeMetric     // 工作队列的当前深度
+	adds                 CounterMetric   // 一个工作队列处理的添加总数
+	latency              HistogramMetric // 一个项在工作队列中停留多长时间
+	workDuration         HistogramMetric // 从工作队列中处理一个项需要多长时间
 	addTimes             map[t]time.Time
 	processingStartTimes map[t]time.Time
 
-	// how long have current threads been working?
-	unfinishedWorkSeconds   SettableGaugeMetric
-	longestRunningProcessor SettableGaugeMetric
+	unfinishedWorkSeconds   SettableGaugeMetric // 当前线程工作了多长时间?
+	longestRunningProcessor SettableGaugeMetric //
 }
 
 func (m *defaultQueueMetrics) add(item t) {
@@ -125,9 +120,11 @@ func (m *defaultQueueMetrics) done(item t) {
 	}
 }
 
+// 上报未完成的指标
 func (m *defaultQueueMetrics) updateUnfinishedWork() {
-	// Note that a summary metric would be better for this, but prometheus
-	// doesn't seem to have non-hacky ways to reset the summary metrics.
+	//请注意，对于这一点，汇总度量可能更好，但是prometheus
+	//似乎没有非hack的方法来重置汇总指标。
+
 	var total float64
 	var oldest float64
 	for _, t := range m.processingStartTimes {

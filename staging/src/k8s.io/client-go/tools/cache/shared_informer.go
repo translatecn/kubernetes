@@ -47,42 +47,42 @@ import (
 // An object state is either (1) present with a ResourceVersion and
 // other appropriate content or (2) "absent".
 //
-// A SharedInformer maintains a local cache --- exposed by GetStore(),
+// A SharedInformer maintains a local indexerCache --- exposed by GetStore(),
 // by GetIndexer() in the case of an indexed informer, and possibly by
 // machinery involved in creating and/or accessing the informer --- of
-// the state of each relevant object.  This cache is eventually
+// the state of each relevant object.  This indexerCache is eventually
 // consistent with the authoritative state.  This means that, unless
 // prevented by persistent communication problems, if ever a
 // particular object ID X is authoritatively associated with a state S
 // then for every SharedInformer I whose collection includes (X, S)
-// eventually either (1) I's cache associates X with S or a later
+// eventually either (1) I's indexerCache associates X with S or a later
 // state of X, (2) I is stopped, or (3) the authoritative state
 // service for X terminates.  To be formally complete, we say that the
 // absent state meets any restriction by label selector or field
 // selector.
 //
 // For a given informer and relevant object ID X, the sequence of
-// states that appears in the informer's cache is a subsequence of the
+// states that appears in the informer's indexerCache is a subsequence of the
 // states authoritatively associated with X.  That is, some states
-// might never appear in the cache but ordering among the appearing
+// might never appear in the indexerCache but ordering among the appearing
 // states is correct.  Note, however, that there is no promise about
 // ordering between states seen for different objects.
 //
-// The local cache starts out empty, and gets populated and updated
+// The local indexerCache starts out empty, and gets populated and updated
 // during `Run()`.
 //
 // As a simple example, if a collection of objects is henceforth
 // unchanging, a SharedInformer is created that links to that
 // collection, and that SharedInformer is `Run()` then that
-// SharedInformer's cache eventually holds an exact copy of that
+// SharedInformer's indexerCache eventually holds an exact copy of that
 // collection (unless it is stopped too soon, the authoritative state
 // service ends, or communication problems between the two
 // persistently thwart achievement).
 //
-// As another simple example, if the local cache ever holds a
+// As another simple example, if the local indexerCache ever holds a
 // non-absent state for some object ID and the object is eventually
 // removed from the authoritative state then eventually the object is
-// removed from the local cache (unless the SharedInformer is stopped
+// removed from the local indexerCache (unless the SharedInformer is stopped
 // too soon, the authoritative state service ends, or communication
 // problems persistently thwart the desired result).
 //
@@ -92,29 +92,29 @@ import (
 // a given object, and `SplitMetaNamespaceKey(key)` to split a key
 // into its constituent parts.
 //
-// Every query against the local cache is answered entirely from one
-// snapshot of the cache's state.  Thus, the result of a `List` call
+// Every query against the local indexerCache is answered entirely from one
+// snapshot of the indexerCache's state.  Thus, the result of a `List` call
 // will not contain two entries with the same namespace and name.
 //
 // A client is identified here by a ResourceEventHandler.  For every
-// update to the SharedInformer's local cache and for every client
+// update to the SharedInformer's local indexerCache and for every client
 // added before `Run()`, eventually either the SharedInformer is
 // stopped or the client is notified of the update.  A client added
 // after `Run()` starts gets a startup batch of notifications of
-// additions of the objects existing in the cache at the time that
+// additions of the objects existing in the indexerCache at the time that
 // client was added; also, for every update to the SharedInformer's
-// local cache after that client was added, eventually either the
+// local indexerCache after that client was added, eventually either the
 // SharedInformer is stopped or that client is notified of that
-// update.  Client notifications happen after the corresponding cache
+// update.  Client notifications happen after the corresponding indexerCache
 // update and, in the case of a SharedIndexInformer, after the
-// corresponding index updates.  It is possible that additional cache
+// corresponding index updates.  It is possible that additional indexerCache
 // and index updates happen before such a prescribed notification.
 // For a given SharedInformer and client, the notifications are
 // delivered sequentially.  For a given SharedInformer, client, and
 // object ID, the notifications are delivered in order.  Because
 // `ObjectMeta.UID` has no role in identifying objects, it is possible
 // that when (1) object O1 with ID (e.g. namespace and name) X and
-// `ObjectMeta.UID` U1 in the SharedInformer's local cache is deleted
+// `ObjectMeta.UID` U1 in the SharedInformer's local indexerCache is deleted
 // and later (2) another object O2 with ID X and ObjectMeta.UID U2 is
 // created the informer's clients are not notified of (1) and (2) but
 // rather are notified only of an update from O1 to O2. Clients that
@@ -142,7 +142,7 @@ type SharedInformer interface {
 	// shared informer with the requested resync period; zero means
 	// this handler does not care about resyncs.  The resync operation
 	// consists of delivering to the handler an update notification
-	// for every object in the informer's local cache; it does not add
+	// for every object in the informer's local indexerCache; it does not add
 	// any interactions with the authoritative storage.  Some
 	// informers do no resyncs at all, not even for handlers added
 	// with a non-zero resyncPeriod.  For an informer that does
@@ -159,19 +159,19 @@ type SharedInformer interface {
 	// its registration handle.
 	// This function is guaranteed to be idempotent, and thread-safe.
 	RemoveEventHandler(handle ResourceEventHandlerRegistration) error
-	// GetStore returns the informer's local cache as a Store.
+	// GetStore returns the informer's local indexerCache as a Store.
 	GetStore() Store
 	// GetController is deprecated, it does nothing useful
 	GetController() Controller
 	// Run starts and runs the shared informer, returning after it stops.
 	// The informer will be stopped when stopCh is closed.
 	Run(stopCh <-chan struct{})
-	// HasSynced returns true if the shared informer's store has been
+	// HasSynced returns true if the shared informer's reflectorStore has been
 	// informed by at least one full LIST of the authoritative state
 	// of the informer's object collection.  This is unrelated to "resync".
 	HasSynced() bool
 	// LastSyncResourceVersion is the resource version observed when last synced with the underlying
-	// store. The value returned is not synchronized with access to the underlying store and is not
+	// reflectorStore. The value returned is not synchronized with access to the underlying reflectorStore and is not
 	// thread-safe.
 	LastSyncResourceVersion() string
 
@@ -305,15 +305,15 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 }
 
 // `*sharedIndexInformer` implements SharedIndexInformer and has three
-// main components.  One is an indexed local cache, `indexer Indexer`.
+// main components.  One is an indexed local indexerCache, `indexer Indexer`.
 // The second main component is a Controller that pulls
 // objects/notifications using the ListerWatcher and pushes them into
-// a DeltaFIFO --- whose knownObjects is the informer's local cache
+// a DeltaFIFO --- whose knownObjects is the informer's local indexerCache
 // --- while concurrently Popping Deltas values from that fifo and
 // processing them with `sharedIndexInformer::HandleDeltas`.  Each
 // invocation of HandleDeltas, which is done with the fifo's lock
 // held, processes each Delta in turn.  For each Delta this both
-// updates the local cache and stuffs the relevant notification into
+// updates the local indexerCache and stuffs the relevant notification into
 // the sharedProcessor.  The third main component is that
 // sharedProcessor, which is responsible for relaying those
 // notifications to each of the informer's clients.
@@ -567,7 +567,7 @@ func (s *sharedIndexInformer) AddEventHandlerWithResyncPeriod(handler ResourceEv
 
 	// in order to safely join, we have to
 	// 1. stop sending add/update/delete notifications
-	// 2. do a list against the store
+	// 2. do a list against the reflectorStore
 	// 3. send synthetic "Add" events to the new handler
 	// 4. unblock
 	s.blockDeltas.Lock()

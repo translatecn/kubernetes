@@ -15,7 +15,6 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.20
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/GoogleCloudPlatform/k8s-cloud-provider v1.18.1-0.20220218231025-f11817397a1b
-	github.com/JeffAshton/win_pdh v0.0.0-20161109143554-76bb4ee9f0ab
 	github.com/Microsoft/go-winio v0.4.17
 	github.com/Microsoft/hcsshim v0.8.22
 	github.com/NYTimes/gziphandler v1.1.1

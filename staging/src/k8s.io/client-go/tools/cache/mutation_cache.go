@@ -55,11 +55,11 @@ type ResourceVersionComparator interface {
 //   - is comparable across the same resource in a namespace
 //
 // Most backends will have these semantics. Indexer may be nil. ttl controls how long an item
-// remains in the mutation cache before it is removed.
+// remains in the mutation indexerCache before it is removed.
 //
-// If includeAdds is true, objects in the mutation cache will be returned even if they don't exist
-// in the underlying store. This is only safe if your use of the cache can handle mutation entries
-// remaining in the cache for up to ttl when mutations and deletes occur very closely in time.
+// If includeAdds is true, objects in the mutation indexerCache will be returned even if they don't exist
+// in the underlying reflectorStore. This is only safe if your use of the indexerCache can handle mutation entries
+// remaining in the indexerCache for up to ttl when mutations and deletes occur very closely in time.
 func NewIntegerResourceVersionMutationCache(backingCache Store, indexer Indexer, ttl time.Duration, includeAdds bool) MutationCache {
 	return &mutationCache{
 		backingCache:  backingCache,
@@ -73,7 +73,7 @@ func NewIntegerResourceVersionMutationCache(backingCache Store, indexer Indexer,
 
 // mutationCache doesn't guarantee that it returns values added via Mutation since they can page out and
 // since you can't distinguish between, "didn't observe create" and "was deleted after create",
-// if the key is missing from the backing cache, we always return it as missing
+// if the key is missing from the backing indexerCache, we always return it as missing
 type mutationCache struct {
 	lock          sync.Mutex
 	backingCache  Store
@@ -120,7 +120,7 @@ func (c *mutationCache) ByIndex(name string, indexKey string) ([]interface{}, er
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if c.indexer == nil {
-		return nil, fmt.Errorf("no indexer has been provided to the mutation cache")
+		return nil, fmt.Errorf("no indexer has been provided to the mutation indexerCache")
 	}
 	keys, err := c.indexer.IndexKeys(name, indexKey)
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *mutationCache) ByIndex(name string, indexKey string) ([]interface{}, er
 			}
 			elements, err := fn(updated)
 			if err != nil {
-				klog.V(4).Infof("Unable to calculate an index entry for mutation cache entry %s: %v", key, err)
+				klog.V(4).Infof("Unable to calculate an index entry for mutation indexerCache entry %s: %v", key, err)
 				continue
 			}
 			for _, inIndex := range elements {
@@ -173,7 +173,7 @@ func (c *mutationCache) ByIndex(name string, indexKey string) ([]interface{}, er
 	return items, nil
 }
 
-// newerObject checks the mutation cache for a newer object and returns one if found. If the
+// newerObject checks the mutation indexerCache for a newer object and returns one if found. If the
 // mutated object is older than the backing object, it is removed from the  Must be
 // called while the lock is held.
 func (c *mutationCache) newerObject(key string, backing runtime.Object) runtime.Object {
@@ -192,7 +192,7 @@ func (c *mutationCache) newerObject(key string, backing runtime.Object) runtime.
 	return mutatedObjRuntime
 }
 
-// Mutation adds a change to the cache that can be returned in GetByKey if it is newer than the backingCache
+// Mutation adds a change to the indexerCache that can be returned in GetByKey if it is newer than the backingCache
 // copy.  If you call Mutation twice with the same object on different threads, one will win, but its not defined
 // which one.  This doesn't affect correctness, since the GetByKey guaranteed of "later of these two caches" is
 // preserved, but you may not get the version of the object you want.  The object you get is only guaranteed to

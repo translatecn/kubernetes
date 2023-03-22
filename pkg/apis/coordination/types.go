@@ -35,7 +35,7 @@ type Lease struct {
 
 // LeaseSpec is a specification of a Lease.
 type LeaseSpec struct {
-	// holderIdentity contains the identity of the holder of a current lease.
+	// holderIdentity 包含当前租约持有者的标识。
 	// +optional
 	HolderIdentity *string
 	// leaseDurationSeconds is a duration that candidates for a lease need
@@ -43,7 +43,7 @@ type LeaseSpec struct {
 	// observed RenewTime.
 	// +optional
 	LeaseDurationSeconds *int32
-	// acquireTime is a time when the current lease was acquired.
+	// acquireTime是acquire当前租约的时间.
 	// +optional
 	AcquireTime *metav1.MicroTime
 	// renewTime is a time when the current holder of a lease has last

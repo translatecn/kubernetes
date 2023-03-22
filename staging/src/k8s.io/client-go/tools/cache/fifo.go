@@ -110,10 +110,9 @@ func Pop(queue Queue) interface{} {
 //
 // Compare with DeltaFIFO for other use cases.
 type FIFO struct {
-	lock sync.RWMutex
-	cond sync.Cond
-	// We depend on the property that every key in `items` is also in `queue`
-	items map[string]interface{}
+	lock  sync.RWMutex
+	cond  sync.Cond
+	items map[string]interface{} // 我们依赖于属性items中的每个键也在queue中
 	queue []string
 
 	// populated is true if the first batch of items inserted by Replace() has been populated
@@ -269,7 +268,7 @@ func (f *FIFO) IsClosed() bool {
 
 // Pop waits until an item is ready and processes it. If multiple items are
 // ready, they are returned in the order in which they were added/updated.
-// The item is removed from the queue (and the store) before it is processed,
+// The item is removed from the queue (and the reflectorStore) before it is processed,
 // so if you don't successfully process it, it should be added back with
 // AddIfNotPresent(). process function is called under lock, so it is safe
 // update data structures in it that need to be in sync with the queue.
@@ -340,8 +339,8 @@ func (f *FIFO) Replace(list []interface{}, resourceVersion string) error {
 	return nil
 }
 
-// Resync will ensure that every object in the Store has its key in the queue.
-// This should be a no-op, because that property is maintained by all operations.
+// Resync 将确保Store中的每个对象在队列中都有它的键。
+// 这应该是一个no-op，因为该属性由所有操作维护。
 func (f *FIFO) Resync() error {
 	f.lock.Lock()
 	defer f.lock.Unlock()

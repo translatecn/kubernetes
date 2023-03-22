@@ -19,6 +19,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"k8s.io/client-go/util/homedir"
+	"path/filepath"
 	"time"
 
 	"k8s.io/klog/v2"
@@ -123,11 +125,12 @@ func (c *Controller) Run(workers int, stopCh chan struct{}) {
 	defer c.queue.ShutDown()
 	klog.Info("Starting Pod controller")
 
-	go c.informer.Run(stopCh)
+	go c.informer.Run(stopCh) // ✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️ 重要
 
-	// Wait for all involved caches to be synced, before processing items from the queue is started
-	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+	// 等待所有相关的缓存同步完成，然后才开始处理队列中的项
+	_ = new(cache.DeltaFIFO).HasSynced
+	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) { // ✅
+		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))
 		return
 	}
 
@@ -147,8 +150,11 @@ func (c *Controller) runWorker() {
 func main() {
 	var kubeconfig string
 	var master string
-
-	flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
+	if home := homedir.HomeDir(); home != "" {
+		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
+	}
 	flag.StringVar(&master, "master", "", "master url")
 	flag.Parse()
 
@@ -165,44 +171,40 @@ func main() {
 	}
 
 	// create the pod watcher
-	podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, fields.Everything())
+	//podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, fields.Everything()) // ✅
+	podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", "", fields.Everything()) // ✅
 
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
-	// Bind the workqueue to a cache with the help of an informer. This way we make sure that
-	// whenever the cache is updated, the pod key is added to the workqueue.
-	// Note that when we finally process the item from the workqueue, we might see a newer version
-	// of the Pod than the version which was responsible for triggering the update.
-	indexer, informer := cache.NewIndexerInformer(podListWatcher, &v1.Pod{}, 0, cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(obj)
-			if err == nil {
-				queue.Add(key)
-			}
-		},
-		UpdateFunc: func(old interface{}, new interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(new)
-			if err == nil {
-				queue.Add(key)
-			}
-		},
-		DeleteFunc: func(obj interface{}) {
-			// IndexerInformer uses a delta queue, therefore for deletes we have to use this
-			// key function.
-			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			if err == nil {
-				queue.Add(key)
-			}
-		},
-	}, cache.Indexers{})
+	indexer, informer := cache.NewIndexerInformer(podListWatcher,
+		&v1.Pod{},
+		0,
+		cache.ResourceEventHandlerFuncs{ // ✅ 对应 5. Dispatch Event
+			AddFunc: func(obj interface{}) {
+				key, err := cache.MetaNamespaceKeyFunc(obj) // 获取一个资源的  namespace/name
+				if err == nil {
+					queue.Add(key)
+				}
+			},
+			UpdateFunc: func(old interface{}, new interface{}) {
+				key, err := cache.MetaNamespaceKeyFunc(new)
+				if err == nil {
+					queue.Add(key)
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				// IndexerInformer uses a delta queue, therefore for deletes we have to use this
+				// key function.
+				key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+				if err == nil {
+					queue.Add(key)
+				}
+			},
+		}, cache.Indexers{})
 
 	controller := NewController(queue, indexer, informer)
 
-	// We can now warm up the cache for initial synchronization.
-	// Let's suppose that we knew about a pod "mypod" on our last run, therefore add it to the cache.
-	// If this pod is not there anymore, the controller will be notified about the removal after the
-	// cache has synchronized.
 	indexer.Add(&v1.Pod{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name:      "mypod",

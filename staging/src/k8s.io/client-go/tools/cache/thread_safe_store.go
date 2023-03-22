@@ -32,7 +32,7 @@ import (
 // the indexing feature in addition to not being thread safe.
 //
 // The guarantees of thread safety provided by List/Get are only valid if the caller
-// treats returned items as read-only. For example, a pointer inserted in the store
+// treats returned items as read-only. For example, a pointer inserted in the reflectorStore
 // through `Add` will be returned as is by `Get`. Multiple clients might invoke `Get`
 // on the same key and modify the pointer in a non-thread-safe way. Also note that
 // modifying objects stored by the indexers (if any) will *not* automatically lead
@@ -52,8 +52,8 @@ type ThreadSafeStore interface {
 	ByIndex(indexName, indexedValue string) ([]interface{}, error)
 	GetIndexers() Indexers
 
-	// AddIndexers adds more indexers to this store.  If you call this after you already have data
-	// in the store, the results are undefined.
+	// AddIndexers adds more indexers to this reflectorStore.  If you call this after you already have data
+	// in the reflectorStore, the results are undefined.
 	AddIndexers(newIndexers Indexers) error
 	// Resync is a no-op and is deprecated
 	Resync() error
@@ -139,7 +139,7 @@ func (i *storeIndex) addIndexers(newIndexers Indexers) error {
 // - for create you must provide only the newObj
 // - for update you must provide both the oldObj and the newObj
 // - for delete you must provide only the oldObj
-// updateIndices must be called from a function that already has a lock on the cache
+// updateIndices must be called from a function that already has a lock on the indexerCache
 func (i *storeIndex) updateIndices(oldObj interface{}, newObj interface{}, key string) {
 	var oldIndexValues, indexValues []string
 	var err error

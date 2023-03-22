@@ -16,7 +16,7 @@ limitations under the License.
 
 package cache
 
-// FakeCustomStore lets you define custom functions for store operations.
+// FakeCustomStore lets you define custom functions for reflectorStore operations.
 type FakeCustomStore struct {
 	AddFunc      func(obj interface{}) error
 	UpdateFunc   func(obj interface{}) error

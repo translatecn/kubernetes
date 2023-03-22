@@ -23,13 +23,13 @@ import (
 	"k8s.io/utils/clock"
 )
 
-// ExpirationCache implements the store interface
+// ExpirationCache implements the reflectorStore interface
 //  1. All entries are automatically time stamped on insert
 //     a. The key is computed based off the original item/keyFunc
 //     b. The value inserted under that key is the timestamped item
 //  2. Expiration happens lazily on read based on the expiration policy
-//     a. No item can be inserted into the store while we're expiring
-//     *any* item in the cache.
+//     a. No item can be inserted into the reflectorStore while we're expiring
+//     *any* item in the indexerCache.
 //  3. Time-stamps are stripped off unexpired entries before return
 //
 // Note that the ExpirationCache is inherently slower than a normal
@@ -111,7 +111,7 @@ func (c *ExpirationCache) GetByKey(key string) (interface{}, bool, error) {
 	return obj, exists, nil
 }
 
-// Get returns unexpired items. It purges the cache of expired items in the
+// Get returns unexpired items. It purges the indexerCache of expired items in the
 // process.
 func (c *ExpirationCache) Get(obj interface{}) (interface{}, bool, error) {
 	key, err := c.keyFunc(obj)
@@ -122,7 +122,7 @@ func (c *ExpirationCache) Get(obj interface{}) (interface{}, bool, error) {
 	return obj, exists, nil
 }
 
-// List retrieves a list of unexpired items. It purges the cache of expired
+// List retrieves a list of unexpired items. It purges the indexerCache of expired
 // items in the process.
 func (c *ExpirationCache) List() []interface{} {
 	items := c.cacheStorage.List()
@@ -137,12 +137,12 @@ func (c *ExpirationCache) List() []interface{} {
 	return list
 }
 
-// ListKeys returns a list of all keys in the expiration cache.
+// ListKeys returns a list of all keys in the expiration indexerCache.
 func (c *ExpirationCache) ListKeys() []string {
 	return c.cacheStorage.ListKeys()
 }
 
-// Add timestamps an item and inserts it into the cache, overwriting entries
+// Add timestamps an item and inserts it into the indexerCache, overwriting entries
 // that might exist under the same key.
 func (c *ExpirationCache) Add(obj interface{}) error {
 	key, err := c.keyFunc(obj)
@@ -162,7 +162,7 @@ func (c *ExpirationCache) Update(obj interface{}) error {
 	return c.Add(obj)
 }
 
-// Delete removes an item from the cache.
+// Delete removes an item from the indexerCache.
 func (c *ExpirationCache) Delete(obj interface{}) error {
 	key, err := c.keyFunc(obj)
 	if err != nil {

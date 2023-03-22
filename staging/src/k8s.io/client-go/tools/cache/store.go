@@ -59,15 +59,11 @@ type Store interface {
 	// GetByKey returns the accumulator associated with the given key
 	GetByKey(key string) (item interface{}, exists bool, err error)
 
-	// Replace will delete the contents of the store, using instead the
+	// Replace will delete the contents of the reflectorStore, using instead the
 	// given list. Store takes ownership of the list, you should not reference
 	// it after calling this function.
 	Replace([]interface{}, string) error
-
-	// Resync is meaningless in the terms appearing here but has
-	// meaning in some implementations that have non-trivial
-	// additional behavior (e.g., DeltaFIFO).
-	Resync() error
+	Resync() error // 在这里出现的术语中，Resync是没有意义的，但在一些具有重要附加行为的实现(例如，DeltaFIFO)中有意义。
 }
 
 // KeyFunc knows how to make a key from an object. Implementations should be deterministic.
@@ -134,20 +130,17 @@ func SplitMetaNamespaceKey(key string) (namespace, name string, err error) {
 	return "", "", fmt.Errorf("unexpected key format: %q", key)
 }
 
-// `*cache` implements Indexer in terms of a ThreadSafeStore and an
+// `*indexerCache` implements Indexer in terms of a ThreadSafeStore and an
 // associated KeyFunc.
-type cache struct {
-	// cacheStorage bears the burden of thread safety for the cache
-	cacheStorage ThreadSafeStore
-	// keyFunc is used to make the key for objects stored in and retrieved from items, and
-	// should be deterministic.
-	keyFunc KeyFunc
+type indexerCache struct {
+	cacheStorage ThreadSafeStore // 为indexerCache承担线程安全的负担
+	keyFunc      KeyFunc
 }
 
-var _ Store = &cache{}
+var _ Store = &indexerCache{}
 
-// Add inserts an item into the cache.
-func (c *cache) Add(obj interface{}) error {
+// Add inserts an item into the indexerCache.
+func (c *indexerCache) Add(obj interface{}) error {
 	key, err := c.keyFunc(obj)
 	if err != nil {
 		return KeyError{obj, err}
@@ -156,8 +149,8 @@ func (c *cache) Add(obj interface{}) error {
 	return nil
 }
 
-// Update sets an item in the cache to its updated state.
-func (c *cache) Update(obj interface{}) error {
+// Update sets an item in the indexerCache to its updated state.
+func (c *indexerCache) Update(obj interface{}) error {
 	key, err := c.keyFunc(obj)
 	if err != nil {
 		return KeyError{obj, err}
@@ -166,8 +159,8 @@ func (c *cache) Update(obj interface{}) error {
 	return nil
 }
 
-// Delete removes an item from the cache.
-func (c *cache) Delete(obj interface{}) error {
+// Delete removes an item from the indexerCache.
+func (c *indexerCache) Delete(obj interface{}) error {
 	key, err := c.keyFunc(obj)
 	if err != nil {
 		return KeyError{obj, err}
@@ -178,52 +171,52 @@ func (c *cache) Delete(obj interface{}) error {
 
 // List returns a list of all the items.
 // List is completely threadsafe as long as you treat all items as immutable.
-func (c *cache) List() []interface{} {
+func (c *indexerCache) List() []interface{} {
 	return c.cacheStorage.List()
 }
 
 // ListKeys returns a list of all the keys of the objects currently
-// in the cache.
-func (c *cache) ListKeys() []string {
+// in the indexerCache.
+func (c *indexerCache) ListKeys() []string {
 	return c.cacheStorage.ListKeys()
 }
 
-// GetIndexers returns the indexers of cache
-func (c *cache) GetIndexers() Indexers {
+// GetIndexers returns the indexers of indexerCache
+func (c *indexerCache) GetIndexers() Indexers {
 	return c.cacheStorage.GetIndexers()
 }
 
 // Index returns a list of items that match on the index function
 // Index is thread-safe so long as you treat all items as immutable
-func (c *cache) Index(indexName string, obj interface{}) ([]interface{}, error) {
+func (c *indexerCache) Index(indexName string, obj interface{}) ([]interface{}, error) {
 	return c.cacheStorage.Index(indexName, obj)
 }
 
 // IndexKeys returns the storage keys of the stored objects whose set of
 // indexed values for the named index includes the given indexed value.
 // The returned keys are suitable to pass to GetByKey().
-func (c *cache) IndexKeys(indexName, indexedValue string) ([]string, error) {
+func (c *indexerCache) IndexKeys(indexName, indexedValue string) ([]string, error) {
 	return c.cacheStorage.IndexKeys(indexName, indexedValue)
 }
 
 // ListIndexFuncValues returns the list of generated values of an Index func
-func (c *cache) ListIndexFuncValues(indexName string) []string {
+func (c *indexerCache) ListIndexFuncValues(indexName string) []string {
 	return c.cacheStorage.ListIndexFuncValues(indexName)
 }
 
 // ByIndex returns the stored objects whose set of indexed values
 // for the named index includes the given indexed value.
-func (c *cache) ByIndex(indexName, indexedValue string) ([]interface{}, error) {
+func (c *indexerCache) ByIndex(indexName, indexedValue string) ([]interface{}, error) {
 	return c.cacheStorage.ByIndex(indexName, indexedValue)
 }
 
-func (c *cache) AddIndexers(newIndexers Indexers) error {
+func (c *indexerCache) AddIndexers(newIndexers Indexers) error {
 	return c.cacheStorage.AddIndexers(newIndexers)
 }
 
 // Get returns the requested item, or sets exists=false.
 // Get is completely threadsafe as long as you treat all items as immutable.
-func (c *cache) Get(obj interface{}) (item interface{}, exists bool, err error) {
+func (c *indexerCache) Get(obj interface{}) (item interface{}, exists bool, err error) {
 	key, err := c.keyFunc(obj)
 	if err != nil {
 		return nil, false, KeyError{obj, err}
@@ -233,7 +226,7 @@ func (c *cache) Get(obj interface{}) (item interface{}, exists bool, err error) 
 
 // GetByKey returns the request item, or exists=false.
 // GetByKey is completely threadsafe as long as you treat all items as immutable.
-func (c *cache) GetByKey(key string) (item interface{}, exists bool, err error) {
+func (c *indexerCache) GetByKey(key string) (item interface{}, exists bool, err error) {
 	item, exists = c.cacheStorage.Get(key)
 	return item, exists, nil
 }
@@ -241,7 +234,7 @@ func (c *cache) GetByKey(key string) (item interface{}, exists bool, err error) 
 // Replace will delete the contents of 'c', using instead the given list.
 // 'c' takes ownership of the list, you should not reference the list again
 // after calling this function.
-func (c *cache) Replace(list []interface{}, resourceVersion string) error {
+func (c *indexerCache) Replace(list []interface{}, resourceVersion string) error {
 	items := make(map[string]interface{}, len(list))
 	for _, item := range list {
 		key, err := c.keyFunc(item)
@@ -255,13 +248,13 @@ func (c *cache) Replace(list []interface{}, resourceVersion string) error {
 }
 
 // Resync is meaningless for one of these
-func (c *cache) Resync() error {
+func (c *indexerCache) Resync() error {
 	return nil
 }
 
 // NewStore returns a Store implemented simply with a map and a lock.
 func NewStore(keyFunc KeyFunc) Store {
-	return &cache{
+	return &indexerCache{
 		cacheStorage: NewThreadSafeStore(Indexers{}, Indices{}),
 		keyFunc:      keyFunc,
 	}
@@ -269,7 +262,7 @@ func NewStore(keyFunc KeyFunc) Store {
 
 // NewIndexer returns an Indexer implemented simply with a map and a lock.
 func NewIndexer(keyFunc KeyFunc, indexers Indexers) Indexer {
-	return &cache{
+	return &indexerCache{
 		cacheStorage: NewThreadSafeStore(indexers, Indices{}),
 		keyFunc:      keyFunc,
 	}

@@ -40,12 +40,6 @@ func NewDelayingQueue() DelayingInterface {
 	return NewDelayingQueueWithCustomClock(clock.RealClock{}, "")
 }
 
-// NewDelayingQueueWithCustomQueue constructs a new workqueue with ability to
-// inject custom queue Interface instead of the default one
-func NewDelayingQueueWithCustomQueue(q Interface, name string) DelayingInterface {
-	return newDelayingQueue(clock.RealClock{}, q, name)
-}
-
 // NewNamedDelayingQueue constructs a new named workqueue with delayed queuing ability
 func NewNamedDelayingQueue(name string) DelayingInterface {
 	return NewDelayingQueueWithCustomClock(clock.RealClock{}, name)
@@ -75,30 +69,21 @@ func newDelayingQueue(clock clock.WithTicker, q Interface, name string) *delayin
 type delayingType struct {
 	Interface
 
-	// clock tracks time for delayed firing
-	clock clock.Clock
-
-	// stopCh lets us signal a shutdown to the waiting loop
-	stopCh chan struct{}
-	// stopOnce guarantees we only signal shutdown a single time
+	clock    clock.Clock // 计时器
+	stopCh   chan struct{}
 	stopOnce sync.Once
 
 	// heartbeat ensures we wait no more than maxWait before firing
-	heartbeat clock.Ticker
-
-	// waitingForAddCh is a buffered channel that feeds waitingForAdd
-	waitingForAddCh chan *waitFor
-
-	// metrics counts the number of retries
-	metrics retryMetrics
+	heartbeat       clock.Ticker  // 镻认10秒的心跳，后面用在一个大循环里，避免没有新元素时一直阻塞
+	waitingForAddCh chan *waitFor // 1000
+	metrics         retryMetrics
 }
 
 // waitFor holds the data to add and the time it should be added
 type waitFor struct {
-	data    t
-	readyAt time.Time
-	// index in the priority queue (heap)
-	index int
+	data    t         // 准备添加到队列中的数据
+	readyAt time.Time // 应该被加入到队列的时间
+	index   int       // 在heap中的索引
 }
 
 // waitForPriorityQueue implements a priority queue for waitFor items.
@@ -167,8 +152,7 @@ func (q *delayingType) AddAfter(item interface{}, duration time.Duration) {
 
 	q.metrics.retry()
 
-	// immediately add things with no delay
-	if duration <= 0 {
+	if duration <= 0 { // 时间到了，直接添加
 		q.Add(item)
 		return
 	}
@@ -189,15 +173,16 @@ const maxWait = 10 * time.Second
 func (q *delayingType) waitingLoop() {
 	defer utilruntime.HandleCrash()
 
-	// Make a placeholder channel to use when there are no items in our list
+	// 队列里没有元素时实现等待
 	never := make(<-chan time.Time)
 
-	// Make a timer that expires when the item at the head of the waiting queue is ready
+	// 设置一个计时器，当队列最前面的物品准备好时，计时器就会过期
 	var nextReadyAtTimer clock.Timer
-
+	// 优先级队列
 	waitingForQueue := &waitForPriorityQueue{}
 	heap.Init(waitingForQueue)
 
+	// 用来处理重复添加逻辑
 	waitingEntryByData := map[t]*waitFor{}
 
 	for {
@@ -207,19 +192,20 @@ func (q *delayingType) waitingLoop() {
 
 		now := q.clock.Now()
 
-		// Add ready entries
+		// 队列有元素就开始循环
 		for waitingForQueue.Len() > 0 {
 			entry := waitingForQueue.Peek().(*waitFor)
 			if entry.readyAt.After(now) {
 				break
 			}
-
+			// 时间到了,pop出最后一个元素
 			entry = heap.Pop(waitingForQueue).(*waitFor)
 			q.Add(entry.data)
+			// 删除已经加入到延迟队列里的元素
 			delete(waitingEntryByData, entry.data)
 		}
 
-		// Set up a wait for the first item's readyAt (if one exists)
+		// 如果队列有元素,就用第一个原色的等待时间初始化计时器,如果为空则一直等待
 		nextReadyAt := never
 		if waitingForQueue.Len() > 0 {
 			if nextReadyAtTimer != nil {
@@ -234,19 +220,17 @@ func (q *delayingType) waitingLoop() {
 		case <-q.stopCh:
 			return
 
-		case <-q.heartbeat.C():
-			// continue the loop, which will add ready items
-
-		case <-nextReadyAt:
-			// continue the loop, which will add ready items
+		case <-q.heartbeat.C(): // 10秒
+		case <-nextReadyAt: // 第一个元素的等待时间到了
 
 		case waitEntry := <-q.waitingForAddCh:
+			// 如果时间没到，就加到优先级队列里；如果时间到了，就加入到延时队列里
 			if waitEntry.readyAt.After(q.clock.Now()) {
 				insert(waitingForQueue, waitingEntryByData, waitEntry)
 			} else {
 				q.Add(waitEntry.data)
 			}
-
+			// 将waitingForAddCh里的数据处理完
 			drained := false
 			for !drained {
 				select {
@@ -266,7 +250,7 @@ func (q *delayingType) waitingLoop() {
 
 // insert adds the entry to the priority queue, or updates the readyAt if it already exists in the queue
 func insert(q *waitForPriorityQueue, knownEntries map[t]*waitFor, entry *waitFor) {
-	// if the entry already exists, update the time only if it would cause the item to be queued sooner
+	// 看一个元素是够存在，如果存在，且新的到达时间早，就更新时间
 	existing, exists := knownEntries[entry.data]
 	if exists {
 		if existing.readyAt.After(entry.readyAt) {

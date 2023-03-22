@@ -19,17 +19,9 @@ package workqueue
 // RateLimitingInterface is an interface that rate limits items being added to the queue.
 type RateLimitingInterface interface {
 	DelayingInterface
-
-	// AddRateLimited adds an item to the workqueue after the rate limiter says it's ok
-	AddRateLimited(item interface{})
-
-	// Forget indicates that an item is finished being retried.  Doesn't matter whether it's for perm failing
-	// or for success, we'll stop the rate limiter from tracking it.  This only clears the `rateLimiter`, you
-	// still have to call `Done` on the queue.
-	Forget(item interface{})
-
-	// NumRequeues returns back how many times the item was requeued
-	NumRequeues(item interface{}) int
+	AddRateLimited(item interface{})  // AddRateLimited 限速方式往队列中加入一个元素
+	Forget(item interface{})          // Forget 标识一个元素结束重试
+	NumRequeues(item interface{}) int // NumRequeues 表示这个元素被处理了多少次
 }
 
 // NewRateLimitingQueue constructs a new workqueue with rateLimited queuing ability

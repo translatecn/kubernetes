@@ -94,19 +94,19 @@
                 "$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime"
               }
             ],
-            "description": "acquireTime is a time when the current lease was acquired."
+            "description": "acquireTime是acquire当前租约的时间."
           },
           "holderIdentity": {
-            "description": "holderIdentity contains the identity of the holder of a current lease.",
+            "description": "holderIdentity 包含当前租约持有者的标识。",
             "type": "string"
           },
           "leaseDurationSeconds": {
-            "description": "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
+            "description": "leaseDurationSeconds 是一个租期的候选人需要租约的时间。这是根据最后观察到的RenewTime的时间来衡量的。",
             "format": "int32",
             "type": "integer"
           },
           "leaseTransitions": {
-            "description": "leaseTransitions is the number of transitions of a lease between holders.",
+            "description": "leaseTransitions 租约被多少人持有过.",
             "format": "int32",
             "type": "integer"
           },
@@ -116,7 +116,7 @@
                 "$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime"
               }
             ],
-            "description": "renewTime is a time when the current holder of a lease has last updated the lease."
+            "description": "renewTime 是当前租约持有人上次更新租约的时间."
           }
         },
         "type": "object"
