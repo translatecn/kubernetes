@@ -132,62 +132,25 @@ import (
 // state, except that its ResourceVersion is replaced with a
 // ResourceVersion in which the object is actually absent.
 type SharedInformer interface {
-	// AddEventHandler adds an event handler to the shared informer using the shared informer's resync
-	// period.  Events to a single handler are delivered sequentially, but there is no coordination
-	// between different handlers.
-	// It returns a registration handle for the handler that can be used to remove
-	// the handler again.
+	// AddEventHandler 可以添加自定义的 ResourceEventHandler
 	AddEventHandler(handler ResourceEventHandler) (ResourceEventHandlerRegistration, error)
-	// AddEventHandlerWithResyncPeriod adds an event handler to the
-	// shared informer with the requested resync period; zero means
-	// this handler does not care about resyncs.  The resync operation
-	// consists of delivering to the handler an update notification
-	// for every object in the informer's local indexerCache; it does not add
-	// any interactions with the authoritative storage.  Some
-	// informers do no resyncs at all, not even for handlers added
-	// with a non-zero resyncPeriod.  For an informer that does
-	// resyncs, and for each handler that requests resyncs, that
-	// informer develops a nominal resync period that is no shorter
-	// than the requested period but may be longer.  The actual time
-	// between any two resyncs may be longer than the nominal period
-	// because the implementation takes time to do work and there may
-	// be competing load and scheduling noise.
-	// It returns a registration handle for the handler that can be used to remove
-	// the handler again and an error if the handler cannot be added.
+	// AddEventHandlerWithResyncPeriod 附带 resync 间隔配置，设置为 0 表示不关心 resync
 	AddEventHandlerWithResyncPeriod(handler ResourceEventHandler, resyncPeriod time.Duration) (ResourceEventHandlerRegistration, error)
 	// RemoveEventHandler removes a formerly added event handler given by
 	// its registration handle.
 	// This function is guaranteed to be idempotent, and thread-safe.
 	RemoveEventHandler(handle ResourceEventHandlerRegistration) error
-	// GetStore returns the informer's local indexerCache as a Store.
+	// GetStore 这里的 Store 指的是 Indexer
 	GetStore() Store
-	// GetController is deprecated, it does nothing useful
+	// GetController 过时了，没有用
 	GetController() Controller
-	// Run starts and runs the shared informer, returning after it stops.
-	// The informer will be stopped when stopCh is closed.
+	// Run 通过 Run 来启动
 	Run(stopCh <-chan struct{})
-	// HasSynced returns true if the shared informer's reflectorStore has been
-	// informed by at least one full LIST of the authoritative state
-	// of the informer's object collection.  This is unrelated to "resync".
+	// HasSynced 这里和 resync 逻辑没有关系，表示 Indexer 至少更新过一次全量的对象
 	HasSynced() bool
-	// LastSyncResourceVersion is the resource version observed when last synced with the underlying
-	// reflectorStore. The value returned is not synchronized with access to the underlying reflectorStore and is not
-	// thread-safe.
+	// LastSyncResourceVersion 最后一次拿到的 RV
 	LastSyncResourceVersion() string
-
-	// The WatchErrorHandler is called whenever ListAndWatch drops the
-	// connection with an error. After calling this handler, the informer
-	// will backoff and retry.
-	//
-	// The default implementation looks at the error type and tries to log
-	// the error message at an appropriate level.
-	//
-	// There's only one handler, so if you call this multiple times, last one
-	// wins; calling after the informer has been started returns an error.
-	//
-	// The handler is intended for visibility, not to e.g. pause the consumers.
-	// The handler should return quickly - any expensive processing should be
-	// offloaded.
+	// SetWatchErrorHandler 用于每次 ListAndWatch 连接断开时回调，主要就是日志记录的作用
 	SetWatchErrorHandler(handler WatchErrorHandler) error
 
 	// The TransformFunc is called for each object which is about to be stored.
@@ -244,7 +207,7 @@ func NewSharedIndexInformer(lw ListerWatcher, exampleObject runtime.Object, defa
 	realClock := &clock.RealClock{}
 	sharedIndexInformer := &sharedIndexInformer{
 		processor:                       &sharedProcessor{clock: realClock},
-		indexer:                         NewIndexer(DeletionHandlingMetaNamespaceKeyFunc, indexers),
+		indexerStore:                    NewIndexer(DeletionHandlingMetaNamespaceKeyFunc, indexers),
 		listerWatcher:                   lw,
 		objectType:                      exampleObject,
 		resyncCheckPeriod:               defaultEventHandlerResyncPeriod,
@@ -305,7 +268,7 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 }
 
 // `*sharedIndexInformer` implements SharedIndexInformer and has three
-// main components.  One is an indexed local indexerCache, `indexer Indexer`.
+// main components.  One is an indexed local indexerCache, `indexerStore Indexer`.
 // The second main component is a Controller that pulls
 // objects/notifications using the ListerWatcher and pushes them into
 // a DeltaFIFO --- whose knownObjects is the informer's local indexerCache
@@ -318,23 +281,13 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 // sharedProcessor, which is responsible for relaying those
 // notifications to each of the informer's clients.
 type sharedIndexInformer struct {
-	indexer    Indexer
-	controller Controller
-
+	indexerStore          Indexer
+	controller            Controller
 	processor             *sharedProcessor
 	cacheMutationDetector MutationDetector
-
-	listerWatcher ListerWatcher
-
-	// objectType is an example object of the type this informer is
-	// expected to handle.  Only the type needs to be right, except
-	// that when that is `unstructured.Unstructured` the object's
-	// `"apiVersion"` and `"kind"` must also be right.
-	objectType runtime.Object
-
-	// resyncCheckPeriod is how often we want the reflector's resync timer to fire so it can call
-	// shouldResync to check if any of our listeners need a resync.
-	resyncCheckPeriod time.Duration
+	listerWatcher         ListerWatcher
+	objectType            runtime.Object // 表示当前 Informer 期望关注的类型，主要是 GVK 信息
+	resyncCheckPeriod     time.Duration  // reflector 的 resync 计时器计时间隔，通知所有的 listener 执行 resync
 	// defaultEventHandlerResyncPeriod is the default resync period for any handlers added via
 	// AddEventHandler (i.e. they don't specify one and just want to use the shared informer's default
 	// value).
@@ -420,18 +373,17 @@ func (s *sharedIndexInformer) Run(stopCh <-chan struct{}) {
 		return
 	}
 	fifo := NewDeltaFIFOWithOptions(DeltaFIFOOptions{
-		KnownObjects:          s.indexer,
+		KnownObjects:          s.indexerStore,
 		EmitDeltaTypeReplaced: true,
 	})
 
 	cfg := &Config{
-		Queue:            fifo,
-		ListerWatcher:    s.listerWatcher,
-		ObjectType:       s.objectType,
-		FullResyncPeriod: s.resyncCheckPeriod,
-		RetryOnError:     false,
-		ShouldResync:     s.processor.shouldResync,
-
+		Queue:             fifo,
+		ListerWatcher:     s.listerWatcher,
+		ObjectType:        s.objectType,
+		FullResyncPeriod:  s.resyncCheckPeriod,
+		RetryOnError:      false,
+		ShouldResync:      s.processor.shouldResync,
 		Process:           s.HandleDeltas,
 		WatchErrorHandler: s.watchErrorHandler,
 	}
@@ -451,7 +403,7 @@ func (s *sharedIndexInformer) Run(stopCh <-chan struct{}) {
 	defer wg.Wait()              // Wait for Processor to stop
 	defer close(processorStopCh) // Tell Processor to stop
 	wg.StartWithChannel(processorStopCh, s.cacheMutationDetector.Run)
-	wg.StartWithChannel(processorStopCh, s.processor.run)
+	wg.StartWithChannel(processorStopCh, s.processor.run) // processor 的 run 方法
 
 	defer func() {
 		s.startedLock.Lock()
@@ -488,11 +440,11 @@ func (s *sharedIndexInformer) LastSyncResourceVersion() string {
 }
 
 func (s *sharedIndexInformer) GetStore() Store {
-	return s.indexer
+	return s.indexerStore
 }
 
 func (s *sharedIndexInformer) GetIndexer() Indexer {
-	return s.indexer
+	return s.indexerStore
 }
 
 func (s *sharedIndexInformer) AddIndexers(indexers Indexers) error {
@@ -503,7 +455,7 @@ func (s *sharedIndexInformer) AddIndexers(indexers Indexers) error {
 		return fmt.Errorf("informer has already started")
 	}
 
-	return s.indexer.AddIndexers(indexers)
+	return s.indexerStore.AddIndexers(indexers)
 }
 
 func (s *sharedIndexInformer) GetController() Controller {
@@ -574,7 +526,7 @@ func (s *sharedIndexInformer) AddEventHandlerWithResyncPeriod(handler ResourceEv
 	defer s.blockDeltas.Unlock()
 
 	handle := s.processor.addListener(listener)
-	for _, item := range s.indexer.List() {
+	for _, item := range s.indexerStore.List() {
 		listener.add(addNotification{newObj: item})
 	}
 	return handle, nil
@@ -585,7 +537,7 @@ func (s *sharedIndexInformer) HandleDeltas(obj interface{}) error {
 	defer s.blockDeltas.Unlock()
 
 	if deltas, ok := obj.(Deltas); ok {
-		return processDeltas(s, s.indexer, s.transform, deltas)
+		return processDeltas(s, s.indexerStore, s.transform, deltas)
 	}
 	return errors.New("object given as Process argument is not Deltas")
 }
@@ -800,22 +752,10 @@ func (p *sharedProcessor) resyncCheckPeriodChanged(resyncCheckPeriod time.Durati
 	}
 }
 
-// processorListener relays notifications from a sharedProcessor to
-// one ResourceEventHandler --- using two goroutines, two unbuffered
-// channels, and an unbounded ring buffer.  The `add(notification)`
-// function sends the given notification to `addCh`.  One goroutine
-// runs `pop()`, which pumps notifications from `addCh` to `nextCh`
-// using storage in the ring buffer while `nextCh` is not keeping up.
-// Another goroutine runs `run()`, which receives notifications from
-// `nextCh` and synchronously invokes the appropriate handler method.
-//
-// processorListener also keeps track of the adjusted requested resync
-// period of the listener.
 type processorListener struct {
-	nextCh chan interface{}
-	addCh  chan interface{}
-
-	handler ResourceEventHandler
+	nextCh  chan interface{}     // 读消息
+	addCh   chan interface{}     //写消息
+	handler ResourceEventHandler // 核心属性
 
 	// pendingNotifications is an unbounded ring buffer that holds all notifications not yet distributed.
 	// There is one per listener, but a failing/stalled listener will have infinite pendingNotifications
@@ -862,7 +802,9 @@ func newProcessListener(handler ResourceEventHandler, requestedResyncPeriod, res
 	return ret
 }
 
+// ok
 func (p *processorListener) add(notification interface{}) {
+	// 将通知放到 addCh 中，所以下面 pop() 方法里先执行到的 case 是第二个
 	p.addCh <- notification
 }
 
@@ -874,28 +816,27 @@ func (p *processorListener) pop() {
 	var notification interface{}
 	for {
 		select {
-		case nextCh <- notification:
-			// Notification dispatched
+		case nextCh <- notification: // 下面获取到的通知，添加到 nextCh 里，供 run() 方法中消费
 			var ok bool
-			notification, ok = p.pendingNotifications.ReadOne()
-			if !ok { // Nothing to pop
-				nextCh = nil // Disable this select case
+			notification, ok = p.pendingNotifications.ReadOne() // 从 pendingNotifications 里消费通知，生产者在下面 case 里
+			if !ok {                                            // Nothing to pop
+				nextCh = nil
 			}
-		case notificationToAdd, ok := <-p.addCh:
+		case notificationToAdd, ok := <-p.addCh: // 逻辑从这里开始，从 addCh 里提取通知
 			if !ok {
 				return
 			}
-			if notification == nil { // No notification to pop (and pendingNotifications is empty)
-				// Optimize the case - skip adding to pendingNotifications
+			if notification == nil {
 				notification = notificationToAdd
 				nextCh = p.nextCh
-			} else { // There is already a notification waiting to be dispatched
-				p.pendingNotifications.WriteOne(notificationToAdd)
+			} else {
+				p.pendingNotifications.WriteOne(notificationToAdd) // 新添加的通知丢到 pendingNotifications
 			}
 		}
 	}
 }
 
+// ok
 func (p *processorListener) run() {
 	// this call blocks until the channel is closed.  When a panic happens during the notification
 	// we will catch it, **the offending item will be skipped!**, and after a short delay (one second)

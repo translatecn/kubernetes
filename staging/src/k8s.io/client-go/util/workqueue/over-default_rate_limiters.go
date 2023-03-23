@@ -28,38 +28,59 @@ type RateLimiter interface {
 	When(item interface{}) time.Duration // 获取一个项目并决定该项目应该等待多长时间
 	Forget(item interface{})             // 指示项已完成重试。不管是成功还是失败，我们都会停止追踪
 	NumRequeues(item interface{}) int    // 返回项目失败的次数
-
 }
 
-// DefaultControllerRateLimiter is a no-arg constructor for a default rate limiter for a workqueue.  It has
-// both overall and per-item rate limiting.  The overall is a token bucket and the per-item is exponential
+// ---------------------------------------------默认----------------------------------------------
+
+// DefaultControllerRateLimiter 是工作队列的默认速率限制器的无参数构造函数。它有整体和每件物品的速度限制。整体是一个令牌桶，每一项是指数级的
 func DefaultControllerRateLimiter() RateLimiter {
 	return NewMaxOfRateLimiter(
 		NewItemExponentialFailureRateLimiter(5*time.Millisecond, 1000*time.Second),
 		&BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(10), 100)},
 	)
 }
-
-// BucketRateLimiter adapts a standard bucket to the workqueue ratelimiter API
-type BucketRateLimiter struct {
-	*rate.Limiter
+func NewMaxOfRateLimiter(limiters ...RateLimiter) RateLimiter {
+	return &MaxOfRateLimiter{limiters: limiters}
 }
 
-var _ RateLimiter = &BucketRateLimiter{}
-
-func (r *BucketRateLimiter) When(item interface{}) time.Duration {
-	return r.Limiter.Reserve().Delay()
+// MaxOfRateLimiter 当与令牌桶限制器一起使用时，在特定项单独延迟较长时间的情况下，爆发可能会明显超过。
+type MaxOfRateLimiter struct {
+	limiters []RateLimiter
 }
 
-func (r *BucketRateLimiter) NumRequeues(item interface{}) int {
-	return 0
+func (r *MaxOfRateLimiter) When(item interface{}) time.Duration { // 取较大者
+	ret := time.Duration(0)
+	for _, limiter := range r.limiters {
+		curr := limiter.When(item)
+		if curr > ret {
+			ret = curr
+		}
+	}
+
+	return ret
 }
 
-func (r *BucketRateLimiter) Forget(item interface{}) {
+func (r *MaxOfRateLimiter) NumRequeues(item interface{}) int { // 取较大者
+	ret := 0
+	for _, limiter := range r.limiters {
+		curr := limiter.NumRequeues(item)
+		if curr > ret {
+			ret = curr
+		}
+	}
+
+	return ret
 }
 
-// ItemExponentialFailureRateLimiter does a simple baseDelay*2^<num-failures> limit
-// dealing with max failures and expiration are up to the caller
+func (r *MaxOfRateLimiter) Forget(item interface{}) {
+	for _, limiter := range r.limiters {
+		limiter.Forget(item)
+	}
+}
+
+// --------------------------------------------默认 ok-----------------------------------------------
+
+// ItemExponentialFailureRateLimiter 做一个简单的baseDelay*2^<num-failures>限制;对Max失败和过期的限制处理由调用者决定
 type ItemExponentialFailureRateLimiter struct {
 	failuresLock sync.Mutex
 	failures     map[interface{}]int
@@ -78,10 +99,6 @@ func NewItemExponentialFailureRateLimiter(baseDelay time.Duration, maxDelay time
 	}
 }
 
-func DefaultItemBasedRateLimiter() RateLimiter {
-	return NewItemExponentialFailureRateLimiter(time.Millisecond, 1000*time.Second)
-}
-
 func (r *ItemExponentialFailureRateLimiter) When(item interface{}) time.Duration {
 	r.failuresLock.Lock()
 	defer r.failuresLock.Unlock()
@@ -89,7 +106,7 @@ func (r *ItemExponentialFailureRateLimiter) When(item interface{}) time.Duration
 	exp := r.failures[item]
 	r.failures[item] = r.failures[item] + 1
 
-	// The backoff is capped such that 'calculated' value never overflows.
+	// 每调用一次，exp也就加1，对应到这里时2^n指数爆炸
 	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp))
 	if backoff > math.MaxInt64 {
 		return r.maxDelay
@@ -117,14 +134,36 @@ func (r *ItemExponentialFailureRateLimiter) Forget(item interface{}) {
 	delete(r.failures, item)
 }
 
-// ItemFastSlowRateLimiter does a quick retry for a certain number of attempts, then a slow retry after that
-type ItemFastSlowRateLimiter struct {
-	failuresLock sync.Mutex
-	failures     map[interface{}]int
+// -------------------------------------默认------------------------------------------------------
 
-	maxFastAttempts int
-	fastDelay       time.Duration
-	slowDelay       time.Duration
+// BucketRateLimiter 将标准桶适配到工作队列速率限制器API
+type BucketRateLimiter struct {
+	*rate.Limiter
+}
+
+var _ RateLimiter = &BucketRateLimiter{}
+
+func (r *BucketRateLimiter) When(item interface{}) time.Duration {
+	// 过多久之后给当前元素发放一个令牌
+	return r.Limiter.Reserve().Delay()
+}
+
+func (r *BucketRateLimiter) NumRequeues(item interface{}) int {
+	return 0
+}
+
+func (r *BucketRateLimiter) Forget(item interface{}) {
+}
+
+// ---------------------------------------------ok----------------------------------------------
+
+// ItemFastSlowRateLimiter 是否快速重试一定数量的尝试，然后缓慢重试之后
+type ItemFastSlowRateLimiter struct {
+	failuresLock    sync.Mutex
+	failures        map[interface{}]int
+	maxFastAttempts int           // 快速重试的次数
+	fastDelay       time.Duration // 快重试间隔
+	slowDelay       time.Duration // 慢重试间隔
 }
 
 var _ RateLimiter = &ItemFastSlowRateLimiter{}
@@ -143,7 +182,7 @@ func (r *ItemFastSlowRateLimiter) When(item interface{}) time.Duration {
 	defer r.failuresLock.Unlock()
 
 	r.failures[item] = r.failures[item] + 1
-
+	// 如果快重试次数没有用完，返回fastDelay
 	if r.failures[item] <= r.maxFastAttempts {
 		return r.fastDelay
 	}
@@ -165,48 +204,9 @@ func (r *ItemFastSlowRateLimiter) Forget(item interface{}) {
 	delete(r.failures, item)
 }
 
-// MaxOfRateLimiter calls every RateLimiter and returns the worst case response
-// When used with a token bucket limiter, the burst could be apparently exceeded in cases where particular items
-// were separately delayed a longer time.
-type MaxOfRateLimiter struct {
-	limiters []RateLimiter
-}
+// -------------------------------------------------------------------------------------------
 
-func (r *MaxOfRateLimiter) When(item interface{}) time.Duration {
-	ret := time.Duration(0)
-	for _, limiter := range r.limiters {
-		curr := limiter.When(item)
-		if curr > ret {
-			ret = curr
-		}
-	}
-
-	return ret
-}
-
-func NewMaxOfRateLimiter(limiters ...RateLimiter) RateLimiter {
-	return &MaxOfRateLimiter{limiters: limiters}
-}
-
-func (r *MaxOfRateLimiter) NumRequeues(item interface{}) int {
-	ret := 0
-	for _, limiter := range r.limiters {
-		curr := limiter.NumRequeues(item)
-		if curr > ret {
-			ret = curr
-		}
-	}
-
-	return ret
-}
-
-func (r *MaxOfRateLimiter) Forget(item interface{}) {
-	for _, limiter := range r.limiters {
-		limiter.Forget(item)
-	}
-}
-
-// WithMaxWaitRateLimiter have maxDelay which avoids waiting too long
+// WithMaxWaitRateLimiter 有maxDelay避免等待太长时间
 type WithMaxWaitRateLimiter struct {
 	limiter  RateLimiter
 	maxDelay time.Duration

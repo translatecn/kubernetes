@@ -126,7 +126,7 @@ func (i *storeIndex) addIndexers(newIndexers Indexers) error {
 	newKeys := sets.StringKeySet(newIndexers)
 
 	if oldKeys.HasAny(newKeys.List()...) {
-		return fmt.Errorf("indexer conflict: %v", oldKeys.Intersection(newKeys))
+		return fmt.Errorf("indexerStore conflict: %v", oldKeys.Intersection(newKeys))
 	}
 
 	for k, v := range newIndexers {

@@ -70,8 +70,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 )
 
-// Info holds Kubernetes API authorization config.  It is intended
-// to be read/written from a file as a JSON object.
+// Info holds Kubernetes API authorization config.  It is intended to be read/written from a file as a JSON object.
 type Info struct {
 	User        string
 	Password    string `datapolicy:"password"`

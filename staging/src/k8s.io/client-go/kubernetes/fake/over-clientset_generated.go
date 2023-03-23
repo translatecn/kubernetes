@@ -127,10 +127,10 @@ import (
 	"k8s.io/client-go/testing"
 )
 
-// NewSimpleClientset returns a clientset that will respond with the provided objects.
-// It's backed by a very simple object tracker that processes creates, updates and deletions as-is,
-// without applying any validations and/or defaults. It shouldn't be considered a replacement
-// for a real clientset and is mostly useful in simple unit tests.
+// NewSimpleClientset返回一个客户集，该客户集将响应所提供的对象。
+//它由一个非常简单的对象跟踪器支持，可以按原样处理创建、更新和删除，
+//不应用任何验证和/或默认值。它不应该被认为是替代品
+//用于实际客户端集，主要用于简单的单元测试。
 func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 	o := testing.NewObjectTracker(scheme, codecs.UniversalDecoder())
 	for _, obj := range objects {

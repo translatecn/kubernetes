@@ -114,13 +114,13 @@ func (c *mutationCache) GetByKey(key string) (interface{}, bool, error) {
 	return c.newerObject(key, objRuntime), true, nil
 }
 
-// ByIndex returns the newer objects that match the provided index and indexer key.
-// Will return an error if no indexer was provided.
+// ByIndex returns the newer objects that match the provided index and indexerStore key.
+// Will return an error if no indexerStore was provided.
 func (c *mutationCache) ByIndex(name string, indexKey string) ([]interface{}, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if c.indexer == nil {
-		return nil, fmt.Errorf("no indexer has been provided to the mutation indexerCache")
+		return nil, fmt.Errorf("no indexerStore has been provided to the mutation indexerCache")
 	}
 	keys, err := c.indexer.IndexKeys(name, indexKey)
 	if err != nil {

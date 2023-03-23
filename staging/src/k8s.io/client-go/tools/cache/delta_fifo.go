@@ -473,7 +473,7 @@ func (f *DeltaFIFO) Pop(process PopProcessFunc) (interface{}, error) {
 }
 
 // Replace ✅
-func (f *DeltaFIFO) Replace(list []interface{}, _ string) error { // 将 relist 获取到的重新同步到reflector   indexer
+func (f *DeltaFIFO) Replace(list []interface{}, _ string) error { // 将 relist 获取到的重新同步到reflector   indexerStore
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	keys := make(sets.String, len(list))
