@@ -30,7 +30,7 @@ type unionCAContent []CAContentProvider
 var _ CAContentProvider = &unionCAContent{}
 var _ ControllerRunner = &unionCAContent{}
 
-// NewUnionCAContentProvider returns a CAContentProvider that is a union of other CAContentProviders
+// NewUnionCAContentProvider 返回一个CAContentProvider，它是其他CAContentProviders的联合
 func NewUnionCAContentProvider(caContentProviders ...CAContentProvider) CAContentProvider {
 	return unionCAContent(caContentProviders)
 }

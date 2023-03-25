@@ -95,14 +95,9 @@ func (s *RequestHeaderAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&s.GroupHeaders, "requestheader-group-headers", s.GroupHeaders, "要检查组的请求头列表。建议使用X-Remote-Group。")
 	fs.StringSliceVar(&s.ExtraHeaderPrefixes, "requestheader-extra-headers-prefix", s.ExtraHeaderPrefixes, "要检查的请求头前缀列表。建议使用X-Remote-Extra-")
 	fs.StringVar(&s.ClientCAFile, "requestheader-client-ca-file", s.ClientCAFile, "在信任 --requesttheader-username-headers 指定的头中的用户名之前，用于验证传入请求上的客户端证书的根证书包。警告:通常不依赖于对传入请求已经完成的授权。")
-
-	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames,
-		"允许在--requesttheader-username-headers指定的头中提供用户名的客户端证书公共名称列表。"+
-			"如果为空，则允许在——requestheader-client-ca-file中通过权威机构验证的任何客户端证书。")
+	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames, "允许在--requesttheader-username-headers指定的头中提供用户名的客户端证书公共名称列表。如果为空，则允许在--requestheader-client-ca-file中通过权威机构验证的任何客户端证书。")
 }
 
-// ToAuthenticationRequestHeaderConfig returns a RequestHeaderConfig config object for these options
-// if necessary, nil otherwise.
 func (s *RequestHeaderAuthenticationOptions) ToAuthenticationRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error) {
 	if len(s.ClientCAFile) == 0 {
 		return nil, nil
@@ -134,7 +129,7 @@ type ClientCertAuthenticationOptions struct {
 	CAContentProvider dynamiccertificates.CAContentProvider
 }
 
-// GetClientVerifyOptionFn provides verify options for your authenticator while respecting the preferred order of verifiers.
+// GetClientCAContentProvider 为您的验证器提供验证选项，同时按照验证器的首选顺序。
 func (s *ClientCertAuthenticationOptions) GetClientCAContentProvider() (dynamiccertificates.CAContentProvider, error) {
 	if s.CAContentProvider != nil {
 		return s.CAContentProvider, nil

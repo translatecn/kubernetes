@@ -27,8 +27,7 @@ import (
 )
 
 type EgressSelectorOptions struct {
-	// ConfigFile is the file path with api-server egress selector configuration.
-	ConfigFile string
+	ConfigFile string // 具有api服务器出口选择器配置的文件路径。
 }
 
 // NewEgressSelectorOptions 选项是指向用于出口/连接的配置文件.这决定了哪些类型的请求使用出口/连接以及如何使用它.如果为空,API服务器将尝试直接使用网络连接.
@@ -53,16 +52,16 @@ func (o *EgressSelectorOptions) ApplyTo(c *server.Config) error {
 		return nil
 	}
 
-	npConfig, err := egressselector.ReadEgressSelectorConfiguration(o.ConfigFile) // ✅
+	npConfig, err := egressselector.ReadEgressSelectorConfiguration(o.ConfigFile)
 	if err != nil {
 		return fmt.Errorf("failed to read egress selector config: %v", err)
 	}
-	errs := egressselector.ValidateEgressSelectorConfiguration(npConfig) // ✅
+	errs := egressselector.ValidateEgressSelectorConfiguration(npConfig)
 	if len(errs) > 0 {
 		return fmt.Errorf("failed to validate egress selector configuration: %v", errs.ToAggregate())
 	}
 
-	cs, err := egressselector.NewEgressSelector(npConfig) // todo 后面需要重看
+	cs, err := egressselector.NewEgressSelector(npConfig) // ✅
 	if err != nil {
 		return fmt.Errorf("failed to setup egress selector with config %#v: %v", npConfig, err)
 	}

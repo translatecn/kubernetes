@@ -49,16 +49,10 @@ type ControllerRunner interface {
 // DynamicFileCAContent provides a CAContentProvider that can dynamically react to new file content
 // It also fulfills the authenticator interface to provide verifyoptions
 type DynamicFileCAContent struct {
-	name string
-
-	// filename is the name the file to read.
-	filename string
-
-	// caBundle is a caBundleAndVerifier that contains the last read, non-zero length content of the file
-	caBundle atomic.Value
-
+	name      string       // 用途
+	filename  string       // ca文件名
+	caBundle  atomic.Value // /etc/kubernetes/pki/ca.crt 文件的数据
 	listeners []Listener
-
 	// queue only ever has one item, but it has nice error handling backoff/retry semantics
 	queue workqueue.RateLimitingInterface
 }
@@ -72,7 +66,7 @@ type caBundleAndVerifier struct {
 	verifyOptions x509.VerifyOptions
 }
 
-// NewDynamicCAContentFromFile returns a CAContentProvider based on a filename that automatically reloads content
+// NewDynamicCAContentFromFile 返回一个基于文件的CAContentProvider，自动重新加载内容。
 func NewDynamicCAContentFromFile(purpose, filename string) (*DynamicFileCAContent, error) {
 	if len(filename) == 0 {
 		return nil, fmt.Errorf("missing filename for ca bundle")
@@ -96,7 +90,7 @@ func (c *DynamicFileCAContent) AddListener(listener Listener) {
 	c.listeners = append(c.listeners, listener)
 }
 
-// loadCABundle determines the next set of content for the file.
+// loadCABundle 确定文件的下一组内容。
 func (c *DynamicFileCAContent) loadCABundle() error {
 	caBundle, err := ioutil.ReadFile(c.filename)
 	if err != nil {
@@ -106,7 +100,7 @@ func (c *DynamicFileCAContent) loadCABundle() error {
 		return fmt.Errorf("missing content for CA bundle %q", c.Name())
 	}
 
-	// check to see if we have a change. If the values are the same, do nothing.
+	// 检查我们是否有变化。如果值是相同的，就什么也不做。
 	if !c.hasCAChanged(caBundle) {
 		return nil
 	}
@@ -125,14 +119,14 @@ func (c *DynamicFileCAContent) loadCABundle() error {
 	return nil
 }
 
-// hasCAChanged returns true if the caBundle is different than the current.
+// hasCAChanged 如果caBundle与当前不同，则返回true。
 func (c *DynamicFileCAContent) hasCAChanged(caBundle []byte) bool {
 	uncastExisting := c.caBundle.Load()
 	if uncastExisting == nil {
 		return true
 	}
 
-	// check to see if we have a change. If the values are the same, do nothing.
+	// 检查我们是否有变化。如果值是相同的，就什么也不做。
 	existing, ok := uncastExisting.(*caBundleAndVerifier)
 	if !ok {
 		return true

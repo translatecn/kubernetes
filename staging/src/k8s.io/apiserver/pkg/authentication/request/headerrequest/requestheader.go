@@ -44,7 +44,6 @@ func (d StringSliceProviderFunc) Value() []string {
 	return d()
 }
 
-// StaticStringSlice a StringSliceProvider that returns a fixed value
 type StaticStringSlice []string
 
 // Value returns the current string slice.  Callers should never mutate the returned value.

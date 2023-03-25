@@ -173,11 +173,13 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 
 // CreateServerChain creates the apiservers connected via delegation.
 func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatorapiserver.APIAggregator, error) {
+	// 1、为 kubeAPIServer 创建配置
 	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions) // kube-api-server
 	if err != nil {
 		return nil, err
 	}
 
+	// 2、判断是否配置了 APIExtensionsServer，创建 apiExtensionsConfig
 	// If additional API servers are added, they should be gated.
 	apiExtensionsConfig, err := createAPIExtensionsConfig(*kubeAPIServerConfig.GenericConfig, kubeAPIServerConfig.ExtraConfig.VersionedInformers, pluginInitializer, completedOptions.ServerRunOptions, completedOptions.MasterCount,
 		serviceResolver, webhook.NewDefaultAuthenticationInfoResolverWrapper(kubeAPIServerConfig.ExtraConfig.ProxyTransport, kubeAPIServerConfig.GenericConfig.EgressSelector, kubeAPIServerConfig.GenericConfig.LoopbackClientConfig, kubeAPIServerConfig.GenericConfig.TracerProvider))
@@ -186,21 +188,26 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 	}
 
 	notFoundHandler := notfoundhandler.New(kubeAPIServerConfig.GenericConfig.Serializer, genericapifilters.NoMuxAndDiscoveryIncompleteKey)
+	// 3、初始化 APIExtensionsServer
+	//主要处理 CustomResourceDefinition（CRD）和 CustomResource（CR）的 REST 请求，也是 Delegation 的最后一环，如果对应 CR 不能被处理的话则会返回 404。
 	apiExtensionsServer, err := createAPIExtensionsServer(apiExtensionsConfig, genericapiserver.NewEmptyDelegateWithCustomHandler(notFoundHandler))
 	if err != nil {
 		return nil, err
 	}
-
+	// 4、初始化 KubeAPIServer
+	//负责对请求的一些通用处理，认证、鉴权等，以及处理各个内建资源的 REST 服务；
 	kubeAPIServer, err := CreateKubeAPIServer(kubeAPIServerConfig, apiExtensionsServer.GenericAPIServer)
 	if err != nil {
 		return nil, err
 	}
-
+	// 5、创建 AggregatorConfig
 	// aggregator comes last in the chain
 	aggregatorConfig, err := createAggregatorConfig(*kubeAPIServerConfig.GenericConfig, completedOptions.ServerRunOptions, kubeAPIServerConfig.ExtraConfig.VersionedInformers, serviceResolver, kubeAPIServerConfig.ExtraConfig.ProxyTransport, pluginInitializer)
 	if err != nil {
 		return nil, err
 	}
+	// 6、初始化 AggregatorServer
+	//暴露的功能类似于一个七层负载均衡，将来自用户的请求拦截转发给其他服务器，并且负责整个 APIServer 的 Discovery 功能；
 	aggregatorServer, err := createAggregatorServer(aggregatorConfig, kubeAPIServer.GenericAPIServer, apiExtensionsServer.Informers)
 	if err != nil {
 		// we don't need special handling for innerStopCh because the aggregator server doesn't create any go routines
@@ -240,17 +247,17 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	error,
 ) {
 	proxyTransport := CreateProxyTransport()
-
+	// 1、构建 genericConfig
 	genericConfig, versionedInformers, serviceResolver, pluginInitializers, admissionPostStartHook, storageFactory, err := buildGenericConfig(s.ServerRunOptions, proxyTransport)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
+	// 2、初始化所支持的能力
 	capabilities.Setup(s.AllowPrivileged, s.MaxConnectionBytesPerSec)
 
 	s.Metrics.Apply()
 	serviceaccount.RegisterMetrics()
-
+	// 3、构建 controlplane.Config 对象
 	config := &controlplane.Config{
 		GenericConfig: genericConfig,
 		ExtraConfig: controlplane.ExtraConfig{
@@ -419,26 +426,29 @@ func buildGenericConfig(
 		return
 	}
 
-	// Use protobufs for self-communication.
-	// Since not every generic apiserver has to support protobufs, we
-	// cannot default to it in generic apiserver and need to explicitly
-	// set it in kube-apiserver.
 	// 3、设置使用 protobufs 用来内部交互，并且禁用压缩功能
 	genericConfig.LoopbackClientConfig.ContentConfig.ContentType = "application/vnd.kubernetes.protobuf"
-	// Disable compression for self-communication, since we are going to be
-	// on a fast local network
-	genericConfig.LoopbackClientConfig.DisableCompression = true
+
+	genericConfig.LoopbackClientConfig.DisableCompression = true // 禁用自我通信的压缩功能，因为我们将在一个快速的本地网络上。
 	// 4、创建 clientset
 	kubeClientConfig := genericConfig.LoopbackClientConfig
 	clientgoExternalClient, err := clientgoclientset.NewForConfig(kubeClientConfig)
 	if err != nil {
-		lastErr = fmt.Errorf("failed to create real external clientset: %v", err)
+		lastErr = fmt.Errorf("未能创建真正的外部客户集: %v", err)
 		return
 	}
 	versionedInformers = clientgoinformers.NewSharedInformerFactory(clientgoExternalClient, 10*time.Minute)
 
-	// Authentication.ApplyTo requires already applied OpenAPIConfig and EgressSelector if present
-	if lastErr = s.Authentication.ApplyTo(&genericConfig.Authentication, genericConfig.SecureServing, genericConfig.EgressSelector, genericConfig.OpenAPIConfig, genericConfig.OpenAPIV3Config, clientgoExternalClient, versionedInformers); lastErr != nil {
+	// Authentication.ApplyTo需要已经应用的OpenAPIConfig和EgressSelector（如果存在）。
+	if lastErr = s.Authentication.ApplyTo( // 认证
+		&genericConfig.Authentication,
+		genericConfig.SecureServing,
+		genericConfig.EgressSelector,
+		genericConfig.OpenAPIConfig,
+		genericConfig.OpenAPIV3Config,
+		clientgoExternalClient,
+		versionedInformers,
+	); lastErr != nil {
 		return
 	}
 
@@ -528,6 +538,7 @@ func Complete(s *options.ServerRunOptions) (completedServerRunOptions, error) {
 	}
 
 	// 我们只在用户提供的情况下才处理Secondary  定义的svc网络
+	// 获取 service ip range 以及 api server service IP
 	apiServerServiceIP, primaryServiceIPRange, secondaryServiceIPRange, err := getServiceIPAndRanges(s.ServiceClusterIPRanges) // 10.96.0.1 ,10.96.0.0/22
 	if err != nil {
 		return options, err

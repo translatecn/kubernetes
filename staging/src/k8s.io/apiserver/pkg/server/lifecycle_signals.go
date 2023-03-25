@@ -94,9 +94,7 @@ type lifecycleSignal interface {
 	// it immediately unblocks any goroutine waiting for this event.
 	Signal()
 
-	// Signaled returns a channel that is closed when the underlying event
-	// has been signaled. Successive calls to Signaled return the same value.
-	Signaled() <-chan struct{}
+	Signaled() <-chan struct{} // signals返回一个通道，该通道在底层事件被触发时关闭。连续调用signals返回相同的值。
 
 	// Name returns the name of the signal, useful for logging.
 	Name() string

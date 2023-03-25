@@ -57,14 +57,10 @@ type EtcdOptions struct {
 	EncryptionProviderConfigFilepath        string // 加密提供者配置文件路径
 	EncryptionProviderConfigAutomaticReload bool   // 是否启用,默认不开启
 
-	// complete guards fields that must be initialized via Complete before the Apply methods can be used.
-	complete               bool
+	complete               bool // 在使用Apply方法之前，保护必须通过Complete初始化的字段。
 	resourceTransformers   encryptionconfig.ResourceTransformers
 	kmsPluginHealthzChecks []healthz.HealthChecker
-
-	// SkipHealthEndpoints, when true, causes the Apply methods to not set up health endpoints.
-	// This allows multiple invocations of the Apply methods without duplication of said endpoints.
-	SkipHealthEndpoints bool
+	SkipHealthEndpoints    bool
 }
 
 var storageTypes = sets.NewString(
@@ -153,9 +149,8 @@ func (s *EtcdOptions) AddFlags(fs *pflag.FlagSet) {
 
 }
 
-// Complete must be called exactly once before using any of the Apply methods.  It is responsible for setting
-// up objects that must be created once and reused across multiple invocations such as storage transformers.
-// This method mutates the receiver (EtcdOptions).  It must never mutate the inputs.
+// Complete 在使用Apply方法之前，必须精确地调用一次。它负责设置必须创建一次并在多个调用(如存储转换器)之间重用的对象。
+// 这个方法会改变接收者(EtcdOptions)。它绝不能改变输入。
 func (s *EtcdOptions) Complete(
 	storageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker,
 	stopCh <-chan struct{},
@@ -171,7 +166,7 @@ func (s *EtcdOptions) Complete(
 
 	if len(s.EncryptionProviderConfigFilepath) != 0 {
 		ctxTransformers, closeTransformers := wait.ContextForChannel(stopCh)
-		ctxServer, _ := wait.ContextForChannel(stopCh) // explicitly ignore cancel here because we do not own the server's lifecycle
+		ctxServer, _ := wait.ContextForChannel(stopCh) // 这里显式地忽略cancel，因为我们不拥有服务器的生命周期
 
 		encryptionConfiguration, err := encryptionconfig.LoadEncryptionConfig(s.EncryptionProviderConfigFilepath, s.EncryptionProviderConfigAutomaticReload, ctxTransformers.Done())
 		if err != nil {
@@ -239,7 +234,7 @@ func (s *EtcdOptions) ApplyTo(c *server.Config) error {
 	return s.ApplyWithStorageFactoryTo(&SimpleStorageFactory{StorageConfig: s.StorageConfig}, c)
 }
 
-// ApplyWithStorageFactoryTo mutates the provided server.Config.  It must never mutate the receiver (EtcdOptions).
+// ApplyWithStorageFactoryTo ✅
 func (s *EtcdOptions) ApplyWithStorageFactoryTo(factory serverstorage.StorageFactory, c *server.Config) error {
 	if s == nil {
 		return nil
@@ -266,6 +261,7 @@ func (s *EtcdOptions) ApplyWithStorageFactoryTo(factory serverstorage.StorageFac
 	return nil
 }
 
+// ✅
 func (s *EtcdOptions) addEtcdHealthEndpoint(c *server.Config) error {
 	healthCheck, err := storagefactory.CreateHealthCheck(s.StorageConfig, c.DrainedNotify())
 	if err != nil {

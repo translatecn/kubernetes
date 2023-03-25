@@ -456,9 +456,9 @@ loop:
 			}
 			// 新的resourceVersion
 			resourceVersion := meta.GetResourceVersion()
-			_ = reflectorStore.(*DeltaFIFO).Add    // 对应 2.Add Obj to fifo
-			_ = reflectorStore.(*DeltaFIFO).Update // 对应 2.Add Obj to fifo
-			_ = reflectorStore.(*DeltaFIFO).Delete // 对应 2.Add Obj to fifo
+			//_ = reflectorStore.(*DeltaFIFO).Add 				// 对应 2.Add Obj to fifo
+			//_ = reflectorStore.(*cacher.watchCache).Update 	// 对应 2.Add Obj to fifo
+			//_ = reflectorStore.(*DeltaFIFO).Delete 			// 对应 2.Add Obj to fifo
 			switch event.Type {
 			case watch.Added:
 				err := reflectorStore.Add(event.Object)

@@ -104,14 +104,8 @@ type Config struct {
 	// Authorization is the configuration for authorization
 	Authorization AuthorizationInfo
 
-	// LoopbackClientConfig is a config for a privileged loopback connection to the API server
-	// This is required for proper functioning of the PostStartHooks on a GenericAPIServer
-	// TODO: move into SecureServing(WithLoopback) as soon as insecure serving is gone
-	LoopbackClientConfig *restclient.Config
-
-	// EgressSelector provides a lookup mechanism for dialing outbound connections.
-	// It does so based on a EgressSelectorConfiguration which was read at startup.
-	EgressSelector *egressselector.EgressSelector
+	LoopbackClientConfig *restclient.Config             // 是一个与API服务器的特权环回连接的配置。这对于GenericAPIServer上的PostStartHooks的正常运行是必需的。  s.SecureServing.ApplyTo(&gener
+	EgressSelector       *egressselector.EgressSelector // EgressSelector为拨出站连接提供查找机制。它基于启动时读取的EgressSelectorConfiguration。
 
 	// RuleResolver is required to get the list of rules that apply to a given user
 	// in a given namespace
@@ -180,8 +174,7 @@ type Config struct {
 	// SkipOpenAPIInstallation avoids installing the OpenAPI handler if set to true.
 	SkipOpenAPIInstallation bool
 
-	// RESTOptionsGetter is used to construct RESTStorage types via the generic registry.
-	RESTOptionsGetter genericregistry.RESTOptionsGetter
+	RESTOptionsGetter genericregistry.RESTOptionsGetter // 用来通过通用注册表构建RESTStorage类型。
 
 	// If specified, all requests except those which match the LongRunningFunc predicate will timeout
 	// after this duration.
@@ -506,7 +499,7 @@ func completeOpenAPI(config *openapicommon.Config, version *version.Info) {
 	}
 }
 
-// DrainedNotify returns a lifecycle signal of genericapiserver already drained while shutting down.
+// DrainedNotify 返回genericapisserver在关闭时已经耗尽的生命周期信号。
 func (c *Config) DrainedNotify() <-chan struct{} {
 	return c.lifecycleSignals.InFlightRequestsDrained.Signaled()
 }

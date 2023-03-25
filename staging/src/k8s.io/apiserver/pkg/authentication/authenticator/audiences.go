@@ -18,14 +18,13 @@ package authenticator
 
 import "context"
 
-// Audiences is a container for the Audiences of a token.
+// Audiences 是一个标记的Audiences的容器。
 type Audiences []string
 
-// The key type is unexported to prevent collisions
 type key int
 
 const (
-	// audiencesKey is the context key for request audiences.
+	// audiencesKey 是请求受众的上下文key
 	audiencesKey key = iota
 )
 

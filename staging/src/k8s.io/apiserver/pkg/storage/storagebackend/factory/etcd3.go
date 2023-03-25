@@ -149,9 +149,8 @@ func (a *atomicLastError) Load() error {
 }
 
 func newETCD3Check(c storagebackend.Config, timeout time.Duration, stopCh <-chan struct{}) (func() error, error) {
-	// constructing the etcd v3 client blocks and times out if etcd is not available.
-	// retry in a loop in the background until we successfully create the client, storing the client or error encountered
-
+	// 如果etcd不可用，构建etcd v3客户端会阻塞并超时。
+	// 在后台循环重试，直到成功创建客户端，存储客户端或遇到的错误
 	lock := sync.RWMutex{}
 	var client *clientv3.Client
 	clientErr := fmt.Errorf("etcd client connection not yet established")
@@ -190,9 +189,8 @@ func newETCD3Check(c storagebackend.Config, timeout time.Duration, stopCh <-chan
 			clientErr = fmt.Errorf("server is shutting down")
 		}
 	}()
-
-	// limit to a request every half of the configured timeout with a maximum burst of one
-	// rate limited requests will receive the last request sent error (note: not the last received response)
+	// 将请求限制为配置超时的一半，最大突发为1
+	// 速率有限的请求将接收到最后一个请求发送错误(注意:不是最后一个接收到的响应)
 	limiter := rate.NewLimiter(rate.Every(timeout/2), 1)
 	// initial state is the clientErr
 	lastError := &atomicLastError{err: fmt.Errorf("etcd client connection not yet established")}

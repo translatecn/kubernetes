@@ -53,24 +53,18 @@ type EgressSelector struct {
 	egressToDialer map[EgressType]utilnet.DialFunc
 }
 
-// EgressType is an indicator of which egress selection should be used for sending traffic.
+// EgressType 指示应使用哪个出口选择来发送流量。可以更加智能的决定流量的目标
 // See https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/1281-network-proxy/README.md#network-context
 type EgressType int
 
 const (
-	// ControlPlane is the EgressType for traffic intended to go to the control plane.
-	ControlPlane EgressType = iota
-	// Etcd is the EgressType for traffic intended to go to Kubernetes persistence store.
-	Etcd
-	// Cluster is the EgressType for traffic intended to go to the system being managed by Kubernetes.
-	Cluster
+	ControlPlane EgressType = iota // 进入控制平面的流量。
+	Etcd                           // 进入etcd的流量。
+	Cluster                        // 打算进入由Kubernetes管理的系统。
 )
 
-// NetworkContext is the struct used by Kubernetes API Server to indicate where it intends traffic to be sent.
+// NetworkContext 是Kubernetes API Server用来指示它打算将流量发送到哪里的结构。
 type NetworkContext struct {
-	// EgressSelectionName is the unique name of the
-	// EgressSelectorConfiguration which determines
-	// the network we route the traffic to.
 	EgressSelectionName EgressType
 }
 
@@ -91,7 +85,6 @@ func (s EgressType) String() string {
 	}
 }
 
-// AsNetworkContext is a helper function to make it easy to get the basic NetworkContext objects.
 func (s EgressType) AsNetworkContext() NetworkContext {
 	return NetworkContext{EgressSelectionName: s}
 }
@@ -360,8 +353,7 @@ func connectionToDialerCreator(c apiserver.Connection) (*dialerCreator, error) {
 
 }
 
-// NewEgressSelector configures lookup mechanism for Lookup.
-// It does so based on a EgressSelectorConfiguration which was read at startup.
+// NewEgressSelector ✅
 func NewEgressSelector(config *apiserver.EgressSelectorConfiguration) (*EgressSelector, error) {
 	if config == nil || config.EgressSelections == nil {
 		// No Connection Services configured, leaving the serviceMap empty, will return default dialer.
@@ -394,8 +386,8 @@ func NewEgressSelectorWithMap(m map[EgressType]utilnet.DialFunc) *EgressSelector
 	}
 }
 
-// Lookup gets the dialer function for the network context.
-// This is configured for the Kubernetes API Server at startup.
+// Lookup 获取网络上下文的dialer函数。
+// 这是Kubernetes API Server在启动时的配置
 func (cs *EgressSelector) Lookup(networkContext NetworkContext) (utilnet.DialFunc, error) {
 	if cs.egressToDialer == nil {
 		// The round trip wrapper will over-ride the dialContext method appropriately

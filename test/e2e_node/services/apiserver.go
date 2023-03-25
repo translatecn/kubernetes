@@ -86,7 +86,7 @@ func (a *APIServer) Start() error {
 	o.ServiceAccountSigningKeyFile = saSigningKeyFile.Name()
 	o.Authentication.APIAudiences = []string{"https://foo.bar.example.com"}
 	o.Authentication.ServiceAccounts.Issuers = []string{"https://foo.bar.example.com"}
-	o.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()}
+	o.Authentication.ServiceAccounts.KeyFiles = []string{saSigningKeyFile.Name()} // test
 
 	o.KubeletConfig.PreferredAddressTypes = []string{"InternalIP"}
 

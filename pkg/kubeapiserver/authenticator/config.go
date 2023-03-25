@@ -47,11 +47,10 @@ import (
 	"k8s.io/kubernetes/pkg/serviceaccount"
 )
 
-// Config contains the data on how to authenticate a request to the Kube API Server
+// Config 包含关于如何向Kube API服务器验证请求的数据
 type Config struct {
-	Anonymous      bool
-	BootstrapToken bool
-
+	Anonymous                   bool
+	BootstrapToken              bool
 	TokenAuthFile               string
 	OIDCIssuerURL               string
 	OIDCClientID                string
@@ -65,7 +64,7 @@ type Config struct {
 	ServiceAccountKeyFiles      []string
 	ServiceAccountLookup        bool
 	ServiceAccountIssuers       []string
-	APIAudiences                authenticator.Audiences
+	APIAudiences                authenticator.Audiences // 预先规定的调用者们  , 目前只有一个 https://kubernetes.default.svc.cluster.local
 	WebhookTokenAuthnConfigFile string
 	WebhookTokenAuthnVersion    string
 	WebhookTokenAuthnCacheTTL   time.Duration
@@ -79,21 +78,17 @@ type Config struct {
 
 	RequestHeaderConfig *authenticatorfactory.RequestHeaderConfig
 
-	// TODO, this is the only non-serializable part of the entire config.  Factor it out into a clientconfig
+	// TODO, 这是整个配置中唯一不可序列化的部分。将其分解到客户配置中
 	ServiceAccountTokenGetter   serviceaccount.ServiceAccountTokenGetter
 	SecretsWriter               typedv1core.SecretsGetter
-	BootstrapTokenAuthenticator authenticator.Token
-	// ClientCAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
-	// Generally this is the CA bundle file used to authenticate client certificates
-	// If this value is nil, then mutual TLS is disabled.
-	ClientCAContentProvider dynamiccertificates.CAContentProvider
+	BootstrapTokenAuthenticator authenticator.Token                   // 缓存读取
+	ClientCAContentProvider     dynamiccertificates.CAContentProvider // 用于验证客户证书的CA捆绑文件，如果这个值为零，那么相互TLS被禁用。
 
 	// Optional field, custom dial function used to connect to webhook
 	CustomDial utilnet.DialFunc
 }
 
-// New returns an authenticator.Request or an error that supports the standard
-// Kubernetes authentication mechanisms.
+// New 返回一个验证器请求、支持标准Kubernetes身份验证机制
 func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, error) {
 	var authenticators []authenticator.Request
 	var tokenAuthenticators []authenticator.Token

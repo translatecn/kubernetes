@@ -25,7 +25,6 @@ import (
 	"k8s.io/kubernetes/pkg/serviceaccount"
 )
 
-// clientGetter implements ServiceAccountTokenGetter using a clientset.Interface
 type clientGetter struct {
 	client               clientset.Interface
 	secretLister         v1listers.SecretLister
@@ -33,19 +32,17 @@ type clientGetter struct {
 	podLister            v1listers.PodLister
 }
 
-// NewGetterFromClient returns a ServiceAccountTokenGetter that
-// uses the specified client to retrieve service accounts and secrets.
-// The client should NOT authenticate using a service account token
-// the returned getter will be used to retrieve, or recursion will result.
+// NewGetterFromClient 返回一个ServiceAccountTokenGetter，它使用指定的客户端来检索服务帐户和秘密。
+// 客户端不应该使用返回的getter将用于检索的服务帐户令牌进行身份验证，否则将导致递归。
 func NewGetterFromClient(c clientset.Interface, secretLister v1listers.SecretLister, serviceAccountLister v1listers.ServiceAccountLister, podLister v1listers.PodLister) serviceaccount.ServiceAccountTokenGetter {
 	return clientGetter{c, secretLister, serviceAccountLister, podLister}
 }
 
 func (c clientGetter) GetServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
-	if serviceAccount, err := c.serviceAccountLister.ServiceAccounts(namespace).Get(name); err == nil {
+	if serviceAccount, err := c.serviceAccountLister.ServiceAccounts(namespace).Get(name); err == nil { // 从缓存读
 		return serviceAccount, nil
 	}
-	return c.client.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	return c.client.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{}) // 从接口读
 }
 
 func (c clientGetter) GetPod(namespace, name string) (*v1.Pod, error) {

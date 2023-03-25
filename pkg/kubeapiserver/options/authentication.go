@@ -45,11 +45,11 @@ import (
 
 // BuiltInAuthenticationOptions 包含API服务器的所有内置身份验证选项
 type BuiltInAuthenticationOptions struct {
-	APIAudiences         []string                                           //
+	APIAudiences         []string                                           // 预先规定的调用者们
 	Anonymous            *AnonymousAuthenticationOptions                    // 匿名授权
 	BootstrapToken       *BootstrapTokenAuthenticationOptions               //
 	ClientCert           *genericoptions.ClientCertAuthenticationOptions    //
-	OIDC                 *OIDCAuthenticationOptions                         //
+	OIDC                 *OIDCAuthenticationOptions                         // https://www.jianshu.com/p/fb4a386ef718
 	RequestHeader        *genericoptions.RequestHeaderAuthenticationOptions //
 	ServiceAccounts      *ServiceAccountAuthenticationOptions               //
 	TokenFile            *TokenFileAuthenticationOptions                    //
@@ -81,17 +81,17 @@ type OIDCAuthenticationOptions struct {
 	RequiredClaims map[string]string
 }
 
-// ServiceAccountAuthenticationOptions contains service account authentication options for API Server
+// ServiceAccountAuthenticationOptions 包含API服务器的服务账户认证选项
 type ServiceAccountAuthenticationOptions struct {
 	KeyFiles         []string
-	Lookup           bool
+	Lookup           bool     // 如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。
 	Issuers          []string // 其全称为 “Issuer Identifier”,中文意思就是：颁发者身份标识,表示 Token 颁发者的唯一标识,一般是一个 http(s) url,如 https://www.baidu.com
 	JWKSURI          string
 	MaxExpiration    time.Duration
 	ExtendExpiration bool
 }
 
-// TokenFileAuthenticationOptions contains token file authentication options for API Server
+// TokenFileAuthenticationOptions  包含API服务器的令牌文件认证选项
 type TokenFileAuthenticationOptions struct {
 	TokenFile string
 }
@@ -155,7 +155,7 @@ func (o *BuiltInAuthenticationOptions) WithRequestHeader() *BuiltInAuthenticatio
 	return o
 }
 
-// WithServiceAccounts set default value for service account authentication
+// WithServiceAccounts 设置服务帐户认证的默认值
 func (o *BuiltInAuthenticationOptions) WithServiceAccounts() *BuiltInAuthenticationOptions {
 	o.ServiceAccounts = &ServiceAccountAuthenticationOptions{Lookup: true, ExtendExpiration: true}
 	return o
@@ -238,7 +238,7 @@ func (o *BuiltInAuthenticationOptions) Validate() []error {
 // AddFlags returns flags of authentication for a API Server
 func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&o.APIAudiences, "api-audiences", o.APIAudiences,
-		"API的标识符.sa 令牌验证器将验证针对API使用的令牌是否绑定到这些使用者的至少一个.如果配置了 --service-account-issuer 标志而没有配置该标志,则该字段默认为包含发行者URL的单个元素列表.",
+		"API的标识符. sa令牌验证器将验证针对API使用的令牌是否绑定到这些使用者的至少一个.如果配置了 --service-account-issuer 标志而没有配置该标志,则该字段默认为包含发行者URL的单个元素列表.",
 	)
 
 	if o.Anonymous != nil {
@@ -274,8 +274,7 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	if o.ServiceAccounts != nil {
 		fs.StringArrayVar(&o.ServiceAccounts.KeyFiles, "service-account-key-file", o.ServiceAccounts.KeyFiles,
 			"包含pem编码的x509 RSA或ECDSA私钥或公钥的文件，用于验证ServiceAccount令牌。"+
-				"指定的文件可以包含多个键，并且该标志可以在不同的文件中指定多次。"+
-				"如果未指定，则使用——tls-private-key-file。提供——service-account-signing-key-file时必须指定")
+				"指定的文件可以包含多个键，并且该标志可以在不同的文件中指定多次。如果未指定，则使用--tls-private-key-file。提供--service-account-signing-key-file时必须指定")
 
 		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup,
 			"如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。")
@@ -306,7 +305,7 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 }
 
-// ToAuthenticationConfig convert BuiltInAuthenticationOptions to kubeauthenticator.Config
+// ToAuthenticationConfig ✅ convert BuiltInAuthenticationOptions to kubeauthenticator.Config
 func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (kubeauthenticator.Config, error) {
 	ret := kubeauthenticator.Config{
 		TokenSuccessCacheTTL: o.TokenSuccessCacheTTL,
@@ -349,8 +348,8 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (kubeauthenticat
 		}
 	}
 
-	ret.APIAudiences = o.APIAudiences
-	if o.ServiceAccounts != nil {
+	ret.APIAudiences = o.APIAudiences // 预先规定的调用者们
+	if o.ServiceAccounts != nil {     // --service-account-key-file
 		if len(o.ServiceAccounts.Issuers) != 0 && len(o.APIAudiences) == 0 {
 			ret.APIAudiences = authenticator.Audiences(o.ServiceAccounts.Issuers)
 		}
@@ -371,10 +370,10 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (kubeauthenticat
 
 		if len(o.WebHook.ConfigFile) > 0 && o.WebHook.CacheTTL > 0 {
 			if o.TokenSuccessCacheTTL > 0 && o.WebHook.CacheTTL < o.TokenSuccessCacheTTL {
-				klog.Warningf("the webhook cache ttl of %s is shorter than the overall cache ttl of %s for successful token authentication attempts.", o.WebHook.CacheTTL, o.TokenSuccessCacheTTL)
+				klog.Warningf("对于尝试验证成功的令牌身份，webhook缓存的TTL %s比缓存的总TTL %s短。", o.WebHook.CacheTTL, o.TokenSuccessCacheTTL)
 			}
 			if o.TokenFailureCacheTTL > 0 && o.WebHook.CacheTTL < o.TokenFailureCacheTTL {
-				klog.Warningf("the webhook cache ttl of %s is shorter than the overall cache ttl of %s for failed token authentication attempts.", o.WebHook.CacheTTL, o.TokenFailureCacheTTL)
+				klog.Warningf("对于尝试验证失败的令牌身份，webhook缓存的TTL %s比缓存的总TTL %s短。", o.WebHook.CacheTTL, o.TokenFailureCacheTTL)
 			}
 		}
 	}
@@ -382,8 +381,14 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (kubeauthenticat
 	return ret, nil
 }
 
-// ApplyTo requires already applied OpenAPIConfig and EgressSelector if present.
-func (o *BuiltInAuthenticationOptions) ApplyTo(authInfo *genericapiserver.AuthenticationInfo, secureServing *genericapiserver.SecureServingInfo, egressSelector *egressselector.EgressSelector, openAPIConfig *openapicommon.Config, openAPIV3Config *openapicommon.Config, extclient kubernetes.Interface, versionedInformer informers.SharedInformerFactory) error {
+func (o *BuiltInAuthenticationOptions) ApplyTo(
+	authInfo *genericapiserver.AuthenticationInfo,
+	secureServing *genericapiserver.SecureServingInfo,
+	egressSelector *egressselector.EgressSelector,
+	openAPIConfig *openapicommon.Config,
+	openAPIV3Config *openapicommon.Config,
+	extclient kubernetes.Interface,
+	versionedInformer informers.SharedInformerFactory) error {
 	if o == nil {
 		return nil
 	}

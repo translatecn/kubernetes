@@ -39,14 +39,10 @@ type Context interface {
 	AuthenticatedData() []byte
 }
 
-// Transformer allows a value to be transformed before being read from or written to the underlying store. The methods
-// must be able to undo the transformation caused by the other.
+// Transformer 允许在从底层存储读取或写入之前对一个值进行转换。
 type Transformer interface {
-	// TransformFromStorage may transform the provided data from its underlying storage representation or return an error.
-	// Stale is true if the object on disk is stale and a write to etcd should be issued, even if the contents of the object
-	// have not changed.
+	// TransformFromStorage 如果磁盘上的对象是陈旧的，并且应该向etcd写入，即使该对象的内容没有改变，Stale为真。
 	TransformFromStorage(ctx context.Context, data []byte, dataCtx Context) (out []byte, stale bool, err error)
-	// TransformToStorage may transform the provided data into the appropriate form in storage or return an error.
 	TransformToStorage(ctx context.Context, data []byte, dataCtx Context) (out []byte, err error)
 }
 

@@ -116,25 +116,17 @@ func (h *kmsv2PluginProbe) toHealthzCheck(idx int) healthz.HealthChecker {
 	})
 }
 
-// EncryptionConfiguration represents the parsed and normalized encryption configuration for the apiserver.
+// EncryptionConfiguration 表示apisserver的经过解析和规范化的加密配置。
 type EncryptionConfiguration struct {
-	// Transformers is a list of value.Transformer that will be used to encrypt and decrypt data.
-	Transformers map[schema.GroupResource]value.Transformer
-
-	// HealthChecks is a list of healthz.HealthChecker that will be used to check the health of the encryption providers.
-	HealthChecks []healthz.HealthChecker
-
-	// EncryptionFileContentHash is the hash of the encryption config file.
-	EncryptionFileContentHash string
-
-	// KMSCloseGracePeriod is the duration we will wait before closing old transformers.
-	// We wait for any in-flight requests to finish by using the duration which is longer than their timeout.
-	KMSCloseGracePeriod time.Duration
+	Transformers              map[schema.GroupResource]value.Transformer // 用于加密、解密数据
+	HealthChecks              []healthz.HealthChecker                    // 将用于检查加密提供程序的运行状况。
+	EncryptionFileContentHash string                                     // 加密配置文件的哈希值。
+	KMSCloseGracePeriod       time.Duration                              // 在关闭旧转化器之前所要等待的时间。通过使用比超时时间长的持续时间来等待任何飞行中的请求完成。
 }
 
-// LoadEncryptionConfig parses and validates the encryption config specified by filepath.
-// It may launch multiple go routines whose lifecycle is controlled by stopCh.
-// If reload is true, or KMS v2 plugins are used with no KMS v1 plugins, the returned slice of health checkers will always be of length 1.
+// LoadEncryptionConfig 解析并验证filepath指定的加密配置。
+// 可以启动多个go例程，其生命周期由stopCh控制。
+// 如果reload为true，或者使用KMS v2插件而不使用KMS v1插件，则返回的健康检查器切片的长度始终为1。
 func LoadEncryptionConfig(filepath string, reload bool, stopCh <-chan struct{}) (*EncryptionConfiguration, error) {
 	config, contentHash, err := loadConfig(filepath, reload)
 	if err != nil {
@@ -720,7 +712,6 @@ var _ ResourceTransformers = &StaticTransformers{}
 
 type StaticTransformers map[schema.GroupResource]value.Transformer
 
-// StaticTransformers
 func (s StaticTransformers) TransformerForResource(resource schema.GroupResource) value.Transformer {
 	transformer := s[resource]
 	if transformer == nil {

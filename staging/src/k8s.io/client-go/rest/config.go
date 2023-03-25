@@ -88,13 +88,8 @@ type Config struct {
 
 	// TLSClientConfig contains settings to enable transport layer security
 	TLSClientConfig
-
-	// UserAgent is an optional field that specifies the caller of this request.
-	UserAgent string
-
-	// DisableCompression bypasses automatic GZip compression requests to the
-	// server.
-	DisableCompression bool
+	UserAgent          string //  是一个可选的字段，用于指定该请求的调用者。
+	DisableCompression bool   // 绕过了对服务器的自动GZip压缩请求。
 
 	// Transport may be used for custom HTTP behavior. This attribute may not
 	// be specified with the TLS client certificate options. Use WrapTransport
@@ -281,11 +276,8 @@ type ContentConfig struct {
 	// AcceptContentTypes specifies the types the client will accept and is optional.
 	// If not set, ContentType will be used to define the Accept header
 	AcceptContentTypes string
-	// ContentType specifies the wire format used to communicate with the server.
-	// This value will be set as the Accept header on requests made to the server, and
-	// as the default content type on any object sent to the server. If not set,
-	// "application/json" is used.
-	ContentType string
+
+	ContentType string // 用于与服务器通信格式。
 	// GroupVersion is the API version to talk to. Must be provided when initializing
 	// a RESTClient directly. When initializing a Client, will be set with the default
 	// code version.
@@ -486,13 +478,13 @@ func adjustCommand(p string) string {
 	return filepath.Base(p)
 }
 
-// buildUserAgent builds a User-Agent string from given args.
+// ✅
 func buildUserAgent(command, version, os, arch, commit string) string {
 	return fmt.Sprintf(
 		"%s/%s (%s/%s) kubernetes/%s", command, version, os, arch, commit)
 }
 
-// DefaultKubernetesUserAgent returns a User-Agent string built from static global vars.
+// DefaultKubernetesUserAgent ✅
 func DefaultKubernetesUserAgent() string {
 	return buildUserAgent(
 		adjustCommand(os.Args[0]),

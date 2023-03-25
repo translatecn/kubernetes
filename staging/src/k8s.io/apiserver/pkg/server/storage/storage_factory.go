@@ -41,20 +41,11 @@ type Backend struct {
 	TLSConfig *tls.Config
 }
 
-// StorageFactory is the interface to locate the storage for a given GroupResource
+// StorageFactory 是为一个给定的GroupResource存储的接口。
 type StorageFactory interface {
-	// New finds the storage destination for the given group and resource. It will
-	// return an error if the group has no storage destination configured.
-	NewConfig(groupResource schema.GroupResource) (*storagebackend.ConfigForResource, error)
-
-	// ResourcePrefix returns the overridden resource prefix for the GroupResource
-	// This allows for cohabitation of resources with different native types and provides
-	// centralized control over the shape of etcd directories
-	ResourcePrefix(groupResource schema.GroupResource) string
-
-	// Backends gets all backends for all registered storage destinations.
-	// Used for getting all instances for health validations.
-	Backends() []Backend
+	NewConfig(groupResource schema.GroupResource) (*storagebackend.ConfigForResource, error) // 为给定的组和资源找到存储目的地。如果该组没有配置存储目的地，它将返回一个错误。
+	ResourcePrefix(groupResource schema.GroupResource) string                                // 返回GroupResource的重写资源前缀。这允许不同原生类型的资源共存，并提供对etcd目录形状的集中控制
+	Backends() []Backend                                                                     // Backends 获取所有注册存储目的地的所有后端。用于获取所有用于健康验证的实例。
 }
 
 // DefaultStorageFactory takes a GroupResource and returns back its storage interface.  This result includes:

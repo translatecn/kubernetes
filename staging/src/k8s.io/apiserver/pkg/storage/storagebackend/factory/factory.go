@@ -39,7 +39,7 @@ func Create(c storagebackend.ConfigForResource, newFunc func() runtime.Object) (
 	}
 }
 
-// CreateHealthCheck creates a healthcheck function based on given config.
+// CreateHealthCheck 创建基于给定配置的healthcheck函数。
 func CreateHealthCheck(c storagebackend.Config, stopCh <-chan struct{}) (func() error, error) {
 	switch c.Type {
 	case storagebackend.StorageTypeETCD2:

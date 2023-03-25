@@ -40,7 +40,7 @@ func init() {
 	install.Install(cfgScheme)
 }
 
-// ReadEgressSelectorConfiguration reads the egress selector configuration at the specified path.
+// ReadEgressSelectorConfiguration ✅ reads the egress selector configuration at the specified path.
 // It returns the loaded egress selector configuration if the input file aligns with the required syntax.
 // If it does not align with the provided syntax, it returns a default configuration which should function as a no-op.
 // It does this by returning a nil configuration, which preserves backward compatibility.

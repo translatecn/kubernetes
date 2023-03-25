@@ -72,10 +72,10 @@ type Connection struct {
 
 }
 
-// ProtocolType is a set of valid values for Connection.ProtocolType
 type ProtocolType string
 
-// 链接到konnectivity服务器的协议方式
+// https://blog.csdn.net/xiaoyi52/article/details/125028052
+// 链接到 konnectivity 服务器的协议方式
 const (
 	ProtocolHTTPConnect ProtocolType = "HTTPConnect"
 	ProtocolGRPC        ProtocolType = "GRPC"
