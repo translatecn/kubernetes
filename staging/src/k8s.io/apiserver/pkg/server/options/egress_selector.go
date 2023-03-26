@@ -44,9 +44,7 @@ func (o *EgressSelectorOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.ConfigFile, "egress-selector-config-file", o.ConfigFile, "apiserver egress 选择器配置文件")
 }
 
-// ApplyTo adds the egress selector settings to the server configuration.
-// In case egress selector settings were not provided by a cluster-admin
-// they will be prepared from the recommended/default/no-op values.
+// ApplyTo ✅
 func (o *EgressSelectorOptions) ApplyTo(c *server.Config) error {
 	if o == nil {
 		return nil

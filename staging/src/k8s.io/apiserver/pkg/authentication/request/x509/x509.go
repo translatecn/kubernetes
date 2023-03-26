@@ -76,7 +76,6 @@ type UserConversion interface {
 	User(chain []*x509.Certificate) (*authenticator.Response, bool, error)
 }
 
-// UserConversionFunc is a function that implements the UserConversion interface.
 type UserConversionFunc func(chain []*x509.Certificate) (*authenticator.Response, bool, error)
 
 // User implements x509.UserConversion
@@ -111,7 +110,7 @@ func certificateIdentifier(c *x509.Certificate) string {
 // is eventually expected, but not currently present.
 type VerifyOptionFunc func() (x509.VerifyOptions, bool)
 
-// Authenticator implements request.Authenticator by extracting user info from verified client certificates
+// Authenticator 从已验证的客户端证书中提取用户信息
 type Authenticator struct {
 	verifyOptionsFn VerifyOptionFunc
 	user            UserConversion
@@ -123,8 +122,8 @@ func New(opts x509.VerifyOptions, user UserConversion) *Authenticator {
 	return NewDynamic(StaticVerifierFn(opts), user)
 }
 
-// NewDynamic returns a request.Authenticator that verifies client certificates using the provided
-// VerifyOptionFunc (which may be dynamic), and converts valid certificate chains into user.Info using the provided UserConversion
+// NewDynamic 返回一个请求.验证器，使用提供的方法验证客户端证书
+// VerifyOptionFunc(可能是动态的)，并将有效的证书链转换为用户。信息使用提供的UserConversion
 func NewDynamic(verifyOptionsFn VerifyOptionFunc, user UserConversion) *Authenticator {
 	return &Authenticator{verifyOptionsFn, user}
 }
@@ -174,14 +173,11 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 	return nil, false, utilerrors.NewAggregate(errlist)
 }
 
-// Verifier implements request.Authenticator by verifying a client cert on the request, then delegating to the wrapped auth
+// Verifier 在请求上验证客户端证书，然后委托给封装的身份验证
 type Verifier struct {
-	verifyOptionsFn VerifyOptionFunc
-	auth            authenticator.Request
-
-	// allowedCommonNames contains the common names which a verified certificate is allowed to have.
-	// If empty, all verified certificates are allowed.
-	allowedCommonNames StringSliceProvider
+	verifyOptionsFn    VerifyOptionFunc
+	auth               authenticator.Request
+	allowedCommonNames StringSliceProvider // 包含经过验证的证书允许具有的通用名称。如果为空，则允许所有已验证的证书。
 }
 
 // NewVerifier create a request.Authenticator by verifying a client cert on the request, then delegating to the wrapped auth
@@ -189,7 +185,7 @@ func NewVerifier(opts x509.VerifyOptions, auth authenticator.Request, allowedCom
 	return NewDynamicCAVerifier(StaticVerifierFn(opts), auth, StaticStringSlice(allowedCommonNames.List()))
 }
 
-// NewDynamicCAVerifier create a request.Authenticator by verifying a client cert on the request, then delegating to the wrapped auth
+// NewDynamicCAVerifier 创建请求。验证程序，方法是验证请求上的客户端证书，然后委托给封装的验证程序
 func NewDynamicCAVerifier(verifyOptionsFn VerifyOptionFunc, auth authenticator.Request, allowedCommonNames StringSliceProvider) authenticator.Request {
 	return &Verifier{verifyOptionsFn, auth, allowedCommonNames}
 }
@@ -244,7 +240,7 @@ func DefaultVerifyOptions() x509.VerifyOptions {
 	}
 }
 
-// CommonNameUserConversion builds user info from a certificate chain using the subject's CommonName
+// CommonNameUserConversion 使用主题的CommonName从证书链构建用户信息
 var CommonNameUserConversion = UserConversionFunc(func(chain []*x509.Certificate) (*authenticator.Response, bool, error) {
 	if len(chain[0].Subject.CommonName) == 0 {
 		return nil, false, nil

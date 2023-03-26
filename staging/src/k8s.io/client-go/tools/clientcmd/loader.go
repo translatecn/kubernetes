@@ -105,12 +105,12 @@ func (g *ClientConfigGetter) IsDefaultConfig(config *restclient.Config) bool {
 	return false
 }
 
-// ClientConfigLoadingRules is an ExplicitPath and string slice of specific locations that are used for merging together a Config
-// Callers can put the chain together however they want, but we'd recommend:
-// EnvVarPathFiles if set (a list of files if set) OR the HomeDirectoryPath
-// ExplicitPath is special, because if a user specifically requests a certain file be used and error is reported if this file is not present
+// ClientConfigLoadingRules 是一个ExplicitPath和特定位置的字符串片，用于合并一个Config。
+// 调用者可以随心所欲地把链放在一起，但我们建议：
+// EnvVarPathFiles（如果设置了文件列表）或HomeDirectoryPath
+// ExplicitPath很特别，因为如果用户特别要求使用某个文件，如果这个文件不存在就会报告错误
 type ClientConfigLoadingRules struct {
-	ExplicitPath string
+	ExplicitPath string // 显式路径
 	Precedence   []string
 
 	// MigrationRules is a map of destination files to source files.  If a destination file is not present, then the source file is checked.
@@ -133,8 +133,7 @@ type ClientConfigLoadingRules struct {
 // ClientConfigLoadingRules implements the ClientConfigLoader interface.
 var _ ClientConfigLoader = &ClientConfigLoadingRules{}
 
-// NewDefaultClientConfigLoadingRules returns a ClientConfigLoadingRules object with default fields filled in.  You are not required to
-// use this constructor
+// NewDefaultClientConfigLoadingRules 您不需要使用这个构造函数
 func NewDefaultClientConfigLoadingRules() *ClientConfigLoadingRules {
 	chain := []string{}
 	warnIfAllMissing := false
@@ -142,7 +141,7 @@ func NewDefaultClientConfigLoadingRules() *ClientConfigLoadingRules {
 	envVarFiles := os.Getenv(RecommendedConfigPathEnvVar)
 	if len(envVarFiles) != 0 {
 		fileList := filepath.SplitList(envVarFiles)
-		// prevent the same path load multiple times
+		// 防止同一路径多次加载
 		chain = append(chain, deduplicate(fileList)...)
 		warnIfAllMissing = true
 

@@ -40,8 +40,8 @@ func New(tokens map[string]*user.DefaultInfo) *TokenAuthenticator {
 	}
 }
 
-// NewCSV returns a TokenAuthenticator, populated from a CSV file.
-// The CSV file must contain records in the format "token,username,useruid"
+// NewCSV 返回一个TokenAuthenticator，由CSV文件填充。
+// CSV文件中必须包含token,username,useruid格式的记录
 func NewCSV(path string) (*TokenAuthenticator, error) {
 	file, err := os.Open(path)
 	if err != nil {

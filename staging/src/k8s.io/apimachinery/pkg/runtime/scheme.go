@@ -87,7 +87,7 @@ type Scheme struct {
 // FieldLabelConversionFunc converts a field selector to internal representation.
 type FieldLabelConversionFunc func(label, value string) (internalLabel, internalValue string, err error)
 
-// NewScheme creates a new Scheme. This scheme is pluggable by default.
+// NewScheme 创建一个新的Scheme。默认情况下，该方案是可插拔的。
 func NewScheme() *Scheme {
 	s := &Scheme{
 		gvkToType:                 map[schema.GroupVersionKind]reflect.Type{},
@@ -568,8 +568,7 @@ func setTargetKind(obj Object, kind schema.GroupVersionKind) {
 	obj.GetObjectKind().SetGroupVersionKind(kind)
 }
 
-// SetVersionPriority allows specifying a precise order of priority. All specified versions must be in the same group,
-// and the specified order overwrites any previously specified order for this group
+// SetVersionPriority 允许指定精确的优先顺序。所有指定的版本必须在同一组中，并且指定的顺序将覆盖此组之前指定的任何顺序
 func (s *Scheme) SetVersionPriority(versions ...schema.GroupVersion) error {
 	groups := sets.String{}
 	order := []string{}

@@ -24,13 +24,10 @@ import (
 	"k8s.io/utils/clock"
 )
 
-// NewExpiring returns an initialized expiring cache.
 func NewExpiring() *Expiring {
 	return NewExpiringWithClock(clock.RealClock{})
 }
 
-// NewExpiringWithClock is like NewExpiring but allows passing in a custom
-// clock for testing.
 func NewExpiringWithClock(clock clock.Clock) *Expiring {
 	return &Expiring{
 		clock: clock,
@@ -38,25 +35,13 @@ func NewExpiringWithClock(clock clock.Clock) *Expiring {
 	}
 }
 
-// Expiring is a map whose entries expire after a per-entry timeout.
+// Expiring 是一个，其条目在每个条目超时后过期。
 type Expiring struct {
-	clock clock.Clock
-
-	// mu protects the below fields
-	mu sync.RWMutex
-	// cache is the internal map that backs the cache.
-	cache map[interface{}]entry
-	// generation is used as a cheap resource version for cache entries. Cleanups
-	// are scheduled with a key and generation. When the cleanup runs, it first
-	// compares its generation with the current generation of the entry. It
-	// deletes the entry iff the generation matches. This prevents cleanups
-	// scheduled for earlier versions of an entry from deleting later versions of
-	// an entry when Set() is called multiple times with the same key.
-	//
-	// The integer value of the generation of an entry is meaningless.
-	generation uint64
-
-	heap expiringHeap
+	clock      clock.Clock
+	mu         sync.RWMutex
+	cache      map[interface{}]entry
+	generation uint64 //资源版本
+	heap       expiringHeap
 }
 
 type entry struct {
@@ -65,7 +50,6 @@ type entry struct {
 	generation uint64
 }
 
-// Get looks up an entry in the cache.
 func (c *Expiring) Get(key interface{}) (val interface{}, ok bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -97,7 +81,7 @@ func (c *Expiring) Set(key interface{}, val interface{}, ttl time.Duration) {
 		generation: c.generation,
 	}
 
-	// Run GC inline before pushing the new entry.
+	// 在推送新条目之前内联运行GC。
 	c.gc(now)
 
 	heap.Push(&c.heap, &expiringHeapEntry{
@@ -107,7 +91,6 @@ func (c *Expiring) Set(key interface{}, val interface{}, ttl time.Duration) {
 	})
 }
 
-// Delete deletes an entry in the map.
 func (c *Expiring) Delete(key interface{}) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -141,9 +124,6 @@ func (c *Expiring) Len() int {
 
 func (c *Expiring) gc(now time.Time) {
 	for {
-		// Return from gc if the heap is empty or the next element is not yet
-		// expired.
-		//
 		// heap[0] is a peek at the next element in the heap, which is not obvious
 		// from looking at the (*expiringHeap).Pop() implementation below.
 		// heap.Pop() swaps the first entry with the last entry of the heap, then

@@ -221,9 +221,9 @@ func (j *jwtTokenGenerator) GenerateToken(claims *jwt.Claims, privateClaims inte
 		CompactSerialize()
 }
 
-// JWTTokenAuthenticator authenticates tokens as JWT tokens produced by JWTTokenGenerator
-// Token signatures are verified using each of the given public keys until one works (allowing key rotation)
-// If lookup is true, the service account and secret referenced as claims inside the token are retrieved and verified with the provided ServiceAccountTokenGetter
+// JWTTokenAuthenticator 将authenticates tokens转换为为JWTTokenGenerator生成的JWT令牌
+// 使用每个给定的公钥验证令牌签名，直到其中一个有效(允许密钥旋转)
+// 如果查找为真，将检索作为令牌内声明引用的服务帐户和秘密，并使用提供的ServiceAccountTokenGetter进行验证
 func JWTTokenAuthenticator(issuers []string, keys []interface{}, implicitAuds authenticator.Audiences, validator Validator) authenticator.Token {
 	issuersMap := make(map[string]bool)
 	for _, issuer := range issuers {

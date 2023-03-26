@@ -23,16 +23,12 @@ import (
 	"k8s.io/apiserver/pkg/authentication/authenticator"
 )
 
-// unionAuthTokenHandler authenticates tokens using a chain of authenticator.Token objects
+// unionAuthTokenHandler 使用验证器链验证令牌。令牌对象
 type unionAuthTokenHandler struct {
-	// Handlers is a chain of request authenticators to delegate to
-	Handlers []authenticator.Token
-	// FailOnError determines whether an error returns short-circuits the chain
-	FailOnError bool
+	Handlers    []authenticator.Token
+	FailOnError bool // 确定错误返回是否会使链短路
 }
 
-// New returns a token authenticator that validates credentials using a chain of authenticator.Token objects.
-// The entire chain is tried until one succeeds. If all fail, an aggregate error is returned.
 func New(authTokenHandlers ...authenticator.Token) authenticator.Token {
 	if len(authTokenHandlers) == 1 {
 		return authTokenHandlers[0]
@@ -40,8 +36,6 @@ func New(authTokenHandlers ...authenticator.Token) authenticator.Token {
 	return &unionAuthTokenHandler{Handlers: authTokenHandlers, FailOnError: false}
 }
 
-// NewFailOnError returns a token authenticator that validates credentials using a chain of authenticator.Token objects.
-// The first error short-circuits the chain.
 func NewFailOnError(authTokenHandlers ...authenticator.Token) authenticator.Token {
 	if len(authTokenHandlers) == 1 {
 		return authTokenHandlers[0]
@@ -49,7 +43,7 @@ func NewFailOnError(authTokenHandlers ...authenticator.Token) authenticator.Toke
 	return &unionAuthTokenHandler{Handlers: authTokenHandlers, FailOnError: true}
 }
 
-// AuthenticateToken authenticates the token using a chain of authenticator.Token objects.
+// AuthenticateToken 使用验证器链对令牌进行身份验证。令牌对象。
 func (authHandler *unionAuthTokenHandler) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
 	var errlist []error
 	for _, currAuthRequestHandler := range authHandler.Handlers {

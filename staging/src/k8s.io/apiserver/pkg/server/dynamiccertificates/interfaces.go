@@ -33,18 +33,12 @@ type Notifier interface {
 	AddListener(listener Listener)
 }
 
-// CAContentProvider provides ca bundle byte content
+// CAContentProvider  提供ca包字节内容
 type CAContentProvider interface {
 	Notifier
-
-	// Name is just an identifier.
-	Name() string
-	// CurrentCABundleContent provides ca bundle byte content. Errors can be
-	// contained to the controllers initializing the value. By the time you get
-	// here, you should always be returning a value that won't fail.
-	CurrentCABundleContent() []byte
-	// VerifyOptions provides VerifyOptions for authenticators.
-	VerifyOptions() (x509.VerifyOptions, bool)
+	Name() string                              // 只是一个标识符。
+	CurrentCABundleContent() []byte            // ca bundle字节内容
+	VerifyOptions() (x509.VerifyOptions, bool) // 为身份验证器提供VerifyOptions。
 }
 
 // CertKeyContentProvider provides a certificate and matching private key.

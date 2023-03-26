@@ -70,18 +70,12 @@ type cacheWarning struct {
 
 type cachedTokenAuthenticator struct {
 	authenticator authenticator.Token
-
-	cacheErrs  bool
-	successTTL time.Duration
-	failureTTL time.Duration
-
-	cache cache
-	group singleflight.Group
-
-	// hashPool is a per authenticator pool of hash.Hash (to avoid allocations from building the Hash)
-	// HMAC with SHA-256 and a random key is used to prevent precomputation and length extension attacks
-	// It also mitigates hash map DOS attacks via collisions (the inputs are supplied by untrusted users)
-	hashPool *sync.Pool
+	cacheErrs     bool
+	successTTL    time.Duration
+	failureTTL    time.Duration
+	cache         cache
+	group         singleflight.Group
+	hashPool      *sync.Pool // todo 暂时不知道具体有什么用途
 }
 
 type cache interface {
@@ -93,7 +87,7 @@ type cache interface {
 	remove(key string)
 }
 
-// New returns a token authenticator that caches the results of the specified authenticator. A ttl of 0 bypasses the cache.
+// New 返回令牌验证器，该验证器缓存指定验证器的结果。ttl为0会绕过缓存。
 func New(authenticator authenticator.Token, cacheErrs bool, successTTL, failureTTL time.Duration) authenticator.Token {
 	return newWithClock(authenticator, cacheErrs, successTTL, failureTTL, clock.RealClock{})
 }
@@ -109,16 +103,13 @@ func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL,
 		cacheErrs:     cacheErrs,
 		successTTL:    successTTL,
 		failureTTL:    failureTTL,
-		// Cache performance degrades noticeably when the number of
-		// tokens in operation exceeds the size of the cache. It is
-		// cheap to make the cache big in the second dimension below,
-		// the memory is only consumed when that many tokens are being
-		// used. Currently we advertise support 5k nodes and 10k
-		// namespaces; a 32k entry cache is therefore a 2x safety
-		// margin.
+		//当正在操作的令牌数量超过缓存的大小时，缓存性能会显著降低。在下面的第二个维度中使缓存变大是很便宜的，只有在使用那么多令牌时才会消耗内存。
+		//目前我们宣称支持5k个节点和10k个名称空间;因此，32k的入口缓存是2倍的安全裕度。
 		cache: newStripedCache(32, fnvHashFunc, func() cache { return newSimpleCache(clock) }),
-
 		hashPool: &sync.Pool{
+			// hashPool 是每个验证者的散列池。哈希(避免在构建 Hash 时进行分配)
+			//使用SHA-256和随机密钥的HMAC，防止预计算和扩长攻击
+			//它还通过碰撞来减轻哈希映射DOS攻击(输入由不受信任的用户提供)
 			New: func() interface{} {
 				return hmac.New(sha256.New, randomCacheKey)
 			},

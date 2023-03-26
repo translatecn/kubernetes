@@ -46,8 +46,8 @@ func authenticate(ctx context.Context, implicitAuds Audiences, authenticate func
 }
 
 type audAgnosticRequestAuthenticator struct {
-	implicit Audiences
-	delegate Request
+	implicit Audiences // 指定的用户
+	delegate Request   // token csv文件存在的用户
 }
 
 var _ = Request(&audAgnosticRequestAuthenticator{})
@@ -80,8 +80,6 @@ func (a *audAgnosticTokenAuthenticator) AuthenticateToken(ctx context.Context, t
 	})
 }
 
-// WrapAudienceAgnosticToken wraps an audience agnostic token authenticator to
-// restrict its accepted audiences to a set of implicit audiences.
 func WrapAudienceAgnosticToken(implicit Audiences, delegate Token) Token {
 	return &audAgnosticTokenAuthenticator{
 		implicit: implicit,

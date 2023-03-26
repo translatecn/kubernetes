@@ -63,7 +63,7 @@ type AnonymousAuthenticationOptions struct {
 	Allow bool // 是否允许匿名访问
 }
 
-// BootstrapTokenAuthenticationOptions contains bootstrap token authentication options for API Server
+// BootstrapTokenAuthenticationOptions 包含API服务器的引导令牌身份验证选项
 type BootstrapTokenAuthenticationOptions struct {
 	Enable bool
 }
@@ -83,7 +83,7 @@ type OIDCAuthenticationOptions struct {
 
 // ServiceAccountAuthenticationOptions 包含API服务器的服务账户认证选项
 type ServiceAccountAuthenticationOptions struct {
-	KeyFiles         []string
+	KeyFiles         []string // --service-account-key-file
 	Lookup           bool     // 如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。
 	Issuers          []string // 其全称为 “Issuer Identifier”,中文意思就是：颁发者身份标识,表示 Token 颁发者的唯一标识,一般是一个 http(s) url,如 https://www.baidu.com
 	JWKSURI          string
@@ -96,7 +96,7 @@ type TokenFileAuthenticationOptions struct {
 	TokenFile string
 }
 
-// WebHookAuthenticationOptions contains web hook authentication options for API Server
+// WebHookAuthenticationOptions 包含API服务器的web钩子身份验证选项
 type WebHookAuthenticationOptions struct {
 	ConfigFile   string        //
 	Version      string        //
@@ -299,7 +299,7 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	if o.WebHook != nil {
-		fs.StringVar(&o.WebHook.ConfigFile, "authentication-token-webhook-config-file", o.WebHook.ConfigFile, "kubecconfig格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。")
+		fs.StringVar(&o.WebHook.ConfigFile, "authentication-token-webhook-config-file", o.WebHook.ConfigFile, "kube config格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。")
 		fs.StringVar(&o.WebHook.Version, "authentication-token-webhook-version", o.WebHook.Version, "authentication.k8s的API版本。io TokenReview发送到webhook和期望收到的。")
 		fs.DurationVar(&o.WebHook.CacheTTL, "authentication-token-webhook-cache-ttl", o.WebHook.CacheTTL, "缓存webhook令牌验证器响应的持续时间。")
 	}
@@ -381,6 +381,7 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (kubeauthenticat
 	return ret, nil
 }
 
+// ApplyTo ✅
 func (o *BuiltInAuthenticationOptions) ApplyTo(
 	authInfo *genericapiserver.AuthenticationInfo,
 	secureServing *genericapiserver.SecureServingInfo,

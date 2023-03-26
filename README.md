@@ -103,3 +103,12 @@ The [Kubernetes Steering community repo](https://github.com/kubernetes/steering)
 ## Roadmap 
 
 The [Kubernetes Enhancements repo](https://github.com/kubernetes/enhancements) provides information about Kubernetes releases, as well as feature tracking and backlogs.
+
+
+
+
+- https://blog.csdn.net/xiaoyi52/article/details/121721425
+
+
+openssl rsa  -pubin -text -in  /etc/kubernetes/pki/sa.pub
+openssl x509 -noout -text -in apiserver.crt 

@@ -23,14 +23,12 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 )
 
-// Token checks a string value against a backing authentication store and
-// returns a Response or an error if the token could not be checked.
+// Token 根据备份身份验证存储区检查字符串值，如果无法检查令牌，则返回Response或错误。
 type Token interface {
 	AuthenticateToken(ctx context.Context, token string) (*Response, bool, error)
 }
 
-// Request attempts to extract authentication information from a request and
-// returns a Response or an error if the request could not be checked.
+// Request 尝试从请求中提取身份验证信息，如果无法检查请求，则返回Response或错误。
 type Request interface {
 	AuthenticateRequest(req *http.Request) (*Response, bool, error)
 }

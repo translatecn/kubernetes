@@ -147,7 +147,13 @@ func NewSecure(clientCA string, proxyClientNames []string, nameHeaders []string,
 	), nil
 }
 
-func NewDynamicVerifyOptionsSecure(verifyOptionFn x509request.VerifyOptionFunc, proxyClientNames, nameHeaders, groupHeaders, extraHeaderPrefixes StringSliceProvider) authenticator.Request {
+// NewDynamicVerifyOptionsSecure 新的动态验证选项安全
+func NewDynamicVerifyOptionsSecure(
+	verifyOptionFn x509request.VerifyOptionFunc,
+	proxyClientNames,
+	nameHeaders,
+	groupHeaders,
+	extraHeaderPrefixes StringSliceProvider) authenticator.Request {
 	headerAuthenticator := NewDynamic(nameHeaders, groupHeaders, extraHeaderPrefixes)
 
 	return x509request.NewDynamicCAVerifier(verifyOptionFn, headerAuthenticator, proxyClientNames)

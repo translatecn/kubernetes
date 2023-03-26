@@ -49,25 +49,24 @@ import (
 
 // Config 包含关于如何向Kube API服务器验证请求的数据
 type Config struct {
-	Anonymous                   bool
-	BootstrapToken              bool
-	TokenAuthFile               string
-	OIDCIssuerURL               string
-	OIDCClientID                string
-	OIDCCAFile                  string
-	OIDCUsernameClaim           string
-	OIDCUsernamePrefix          string
-	OIDCGroupsClaim             string
-	OIDCGroupsPrefix            string
-	OIDCSigningAlgs             []string
-	OIDCRequiredClaims          map[string]string
-	ServiceAccountKeyFiles      []string
-	ServiceAccountLookup        bool
-	ServiceAccountIssuers       []string
-	APIAudiences                authenticator.Audiences // 预先规定的调用者们  , 目前只有一个 https://kubernetes.default.svc.cluster.local
-	WebhookTokenAuthnConfigFile string
-	WebhookTokenAuthnVersion    string
-	WebhookTokenAuthnCacheTTL   time.Duration
+	Anonymous                 bool
+	BootstrapToken            bool
+	TokenAuthFile             string
+	OIDCIssuerURL             string
+	OIDCClientID              string
+	OIDCCAFile                string
+	OIDCUsernameClaim         string
+	OIDCUsernamePrefix        string
+	OIDCGroupsClaim           string
+	OIDCGroupsPrefix          string
+	OIDCSigningAlgs           []string
+	OIDCRequiredClaims        map[string]string
+	ServiceAccountKeyFiles    []string // --service-account-key-file
+	ServiceAccountLookup      bool
+	ServiceAccountIssuers     []string
+	APIAudiences              authenticator.Audiences // 预先规定的调用者们  , 目前只有一个 https://kubernetes.default.svc.cluster.local
+	WebhookTokenAuthnVersion  string
+	WebhookTokenAuthnCacheTTL time.Duration
 	// WebhookRetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
 	// before we fail the webhook call in order to limit the fan out that ensues when the system is degraded.
@@ -82,10 +81,10 @@ type Config struct {
 	ServiceAccountTokenGetter   serviceaccount.ServiceAccountTokenGetter
 	SecretsWriter               typedv1core.SecretsGetter
 	BootstrapTokenAuthenticator authenticator.Token                   // 缓存读取
-	ClientCAContentProvider     dynamiccertificates.CAContentProvider // 用于验证客户证书的CA捆绑文件，如果这个值为零，那么相互TLS被禁用。
+	ClientCAContentProvider     dynamiccertificates.CAContentProvider // 用于验证客户证书，如果这个值为零，那么相互TLS被禁用。
 
-	// Optional field, custom dial function used to connect to webhook
-	CustomDial utilnet.DialFunc
+	WebhookTokenAuthnConfigFile string           // egressDialer相关的配置信息
+	CustomDial                  utilnet.DialFunc // 可选字段，用于连接webhook自定义拨号功能   egressDialer
 }
 
 // New 返回一个验证器请求、支持标准Kubernetes身份验证机制
@@ -95,7 +94,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	securityDefinitions := spec.SecurityDefinitions{}
 
 	// front-proxy, BasicAuth methods, local first, then remote
-	// Add the front proxy authenticator if requested
+	// 如果需要，添加前端代理身份验证器
 	if config.RequestHeaderConfig != nil {
 		requestHeaderAuthenticator := headerrequest.NewDynamicVerifyOptionsSecure(
 			config.RequestHeaderConfig.CAContentProvider.VerifyOptions,
@@ -114,6 +113,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	}
 
 	// Bearer token methods, local first, then remote
+	// 从本地的csv 认证文件加载用户
 	if len(config.TokenAuthFile) > 0 {
 		tokenAuth, err := newAuthenticatorFromTokenFile(config.TokenAuthFile)
 		if err != nil {
@@ -137,18 +137,12 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	}
 	if config.BootstrapToken {
 		if config.BootstrapTokenAuthenticator != nil {
-			// TODO: This can sometimes be nil because of
+			// TODO: 这有时可以为nil，因为
 			tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, config.BootstrapTokenAuthenticator))
 		}
 	}
-	// NOTE(ericchiang): Keep the OpenID Connect after Service Accounts.
-	//
-	// Because both plugins verify JWTs whichever comes first in the union experiences
-	// cache misses for all requests using the other. While the service account plugin
-	// simply returns an error, the OpenID Connect plugin may query the provider to
-	// update the keys, causing performance hits.
 	if len(config.OIDCIssuerURL) > 0 && len(config.OIDCClientID) > 0 {
-		// TODO(enj): wire up the Notifier and ControllerRunner bits when OIDC supports CA reload
+		// TODO(enj): 当OIDC支持CA重载时，清除Notifier和ControllerRunner bit位
 		var oidcCAContent oidc.CAContentProvider
 		if len(config.OIDCCAFile) != 0 {
 			var oidcCAErr error
@@ -174,7 +168,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		}
 		tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, oidcAuth))
 	}
-	if len(config.WebhookTokenAuthnConfigFile) > 0 {
+	if len(config.WebhookTokenAuthnConfigFile) > 0 { // kube config格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。
 		webhookTokenAuth, err := newWebhookTokenAuthenticator(config)
 		if err != nil {
 			return nil, nil, err
@@ -184,9 +178,9 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	}
 
 	if len(tokenAuthenticators) > 0 {
-		// Union the token authenticators
+		// 联合令牌验证器
 		tokenAuth := tokenunion.New(tokenAuthenticators...)
-		// Optionally cache authentication results
+		// 可选地缓存身份验证结果
 		if config.TokenSuccessCacheTTL > 0 || config.TokenFailureCacheTTL > 0 {
 			tokenAuth = tokencache.New(tokenAuth, true, config.TokenSuccessCacheTTL, config.TokenFailureCacheTTL)
 		}
@@ -227,7 +221,7 @@ func IsValidServiceAccountKeyFile(file string) bool {
 	return err == nil
 }
 
-// newAuthenticatorFromTokenFile returns an authenticator.Token or an error
+// ✅
 func newAuthenticatorFromTokenFile(tokenAuthFile string) (authenticator.Token, error) {
 	tokenAuthenticator, err := tokenfile.NewCSV(tokenAuthFile)
 	if err != nil {
@@ -262,7 +256,6 @@ func newAuthenticatorFromOIDCIssuerURL(opts oidc.Options) (authenticator.Token, 
 	return tokenAuthenticator, nil
 }
 
-// newLegacyServiceAccountAuthenticator returns an authenticator.Token or an error
 func newLegacyServiceAccountAuthenticator(keyfiles []string, lookup bool, apiAudiences authenticator.Audiences, serviceAccountGetter serviceaccount.ServiceAccountTokenGetter, secretsWriter typedv1core.SecretsGetter) (authenticator.Token, error) {
 	allPublicKeys := []interface{}{}
 	for _, keyfile := range keyfiles {
@@ -277,7 +270,6 @@ func newLegacyServiceAccountAuthenticator(keyfiles []string, lookup bool, apiAud
 	return tokenAuthenticator, nil
 }
 
-// newServiceAccountAuthenticator returns an authenticator.Token or an error
 func newServiceAccountAuthenticator(issuers []string, keyfiles []string, apiAudiences authenticator.Audiences, serviceAccountGetter serviceaccount.ServiceAccountTokenGetter) (authenticator.Token, error) {
 	allPublicKeys := []interface{}{}
 	for _, keyfile := range keyfiles {
@@ -294,7 +286,7 @@ func newServiceAccountAuthenticator(issuers []string, keyfiles []string, apiAudi
 
 func newWebhookTokenAuthenticator(config Config) (authenticator.Token, error) {
 	if config.WebhookRetryBackoff == nil {
-		return nil, errors.New("retry backoff parameters for authentication webhook has not been specified")
+		return nil, errors.New("未指定认证webhook的重试回退参数")
 	}
 
 	clientConfig, err := webhookutil.LoadKubeconfig(config.WebhookTokenAuthnConfigFile, config.CustomDial)
