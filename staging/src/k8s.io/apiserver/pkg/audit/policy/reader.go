@@ -60,11 +60,12 @@ func LoadPolicyFromFile(filePath string) (*auditinternal.Policy, error) {
 	return ret, nil
 }
 
+// LoadPolicyFromBytes ✅
 func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 	policy := &auditinternal.Policy{}
 	strictDecoder := serializer.NewCodecFactory(audit.Scheme, serializer.EnableStrict).UniversalDecoder()
 
-	// Try strict decoding first.
+	// 只获取版本信息
 	_, gvk, err := strictDecoder.Decode(policyDef, nil, policy)
 	if err != nil {
 		if !runtime.IsStrictDecodingError(err) {
@@ -78,10 +79,10 @@ func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 		if lenientErr != nil {
 			return nil, fmt.Errorf("failed lenient decoding: %w", lenientErr)
 		}
-		klog.Warningf("Audit policy contains errors, falling back to lenient decoding: %v", err)
+		klog.Warningf("审计策略包含错误，退回到宽限解码: %v", err)
 	}
 
-	// Ensure the policy file contained an apiVersion and kind.
+	// 确保策略文件包含apiVersion和kind。
 	gv := schema.GroupVersion{Group: gvk.Group, Version: gvk.Version}
 	if !apiGroupVersionSet[gv] {
 		return nil, fmt.Errorf("unknown group version field %v in policy", gvk)

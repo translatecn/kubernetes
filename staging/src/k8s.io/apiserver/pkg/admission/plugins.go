@@ -46,7 +46,7 @@ func NewPlugins() *Plugins {
 
 // All registered admission options.
 var (
-	// PluginEnabledFn checks whether a plugin is enabled.  By default, if you ask about it, it's enabled.
+	// PluginEnabledFn 检查插件是否已启用。默认情况下，如果你询问它，它是启用的。
 	PluginEnabledFn = func(name string, config io.Reader) bool {
 		return true
 	}
@@ -84,10 +84,7 @@ func (ps *Plugins) Register(name string, plugin Factory) {
 	ps.registry[name] = plugin
 }
 
-// getPlugin creates an instance of the named plugin.  It returns `false` if
-// the name is not known. The error is returned only when the named provider was
-// known but failed to initialize.  The config parameter specifies the io.Reader
-// handler of the configuration file for the cloud provider, or nil for no configuration.
+// getPlugin  config参数指定 云提供程序配置文件的读取器处理程序，或nil表示没有配置。
 func (ps *Plugins) getPlugin(name string, config io.Reader) (Interface, bool, error) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
@@ -122,8 +119,7 @@ func splitStream(config io.Reader) (io.Reader, io.Reader, error) {
 	return bytes.NewBuffer(configBytes), bytes.NewBuffer(configBytes), nil
 }
 
-// NewFromPlugins returns an admission.Interface that will enforce admission control decisions of all
-// the given plugins.
+// NewFromPlugins 该接口将强制所有给定插件的准入控制决策。
 func (ps *Plugins) NewFromPlugins(pluginNames []string, configProvider ConfigProvider, pluginInitializer PluginInitializer, decorator Decorator) (Interface, error) {
 	handlers := []Interface{}
 	mutationPlugins := []string{}
@@ -162,7 +158,7 @@ func (ps *Plugins) NewFromPlugins(pluginNames []string, configProvider ConfigPro
 	return newReinvocationHandler(chainAdmissionHandler(handlers)), nil
 }
 
-// InitPlugin creates an instance of the named interface.
+// InitPlugin ✅ creates an instance of the named interface.
 func (ps *Plugins) InitPlugin(name string, config io.Reader, pluginInitializer PluginInitializer) (Interface, error) {
 	if name == "" {
 		klog.Info("No admission plugin specified.")
@@ -178,7 +174,7 @@ func (ps *Plugins) InitPlugin(name string, config io.Reader, pluginInitializer P
 	}
 
 	pluginInitializer.Initialize(plugin)
-	// ensure that plugins have been properly initialized
+	// 确保插件已经正确初始化
 	if err := ValidateInitialization(plugin); err != nil {
 		return nil, fmt.Errorf("failed to initialize admission plugin %q: %v", name, err)
 	}

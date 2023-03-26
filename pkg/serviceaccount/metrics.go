@@ -26,33 +26,29 @@ import (
 const kubeServiceAccountSubsystem = "serviceaccount"
 
 var (
-	// LegacyTokensTotal is the number of legacy tokens used against apiserver.
 	legacyTokensTotal = metrics.NewCounter(
 		&metrics.CounterOpts{
 			Subsystem:      kubeServiceAccountSubsystem,
 			Name:           "legacy_tokens_total",
-			Help:           "Cumulative legacy service account tokens used",
+			Help:           "累计使用的遗留服务账户令牌数",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)
 
-	// StaleTokensTotal is the number of stale projected tokens not refreshed on
-	// client side.
 	staleTokensTotal = metrics.NewCounter(
 		&metrics.CounterOpts{
 			Subsystem:      kubeServiceAccountSubsystem,
 			Name:           "stale_tokens_total",
-			Help:           "Cumulative stale projected service account tokens used",
+			Help:           "所使用的累计过期服务帐户令牌",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)
 
-	// ValidTokensTotal is the number of valid projected tokens used.
 	validTokensTotal = metrics.NewCounter(
 		&metrics.CounterOpts{
 			Subsystem:      kubeServiceAccountSubsystem,
 			Name:           "valid_tokens_total",
-			Help:           "Cumulative valid projected service account tokens used",
+			Help:           "使用过的的有效sa令牌的数量",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)

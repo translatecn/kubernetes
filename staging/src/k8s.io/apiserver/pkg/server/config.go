@@ -109,11 +109,9 @@ type Config struct {
 
 	// RuleResolver is required to get the list of rules that apply to a given user
 	// in a given namespace
-	RuleResolver authorizer.RuleResolver
-	// AdmissionControl performs deep inspection of a given request (including content)
-	// to set values and determine whether its allowed
-	AdmissionControl      admission.Interface
-	CorsAllowedOriginList []string // CORS允许的源列表
+	RuleResolver          authorizer.RuleResolver
+	AdmissionControl      admission.Interface // 对给定的请求(包括内容)执行深度检查，以设置值并确定是否允许
+	CorsAllowedOriginList []string            // CORS允许的源列表
 	HSTSDirectives        []string
 	// FlowControl, if not nil, gives priority and fairness to request handling
 	FlowControl utilflowcontrol.Interface
@@ -126,15 +124,13 @@ type Config struct {
 	EnableMetrics             bool
 
 	DisabledPostStartHooks sets.String
-	// done values in this values for this map are ignored.
-	PostStartHooks map[string]PostStartHookConfigEntry
+	PostStartHooks         map[string]PostStartHookConfigEntry
 
 	// Version will enable the /version endpoint if non-nil
 	Version *version.Info
 	// AuditBackend is where audit events are sent to.
-	AuditBackend audit.Backend
-	// AuditPolicyRuleEvaluator makes the decision of whether and how to audit log a request.
-	AuditPolicyRuleEvaluator audit.PolicyRuleEvaluator
+	AuditBackend             audit.Backend
+	AuditPolicyRuleEvaluator audit.PolicyRuleEvaluator // 决定是否以及如何审计请求的日志。
 	// ExternalAddress is the host name to use for external (public internet) facing URLs (e.g. Swagger)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
 	ExternalAddress string
@@ -255,10 +251,6 @@ type Config struct {
 
 type RecommendedConfig struct {
 	Config
-
-	// SharedInformerFactory provides shared informers for Kubernetes resources. This value is set by
-	// RecommendedOptions.CoreAPI.ApplyTo called by RecommendedOptions.ApplyTo. It uses an in-cluster client config
-	// by default, or the kubeconfig given with kubeconfig command line flag.
 	SharedInformerFactory informers.SharedInformerFactory
 
 	// ClientConfig holds the kubernetes client configuration.
@@ -430,8 +422,7 @@ func (c *Config) AddReadyzChecks(healthChecks ...healthz.HealthChecker) {
 	c.ReadyzChecks = append(c.ReadyzChecks, healthChecks...)
 }
 
-// AddPostStartHook allows you to add a PostStartHook that will later be added to the server itself in a New call.
-// Name conflicts will cause an error.
+// AddPostStartHook 允许你添加一个PostStartHook，该PostStartHook稍后将在New调用中添加到服务器本身。
 func (c *Config) AddPostStartHook(name string, hook PostStartHookFunc) error {
 	if len(name) == 0 {
 		return fmt.Errorf("missing name")
@@ -445,8 +436,7 @@ func (c *Config) AddPostStartHook(name string, hook PostStartHookFunc) error {
 	}
 
 	if postStartHook, exists := c.PostStartHooks[name]; exists {
-		// this is programmer error, but it can be hard to debug
-		return fmt.Errorf("unable to add %q because it was already registered by: %s", name, postStartHook.originatingStack)
+		return fmt.Errorf("无法添加%q，因为它存在: %s", name, postStartHook.originatingStack)
 	}
 	c.PostStartHooks[name] = PostStartHookConfigEntry{hook: hook, originatingStack: string(debug.Stack())}
 
@@ -554,8 +544,6 @@ func (c *Config) Complete(informers informers.SharedInformerFactory) CompletedCo
 	return CompletedConfig{&completedConfig{c, informers}}
 }
 
-// Complete fills in any fields not set that are required to have valid data and can be derived
-// from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
 func (c *RecommendedConfig) Complete() CompletedConfig {
 	return c.Config.Complete(c.SharedInformerFactory)
 }
@@ -921,9 +909,9 @@ func (s *SecureServingInfo) HostPort() (string, int, error) {
 	return host, port, nil
 }
 
-// AuthorizeClientBearerToken wraps the authenticator and authorizer in loopback authentication logic
-// if the loopback client config is specified AND it has a bearer token. Note that if either authn or
-// authz is nil, this function won't add a token authenticator or authorizer.
+// AuthorizeClientBearerToken 将验证器和授权器包装在环回验证逻辑中
+// 如果指定了环回客户端配置并且它有一个不记名令牌。请注意，如果是authn或
+// authz是nil，这个函数不会添加一个令牌验证器或授权器。
 func AuthorizeClientBearerToken(loopback *restclient.Config, authn *AuthenticationInfo, authz *AuthorizationInfo) {
 	if loopback == nil || len(loopback.BearerToken) == 0 {
 		return

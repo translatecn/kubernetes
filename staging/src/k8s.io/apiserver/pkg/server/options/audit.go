@@ -109,13 +109,13 @@ type AuditLogOptions struct {
 	GroupVersionString string
 }
 
-// AuditWebhookOptions control the webhook configuration for audit events.
+// AuditWebhookOptions webhook的审计事件配置。
 type AuditWebhookOptions struct {
-	ConfigFile         string
-	InitialBackoff     time.Duration
-	BatchOptions       AuditBatchOptions
-	TruncateOptions    AuditTruncateOptions
-	GroupVersionString string
+	ConfigFile         string               //
+	InitialBackoff     time.Duration        //
+	BatchOptions       AuditBatchOptions    //
+	TruncateOptions    AuditTruncateOptions //
+	GroupVersionString string               // --audit-webhook-version=audit.k8s.io/v1
 }
 
 // AuditDynamicOptions control the configuration of dynamic backends for audit events
@@ -261,15 +261,15 @@ func (o *AuditOptions) ApplyTo(
 		return fmt.Errorf("server config must be non-nil")
 	}
 
-	// 1. Build policy evaluator
+	// 1. 构建策略评估器
 	evaluator, err := o.newPolicyRuleEvaluator()
 	if err != nil {
 		return err
 	}
 
-	// 2. Build log backend
+	// 2. 构建日志后端
 	var logBackend audit.Backend
-	w, err := o.LogOptions.getWriter()
+	w, err := o.LogOptions.getWriter() // ✅
 	if err != nil {
 		return err
 	}
@@ -303,7 +303,7 @@ func (o *AuditOptions) ApplyTo(
 		}
 	}
 
-	groupVersion, err := schema.ParseGroupVersion(o.WebhookOptions.GroupVersionString)
+	groupVersion, err := schema.ParseGroupVersion(o.WebhookOptions.GroupVersionString) // --audit-webhook-version=audit.k8s.io/v1
 	if err != nil {
 		return err
 	}
@@ -311,18 +311,18 @@ func (o *AuditOptions) ApplyTo(
 	// 4. Apply dynamic options.
 	var dynamicBackend audit.Backend
 	if webhookBackend != nil {
-		// if only webhook is enabled wrap it in the truncate options
+		// 如果只启用webhook，则将其封装在截断选项中
 		dynamicBackend = o.WebhookOptions.TruncateOptions.wrapBackend(webhookBackend, groupVersion)
 	}
 
-	// 5. Set the policy rule evaluator
+	// 5. 设置策略规则计算器
 	c.AuditPolicyRuleEvaluator = evaluator
 
-	// 6. Join the log backend with the webhooks
+	// 6. 将日志后端与webhooks连接起来
 	c.AuditBackend = appendBackend(logBackend, dynamicBackend)
 
 	if c.AuditBackend != nil {
-		klog.V(2).Infof("Using audit backend: %s", c.AuditBackend)
+		klog.V(2).Infof("使用审计后端: %s", c.AuditBackend)
 	}
 	return nil
 }
@@ -392,7 +392,7 @@ func (o *AuditTruncateOptions) AddFlags(pluginName string, fs *pflag.FlagSet) {
 
 func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend, gv schema.GroupVersion) audit.Backend {
 	if !o.Enabled {
-		return delegate
+		return delegate // 委托
 	}
 	return plugintruncate.NewBackend(delegate, o.TruncateConfig, gv)
 }

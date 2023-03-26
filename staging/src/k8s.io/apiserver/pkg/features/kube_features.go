@@ -35,11 +35,11 @@ const (
 	// of code conflicts because changes are more likely to be scattered
 	// across the file.
 
-	// owner: @jefftree @alexzielenski
+	// AggregatedDiscoveryEndpoint owner: @jefftree @alexzielenski
 	// alpha: v1.26
 	//
-	// Enables an single HTTP endpoint /discovery/<version> which supports native HTTP
-	// caching with ETags containing all APIResources known to the apiserver.
+	//启用单个HTTP  endpoint /discovery/<version>  ;支持原生HTTP
+	//缓存包含apisserver已知的所有APIResources的ETags。
 	AggregatedDiscoveryEndpoint featuregate.Feature = "AggregatedDiscoveryEndpoint"
 
 	// owner: @smarterclayton
@@ -50,13 +50,13 @@ const (
 	// all at once.
 	APIListChunking featuregate.Feature = "APIListChunking"
 
-	// owner: @MikeSpreitzer @yue9944882
+	// APIPriorityAndFairness owner: @MikeSpreitzer @yue9944882
 	// alpha: v1.18
 	// beta: v1.20
 	//
-	// Enables managing request concurrency with prioritization and fairness at each server.
-	// The FeatureGate was introduced in release 1.15 but the feature
-	// was not really implemented before 1.18.
+	//允许在每个服务器上使用优先级和公平性管理请求并发。
+	// featugate是在1.15版本中引入的
+	//在1.18之前没有真正实现。
 	APIPriorityAndFairness featuregate.Feature = "APIPriorityAndFairness"
 
 	// APIResponseCompression owner: @ilackams

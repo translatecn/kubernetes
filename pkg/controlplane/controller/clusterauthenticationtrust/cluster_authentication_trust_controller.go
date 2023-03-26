@@ -70,21 +70,13 @@ type Controller struct {
 	preRunCaches []cache.InformerSynced
 }
 
-// ClusterAuthenticationInfo holds the information that will included in public configmap.
 type ClusterAuthenticationInfo struct {
-	// ClientCA is the CA that can be used to verify the identity of normal clients
-	ClientCA dynamiccertificates.CAContentProvider
-
-	// RequestHeaderUsernameHeaders are the headers used by this kube-apiserver to determine username
-	RequestHeaderUsernameHeaders headerrequest.StringSliceProvider
-	// RequestHeaderGroupHeaders are the headers used by this kube-apiserver to determine groups
-	RequestHeaderGroupHeaders headerrequest.StringSliceProvider
-	// RequestHeaderExtraHeaderPrefixes are the headers used by this kube-apiserver to determine user.extra
-	RequestHeaderExtraHeaderPrefixes headerrequest.StringSliceProvider
-	// RequestHeaderAllowedNames are the sujbects allowed to act as a front proxy
-	RequestHeaderAllowedNames headerrequest.StringSliceProvider
-	// RequestHeaderCA is the CA that can be used to verify the front proxy
-	RequestHeaderCA dynamiccertificates.CAContentProvider
+	ClientCA                         dynamiccertificates.CAContentProvider // 用来验证正常客户端的身份
+	RequestHeaderUsernameHeaders     headerrequest.StringSliceProvider     // kube-apiserver用来确定用户名的头
+	RequestHeaderGroupHeaders        headerrequest.StringSliceProvider     // kube-apiserver用来确定组的头
+	RequestHeaderExtraHeaderPrefixes headerrequest.StringSliceProvider     // kube-apiserver用来确定用户扩展信息的头
+	RequestHeaderAllowedNames        headerrequest.StringSliceProvider     // subject 被允许充当前端代理
+	RequestHeaderCA                  dynamiccertificates.CAContentProvider // 用于验证前端代理的CA
 }
 
 // NewClusterAuthenticationTrustController returns a controller that will maintain the kube-system configmap/extension-apiserver-authentication

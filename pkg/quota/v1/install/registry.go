@@ -26,7 +26,7 @@ import (
 	"k8s.io/kubernetes/pkg/quota/v1/evaluator/core"
 )
 
-// NewQuotaConfigurationForAdmission returns a quota configuration for admission control.
+// NewQuotaConfigurationForAdmission 返回准入控制的配额配置。
 func NewQuotaConfigurationForAdmission() quota.Configuration {
 	evaluators := core.NewEvaluators(nil)
 	return generic.NewConfiguration(evaluators, DefaultIgnoredResources())
@@ -40,7 +40,7 @@ func NewQuotaConfigurationForControllers(f quota.ListerForResourceFunc) quota.Co
 
 // ignoredResources are ignored by quota by default
 var ignoredResources = map[schema.GroupResource]struct{}{
-	// virtual resources that aren't stored and shouldn't be quota-ed
+	// 未存储且不应分配的虚拟资源
 	{Group: "", Resource: "bindings"}:                                       {},
 	{Group: "", Resource: "componentstatuses"}:                              {},
 	{Group: authentication.GroupName, Resource: "tokenreviews"}:             {},

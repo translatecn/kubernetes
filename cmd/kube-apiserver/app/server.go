@@ -181,8 +181,19 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 
 	// 2、判断是否配置了 APIExtensionsServer，创建 apiExtensionsConfig
 	// If additional API servers are added, they should be gated.
-	apiExtensionsConfig, err := createAPIExtensionsConfig(*kubeAPIServerConfig.GenericConfig, kubeAPIServerConfig.ExtraConfig.VersionedInformers, pluginInitializer, completedOptions.ServerRunOptions, completedOptions.MasterCount,
-		serviceResolver, webhook.NewDefaultAuthenticationInfoResolverWrapper(kubeAPIServerConfig.ExtraConfig.ProxyTransport, kubeAPIServerConfig.GenericConfig.EgressSelector, kubeAPIServerConfig.GenericConfig.LoopbackClientConfig, kubeAPIServerConfig.GenericConfig.TracerProvider))
+	apiExtensionsConfig, err := createAPIExtensionsConfig(
+		*kubeAPIServerConfig.GenericConfig,
+		kubeAPIServerConfig.ExtraConfig.VersionedInformers,
+		pluginInitializer,
+		completedOptions.ServerRunOptions,
+		completedOptions.MasterCount,
+		serviceResolver,
+		webhook.NewDefaultAuthenticationInfoResolverWrapper(
+			kubeAPIServerConfig.ExtraConfig.ProxyTransport,
+			kubeAPIServerConfig.GenericConfig.EgressSelector,
+			kubeAPIServerConfig.GenericConfig.LoopbackClientConfig,
+			kubeAPIServerConfig.GenericConfig.TracerProvider,
+		))
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +264,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 		return nil, nil, nil, err
 	}
 	// 2、初始化所支持的能力
-	capabilities.Setup(s.AllowPrivileged, s.MaxConnectionBytesPerSec)
+	capabilities.Setup(s.AllowPrivileged, s.MaxConnectionBytesPerSec) // true 0
 
 	s.Metrics.Apply()
 	serviceaccount.RegisterMetrics()
@@ -268,17 +279,17 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 			EnableLogsSupport:       s.EnableLogsHandler,
 			ProxyTransport:          proxyTransport,
 
-			ServiceIPRange:          s.PrimaryServiceClusterIPRange,
-			APIServerServiceIP:      s.APIServerServiceIP,
+			ServiceIPRange:          s.PrimaryServiceClusterIPRange, // 10.96.0.0/22
+			APIServerServiceIP:      s.APIServerServiceIP,           // 10.96.0.1
 			SecondaryServiceIPRange: s.SecondaryServiceClusterIPRange,
 
 			APIServerServicePort: 443,
 
-			ServiceNodePortRange:      s.ServiceNodePortRange,
+			ServiceNodePortRange:      s.ServiceNodePortRange, // 2768-30000
 			KubernetesServiceNodePort: s.KubernetesServiceNodePort,
 
-			EndpointReconcilerType: reconcilers.Type(s.EndpointReconcilerType),
-			MasterCount:            s.MasterCount,
+			EndpointReconcilerType: reconcilers.Type(s.EndpointReconcilerType), //lease
+			MasterCount:            s.MasterCount,                              // 1
 
 			ServiceAccountIssuer:        s.ServiceAccountIssuer,
 			ServiceAccountMaxExpiration: s.ServiceAccountTokenMaxExpiration,
@@ -327,14 +338,14 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 
 	// Load the public keys.
 	var pubKeys []interface{}
-	for _, f := range s.Authentication.ServiceAccounts.KeyFiles {
+	for _, f := range s.Authentication.ServiceAccounts.KeyFiles { // /etc/kubernetes/pki/sa.pub
 		keys, err := keyutil.PublicKeysFromFile(f)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to parse key file %q: %v", f, err)
 		}
 		pubKeys = append(pubKeys, keys...)
 	}
-	// Plumb the required metadata through ExtraConfig.
+	// 通过extra config查找所需的元数据。
 	config.ExtraConfig.ServiceAccountIssuerURL = s.Authentication.ServiceAccounts.Issuers[0]
 	config.ExtraConfig.ServiceAccountJWKSURI = s.Authentication.ServiceAccounts.JWKSURI
 	config.ExtraConfig.ServiceAccountPublicKeys = pubKeys
@@ -469,7 +480,7 @@ func buildGenericConfig(
 
 	admissionConfig := &kubeapiserveradmission.Config{
 		ExternalInformers:    versionedInformers,
-		LoopbackClientConfig: genericConfig.LoopbackClientConfig,
+		LoopbackClientConfig: genericConfig.LoopbackClientConfig, // 回调配置
 		CloudConfigFile:      s.CloudProvider.CloudConfigFile,
 	}
 	serviceResolver = buildServiceResolver(s.EnableAggregatorRouting, genericConfig.LoopbackClientConfig.Host, versionedInformers)
@@ -511,7 +522,7 @@ func BuildAuthorizer(s *options.ServerRunOptions, EgressSelector *egressselector
 	return authorizationConfig.New()
 }
 
-// BuildPriorityAndFairness constructs the guts of the API Priority and Fairness filter
+// BuildPriorityAndFairness 构造API优先级和公平过滤器的内部
 func BuildPriorityAndFairness(s *options.ServerRunOptions, extclient clientgoclientset.Interface, versionedInformer clientgoinformers.SharedInformerFactory) (utilflowcontrol.Interface, error) {
 	if s.GenericServerRunOptions.MaxRequestsInFlight+s.GenericServerRunOptions.MaxMutatingRequestsInFlight <= 0 {
 		return nil, fmt.Errorf("invalid configuration: MaxRequestsInFlight=%d and MaxMutatingRequestsInFlight=%d; they must add up to something positive", s.GenericServerRunOptions.MaxRequestsInFlight, s.GenericServerRunOptions.MaxMutatingRequestsInFlight)
@@ -658,6 +669,7 @@ func SetServiceResolverForTests(resolver webhook.ServiceResolver) func() {
 	}
 }
 
+// 构建服务解析器
 func buildServiceResolver(enabledAggregatorRouting bool, hostname string, informer clientgoinformers.SharedInformerFactory) webhook.ServiceResolver {
 	if testServiceResolver != nil {
 		return testServiceResolver

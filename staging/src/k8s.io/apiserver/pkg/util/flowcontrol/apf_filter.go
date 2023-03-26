@@ -80,13 +80,13 @@ type Interface interface {
 
 // This request filter implements https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/1040-priority-and-fairness/README.md
 
-// New creates a new instance to implement API priority and fairness
+// New 创建一个新实例来实现API优先级和公平性
 func New(
 	informerFactory kubeinformers.SharedInformerFactory,
 	flowcontrolClient flowcontrolclient.FlowcontrolV1beta3Interface,
 	serverConcurrencyLimit int,
 	requestWaitLimit time.Duration,
-) Interface {
+) Interface { // todo 优先级
 	clk := eventclock.Real{}
 	return NewTestable(TestableConfig{
 		Name:                   "Controller",
@@ -103,9 +103,7 @@ func New(
 	})
 }
 
-// TestableConfig carries the parameters to an implementation that is testable
 type TestableConfig struct {
-	// Name of the controller
 	Name string
 
 	// Clock to use in timing deliberate delays

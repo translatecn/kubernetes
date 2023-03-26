@@ -25,7 +25,7 @@ import (
 // GroupName is the group name use in this package
 const GroupName = "audit.k8s.io"
 
-// SchemeGroupVersion is group version used to register these objects
+// SchemeGroupVersion 是否使用组版本注册这些对象
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: "v1"}
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource

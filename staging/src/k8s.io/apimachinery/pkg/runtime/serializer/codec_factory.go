@@ -150,7 +150,7 @@ func DisablePretty(options *CodecFactoryOptions) {
 	options.Pretty = false
 }
 
-// EnableStrict enables configuring all serializers in strict mode
+// EnableStrict 启用在严格模式下配置所有序列化器
 func EnableStrict(options *CodecFactoryOptions) {
 	options.Strict = true
 }
@@ -276,8 +276,7 @@ func (f CodecFactory) UniversalDeserializer() runtime.Decoder {
 // unrecognized groups will be returned in the version they are encoded as (no conversion). This decoder performs
 // defaulting.
 //
-// TODO: the decoder will eventually be removed in favor of dealing with objects in their versioned form
-// TODO: only accept a group versioner
+// TODO: 解码器最终将被移除，以便以版本形式处理对象。只接受组版本
 func (f CodecFactory) UniversalDecoder(versions ...schema.GroupVersion) runtime.Decoder {
 	var versioner runtime.GroupVersioner
 	if len(versions) == 0 {

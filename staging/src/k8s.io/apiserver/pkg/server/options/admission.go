@@ -89,10 +89,10 @@ func (a *AdmissionOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&a.ConfigFile, "admission-control-config-file", a.ConfigFile, "带有准入控制配置的文件.")
 }
 
-// ApplyTo adds the admission chain to the server configuration.
-// In case admission plugin names were not provided by a cluster-admin they will be prepared from the recommended/default values.
-// In addition the method lazily initializes a generic plugin that is appended to the list of pluginInitializers
-// note this method uses:
+// ApplyTo 将许可链添加到服务器配置中。
+// 如果集群管理员没有提供准入插件名称，那么它们将从推荐/默认值中准备。
+// 另外，该方法惰性初始化一个附加到pluginInitializers列表中的泛型插件
+// 注意这个方法使用:
 //
 //	genericconfig.Authorizer
 func (a *AdmissionOptions) ApplyTo(

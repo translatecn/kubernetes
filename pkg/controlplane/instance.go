@@ -144,7 +144,7 @@ var (
 	IdentityLeaseRenewIntervalPeriod = 10 * time.Second
 )
 
-// ExtraConfig defines extra configuration for the master
+// ExtraConfig 为主服务器定义额外配置
 type ExtraConfig struct {
 	ClusterAuthenticationInfo clusterauthenticationtrust.ClusterAuthenticationInfo
 

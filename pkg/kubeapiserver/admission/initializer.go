@@ -25,12 +25,12 @@ import (
 
 // TODO add a `WantsToRun` which takes a stopCh.  Might make it generic.
 
-// WantsCloudConfig defines a function which sets CloudConfig for admission plugins that need it.
+// WantsCloudConfig 定义了一个函数，该函数为需要CloudConfig的准入插件设置CloudConfig。
 type WantsCloudConfig interface {
 	SetCloudConfig([]byte)
 }
 
-// PluginInitializer is used for initialization of the Kubernetes specific admission plugins.
+// PluginInitializer 用于初始化Kubernetes特定的准入插件。
 type PluginInitializer struct {
 	cloudConfig        []byte
 	restMapper         meta.RESTMapper
@@ -39,9 +39,6 @@ type PluginInitializer struct {
 
 var _ admission.PluginInitializer = &PluginInitializer{}
 
-// NewPluginInitializer constructs new instance of PluginInitializer
-// TODO: switch these parameters to use the builder pattern or just make them
-// all public, this construction method is pointless boilerplate.
 func NewPluginInitializer(
 	cloudConfig []byte,
 	restMapper meta.RESTMapper,
@@ -54,8 +51,6 @@ func NewPluginInitializer(
 	}
 }
 
-// Initialize checks the initialization interfaces implemented by each plugin
-// and provide the appropriate initialization data
 func (i *PluginInitializer) Initialize(plugin admission.Interface) {
 	if wants, ok := plugin.(WantsCloudConfig); ok {
 		wants.SetCloudConfig(i.cloudConfig)

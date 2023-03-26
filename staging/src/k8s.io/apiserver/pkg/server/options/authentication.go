@@ -49,7 +49,7 @@ func DefaultAuthWebhookRetryBackoff() *wait.Backoff {
 }
 
 type RequestHeaderAuthenticationOptions struct {
-	ClientCAFile        string // 是根证书包,用于在信任头中的用户名之前对传入请求验证客户端证书.
+	ClientCAFile        string // 是根证书包,用于在信任头中的用户名之前对传入请求验证客户端证书.    /etc/kubernetes/pki/front-proxy-ca.crt
 	UsernameHeaders     []string
 	GroupHeaders        []string
 	ExtraHeaderPrefixes []string
@@ -98,12 +98,13 @@ func (s *RequestHeaderAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames, "允许在--requesttheader-username-headers指定的头中提供用户名的客户端证书公共名称列表。如果为空，则允许在--requestheader-client-ca-file中通过权威机构验证的任何客户端证书。")
 }
 
+// ToAuthenticationRequestHeaderConfig 用于验证请求头配置信息
 func (s *RequestHeaderAuthenticationOptions) ToAuthenticationRequestHeaderConfig() (*authenticatorfactory.RequestHeaderConfig, error) {
 	if len(s.ClientCAFile) == 0 {
 		return nil, nil
 	}
 
-	caBundleProvider, err := dynamiccertificates.NewDynamicCAContentFromFile("request-header", s.ClientCAFile)
+	caBundleProvider, err := dynamiccertificates.NewDynamicCAContentFromFile("request-header", s.ClientCAFile) // /etc/kubernetes/pki/front-proxy-ca.crt
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +121,7 @@ func (s *RequestHeaderAuthenticationOptions) ToAuthenticationRequestHeaderConfig
 // ClientCertAuthenticationOptions provides different options for client cert auth. You should use `GetClientVerifyOptionFn` to
 // get the verify options for your authenticator.
 type ClientCertAuthenticationOptions struct {
-	// ClientCA is the certificate bundle for all the signers that you'll recognize for incoming client certificates
-	ClientCA string
+	ClientCA string // 证书包是否包含您将为传入的客户端证书识别的所有签名者  /etc/kubernetes/pki/ca.crt
 
 	// CAContentProvider are the options for verifying incoming connections using mTLS and directly assigning to users.
 	// Generally this is the CA bundle file used to authenticate client certificates

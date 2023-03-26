@@ -50,11 +50,11 @@ func makeAbs(path, base string) (string, error) {
 }
 
 // ReadAdmissionConfiguration reads the admission configuration at the specified path.
-// It returns the loaded admission configuration if the input file aligns with the required syntax.
-// If it does not align with the provided syntax, it returns a default configuration for the enumerated
-// set of pluginNames whose config location references the specified configFilePath.
-// It does this to preserve backward compatibility when admission control files were opaque.
-// It returns an error if the file did not exist.
+// 如果输入文件符合要求的语法，则返回加载的录取配置。
+// 如果与提供的语法不一致，则返回枚举的默认配置
+// 配置位置引用指定configFilePath的pluginNames的集合。
+// 当允许控制文件是不透明的时，这样做是为了保持向后兼容性。
+// 如果文件不存在，则返回错误。
 func ReadAdmissionConfiguration(pluginNames []string, configFilePath string, configScheme *runtime.Scheme) (ConfigProvider, error) {
 	if configFilePath == "" {
 		return configProvider{config: &apiserver.AdmissionConfiguration{}}, nil
@@ -94,7 +94,6 @@ func ReadAdmissionConfiguration(pluginNames []string, configFilePath string, con
 		return nil, err
 	}
 
-	// Only tolerate load errors if the file appears to be one of the two legacy plugin configs
 	unstructuredData := map[string]interface{}{}
 	if err2 := yaml.Unmarshal(data, &unstructuredData); err2 != nil {
 		return nil, err
@@ -152,10 +151,10 @@ func GetAdmissionPluginConfigurationFor(pluginCfg apiserver.AdmissionPluginConfi
 	return nil, nil
 }
 
-// ConfigFor returns a reader for the specified plugin.
-// If no specific configuration is present, we return a nil reader.
+// ConfigFor 返回指定插件的读取器。
+// 如果没有指定的配置，则返回nil读取器。
 func (p configProvider) ConfigFor(pluginName string) (io.Reader, error) {
-	// there is no config, so there is no potential config
+	// 没有配置，所以没有潜在的配置
 	if p.config == nil {
 		return nil, nil
 	}
@@ -170,6 +169,6 @@ func (p configProvider) ConfigFor(pluginName string) (io.Reader, error) {
 		}
 		return pluginConfig, nil
 	}
-	// there is no registered config that matches on plugin name.
+	// 没有与插件名称匹配的注册配置。
 	return nil, nil
 }

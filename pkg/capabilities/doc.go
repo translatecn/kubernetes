@@ -14,5 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package capabilities manages system level capabilities
+// Package capabilities 管理系统级功能
 package capabilities // import "k8s.io/kubernetes/pkg/capabilities"

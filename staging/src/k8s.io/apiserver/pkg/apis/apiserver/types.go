@@ -23,23 +23,20 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AdmissionConfiguration provides versioned configuration for admission controllers.
+// AdmissionConfiguration 提供允许控制器的版本配置。
 type AdmissionConfiguration struct {
 	metav1.TypeMeta
-
-	// Plugins allows specifying a configuration per admission control plugin.
+	// Plugins 允许为每个准入控制插件指定一个配置
 	// +optional
 	Plugins []AdmissionPluginConfiguration
 }
 
-// AdmissionPluginConfiguration provides the configuration for a single plug-in.
+// AdmissionPluginConfiguration 提供单个插件的配置。
 type AdmissionPluginConfiguration struct {
-	// Name is the name of the admission controller.
-	// It must match the registered admission plugin name.
+	// Name 准入控制器的名称。它必须与注册的许可插件名称匹配。
 	Name string
 
-	// Path is the path to a configuration file that contains the plugin's
-	// configuration
+	// Path 是包含插件配置的配置文件的路径
 	// +optional
 	Path string
 

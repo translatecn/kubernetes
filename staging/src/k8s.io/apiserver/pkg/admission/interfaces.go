@@ -26,17 +26,10 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 )
 
-// Attributes is an interface used by AdmissionController to get information about a request
-// that is used to make an admission decision.
 type Attributes interface {
-	// GetName returns the name of the object as presented in the request.  On a CREATE operation, the client
-	// may omit name and rely on the server to generate the name.  If that is the case, this method will return
-	// the empty string
-	GetName() string
-	// GetNamespace is the namespace associated with the request (if any)
-	GetNamespace() string
-	// GetResource is the name of the resource being requested.  This is not the kind.  For example: pods
-	GetResource() schema.GroupVersionResource
+	GetName() string                          // 返回请求中显示的对象名称。
+	GetNamespace() string                     // 是否与请求关联的名称空间(如果有的话)
+	GetResource() schema.GroupVersionResource // 正在请求的资源的名称。这不是kind。例如:pods
 	// GetSubresource is the name of the subresource being requested.  This is a different resource, scoped to the parent resource, but it may have a different kind.
 	// For instance, /pods has the resource "pods" and the kind "Pod", while /pods/foo/status has the resource "pods", the sub resource "status", and the kind "Pod"
 	// (because status operates on pods). The binding resource for a pod though may be /pods/foo/binding, which has resource "pods", subresource "binding", and kind "Binding".
@@ -128,25 +121,17 @@ type Interface interface {
 
 type MutationInterface interface {
 	Interface
-
-	// Admit makes an admission decision based on the request attributes.
-	// Context is used only for timeout/deadline/cancellation and tracing information.
 	Admit(ctx context.Context, a Attributes, o ObjectInterfaces) (err error)
 }
 
 // ValidationInterface is an abstract, pluggable interface for Admission Control decisions.
 type ValidationInterface interface {
 	Interface
-
-	// Validate makes an admission decision based on the request attributes.  It is NOT allowed to mutate
-	// Context is used only for timeout/deadline/cancellation and tracing information.
 	Validate(ctx context.Context, a Attributes, o ObjectInterfaces) (err error)
 }
 
-// Operation is the type of resource operation being checked for admission control
 type Operation string
 
-// Operation constants
 const (
 	Create  Operation = "CREATE"
 	Update  Operation = "UPDATE"
@@ -154,8 +139,7 @@ const (
 	Connect Operation = "CONNECT"
 )
 
-// PluginInitializer is used for initialization of shareable resources between admission plugins.
-// After initialization the resources have to be set separately
+// PluginInitializer 用于初始化许可插件之间的共享资源。初始化后，资源必须单独设置
 type PluginInitializer interface {
 	Initialize(plugin Interface)
 }
@@ -166,7 +150,7 @@ type InitializationValidator interface {
 	ValidateInitialization() error
 }
 
-// ConfigProvider provides a way to get configuration for an admission plugin based on its name
+// ConfigProvider 提供一种方法，以根据其名称获取准入插件的配置
 type ConfigProvider interface {
 	ConfigFor(pluginName string) (io.Reader, error)
 }

@@ -46,7 +46,7 @@ type ServerRunOptions struct {
 	ShutdownDelayDuration       time.Duration //
 	JSONPatchMaxCopyBytes       int64         // 我们故意没有为这个选项添加flag。
 	MaxRequestBodyBytes         int64         //
-	EnablePriorityAndFairness   bool          //
+	EnablePriorityAndFairness   bool          // 优先级和公平性管理
 	ShutdownSendRetryAfter      bool          //
 }
 

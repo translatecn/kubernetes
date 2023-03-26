@@ -100,7 +100,7 @@ type completedConfig struct {
 }
 
 type CompletedConfig struct {
-	// Embed a private pointer that cannot be instantiated outside of this package.
+	// 嵌入一个不能在包外部实例化的私有指针。
 	*completedConfig
 }
 
@@ -111,7 +111,7 @@ type CustomResourceDefinitions struct {
 	Informers externalinformers.SharedInformerFactory
 }
 
-// Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
+// Complete 填充任何未设置的、必须具有有效数据的字段。
 func (cfg *Config) Complete() CompletedConfig {
 	c := completedConfig{
 		cfg.GenericConfig.Complete(),
@@ -129,7 +129,7 @@ func (cfg *Config) Complete() CompletedConfig {
 	return CompletedConfig{&c}
 }
 
-// New returns a new instance of CustomResourceDefinitions from the given config.
+// New 从给定的配置返回CustomResourceDefinitions的一个新实例。
 func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget) (*CustomResourceDefinitions, error) {
 	genericServer, err := c.GenericConfig.New("apiextensions-apiserver", delegationTarget)
 	if err != nil {

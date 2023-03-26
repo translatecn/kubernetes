@@ -68,10 +68,8 @@ type postStartHookEntry struct {
 }
 
 type PostStartHookConfigEntry struct {
-	hook PostStartHookFunc
-	// originatingStack holds the stack that registered postStartHooks. This allows us to show a more helpful message
-	// for duplicate registration.
-	originatingStack string
+	hook             PostStartHookFunc
+	originatingStack string // 保存注册postStartHooks的堆栈。这允许我们显示一个更有用的消息重复注册。
 }
 
 type preShutdownHookEntry struct {

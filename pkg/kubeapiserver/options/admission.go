@@ -80,8 +80,8 @@ func (a *AdmissionOptions) Validate() []error {
 	return errs
 }
 
-// ApplyTo adds the admission chain to the server configuration.
-// Kube-apiserver just call generic AdmissionOptions.ApplyTo.
+// ApplyTo 将许可链添加到服务器配置中。
+// Kube-apiserver调用通用的AdmissionOptions.ApplyTo。
 func (a *AdmissionOptions) ApplyTo(
 	c *server.Config,
 	informers informers.SharedInformerFactory,

@@ -29,7 +29,6 @@ const (
 	DefaultAuditLevel = audit.LevelNone
 )
 
-// NewPolicyRuleEvaluator creates a new policy rule evaluator.
 func NewPolicyRuleEvaluator(policy *audit.Policy) auditinternal.PolicyRuleEvaluator {
 	for i, rule := range policy.Rules {
 		policy.Rules[i].OmitStages = unionStages(policy.OmitStages, rule.OmitStages)

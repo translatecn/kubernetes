@@ -43,20 +43,15 @@ type Config struct {
 }
 
 type backend struct {
-	// The delegate backend that actually exports events.
-	delegateBackend audit.Backend
+	delegateBackend audit.Backend   // 实际上导出事件的委托后端。
+	c               Config          // truncation配置
+	e               runtime.Encoder // 用于计算审计事件大小的编码器。
 
-	// Configuration used for truncation.
-	c Config
-
-	// Encoder used to calculate audit event sizes.
-	e runtime.Encoder
 }
 
 var _ audit.Backend = &backend{}
 
-// NewBackend returns a new truncating backend, using configuration passed in the parameters.
-// Truncate backend automatically runs and shut downs the delegate backend.
+// NewBackend 返回一个新的截断后端，使用传入参数的配置。截断后端自动运行并关闭委托后端。
 func NewBackend(delegateBackend audit.Backend, config Config, groupVersion schema.GroupVersion) audit.Backend {
 	return &backend{
 		delegateBackend: delegateBackend,

@@ -3,6 +3,7 @@ Run
 - CreateServerChain
   - CreateKubeAPIServerConfig
     - buildGenericConfig
+    - AddPostStartHook
   - createAPIExtensionsConfig
   - createAPIExtensionsServer
   - CreateKubeAPIServer

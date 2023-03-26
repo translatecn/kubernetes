@@ -60,17 +60,10 @@ type Stage string
 
 // Valid audit stages.
 const (
-	// The stage for events generated as soon as the audit handler receives the request, and before it
-	// is delegated down the handler chain.
-	StageRequestReceived Stage = "RequestReceived"
-	// The stage for events generated once the response headers are sent, but before the response body
-	// is sent. This stage is only generated for long-running requests (e.g. watch).
-	StageResponseStarted Stage = "ResponseStarted"
-	// The stage for events generated once the response body has been completed, and no more bytes
-	// will be sent.
-	StageResponseComplete Stage = "ResponseComplete"
-	// The stage for events generated when a panic occurred.
-	StagePanic Stage = "Panic"
+	StageRequestReceived  Stage = "RequestReceived"  // 在审计处理程序接收到请求后，在沿着处理程序链进行委托之前生成事件的阶段。
+	StageResponseStarted  Stage = "ResponseStarted"  // 在发送响应头之后，但在发送响应体之前。此阶段仅为长时间运行的请求(例如watch)生成。
+	StageResponseComplete Stage = "ResponseComplete" // 响应体完成后
+	StagePanic            Stage = "Panic"            // 当恐慌发生时产生
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -160,22 +153,16 @@ type EventList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Policy defines the configuration of audit logging, and the rules for how different request
-// categories are logged.
+// Policy 定义审计日志记录的配置，以及记录不同请求类别的规则。
 type Policy struct {
 	metav1.TypeMeta
-	// ObjectMeta is included for interoperability with API infrastructure.
+	// ObjectMeta 用于与API基础设施的互操作性。
 	// +optional
 	metav1.ObjectMeta
-
-	// Rules specify the audit Level a request should be recorded at.
-	// A request may match multiple rules, in which case the FIRST matching rule is used.
-	// The default audit level is None, but can be overridden by a catch-all rule at the end of the list.
-	// PolicyRules are strictly ordered.
+	// 规则指定了请求应记录在的审计级别。一个请求可以匹配多条规则，在这种情况下使用FIRST匹配规则。默认的审计级别是None，但是可以由列表末尾的catch-all规则覆盖。PolicyRules是严格有序的。
 	Rules []PolicyRule
 
-	// OmitStages is a list of stages for which no events are created. Note that this can also
-	// be specified per rule in which case the union of both are omitted.
+	// OmitStages 每个规则都需要添加的
 	// +optional
 	OmitStages []Stage
 
@@ -200,11 +187,10 @@ type PolicyList struct {
 	Items []Policy
 }
 
-// PolicyRule maps requests based off metadata to an audit Level.
-// Requests must match the rules of every field (an intersection of rules).
+// PolicyRule 将基于元数据的请求映射到审计级别。
+// 请求必须匹配每个字段的规则(规则的交集)。
 type PolicyRule struct {
-	// The Level that requests matching this rule are recorded at.
-	Level Level
+	Level Level // 日志等级
 
 	// The users (by authenticated user name) this rule applies to.
 	// An empty list implies every user.

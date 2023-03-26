@@ -20,30 +20,18 @@ import (
 	"sync"
 )
 
-// Capabilities defines the set of capabilities available within the system.
-// For now these are global.  Eventually they may be per-user
+// Capabilities 定义系统中可用的功能集。目前这些是全局的。
 type Capabilities struct {
-	AllowPrivileged bool
-
-	// Pod sources from which to allow privileged capabilities like host networking, sharing the host
-	// IPC namespace, and sharing the host PID namespace.
-	PrivilegedSources PrivilegedSources
-
-	// PerConnectionBandwidthLimitBytesPerSec limits the throughput of each connection (currently only used for proxy, exec, attach)
-	PerConnectionBandwidthLimitBytesPerSec int64
+	AllowPrivileged                        bool              // 允许特权
+	PrivilegedSources                      PrivilegedSources // Pod源，允许主机联网、共享主机IPC名称空间和共享主机PID名称空间等特权功能。
+	PerConnectionBandwidthLimitBytesPerSec int64             // 限制每个连接的吞吐量(目前仅用于proxy, exec, attach)
 }
 
-// PrivilegedSources defines the pod sources allowed to make privileged requests for certain types
-// of capabilities like host networking, sharing the host IPC namespace, and sharing the host PID namespace.
+// PrivilegedSources 定义pod源，允许对某些类型的功能发出特权请求，如主机联网、共享主机IPC命名空间和共享主机PID命名空间。
 type PrivilegedSources struct {
-	// List of pod sources for which using host network is allowed.
-	HostNetworkSources []string
-
-	// List of pod sources for which using host pid namespace is allowed.
-	HostPIDSources []string
-
-	// List of pod sources for which using host ipc is allowed.
-	HostIPCSources []string
+	HostNetworkSources []string // 允许使用主机网络的pod源列表。
+	HostPIDSources     []string // 允许使用主机pid命名空间的pod源列表。
+	HostIPCSources     []string // 允许使用主机ipc的pod源列表。
 }
 
 var capInstance struct {
@@ -52,15 +40,12 @@ var capInstance struct {
 	capabilities *Capabilities
 }
 
-// Initialize the capability set.  This can only be done once per binary, subsequent calls are ignored.
 func Initialize(c Capabilities) {
-	// Only do this once
 	capInstance.once.Do(func() {
 		capInstance.capabilities = &c
 	})
 }
 
-// Setup the capability set.  It wraps Initialize for improving usability.
 func Setup(allowPrivileged bool, perConnectionBytesPerSec int64) {
 	Initialize(Capabilities{
 		AllowPrivileged:                        allowPrivileged,
@@ -75,7 +60,7 @@ func SetForTests(c Capabilities) {
 	capInstance.capabilities = &c
 }
 
-// Get returns a read-only copy of the system capabilities.
+// Get 返回系统功能的只读副本。
 func Get() Capabilities {
 	capInstance.lock.Lock()
 	defer capInstance.lock.Unlock()

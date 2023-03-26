@@ -45,7 +45,7 @@ type WantsAuthorizer interface {
 	admission.InitializationValidator
 }
 
-// WantsQuotaConfiguration defines a function which sets quota configuration for admission plugins that need it.
+// WantsQuotaConfiguration 定义一个函数，该函数为需要它的准入插件设置配额配置。
 type WantsQuotaConfiguration interface {
 	SetQuotaConfiguration(quota.Configuration)
 	admission.InitializationValidator
@@ -76,7 +76,7 @@ type WantsDynamicClient interface {
 	admission.InitializationValidator
 }
 
-// WantsRESTMapper defines a function which sets RESTMapper for admission plugins that need it.
+// WantsRESTMapper 定义一个函数，为需要它的准入插件设置RESTMapper。
 type WantsRESTMapper interface {
 	SetRESTMapper(meta.RESTMapper)
 	admission.InitializationValidator

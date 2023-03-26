@@ -22,7 +22,7 @@ import (
 	"k8s.io/utils/clock"
 )
 
-// RealEventClock fires event on real world time
+// Real RealEventClock 触发时间
 type Real struct {
 	clock.RealClock
 }
