@@ -38,19 +38,12 @@ import (
 
 // Config contains all the settings for one of these low-level controllers.
 type Config struct {
-	// The queue for your objects - has to be a DeltaFIFO due to
-	// assumptions in the implementation. Your Process() function
-	// should accept the output of this Queue's Pop() method.
-	Queue
-	ListerWatcher
-	Process ProcessFunc
-	// ObjectType is an example object of the type this controller is
-	// expected to handle.  Only the type needs to be right, except
-	// that when that is `unstructured.Unstructured` the object's
-	// `"apiVersion"` and `"kind"` must also be right.
-	ObjectType runtime.Object
+	Queue                        // 实际由 DeltaFIFO 实现
+	ListerWatcher                // 构造 Reflector 需要
+	Process       ProcessFunc    // Pop 出来的 obj 处理函数
+	ObjectType    runtime.Object // 目标对象类型
 
-	FullResyncPeriod time.Duration    // 是考虑ShouldResync的周期。
+	FullResyncPeriod time.Duration    // 全量重新同步周期。
 	ShouldResync     ShouldResyncFunc // 是否重新同步队列
 
 	// If true, when Process() returns an error, re-enqueue the object.

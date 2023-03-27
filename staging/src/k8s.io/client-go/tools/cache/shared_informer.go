@@ -281,26 +281,18 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 // sharedProcessor, which is responsible for relaying those
 // notifications to each of the informer's clients.
 type sharedIndexInformer struct {
-	indexerStore          Indexer
-	controller            Controller
-	processor             *sharedProcessor
-	cacheMutationDetector MutationDetector
-	listerWatcher         ListerWatcher
-	objectType            runtime.Object // 表示当前 Informer 期望关注的类型，主要是 GVK 信息
-	resyncCheckPeriod     time.Duration  // reflector 的 resync 计时器计时间隔，通知所有的 listener 执行 resync
-	// defaultEventHandlerResyncPeriod is the default resync period for any handlers added via
-	// AddEventHandler (i.e. they don't specify one and just want to use the shared informer's default
-	// value).
-	defaultEventHandlerResyncPeriod time.Duration
-	// clock allows for testability
-	clock clock.Clock
-
-	started, stopped bool
-	startedLock      sync.Mutex
-
-	// blockDeltas gives a way to stop all event distribution so that a late event handler
-	// can safely join the shared informer.
-	blockDeltas sync.Mutex
+	indexerStore                    Indexer
+	controller                      Controller
+	processor                       *sharedProcessor // 处理函数，将是重点
+	cacheMutationDetector           MutationDetector // 检测 cache 是否有变化，一把用作调试，默认是关闭的
+	listerWatcher                   ListerWatcher    // 构造 Reflector 需要
+	objectType                      runtime.Object   // 目标类型，给 Reflector 判断资源类型
+	resyncCheckPeriod               time.Duration    // Reflector 进行重新同步周期 通知所有的 listener 执行 resync
+	defaultEventHandlerResyncPeriod time.Duration    // 如果使用者没有添加 Resync 时间，则使用这个默认的重新同步周期
+	clock                           clock.Clock      //
+	started, stopped                bool             // 两个 bool 表达了三个状态：controller 启动前、已启动、已停止
+	startedLock                     sync.Mutex
+	blockDeltas                     sync.Mutex // 当 Pop 正在消费队列，此时新增的 listener 需要加锁，防止消费混乱
 
 	// Called whenever the ListAndWatch drops the connection with an error.
 	watchErrorHandler WatchErrorHandler

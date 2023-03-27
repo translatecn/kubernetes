@@ -32,8 +32,8 @@ type NewInformerFunc func(kubernetes.Interface, time.Duration) cache.SharedIndex
 
 // SharedInformerFactory a small interface to allow for adding an informer without an import cycle
 type SharedInformerFactory interface {
-	Start(stopCh <-chan struct{})
-	InformerFor(obj runtime.Object, newFunc NewInformerFunc) cache.SharedIndexInformer
+	Start(stopCh <-chan struct{})// 启动 SharedIndexInformer.Run
+	InformerFor(obj runtime.Object, newFunc NewInformerFunc) cache.SharedIndexInformer// 目标类型初始化
 }
 
 // TweakListOptionsFunc is a function that transforms a v1.ListOptions.

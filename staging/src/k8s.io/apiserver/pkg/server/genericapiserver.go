@@ -257,37 +257,18 @@ type GenericAPIServer struct {
 	ShutdownSendRetryAfter bool
 }
 
-// DelegationTarget is an interface which allows for composition of API servers with top level handling that works
-// as expected.
 type DelegationTarget interface {
-	// UnprotectedHandler returns a handler that is NOT protected by a normal chain
-	UnprotectedHandler() http.Handler
-
-	// PostStartHooks returns the post-start hooks that need to be combined
+	UnprotectedHandler() http.Handler // 不受正常链的保护的处理函数
 	PostStartHooks() map[string]postStartHookEntry
-
-	// PreShutdownHooks returns the pre-stop hooks that need to be combined
 	PreShutdownHooks() map[string]preShutdownHookEntry
-
-	// HealthzChecks returns the healthz checks that need to be combined
 	HealthzChecks() []healthz.HealthChecker
-
-	// ListedPaths returns the paths for supporting an index
 	ListedPaths() []string
-
-	// NextDelegate returns the next delegationTarget in the chain of delegations
 	NextDelegate() DelegationTarget
-
-	// PrepareRun does post API installation setup steps. It calls recursively the same function of the delegates.
 	PrepareRun() preparedGenericAPIServer
-
 	// MuxAndDiscoveryCompleteSignals exposes registered signals that indicate if all known HTTP paths have been installed.
 	MuxAndDiscoveryCompleteSignals() map[string]<-chan struct{}
+	Destroy() // Destroy在关闭时清理它的资源。必须以线程安全的方式实现，并为多次调用做好准备。
 
-	// Destroy cleans up its resources on shutdown.
-	// Destroy has to be implemented in thread-safe way and be prepared
-	// for being called more than once.
-	Destroy()
 }
 
 func (s *GenericAPIServer) UnprotectedHandler() http.Handler {

@@ -87,11 +87,11 @@ type DeltaFIFO struct {
 	items map[string]Deltas // 针对同一ID的事件列表
 	queue []string          // 延迟队列里存储的对象ID
 
-	populated              bool // 调用过 Replace/Delete/Add/Update/AddIfNotPresent，则为true。
-	initialPopulationCount int  // 是第一次调用Replace()插入的项数。
+	populated              bool // 是否已经填充：通过 Replace() 接口将第一批对象放入队列，或者第一次调用增、删、改接口时标记为true
+	initialPopulationCount int  // 通过 Replace() 接口将第一批对象放入队列的数量
 
 	keyFunc      KeyFunc
-	knownObjects KeyListerGetter
+	knownObjects KeyListerGetter // 已知对象，其实就是 Indexer
 	closed       bool
 
 	// emitDeltaTypeReplaced is whether to emit the Replaced or Sync

@@ -58,8 +58,8 @@ type sharedInformerFactory struct {
 	namespace        string
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	lock             sync.Mutex
-	defaultResync    time.Duration
-	customResync     map[reflect.Type]time.Duration
+	defaultResync    time.Duration                  // 工厂级别(所有informer)默认的resync时间
+	customResync     map[reflect.Type]time.Duration // 每个informer具体的resync时间
 
 	informers map[reflect.Type]cache.SharedIndexInformer
 	// startedInformers is used for tracking which informers have been started.

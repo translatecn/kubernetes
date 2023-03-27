@@ -47,22 +47,25 @@ const defaultExpectedTypeName = "<unspecified>"
 
 type Reflector struct {
 	name string // 名称，默认是file:line
+	// 下面三个为了确认类型
+	expectedTypeName string                   // watch 类型的名称
+	expectedType     reflect.Type             // watch 类型
+	expectedGVK      *schema.GroupVersionKind // watch gvk类型
 
-	expectedTypeName              string                   // watch 类型的名称
-	expectedType                  reflect.Type             // watch 类型
-	expectedGVK                   *schema.GroupVersionKind // watch gvk类型
-	reflectorStore                Store                    // 存储
-	listerWatcher                 ListerWatcher            //
-	backoffManager                wait.BackoffManager      // 管理回退ListWatch
-	initConnBackoffManager        wait.BackoffManager      // 管理回退与ListAndWatch的Watch调用的初始连接。
-	MaxInternalErrorRetryDuration time.Duration            // 收到错误以后 ，最大的retry时间
+	reflectorStore Store         // 存储,具体由 DeltaFIFO 实现存储
+	listerWatcher  ListerWatcher // 用来从 api-server 拉取全量和增量资源
+	// 下面两个用来做失败重试
+	backoffManager         wait.BackoffManager // 管理回退ListWatch
+	initConnBackoffManager wait.BackoffManager // 管理回退与ListAndWatch的Watch调用的初始连接。
 
-	resyncPeriod                         time.Duration
-	ShouldResync                         func() bool // 是否应该同步 func (p *sharedProcessor) shouldResync() bool {
-	clock                                clock.Clock // 允许测试操作时间
-	paginatedResult                      bool        // 定义list调用是否强制分页。它基于初始列表调用的结果进行设置。
-	lastSyncResourceVersion              string      // 每次同步时最新的资源版本
-	isLastSyncResourceVersionUnavailable bool        // 上一次从api server list 失败
+	MaxInternalErrorRetryDuration time.Duration // 收到错误以后 ，最大的retry时间
+
+	resyncPeriod                         time.Duration // informer 使用者重新同步的周期
+	ShouldResync                         func() bool   // 是否应该同步 func (p *sharedProcessor) shouldResync() bool {
+	clock                                clock.Clock   // 允许测试操作时间
+	paginatedResult                      bool          // 定义list调用是否强制分页。它基于初始列表调用的结果进行设置。
+	lastSyncResourceVersion              string        // 最后同步的资源版本号，以此为依据，watch 只会监听大于此值的资源
+	isLastSyncResourceVersionUnavailable bool          // 最后同步的资源版本号是否可用
 	// lastSyncResourceVersionMutex guards read/write access to lastSyncResourceVersion
 	lastSyncResourceVersionMutex sync.RWMutex
 	WatchListPageSize            int64 // watch 分页大小
