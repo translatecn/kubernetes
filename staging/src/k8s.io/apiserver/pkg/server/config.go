@@ -85,10 +85,10 @@ import (
 )
 
 const (
-	// DefaultLegacyAPIPrefix is where the legacy APIs will be located.
+	// DefaultLegacyAPIPrefix 是遗留API组所在的位置。
 	DefaultLegacyAPIPrefix = "/api"
 
-	// APIGroupPrefix is where non-legacy API group will be located.
+	// APIGroupPrefix 是非遗留API组所在的位置。
 	APIGroupPrefix = "/apis"
 )
 
@@ -548,9 +548,8 @@ func (c *RecommendedConfig) Complete() CompletedConfig {
 	return c.Config.Complete(c.SharedInformerFactory)
 }
 
-// New ✅ creates a new server which logically combines the handling chain with the passed server.
-// name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delegating.
-// delegationTarget may not be nil.
+// New ✅
+// 创建一个新服务器，该服务器在逻辑上将处理链与传递的server.name用于区分日志记录。
 func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*GenericAPIServer, error) {
 	if c.Serializer == nil {
 		return nil, fmt.Errorf("Genericapiserver.New() called with config.Serializer == nil")
@@ -566,7 +565,7 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 		return c.BuildHandlerChainFunc(handler, c.Config)
 	}
 
-	apiServerHandler := NewAPIServerHandler(name, c.Serializer, handlerChainBuilder, delegationTarget.UnprotectedHandler())
+	apiServerHandler := NewAPIServerHandler(name, c.Serializer, handlerChainBuilder, delegationTarget.UnprotectedHandler()) // 创建了一个url集合
 
 	s := &GenericAPIServer{
 		discoveryAddresses:         c.DiscoveryAddresses,

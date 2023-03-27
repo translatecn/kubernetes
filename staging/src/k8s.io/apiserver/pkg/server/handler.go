@@ -42,9 +42,8 @@ import (
 type APIServerHandler struct {
 	// FullHandlerChain is the one that is eventually served with.  It should include the full filter
 	// chain and then call the Director.
-	FullHandlerChain http.Handler
-	// The registered APIs.  InstallAPIs uses this.  Other servers probably shouldn't access this directly.
-	GoRestfulContainer *restful.Container
+	FullHandlerChain   http.Handler
+	GoRestfulContainer *restful.Container // 注册的api。install api使用这个。其他服务器可能不应该直接访问它。
 	// NonGoRestfulMux is the final HTTP handler in the chain.
 	// It comes after all filters and the API handling
 	// This is where other servers can attach handler to various parts of the chain.

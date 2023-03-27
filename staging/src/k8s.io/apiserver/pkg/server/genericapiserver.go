@@ -63,9 +63,8 @@ import (
 
 // Info about an API group.
 type APIGroupInfo struct {
-	PrioritizedVersions []schema.GroupVersion
-	// Info about the resources in this group. It's a map from version to resource to the storage.
-	VersionedResourcesStorageMap map[string]map[string]rest.Storage
+	PrioritizedVersions          []schema.GroupVersion              // 优先版本
+	VersionedResourcesStorageMap map[string]map[string]rest.Storage // 该组中的资源信息。{资源:{路由:存储}}
 	// OptionsExternalVersion controls the APIVersion used for common objects in the
 	// schema like api.Status, api.DeleteOptions, and metav1.ListOptions. Other implementors may
 	// define a version "v1beta1" but want to use the Kubernetes "v1" internal objects.
@@ -133,7 +132,7 @@ type GenericAPIServer struct {
 	Serializer runtime.NegotiatedSerializer
 
 	// "Outputs"
-	// Handler holds the handlers being used by this API server
+	// Handler保存这个API服务器使用的 handlers
 	Handler *APIServerHandler
 
 	// listedPathProvider is a lister which provides the set of paths to show at /
@@ -148,11 +147,8 @@ type GenericAPIServer struct {
 	// AggregatedLegacyDiscoveryGroupManager serves /api in an aggregated form.
 	AggregatedLegacyDiscoveryGroupManager discoveryendpoint.ResourceManager
 
-	// Enable swagger and/or OpenAPI if these configs are non-nil.
-	openAPIConfig *openapicommon.Config
-
-	// Enable swagger and/or OpenAPI V3 if these configs are non-nil.
-	openAPIV3Config *openapicommon.Config
+	openAPIConfig   *openapicommon.Config // 如果这些配置非空，启用swagger和/或OpenAPI。
+	openAPIV3Config *openapicommon.Config // 如果这些配置非空，启用swagger和/或OpenAPI3。
 
 	// SkipOpenAPIInstallation indicates not to install the OpenAPI handler
 	// during PrepareRun.
@@ -240,11 +236,10 @@ type GenericAPIServer struct {
 
 	// destroyFns contains a list of functions that should be called on shutdown to clean up resources.
 	destroyFns []func()
-
-	// muxAndDiscoveryCompleteSignals holds signals that indicate all known HTTP paths have been registered.
-	// it exists primarily to avoid returning a 404 response when a resource actually exists but we haven't installed the path to a handler.
-	// it is exposed for easier composition of the individual servers.
-	// the primary users of this field are the WithMuxCompleteProtection filter and the NotFoundHandler
+	// muxAndDiscoveryCompleteSignals 保存所有已知HTTP路径已注册的信号。
+	//它的存在主要是为了避免在资源实际存在,但我们没有安装处理程序的路径时返回404响应。
+	//为了更容易地组合各个服务器，它被暴露出来。
+	//这个字段的主要用户是WithMuxCompleteProtection过滤器和NotFoundHandler
 	muxAndDiscoveryCompleteSignals map[string]<-chan struct{}
 
 	// ShutdownSendRetryAfter dictates when to initiate shutdown of the HTTP
@@ -292,8 +287,8 @@ func (s *GenericAPIServer) NextDelegate() DelegationTarget {
 	return s.delegationTarget
 }
 
-// RegisterMuxAndDiscoveryCompleteSignal registers the given signal that will be used to determine if all known
-// HTTP paths have been registered. It is okay to call this method after instantiating the generic server but before running.
+// RegisterMuxAndDiscoveryCompleteSignal 登记给定的信号，该信号将用于确定是否全部已知
+// HTTP路径已注册。可以在实例化泛型服务器之后、运行之前调用此方法。
 func (s *GenericAPIServer) RegisterMuxAndDiscoveryCompleteSignal(signalName string, signal <-chan struct{}) error {
 	if _, exists := s.muxAndDiscoveryCompleteSignals[signalName]; exists {
 		return fmt.Errorf("%s already registered", signalName)
@@ -373,7 +368,7 @@ type preparedGenericAPIServer struct {
 
 // PrepareRun does post API installation setup steps. It calls recursively the same function of the delegates.
 func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
-	s.delegationTarget.PrepareRun()
+	s.delegationTarget.PrepareRun() // ✅
 
 	if s.openAPIConfig != nil && !s.skipOpenAPIInstallation {
 		s.OpenAPIVersionedService, s.StaticOpenAPISpec = routes.OpenAPI{
@@ -447,10 +442,9 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 
 	// Clean up resources on shutdown.
 	defer s.Destroy()
-
-	// spawn a new goroutine for closing the MuxAndDiscoveryComplete signal
-	// registration happens during construction of the generic api server
-	// the last server in the chain aggregates signals from the previous instances
+	//生成一个新的goroutine关闭MuxAndDiscoveryComplete信号
+	//注册发生在构造通用API服务器的过程中
+	//链中的最后一个服务器聚合来自前一个实例的信号
 	go func() {
 		for _, muxAndDiscoveryCompletedSignal := range s.GenericAPIServer.MuxAndDiscoveryCompleteSignals() {
 			select {
@@ -484,11 +478,8 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	shutdownTimeout := s.ShutdownTimeout
 	if s.ShutdownSendRetryAfter {
 		// when this mode is enabled, we do the following:
-		// - the server will continue to listen until all existing requests in flight
-		//   (not including active long running requests) have been drained.
-		// - once drained, http Server Shutdown is invoked with a timeout of 2s,
-		//   net/http waits for 1s for the peer to respond to a GO_AWAY frame, so
-		//   we should wait for a minimum of 2s
+		// - 服务器将继续监听，直到所有正在运行的现有请求(不包括活动的长时间运行的请求)被耗尽。
+		// - 一旦耗尽，http服务器关闭被调用，超时时间为2s, net/http等待对等端响应一个GO_AWAY帧，所以我们应该等待至少2s
 		shutdownTimeout = 2 * time.Second
 		klog.V(1).InfoS("[graceful-termination] using HTTP Server shutdown timeout", "ShutdownTimeout", shutdownTimeout)
 	}
@@ -516,7 +507,7 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 		}
 	}
 
-	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout)
+	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout) //
 	if err != nil {
 		return err
 	}
@@ -599,7 +590,7 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	return nil
 }
 
-// NonBlockingRun spawns the secure http server. An error is
+// NonBlockingRun 生成安全HTTP服务器. An error is
 // returned if the secure port cannot be listened on.
 // The returned channel is closed when the (asynchronous) termination is finished.
 func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdownTimeout time.Duration) (<-chan struct{}, <-chan struct{}, error) {
@@ -609,7 +600,7 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 	var listenerStoppedCh <-chan struct{}
 	if s.SecureServingInfo != nil && s.Handler != nil {
 		var err error
-		stoppedCh, listenerStoppedCh, err = s.SecureServingInfo.Serve(s.Handler, shutdownTimeout, internalStopCh)
+		stoppedCh, listenerStoppedCh, err = s.SecureServingInfo.Serve(s.Handler, shutdownTimeout, internalStopCh) // 真正处理函数入口
 		if err != nil {
 			close(internalStopCh)
 			return nil, nil, err
@@ -633,7 +624,7 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 	return stoppedCh, listenerStoppedCh, nil
 }
 
-// installAPIResources is a private method for installing the REST storage backing each api groupversionresource
+// installAPIResources 安装支持每个api groupversionresource的REST存储
 func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *APIGroupInfo, openAPIModels openapiproto.Models) error {
 	var resourceInfos []*storageversion.ResourceInfo
 	for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
@@ -735,9 +726,7 @@ func (s *GenericAPIServer) InstallLegacyAPIGroup(apiPrefix string, apiGroupInfo 
 	return nil
 }
 
-// InstallAPIGroups exposes given api groups in the API.
-// The <apiGroupInfos> passed into this function shouldn't be used elsewhere as the
-// underlying storage will be destroyed on this servers shutdown.
+// InstallAPIGroups ✅
 func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) error {
 	for _, apiGroupInfo := range apiGroupInfos {
 		// Do not register empty group or empty version.  Doing so claims /apis/ for the wrong entity to be returned.
@@ -761,8 +750,8 @@ func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) erro
 		}
 
 		// setup discovery
-		// Install the version handler.
-		// Add a handler at /apis/<groupName> to enumerate all versions supported by this group.
+		// 安装版本处理程序。
+		// Add a handler at /apis/<groupName> 枚举该组支持的所有版本。
 		apiVersionsForDiscovery := []metav1.GroupVersionForDiscovery{}
 		for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
 			// Check the config to make sure that we elide versions that don't have any resources
@@ -790,9 +779,7 @@ func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) erro
 	return nil
 }
 
-// InstallAPIGroup exposes the given api group in the API.
-// The <apiGroupInfo> passed into this function shouldn't be used elsewhere as the
-// underlying storage will be destroyed on this servers shutdown.
+// InstallAPIGroup 在api中暴露给定的api组。
 func (s *GenericAPIServer) InstallAPIGroup(apiGroupInfo *APIGroupInfo) error {
 	return s.InstallAPIGroups(apiGroupInfo)
 }
@@ -848,7 +835,7 @@ func NewDefaultAPIGroupInfo(group string, scheme *runtime.Scheme, parameterCodec
 	}
 }
 
-// getOpenAPIModels is a private method for getting the OpenAPI models
+// getOpenAPIModels 是获取OpenAPI模型的私有方法
 func (s *GenericAPIServer) getOpenAPIModels(apiPrefix string, apiGroupInfos ...*APIGroupInfo) (openapiproto.Models, error) {
 	if s.openAPIConfig == nil {
 		return nil, nil
@@ -863,7 +850,7 @@ func (s *GenericAPIServer) getOpenAPIModels(apiPrefix string, apiGroupInfos ...*
 		resourceNames = append(resourceNames, groupResources...)
 	}
 
-	// Build the openapi definitions for those resources and convert it to proto models
+	// 为这些资源构建openapi定义，并将其转换为proto模型
 	openAPISpec, err := openapibuilder2.BuildOpenAPIDefinitionsForResources(s.openAPIConfig, resourceNames...)
 	if err != nil {
 		return nil, err
@@ -874,9 +861,8 @@ func (s *GenericAPIServer) getOpenAPIModels(apiPrefix string, apiGroupInfos ...*
 	return utilopenapi.ToProtoModels(openAPISpec)
 }
 
-// getResourceNamesForGroup is a private method for getting the canonical names for each resource to build in an api group
+// getResourceNamesForGroup 获取要在API组中构建的每个资源的规范名称
 func getResourceNamesForGroup(apiPrefix string, apiGroupInfo *APIGroupInfo, pathsToIgnore openapiutil.Trie) ([]string, error) {
-	// Get the canonical names of every resource we need to build in this api group
 	resourceNames := make([]string, 0)
 	for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
 		for resource, storage := range apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version] {

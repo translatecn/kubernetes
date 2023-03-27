@@ -106,8 +106,7 @@ type CompletedConfig struct {
 
 type CustomResourceDefinitions struct {
 	GenericAPIServer *genericapiserver.GenericAPIServer
-
-	// provided for easier embedding
+	// 提供了更容易的嵌入
 	Informers externalinformers.SharedInformerFactory
 }
 
@@ -136,8 +135,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		return nil, err
 	}
 
-	// hasCRDInformerSyncedSignal is closed when the CRD informer this server uses has been fully synchronized.
-	// It ensures that requests to potential custom resource endpoints while the server hasn't installed all known HTTP paths get a 503 error instead of a 404
+	// hasCRDInformerSyncedSignal 当服务器使用的CRD通知器完全同步时关闭。当服务器没有安装所有已知的HTTP路径时，它确保对潜在的自定义资源端点的请求得到503错误而不是404
 	hasCRDInformerSyncedSignal := make(chan struct{})
 	if err := genericServer.RegisterMuxAndDiscoveryCompleteSignal("CRDInformerHasNotSynced", hasCRDInformerSyncedSignal); err != nil {
 		return nil, err

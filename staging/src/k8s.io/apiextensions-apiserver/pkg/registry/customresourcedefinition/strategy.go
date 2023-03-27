@@ -37,7 +37,7 @@ import (
 )
 
 // strategy implements behavior for CustomResources.
-type strategy struct {
+type strategy struct { // 策略
 	runtime.ObjectTyper
 	names.NameGenerator
 }

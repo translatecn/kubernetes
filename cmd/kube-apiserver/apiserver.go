@@ -19,6 +19,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"k8s.io/kubernetes/debug/apiserver"
 	"os"
 	_ "time/tzdata" // for timeZone support in CronJob
@@ -31,6 +32,7 @@ import (
 )
 
 func main() {
+	fmt.Println("pid--->", os.Getpid())
 	os.Args = apiserver.Init(os.Args)
 	command := app.NewAPIServerCommand()
 	code := cli.Run(command)

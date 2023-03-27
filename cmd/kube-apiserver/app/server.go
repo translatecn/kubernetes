@@ -228,7 +228,7 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 	return aggregatorServer, nil
 }
 
-// CreateKubeAPIServer creates and wires a workable kube-apiserver
+// CreateKubeAPIServer 创建并连接一个可用的kube-api-server
 func CreateKubeAPIServer(kubeAPIServerConfig *controlplane.Config, delegateAPIServer genericapiserver.DelegationTarget) (*controlplane.Instance, error) {
 	kubeAPIServer, err := kubeAPIServerConfig.Complete().New(delegateAPIServer)
 	if err != nil {

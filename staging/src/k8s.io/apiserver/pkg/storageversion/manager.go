@@ -48,8 +48,7 @@ type ResourceInfo struct {
 
 // Manager records the resources whose StorageVersions need updates, and provides a method to update those StorageVersions.
 type Manager interface {
-	// AddResourceInfo records resources whose StorageVersions need updates
-	AddResourceInfo(resources ...*ResourceInfo)
+	AddResourceInfo(resources ...*ResourceInfo) // 记录需要更新storageversion的资源
 	// UpdateStorageVersions tries to update the StorageVersions of the recorded resources
 	UpdateStorageVersions(kubeAPIServerClientConfig *rest.Config, apiserverID string)
 	// PendingUpdate returns true if the StorageVersion of the given resource is still pending update.

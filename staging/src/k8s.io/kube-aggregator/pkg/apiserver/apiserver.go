@@ -197,7 +197,7 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 	}
 	informerFactory := informers.NewSharedInformerFactory(
 		apiregistrationClient,
-		5*time.Minute, // this is effectively used as a refresh interval right now.  Might want to do something nicer later on.
+		5*time.Minute, // 现在这可以有效地用作刷新间隔。也许以后该做点更好的事。
 	)
 
 	// apiServiceRegistrationControllerInitiated is closed when APIServiceRegistrationController has finished "installing" all known APIServices.
@@ -409,9 +409,9 @@ func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
 		})
 	}
 
-	prepared := s.GenericAPIServer.PrepareRun()
+	prepared := s.GenericAPIServer.PrepareRun() // ✅
 
-	// delay OpenAPI setup until the delegate had a chance to setup their OpenAPI handlers
+	// 延迟OpenAPI的设置，直到委托有机会设置他们的OpenAPI处理程序
 	if s.openAPIConfig != nil {
 		specDownloader := openapiaggregator.NewDownloader()
 		openAPIAggregator, err := openapiaggregator.BuildAndRegisterAggregator(
