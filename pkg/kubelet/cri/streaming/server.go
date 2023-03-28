@@ -143,7 +143,7 @@ func NewServer(config Config, runtime Runtime) (Server, error) {
 		}
 	}
 	handler := restful.NewContainer()
-	handler.Add(ws)
+	handler.Add(ws) //  没有调用的地方
 	s.handler = handler
 	s.server = &http.Server{
 		Addr:      s.config.Addr,

@@ -9,4 +9,14 @@ Run
   - CreateKubeAPIServer
   - createAggregatorServer
 - PrepareRun
+  - s.installHealthz() 
+  - s.installLivez()
+  - s.installReadyz()
 - Run
+
+
+
+
+
+
+

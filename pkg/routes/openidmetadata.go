@@ -71,11 +71,10 @@ func (s *OpenIDMetadataServer) Install(c *restful.Container) {
 			Operation("getServiceAccountIssuerOpenIDConfiguration").
 			// Just include the OK, doesn't look like we include Internal Error in our openapi-spec.
 			Returns(http.StatusOK, "OK", ""))
-	c.Add(cfg)
+	c.Add(cfg) // ✅ 1个
 
 	// JWKS WebService
-	jwks := new(restful.WebService).
-		Produces(mimeJWKS)
+	jwks := new(restful.WebService).Produces(mimeJWKS)
 
 	jwks.Path(serviceaccount.JWKSPath).Route(
 		jwks.GET("").
@@ -84,7 +83,7 @@ func (s *OpenIDMetadataServer) Install(c *restful.Container) {
 			Operation("getServiceAccountIssuerOpenIDKeyset").
 			// Just include the OK, doesn't look like we include Internal Error in our openapi-spec.
 			Returns(http.StatusOK, "OK", ""))
-	c.Add(jwks)
+	c.Add(jwks) // ✅ 1个
 }
 
 // fromStandard provides compatibility between the standard (net/http) handler signature and the restful signature.

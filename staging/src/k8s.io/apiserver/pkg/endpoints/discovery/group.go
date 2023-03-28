@@ -49,6 +49,26 @@ func NewAPIGroupHandler(serializer runtime.NegotiatedSerializer, group metav1.AP
 	}
 }
 
+// WebService ✅
+// /apis/apiextensions.k8s.io
+// /apis/authentication.k8s.io
+// /apis/authorization.k8s.io
+// /apis/autoscaling
+// /apis/batch
+// /apis/certificates.k8s.io
+// /apis/coordination.k8s.io
+// /apis/discovery.k8s.io
+// /apis/networking.k8s.io
+// /apis/node.k8s.io
+// /apis/policy
+// /apis/rbac.authorization.k8s.io
+// /apis/scheduling.k8s.io
+// /apis/storage.k8s.io
+// /apis/flowcontrol.apiserver.k8s.io
+// /apis/apps
+// /apis/admissionregistration.k8s.io
+// /apis/events.k8s.io
+// /apis/apiregistration.k8s.io
 func (s *APIGroupHandler) WebService() *restful.WebService {
 	mediaTypes, _ := negotiation.MediaTypesForSerializer(s.serializer)
 	ws := new(restful.WebService)

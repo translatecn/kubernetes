@@ -48,7 +48,7 @@ func (v Version) Install(c *restful.Container) {
 			Consumes(restful.MIME_JSON).
 			Writes(version.Info{}))
 
-	c.Add(versionWS)
+	c.Add(versionWS) // ✅ 1个
 }
 
 // handleVersion writes the server's version information.

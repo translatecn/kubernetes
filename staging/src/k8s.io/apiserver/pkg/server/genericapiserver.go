@@ -18,6 +18,9 @@ package server
 
 import (
 	"fmt"
+	apidiscoveryv2beta1 "k8s.io/api/apidiscovery/v2beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/endpoints/handlers/fieldmanager"
 	"net/http"
 	gpath "path"
 	"strings"
@@ -26,9 +29,7 @@ import (
 
 	systemd "github.com/coreos/go-systemd/v22/daemon"
 
-	apidiscoveryv2beta1 "k8s.io/api/apidiscovery/v2beta1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -41,7 +42,6 @@ import (
 	genericapi "k8s.io/apiserver/pkg/endpoints"
 	"k8s.io/apiserver/pkg/endpoints/discovery"
 	discoveryendpoint "k8s.io/apiserver/pkg/endpoints/discovery/aggregated"
-	"k8s.io/apiserver/pkg/endpoints/handlers/fieldmanager"
 	"k8s.io/apiserver/pkg/features"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/server/healthz"
@@ -624,166 +624,6 @@ func (s preparedGenericAPIServer) NonBlockingRun(stopCh <-chan struct{}, shutdow
 	return stoppedCh, listenerStoppedCh, nil
 }
 
-// installAPIResources 安装支持每个api groupversionresource的REST存储
-func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *APIGroupInfo, openAPIModels openapiproto.Models) error {
-	var resourceInfos []*storageversion.ResourceInfo
-	for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
-		if len(apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version]) == 0 {
-			klog.Warningf("Skipping API %v because it has no resources.", groupVersion)
-			continue
-		}
-
-		apiGroupVersion, err := s.getAPIGroupVersion(apiGroupInfo, groupVersion, apiPrefix)
-		if err != nil {
-			return err
-		}
-		if apiGroupInfo.OptionsExternalVersion != nil {
-			apiGroupVersion.OptionsExternalVersion = apiGroupInfo.OptionsExternalVersion
-		}
-		apiGroupVersion.OpenAPIModels = openAPIModels
-
-		if openAPIModels != nil {
-			typeConverter, err := fieldmanager.NewTypeConverter(openAPIModels, false)
-			if err != nil {
-				return err
-			}
-			apiGroupVersion.TypeConverter = typeConverter
-		}
-
-		apiGroupVersion.MaxRequestBodyBytes = s.maxRequestBodyBytes
-
-		discoveryAPIResources, r, err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer)
-
-		if err != nil {
-			return fmt.Errorf("unable to setup API %v: %v", apiGroupInfo, err)
-		}
-		resourceInfos = append(resourceInfos, r...)
-
-		if utilfeature.DefaultFeatureGate.Enabled(features.AggregatedDiscoveryEndpoint) {
-			// Aggregated discovery only aggregates resources under /apis
-			if apiPrefix == APIGroupPrefix {
-				s.AggregatedDiscoveryGroupManager.AddGroupVersion(
-					groupVersion.Group,
-					apidiscoveryv2beta1.APIVersionDiscovery{
-						Version:   groupVersion.Version,
-						Resources: discoveryAPIResources,
-					},
-				)
-			} else {
-				// There is only one group version for legacy resources, priority can be defaulted to 0.
-				s.AggregatedLegacyDiscoveryGroupManager.AddGroupVersion(
-					groupVersion.Group,
-					apidiscoveryv2beta1.APIVersionDiscovery{
-						Version:   groupVersion.Version,
-						Resources: discoveryAPIResources,
-					},
-				)
-			}
-		}
-
-	}
-
-	s.RegisterDestroyFunc(apiGroupInfo.destroyStorage)
-
-	if utilfeature.DefaultFeatureGate.Enabled(features.StorageVersionAPI) &&
-		utilfeature.DefaultFeatureGate.Enabled(features.APIServerIdentity) {
-		// API installation happens before we start listening on the handlers,
-		// therefore it is safe to register ResourceInfos here. The handler will block
-		// write requests until the storage versions of the targeting resources are updated.
-		s.StorageVersionManager.AddResourceInfo(resourceInfos...)
-	}
-
-	return nil
-}
-
-// InstallLegacyAPIGroup exposes the given legacy api group in the API.
-// The <apiGroupInfo> passed into this function shouldn't be used elsewhere as the
-// underlying storage will be destroyed on this servers shutdown.
-func (s *GenericAPIServer) InstallLegacyAPIGroup(apiPrefix string, apiGroupInfo *APIGroupInfo) error {
-	if !s.legacyAPIGroupPrefixes.Has(apiPrefix) {
-		return fmt.Errorf("%q is not in the allowed legacy API prefixes: %v", apiPrefix, s.legacyAPIGroupPrefixes.List())
-	}
-
-	openAPIModels, err := s.getOpenAPIModels(apiPrefix, apiGroupInfo)
-	if err != nil {
-		return fmt.Errorf("unable to get openapi models: %v", err)
-	}
-
-	if err := s.installAPIResources(apiPrefix, apiGroupInfo, openAPIModels); err != nil {
-		return err
-	}
-
-	// Install the version handler.
-	// Add a handler at /<apiPrefix> to enumerate the supported api versions.
-	legacyRootAPIHandler := discovery.NewLegacyRootAPIHandler(s.discoveryAddresses, s.Serializer, apiPrefix)
-	if utilfeature.DefaultFeatureGate.Enabled(features.AggregatedDiscoveryEndpoint) {
-		wrapped := discoveryendpoint.WrapAggregatedDiscoveryToHandler(legacyRootAPIHandler, s.AggregatedLegacyDiscoveryGroupManager)
-		s.Handler.GoRestfulContainer.Add(wrapped.GenerateWebService("/api", metav1.APIVersions{}))
-	} else {
-		s.Handler.GoRestfulContainer.Add(legacyRootAPIHandler.WebService())
-	}
-
-	return nil
-}
-
-// InstallAPIGroups ✅
-func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) error {
-	for _, apiGroupInfo := range apiGroupInfos {
-		// Do not register empty group or empty version.  Doing so claims /apis/ for the wrong entity to be returned.
-		// Catching these here places the error  much closer to its origin
-		if len(apiGroupInfo.PrioritizedVersions[0].Group) == 0 {
-			return fmt.Errorf("cannot register handler with an empty group for %#v", *apiGroupInfo)
-		}
-		if len(apiGroupInfo.PrioritizedVersions[0].Version) == 0 {
-			return fmt.Errorf("cannot register handler with an empty version for %#v", *apiGroupInfo)
-		}
-	}
-
-	openAPIModels, err := s.getOpenAPIModels(APIGroupPrefix, apiGroupInfos...)
-	if err != nil {
-		return fmt.Errorf("unable to get openapi models: %v", err)
-	}
-
-	for _, apiGroupInfo := range apiGroupInfos {
-		if err := s.installAPIResources(APIGroupPrefix, apiGroupInfo, openAPIModels); err != nil {
-			return fmt.Errorf("unable to install api resources: %v", err)
-		}
-
-		// setup discovery
-		// 安装版本处理程序。
-		// Add a handler at /apis/<groupName> 枚举该组支持的所有版本。
-		apiVersionsForDiscovery := []metav1.GroupVersionForDiscovery{}
-		for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
-			// Check the config to make sure that we elide versions that don't have any resources
-			if len(apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version]) == 0 {
-				continue
-			}
-			apiVersionsForDiscovery = append(apiVersionsForDiscovery, metav1.GroupVersionForDiscovery{
-				GroupVersion: groupVersion.String(),
-				Version:      groupVersion.Version,
-			})
-		}
-		preferredVersionForDiscovery := metav1.GroupVersionForDiscovery{
-			GroupVersion: apiGroupInfo.PrioritizedVersions[0].String(),
-			Version:      apiGroupInfo.PrioritizedVersions[0].Version,
-		}
-		apiGroup := metav1.APIGroup{
-			Name:             apiGroupInfo.PrioritizedVersions[0].Group,
-			Versions:         apiVersionsForDiscovery,
-			PreferredVersion: preferredVersionForDiscovery,
-		}
-
-		s.DiscoveryGroupManager.AddGroup(apiGroup)
-		s.Handler.GoRestfulContainer.Add(discovery.NewAPIGroupHandler(s.Serializer, apiGroup).WebService())
-	}
-	return nil
-}
-
-// InstallAPIGroup 在api中暴露给定的api组。
-func (s *GenericAPIServer) InstallAPIGroup(apiGroupInfo *APIGroupInfo) error {
-	return s.InstallAPIGroups(apiGroupInfo)
-}
-
 func (s *GenericAPIServer) getAPIGroupVersion(apiGroupInfo *APIGroupInfo, groupVersion schema.GroupVersion, apiPrefix string) (*genericapi.APIGroupVersion, error) {
 	storage := make(map[string]rest.Storage)
 	for k, v := range apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version] {
@@ -883,4 +723,187 @@ func getResourceNamesForGroup(apiPrefix string, apiGroupInfo *APIGroupInfo, path
 	}
 
 	return resourceNames, nil
+}
+
+// ----------------------------------------------------------------------------------------------------
+
+// installAPIResources 安装支持每个api groupversionresource的REST存储
+func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *APIGroupInfo, openAPIModels openapiproto.Models) error {
+	var resourceInfos []*storageversion.ResourceInfo
+	for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
+		if len(apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version]) == 0 {
+			klog.Warningf("Skipping API %v because it has no resources.", groupVersion)
+			continue
+		}
+
+		apiGroupVersion, err := s.getAPIGroupVersion(apiGroupInfo, groupVersion, apiPrefix)
+		if err != nil {
+			return err
+		}
+		if apiGroupInfo.OptionsExternalVersion != nil {
+			apiGroupVersion.OptionsExternalVersion = apiGroupInfo.OptionsExternalVersion
+		}
+		apiGroupVersion.OpenAPIModels = openAPIModels
+
+		if openAPIModels != nil {
+			typeConverter, err := fieldmanager.NewTypeConverter(openAPIModels, false)
+			if err != nil {
+				return err
+			}
+			apiGroupVersion.TypeConverter = typeConverter
+		}
+
+		apiGroupVersion.MaxRequestBodyBytes = s.maxRequestBodyBytes
+
+		discoveryAPIResources, r, err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer)
+
+		if err != nil {
+			return fmt.Errorf("unable to setup API %v: %v", apiGroupInfo, err)
+		}
+		resourceInfos = append(resourceInfos, r...)
+
+		if utilfeature.DefaultFeatureGate.Enabled(features.AggregatedDiscoveryEndpoint) {
+			// Aggregated discovery only aggregates resources under /apis
+			if apiPrefix == APIGroupPrefix {
+				s.AggregatedDiscoveryGroupManager.AddGroupVersion(
+					groupVersion.Group,
+					apidiscoveryv2beta1.APIVersionDiscovery{
+						Version:   groupVersion.Version,
+						Resources: discoveryAPIResources,
+					},
+				)
+			} else {
+				// There is only one group version for legacy resources, priority can be defaulted to 0.
+				s.AggregatedLegacyDiscoveryGroupManager.AddGroupVersion(
+					groupVersion.Group,
+					apidiscoveryv2beta1.APIVersionDiscovery{
+						Version:   groupVersion.Version,
+						Resources: discoveryAPIResources,
+					},
+				)
+			}
+		}
+
+	}
+
+	s.RegisterDestroyFunc(apiGroupInfo.destroyStorage)
+
+	if utilfeature.DefaultFeatureGate.Enabled(features.StorageVersionAPI) &&
+		utilfeature.DefaultFeatureGate.Enabled(features.APIServerIdentity) {
+		// API installation happens before we start listening on the handlers,
+		// therefore it is safe to register ResourceInfos here. The handler will block
+		// write requests until the storage versions of the targeting resources are updated.
+		s.StorageVersionManager.AddResourceInfo(resourceInfos...)
+	}
+
+	return nil
+}
+
+// InstallLegacyAPIGroup exposes the given legacy api group in the API.
+// The <apiGroupInfo> passed into this function shouldn't be used elsewhere as the
+// underlying storage will be destroyed on this servers shutdown.
+func (s *GenericAPIServer) InstallLegacyAPIGroup(apiPrefix string, apiGroupInfo *APIGroupInfo) error {
+	if !s.legacyAPIGroupPrefixes.Has(apiPrefix) {
+		return fmt.Errorf("%q is not in the allowed legacy API prefixes: %v", apiPrefix, s.legacyAPIGroupPrefixes.List())
+	}
+
+	openAPIModels, err := s.getOpenAPIModels(apiPrefix, apiGroupInfo)
+	if err != nil {
+		return fmt.Errorf("unable to get openapi models: %v", err)
+	}
+
+	if err := s.installAPIResources(apiPrefix, apiGroupInfo, openAPIModels); err != nil {
+		return err
+	}
+
+	// 安装版本处理程序。
+	// Add a handler at /<apiPrefix> to enumerate the supported api versions.
+	legacyRootAPIHandler := discovery.NewLegacyRootAPIHandler(s.discoveryAddresses, s.Serializer, apiPrefix)
+	if utilfeature.DefaultFeatureGate.Enabled(features.AggregatedDiscoveryEndpoint) {
+		// 没有走到
+		wrapped := discoveryendpoint.WrapAggregatedDiscoveryToHandler(legacyRootAPIHandler, s.AggregatedLegacyDiscoveryGroupManager)
+		s.Handler.GoRestfulContainer.Add(wrapped.GenerateWebService("/api", metav1.APIVersions{})) // 没有走到
+	} else {
+		// /api
+		s.Handler.GoRestfulContainer.Add(legacyRootAPIHandler.WebService()) // ✅ 1个
+	}
+
+	return nil
+}
+
+// InstallAPIGroups ✅
+func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) error {
+	for _, apiGroupInfo := range apiGroupInfos {
+		// Do not register empty group or empty version.  Doing so claims /apis/ for the wrong entity to be returned.
+		// Catching these here places the error  much closer to its origin
+		if len(apiGroupInfo.PrioritizedVersions[0].Group) == 0 {
+			return fmt.Errorf("cannot register handler with an empty group for %#v", *apiGroupInfo)
+		}
+		if len(apiGroupInfo.PrioritizedVersions[0].Version) == 0 {
+			return fmt.Errorf("cannot register handler with an empty version for %#v", *apiGroupInfo)
+		}
+	}
+
+	openAPIModels, err := s.getOpenAPIModels(APIGroupPrefix, apiGroupInfos...)
+	if err != nil {
+		return fmt.Errorf("unable to get openapi models: %v", err)
+	}
+
+	for _, apiGroupInfo := range apiGroupInfos {
+		if err := s.installAPIResources(APIGroupPrefix, apiGroupInfo, openAPIModels); err != nil {
+			return fmt.Errorf("unable to install api resources: %v", err)
+		}
+
+		// setup discovery
+		// 安装版本处理程序。
+		// Add a handler at /apis/<groupName> 枚举该组支持的所有版本。
+		apiVersionsForDiscovery := []metav1.GroupVersionForDiscovery{}
+		for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
+			// Check the config to make sure that we elide versions that don't have any resources
+			if len(apiGroupInfo.VersionedResourcesStorageMap[groupVersion.Version]) == 0 {
+				continue
+			}
+			apiVersionsForDiscovery = append(apiVersionsForDiscovery, metav1.GroupVersionForDiscovery{
+				GroupVersion: groupVersion.String(),
+				Version:      groupVersion.Version,
+			})
+		}
+		preferredVersionForDiscovery := metav1.GroupVersionForDiscovery{
+			GroupVersion: apiGroupInfo.PrioritizedVersions[0].String(),
+			Version:      apiGroupInfo.PrioritizedVersions[0].Version,
+		}
+		apiGroup := metav1.APIGroup{
+			Name:             apiGroupInfo.PrioritizedVersions[0].Group,
+			Versions:         apiVersionsForDiscovery,
+			PreferredVersion: preferredVersionForDiscovery,
+		}
+
+		s.DiscoveryGroupManager.AddGroup(apiGroup)
+		// /apis/apiextensions.k8s.io
+		// /apis/authentication.k8s.io
+		// /apis/authorization.k8s.io
+		// /apis/autoscaling
+		// /apis/batch
+		// /apis/certificates.k8s.io
+		// /apis/coordination.k8s.io
+		// /apis/discovery.k8s.io
+		// /apis/networking.k8s.io
+		// /apis/node.k8s.io
+		// /apis/policy
+		// /apis/rbac.authorization.k8s.io
+		// /apis/scheduling.k8s.io
+		// /apis/storage.k8s.io
+		// /apis/flowcontrol.apiserver.k8s.io
+		// /apis/apps
+		// /apis/admissionregistration.k8s.io
+		// /apis/events.k8s.io
+		// /apis/apiregistration.k8s.io
+		s.Handler.GoRestfulContainer.Add(discovery.NewAPIGroupHandler(s.Serializer, apiGroup).WebService()) // ✅  19个
+	}
+	return nil
+}
+
+// InstallAPIGroup 在api中暴露给定的api组。
+func (s *GenericAPIServer) InstallAPIGroup(apiGroupInfo *APIGroupInfo) error {
+	return s.InstallAPIGroups(apiGroupInfo)
 }

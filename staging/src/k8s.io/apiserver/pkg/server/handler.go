@@ -34,20 +34,10 @@ import (
 	"k8s.io/apiserver/pkg/server/mux"
 )
 
-// APIServerHandlers holds the different http.Handlers used by the API server.
-// This includes the full handler chain, the director (which chooses between gorestful and nonGoRestful,
-// the gorestful handler (used for the API) which falls through to the nonGoRestful handler on unregistered paths,
-// and the nonGoRestful handler (which can contain a fallthrough of its own)
-// FullHandlerChain -> Director -> {GoRestfulContainer,NonGoRestfulMux} based on inspection of registered web services
 type APIServerHandler struct {
-	// FullHandlerChain is the one that is eventually served with.  It should include the full filter
-	// chain and then call the Director.
 	FullHandlerChain   http.Handler
-	GoRestfulContainer *restful.Container // 注册的api。install api使用这个。其他服务器可能不应该直接访问它。
-	// NonGoRestfulMux is the final HTTP handler in the chain.
-	// It comes after all filters and the API handling
-	// This is where other servers can attach handler to various parts of the chain.
-	NonGoRestfulMux *mux.PathRecorderMux
+	GoRestfulContainer *restful.Container   // 使用InstallAPIGroups添加的路由
+	NonGoRestfulMux    *mux.PathRecorderMux // 是链中的最后一个HTTP处理程序。这是在所有过滤器和API处理之后，其他服务器可以将处理程序附加到链的各个部分。
 
 	// Director is here so that we can properly handle fall through and proxy cases.
 	// This looks a bit bonkers, but here's what's happening.  We need to have /apis handling registered in gorestful in order to have

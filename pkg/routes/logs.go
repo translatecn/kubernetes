@@ -37,7 +37,7 @@ func (l Logs) Install(c *restful.Container) {
 	ws.Route(ws.GET("/{logpath:*}").To(logFileHandler).Param(ws.PathParameter("logpath", "path to the log").DataType("string")))
 	ws.Route(ws.GET("/").To(logFileListHandler))
 
-	c.Add(ws)
+	c.Add(ws) // ✅ 1个
 }
 
 func logFileHandler(req *restful.Request, resp *restful.Response) {

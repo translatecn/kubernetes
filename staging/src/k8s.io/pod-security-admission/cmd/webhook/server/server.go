@@ -121,8 +121,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/", s.HandleValidate)
 
 	// Serve the metrics.
-	mux.Handle("/metrics",
-		compbasemetrics.HandlerFor(s.metricsRegistry, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}))
+	mux.Handle("/metrics", compbasemetrics.HandlerFor(s.metricsRegistry, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}))
 
 	if s.insecureServing != nil {
 		if err := s.insecureServing.Serve(mux, 0, ctx.Done()); err != nil {

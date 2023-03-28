@@ -185,7 +185,7 @@ func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.Resour
 	var apiResources []metav1.APIResource
 	var resourceInfos []*storageversion.ResourceInfo
 	var errors []error
-	ws := a.newWebService()
+	ws := a.newWebService() // ✅
 
 	// Register the paths in a deterministic (sorted) order to get a deterministic swagger spec.
 	paths := make([]string, len(a.group.Storage))
@@ -210,7 +210,32 @@ func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.Resour
 	return apiResources, resourceInfos, ws, errors
 }
 
-// newWebService creates a new restful webservice with the api installer's prefix and version.
+// newWebService ✅
+// /api/v1
+// /apis/apiextensions.k8s.io/v1
+// /apis/authentication.k8s.io/v1
+// /apis/authorization.k8s.io/v1
+// /apis/autoscaling/v1
+// /apis/autoscaling/v2
+// /apis/autoscaling/v2beta2
+// /apis/batch/v1
+// /apis/certificates.k8s.io/v1
+// /apis/coordination.k8s.io/v1
+// /apis/discovery.k8s.io/v1
+// /apis/networking.k8s.io/v1
+// /apis/node.k8s.io/v1
+// /apis/policy/v1
+// /apis/rbac.authorization.k8s.io/v1
+// /apis/scheduling.k8s.io/v1
+// /apis/storage.k8s.io/v1
+// /apis/storage.k8s.io/v1beta1
+// /apis/flowcontrol.apiserver.k8s.io/v1beta2
+// /apis/flowcontrol.apiserver.k8s.io/v1beta3
+// /apis/flowcontrol.apiserver.k8s.io/v1beta1
+// /apis/apps/v1
+// /apis/admissionregistration.k8s.io/v1
+// /apis/events.k8s.io/v1
+// /apis/apiregistration.k8s.io/v1
 func (a *APIInstaller) newWebService() *restful.WebService {
 	ws := new(restful.WebService)
 	ws.Path(a.prefix)

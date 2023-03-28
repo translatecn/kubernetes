@@ -5,7 +5,7 @@ module k8s.io/apiextensions-apiserver
 go 1.19
 
 require (
-	github.com/emicklei/go-restful/v3 v3.9.0
+	github.com/emicklei/go-restful/v3 v3.8.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/cel-go v0.12.6
 	github.com/google/gnostic v0.5.7-v3refs
@@ -134,3 +134,5 @@ replace (
 	k8s.io/component-base => ../component-base
 	k8s.io/kms => ../kms
 )
+
+replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3

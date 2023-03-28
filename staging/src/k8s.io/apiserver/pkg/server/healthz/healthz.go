@@ -165,8 +165,90 @@ func InstallPathHandler(mux mux, path string, checks ...HealthChecker) {
 	InstallPathHandlerWithHealthyFunc(mux, path, nil, checks...)
 }
 
-// InstallPathHandlerWithHealthyFunc is like InstallPathHandler, but calls firstTimeHealthy exactly once
-// when the handler succeeds for the first time.
+// InstallPathHandlerWithHealthyFunc /healthz/autoregister-completion
+// /healthz/etcd
+// /healthz/log
+// /healthz/ping
+// /healthz/poststarthook/aggregator-reload-proxy-client-cert
+// /healthz/poststarthook/apiservice-openapi-controller
+// /healthz/poststarthook/apiservice-openapiv3-controller
+// /healthz/poststarthook/apiservice-registration-controller
+// /healthz/poststarthook/apiservice-status-available-controller
+// /healthz/poststarthook/bootstrap-controller
+// /healthz/poststarthook/crd-informer-synced
+// /healthz/poststarthook/generic-apiserver-start-informers
+// /healthz/poststarthook/kube-apiserver-autoregistration
+// /healthz/poststarthook/priority-and-fairness-config-consumer
+// /healthz/poststarthook/priority-and-fairness-config-producer
+// /healthz/poststarthook/priority-and-fairness-filter
+// /healthz/poststarthook/rbac/bootstrap-roles
+// /healthz/poststarthook/scheduling/bootstrap-system-priority-classes
+// /healthz/poststarthook/start-apiextensions-controllers
+// /healthz/poststarthook/start-apiextensions-informers
+// /healthz/poststarthook/start-cluster-authentication-info-controller
+// /healthz/poststarthook/start-kube-aggregator-informers
+// /healthz/poststarthook/start-kube-apiserver-admission-initializer
+// /healthz/poststarthook/start-kube-apiserver-identity-lease-controller
+// /healthz/poststarthook/start-kube-apiserver-identity-lease-garbage-collector
+// /healthz/poststarthook/start-legacy-token-tracking-controller
+// /healthz/poststarthook/storage-object-count-tracker-hook
+// /livez/autoregister-completion
+// /livez/etcd
+// /livez/log
+// /livez/ping
+// /livez/poststarthook/aggregator-reload-proxy-client-cert
+// /livez/poststarthook/apiservice-openapi-controller
+// /livez/poststarthook/apiservice-openapiv3-controller
+// /livez/poststarthook/apiservice-registration-controller
+// /livez/poststarthook/apiservice-status-available-controller
+// /livez/poststarthook/bootstrap-controller
+// /livez/poststarthook/crd-informer-synced
+// /livez/poststarthook/generic-apiserver-start-informers
+// /livez/poststarthook/kube-apiserver-autoregistration
+// /livez/poststarthook/priority-and-fairness-config-consumer
+// /livez/poststarthook/priority-and-fairness-config-producer
+// /livez/poststarthook/priority-and-fairness-filter
+// /livez/poststarthook/rbac/bootstrap-roles
+// /livez/poststarthook/scheduling/bootstrap-system-priority-classes
+// /livez/poststarthook/start-apiextensions-controllers
+// /livez/poststarthook/start-apiextensions-informers
+// /livez/poststarthook/start-cluster-authentication-info-controller
+// /livez/poststarthook/start-kube-aggregator-informers
+// /livez/poststarthook/start-kube-apiserver-admission-initializer
+// /livez/poststarthook/start-kube-apiserver-identity-lease-controller
+// /livez/poststarthook/start-kube-apiserver-identity-lease-garbage-collector
+// /livez/poststarthook/start-legacy-token-tracking-controller
+// /livez/poststarthook/storage-object-count-tracker-hook
+// /readyz/autoregister-completion
+// /readyz/etcd
+// /readyz/etcd-readiness
+// /readyz/informer-sync
+// /readyz/log
+// /readyz/ping
+// /readyz/poststarthook/aggregator-reload-proxy-client-cert
+// /readyz/poststarthook/apiservice-openapi-controller
+// /readyz/poststarthook/apiservice-openapiv3-controller
+// /readyz/poststarthook/apiservice-registration-controller
+// /readyz/poststarthook/apiservice-status-available-controller
+// /readyz/poststarthook/bootstrap-controller
+// /readyz/poststarthook/crd-informer-synced
+// /readyz/poststarthook/generic-apiserver-start-informers
+// /readyz/poststarthook/kube-apiserver-autoregistration
+// /readyz/poststarthook/priority-and-fairness-config-consumer
+// /readyz/poststarthook/priority-and-fairness-config-producer
+// /readyz/poststarthook/priority-and-fairness-filter
+// /readyz/poststarthook/rbac/bootstrap-roles
+// /readyz/poststarthook/scheduling/bootstrap-system-priority-classes
+// /readyz/poststarthook/start-apiextensions-controllers
+// /readyz/poststarthook/start-apiextensions-informers
+// /readyz/poststarthook/start-cluster-authentication-info-controller
+// /readyz/poststarthook/start-kube-aggregator-informers
+// /readyz/poststarthook/start-kube-apiserver-admission-initializer
+// /readyz/poststarthook/start-kube-apiserver-identity-lease-controller
+// /readyz/poststarthook/start-kube-apiserver-identity-lease-garbage-collector
+// /readyz/poststarthook/start-legacy-token-tracking-controller
+// /readyz/poststarthook/storage-object-count-tracker-hook
+// /readyz/shutdown
 func InstallPathHandlerWithHealthyFunc(mux mux, path string, firstTimeHealthy func(), checks ...HealthChecker) {
 	if len(checks) == 0 {
 		klog.V(5).Info("No default health checks specified. Installing the ping handler.")
@@ -188,6 +270,7 @@ func InstallPathHandlerWithHealthyFunc(mux mux, path string, firstTimeHealthy fu
 			/* removedRelease */ "",
 			handleRootHealth(name, firstTimeHealthy, checks...)))
 	for _, check := range checks {
+		fmt.Println(123, fmt.Sprintf("%s/%v", path, check.Name()))
 		mux.Handle(fmt.Sprintf("%s/%v", path, check.Name()), adaptCheckToHandler(check.Check))
 	}
 }

@@ -6,7 +6,7 @@ go 1.19
 
 require (
 	github.com/davecgh/go-spew v1.1.1
-	github.com/emicklei/go-restful/v3 v3.9.0
+	github.com/emicklei/go-restful/v3 v3.8.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/gofuzz v1.1.0
 	github.com/spf13/cobra v1.6.0
@@ -106,6 +106,8 @@ require (
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3
 
 replace (
 	k8s.io/api => ../api
