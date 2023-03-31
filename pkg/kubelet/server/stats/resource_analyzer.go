@@ -41,6 +41,8 @@ var _ ResourceAnalyzer = &resourceAnalyzer{}
 func NewResourceAnalyzer(statsProvider Provider, calVolumeFrequency time.Duration, eventRecorder record.EventRecorder) ResourceAnalyzer {
 	fsAnalyzer := newFsResourceAnalyzer(statsProvider, calVolumeFrequency, eventRecorder)
 	summaryProvider := NewSummaryProvider(statsProvider)
+	_ = resourceAnalyzer.Get
+
 	return &resourceAnalyzer{fsAnalyzer, summaryProvider}
 }
 

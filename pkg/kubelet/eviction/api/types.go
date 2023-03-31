@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// Signal defines a signal that can trigger eviction of pods on a node.
+// Signal 定义一个信号，该信号可以触发节点上的pod的驱逐。
 type Signal string
 
 const (

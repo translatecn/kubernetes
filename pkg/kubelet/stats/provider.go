@@ -196,7 +196,7 @@ func (p *Provider) GetRawContainerInfo(containerName string, req *cadvisorapiv1.
 	}, nil
 }
 
-// HasDedicatedImageFs returns true if a dedicated image filesystem exists for storing images.
+// HasDedicatedImageFs   如果imagefs与rootfs在不同的设备上，则返回true。
 func (p *Provider) HasDedicatedImageFs(ctx context.Context) (bool, error) {
 	device, err := p.containerStatsProvider.ImageFsDevice(ctx)
 	if err != nil {

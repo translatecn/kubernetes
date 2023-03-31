@@ -22,6 +22,7 @@ limitations under the License.
 package main
 
 import (
+	"k8s.io/kubernetes/debug/kubelet"
 	"os"
 
 	"k8s.io/component-base/cli"
@@ -32,6 +33,7 @@ import (
 )
 
 func main() {
+	os.Args = kubelet.Init(os.Args)
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)
 	os.Exit(code)
