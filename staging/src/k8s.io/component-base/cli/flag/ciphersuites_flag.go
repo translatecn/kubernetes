@@ -53,8 +53,7 @@ func InsecureTLSCiphers() map[string]uint16 {
 	return cipherKeys
 }
 
-// InsecureTLSCipherNames returns a list of cipher suite names implemented by crypto/tls
-// which have security issues.
+// InsecureTLSCipherNames 返回由crypto/tls实现的具有安全问题的密码套件名称列表。
 func InsecureTLSCipherNames() []string {
 	cipherKeys := sets.NewString()
 	for key := range insecureCiphers {
@@ -63,7 +62,7 @@ func InsecureTLSCipherNames() []string {
 	return cipherKeys.List()
 }
 
-// PreferredTLSCipherNames returns a list of cipher suite names implemented by crypto/tls.
+// PreferredTLSCipherNames 回由crypto/tls实现的密码套件名称列表。
 func PreferredTLSCipherNames() []string {
 	cipherKeys := sets.NewString()
 	for key := range ciphers {

@@ -84,81 +84,39 @@ type KubeletConfiguration struct {
 
 	// enableServer enables Kubelet's secured server.
 	// Note: Kubelet's insecure port is controlled by the readOnlyPort option.
-	EnableServer bool
-	// staticPodPath is the path to the directory containing local (static) pods to
-	// run, or the path to a single static pod file.
-	StaticPodPath string
-	// syncFrequency is the max period between synchronizing running
-	// containers and config
-	SyncFrequency metav1.Duration
-	// fileCheckFrequency is the duration between checking config files for
-	// new data
-	FileCheckFrequency metav1.Duration
-	// httpCheckFrequency is the duration between checking http for new data
-	HTTPCheckFrequency metav1.Duration
-	// staticPodURL is the URL for accessing static pods to run
-	StaticPodURL string
-	// staticPodURLHeader is a map of slices with HTTP headers to use when accessing the podURL
-	StaticPodURLHeader map[string][]string `datapolicy:"token"`
-	// address is the IP address for the Kubelet to serve on (set to 0.0.0.0
-	// for all interfaces)
-	Address string
-	// port is the port for the Kubelet to serve on.
-	Port int32
-	// readOnlyPort is the read-only port for the Kubelet to serve on with
-	// no authentication/authorization (set to 0 to disable)
-	ReadOnlyPort int32
+	EnableServer       bool
+	StaticPodPath      string              // 包含要运行的静态pod文件的目录路径，或单个静态pod文件的路径。以点开头的文件将被忽略。
+	SyncFrequency      metav1.Duration     // 同步运行容器和配置之间的最大时间间隔。
+	FileCheckFrequency metav1.Duration     // 检查配置文件以获取新数据之间的持续时间。
+	HTTPCheckFrequency metav1.Duration     // 检查http以获取新数据的时间
+	StaticPodURL       string              // 用于从某个地址获取要运行的静态pod。
+	StaticPodURLHeader map[string][]string `datapolicy:"token"` // 在访问提供给--manifest-url的URL时要使用的逗号分隔的HTTP标头列表。具有相同名称的多个标头将按提供的相同顺序添加。可以重复使用此标志。
+	Address            string              // Kubelet要服务的IP地址（设置为“0.0.0.0”或“::”以在所有接口和IP族上进行侦听）
+	Port               int32               // Kubelet要服务的端口。
+	ReadOnlyPort       int32               // Kubelet要在其上提供只读端口，没有身份验证/授权（设置为0以禁用）
 	// volumePluginDir is the full path of the directory in which to search
 	// for additional third party volume plugins.
 	VolumePluginDir string
 	// providerID, if set, sets the unique id of the instance that an external provider (i.e. cloudprovider)
 	// can use to identify a specific node
 	ProviderID string
-	// tlsCertFile is the file containing x509 Certificate for HTTPS.  (CA cert,
-	// if any, concatenated after server cert). If tlsCertFile and
-	// tlsPrivateKeyFile are not provided, a self-signed certificate
-	// and key are generated for the public address and saved to the directory
-	// passed to the Kubelet's --cert-dir flag.
-	TLSCertFile string
-	// tlsPrivateKeyFile is the file containing x509 private key matching tlsCertFile
-	TLSPrivateKeyFile string
-	// TLSCipherSuites is the list of allowed cipher suites for the server.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	TLSCipherSuites []string
-	// TLSMinVersion is the minimum TLS version supported.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	TLSMinVersion string
-	// rotateCertificates enables client certificate rotation. The Kubelet will request a
-	// new certificate from the certificates.k8s.io API. This requires an approver to approve the
-	// certificate signing requests.
-	RotateCertificates bool
-	// serverTLSBootstrap enables server certificate bootstrap. Instead of self
-	// signing a serving certificate, the Kubelet will request a certificate from
-	// the certificates.k8s.io API. This requires an approver to approve the
-	// certificate signing requests. The RotateKubeletServerCertificate feature
-	// must be enabled.
-	ServerTLSBootstrap bool
-	// authentication specifies how requests to the Kubelet's server are authenticated
-	Authentication KubeletAuthentication
-	// authorization specifies how requests to the Kubelet's server are authorized
-	Authorization KubeletAuthorization
-	// registryPullQPS is the limit of registry pulls per second.
-	// Set to 0 for no limit.
-	RegistryPullQPS int32
-	// registryBurst is the maximum size of bursty pulls, temporarily allows
-	// pulls to burst to this number, while still not exceeding registryPullQPS.
-	// Only used if registryPullQPS > 0.
-	RegistryBurst int32
-	// eventRecordQPS is the maximum event creations per second. If 0, there
-	// is no limit enforced.
-	EventRecordQPS int32
-	// eventBurst is the maximum size of a burst of event creations, temporarily
-	// allows event creations to burst to this number, while still not exceeding
-	// eventRecordQPS. Only used if eventRecordQPS > 0.
-	EventBurst int32
-	// enableDebuggingHandlers enables server endpoints for log collection
-	// and local running of containers and commands
-	EnableDebuggingHandlers bool
+
+	TLSCertFile        string // 包含用于提供HTTPS的x509证书的文件（如果有中间证书，则连接在服务器证书之后）。如果未提供--tls-cert-file和--tls-private-key-file，则会为公共地址生成自签名证书和密钥，并保存到传递给--cert-dir的目录中。
+	TLSPrivateKeyFile  string // 包含与--tls-cert-file匹配的x509私钥的文件。
+	TLSCipherSuites    []string
+	TLSMinVersion      string
+	RotateCertificates bool // <警告：Beta功能>通过在证书过期接近时,从kube-apiserver请求新证书，自动轮换kubelet客户端证书。
+
+	ServerTLSBootstrap bool // 通过在证书过期接近时,从kube-apiserver请求新证书来自动请求和轮换kubelet服务证书。需要启用RotateKubeletServerCertificate 开关，并批准提交的CSR对象。
+
+	Authentication  KubeletAuthentication
+	Authorization   KubeletAuthorization
+	RegistryPullQPS int32 // 如果> 0，则将注册表拉取QPS限制为此值。如果为0，则无限制。
+	RegistryBurst   int32 // 突发式拉取的最大大小，临时允许拉取突发到此数字，同时仍不超过registry-qps。仅在--registry-qps> 0时使用。
+	EventRecordQPS  int32 // 限制事件创建的QPS。数字必须>= 0。如果为0，将使用DefaultQPS：5。
+	EventBurst      int32 // 突发式事件记录的最大大小，临时允许事件记录突发到此数字，同时仍不超过event-qps。数字必须>= 0。如果为0，将使用DefaultBurst：10。
+
+	EnableDebuggingHandlers bool // 启用用于日志收集和本地运行容器和命令的服务器端点。
 	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
 	EnableContentionProfiling bool
 	HealthzPort               int32
@@ -332,8 +290,7 @@ type KubeletConfiguration struct {
 	// features. This field modifies piecemeal the built-in default values from
 	// "k8s.io/kubernetes/pkg/features/kube_features.go".
 	FeatureGates map[string]bool
-	// Tells the Kubelet to fail to start if swap is enabled on the node.
-	FailSwapOn bool
+	FailSwapOn   bool // 如果节点上启用了SWAP空间，则使Kubelet无法启动。
 	// memorySwap configures swap memory available to container workloads.
 	// +featureGate=NodeSwap
 	// +optional
@@ -469,17 +426,13 @@ type KubeletConfiguration struct {
 type KubeletAuthorizationMode string
 
 const (
-	// KubeletAuthorizationModeAlwaysAllow authorizes all authenticated requests
 	KubeletAuthorizationModeAlwaysAllow KubeletAuthorizationMode = "AlwaysAllow"
-	// KubeletAuthorizationModeWebhook uses the SubjectAccessReview API to determine authorization
-	KubeletAuthorizationModeWebhook KubeletAuthorizationMode = "Webhook"
+	KubeletAuthorizationModeWebhook     KubeletAuthorizationMode = "Webhook"
 )
 
 // KubeletAuthorization holds the state related to the authorization in the kublet.
 type KubeletAuthorization struct {
-	// mode is the authorization mode to apply to requests to the kubelet server.
-	// Valid values are AlwaysAllow and Webhook.
-	// Webhook mode uses the SubjectAccessReview API to determine authorization.
+	// Kubelet服务器的授权模式。有效选项为AlwaysAllow或Webhook。Webhook模式使用SubjectAccessReview API来确定授权。
 	Mode KubeletAuthorizationMode
 
 	// webhook contains settings related to Webhook authorization.
@@ -489,43 +442,34 @@ type KubeletAuthorization struct {
 // KubeletWebhookAuthorization holds the state related to the Webhook
 // Authorization in the Kubelet.
 type KubeletWebhookAuthorization struct {
-	// cacheAuthorizedTTL is the duration to cache 'authorized' responses from the webhook authorizer.
-	CacheAuthorizedTTL metav1.Duration
-	// cacheUnauthorizedTTL is the duration to cache 'unauthorized' responses from the webhook authorizer.
-	CacheUnauthorizedTTL metav1.Duration
+	CacheAuthorizedTTL   metav1.Duration // 缓存来自Webhook授权程序的“已授权”响应的持续时间。
+	CacheUnauthorizedTTL metav1.Duration // 缓存来自Webhook授权程序的“未授权”响应的持续时间。
 }
 
 // KubeletAuthentication holds the Kubetlet Authentication setttings.
 type KubeletAuthentication struct {
-	// x509 contains settings related to x509 client certificate authentication
-	X509 KubeletX509Authentication
+	X509 KubeletX509Authentication // 包含与x509客户端证书身份验证相关的设置
 	// webhook contains settings related to webhook bearer token authentication
-	Webhook KubeletWebhookAuthentication
-	// anonymous contains settings related to anonymous authentication
-	Anonymous KubeletAnonymousAuthentication
+	Webhook   KubeletWebhookAuthentication
+	Anonymous KubeletAnonymousAuthentication // 包含与匿名身份验证相关的设置
 }
 
 // KubeletX509Authentication contains settings related to x509 client certificate authentication
 type KubeletX509Authentication struct {
-	// clientCAFile is the path to a PEM-encoded certificate bundle. If set, any request presenting a client certificate
-	// signed by one of the authorities in the bundle is authenticated with a username corresponding to the CommonName,
-	// and groups corresponding to the Organization in the client certificate.
+	// clientCAFile是一个PEM编码的证书包的路径。
+	// 如果设置，通过由client-ca-file中的任何一个机构签名的客户端证书呈现的任何请求都将使用与客户端证书的CommonName相对应的身份进行身份验证。
 	ClientCAFile string
 }
 
 // KubeletWebhookAuthentication contains settings related to webhook authentication
 type KubeletWebhookAuthentication struct {
-	// enabled allows bearer token authentication backed by the tokenreviews.authentication.k8s.io API
-	Enabled bool
-	// cacheTTL enables caching of authentication results
-	CacheTTL metav1.Duration
+	Enabled  bool            // 使用 TokenReview API来确定承载令牌的身份验证。
+	CacheTTL metav1.Duration // 缓存来自Webhook令牌验证器的响应的持续时间。
 }
 
 // KubeletAnonymousAuthentication enables anonymous requests to the kubelet server.
 type KubeletAnonymousAuthentication struct {
-	// enabled allows anonymous requests to the kubelet server.
-	// Requests that are not rejected by another authentication method are treated as anonymous requests.
-	// Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated.
+	// 启用对Kubelet服务器的匿名请求。未被其他身份验证方法拒绝的请求将被视为匿名请求。匿名请求的用户名为system:anonymous，组名为system:unauthenticated。
 	Enabled bool
 }
 
