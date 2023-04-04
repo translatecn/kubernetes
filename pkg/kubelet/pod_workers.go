@@ -381,13 +381,9 @@ type podWorkers struct {
 	podLock sync.Mutex
 	// podsSynced is true once the pod worker has been synced at least once,
 	// which means that all working pods have been started via UpdatePod().
-	podsSynced bool
-	// Tracks all running per-pod goroutines - per-pod goroutine will be
-	// processing updates received through its corresponding channel.
-	podUpdates map[types.UID]chan podWork
-	// Tracks the last undelivered work item for this pod - a work item is
-	// undelivered if it comes in while the worker is working.
-	lastUndeliveredWorkUpdate map[types.UID]podWork
+	podsSynced                bool
+	podUpdates                map[types.UID]chan podWork // 跟踪所有正在运行的每个pod goroutine - 每个pod goroutine将通过其相应的通道处理接收到的更新。
+	lastUndeliveredWorkUpdate map[types.UID]podWork      // 跟踪此pod的最后一个未传递的工作项 - 如果工作程序正在工作，则工作项未传递。
 	// Tracks by UID the termination status of a pod - syncing, terminating,
 	// terminated, and evicted.
 	podSyncStatuses map[types.UID]*podSyncStatus
@@ -758,8 +754,7 @@ func (p *podWorkers) UpdatePod(options UpdatePodOptions) {
 		return
 	}
 
-	// capture the maximum latency between a requested update and when the pod
-	// worker observes it
+	// capture the maximum latency between a requested update and when the pod worker observes it
 	if undelivered, ok := p.lastUndeliveredWorkUpdate[pod.UID]; ok {
 		// track the max latency between when a config change is requested and when it is realized
 		// NOTE: this undercounts the latency when multiple requests are queued, but captures max latency
@@ -768,7 +763,7 @@ func (p *podWorkers) UpdatePod(options UpdatePodOptions) {
 		}
 	}
 
-	// always sync the most recent data
+	// 始终同步最新的数据。
 	p.lastUndeliveredWorkUpdate[pod.UID] = work
 
 	if (becameTerminating || wasGracePeriodShortened) && status.cancelFn != nil {
@@ -983,7 +978,7 @@ func (p *podWorkers) managePodLoop(podUpdates <-chan podWork) {
 				klog.V(4).InfoS("Processing pod event done", "pod", klog.KObj(pod), "podUID", pod.UID, "updateType", update.WorkType)
 				return
 			}
-			// otherwise we move to the terminating phase
+			// 否则，我们进入终止阶段。
 			p.completeTerminating(pod)
 			phaseTransition = true
 
@@ -1163,8 +1158,7 @@ func (p *podWorkers) completeUnstartedTerminated(pod *v1.Pod) {
 	}
 }
 
-// completeWork requeues on error or the next sync interval and then immediately executes any pending
-// work.
+// completeWork 在错误或下一个同步间隔上重新排队，然后立即执行任何待处理的工作。
 func (p *podWorkers) completeWork(pod *v1.Pod, phaseTransition bool, syncErr error) {
 	// Requeue the last update if the last sync returned error.
 	switch {
@@ -1183,8 +1177,7 @@ func (p *podWorkers) completeWork(pod *v1.Pod, phaseTransition bool, syncErr err
 	p.completeWorkQueueNext(pod.UID)
 }
 
-// completeWorkQueueNext holds the lock and either queues the next work item for the worker or
-// clears the working status.
+// completeWorkQueueNext 保持锁定状态，并将下一个工作项排队给工作程序，或清除工作状态。
 func (p *podWorkers) completeWorkQueueNext(uid types.UID) {
 	p.podLock.Lock()
 	defer p.podLock.Unlock()

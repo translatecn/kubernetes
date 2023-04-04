@@ -135,38 +135,28 @@ func NewKubeletCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use: componentKubelet,
-		Long: `The kubelet is the primary "node agent" that runs on each
-node. It can register the node with the apiserver using one of: the hostname; a flag to
-override the hostname; or specific logic for a cloud provider.
-
-The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object
-that describes a pod. The kubelet takes a set of PodSpecs that are provided through
-various mechanisms (primarily through the apiserver) and ensures that the containers
-described in those PodSpecs are running and healthy. The kubelet doesn't manage
-containers which were not created by Kubernetes.
-
-Other than from an PodSpec from the apiserver, there are two ways that a container
-manifest can be provided to the Kubelet.
-
-File: Path passed as a flag on the command line. Files under this path will be monitored
-periodically for updates. The monitoring period is 20s by default and is configurable
-via a flag.
-
-HTTP endpoint: HTTP endpoint passed as a parameter on the command line. This endpoint
-is checked every 20 seconds (also configurable with a flag).`,
-		// The Kubelet has special flag parsing requirements to enforce flag precedence rules,
-		// so we do all our parsing manually in Run, below.
-		// DisableFlagParsing=true provides the full set of flags passed to the kubelet in the
-		// `args` arg to Run, without Cobra's interference.
+		Long: `Kubelet是在每个节点上运行的主要“节点代理”。它可以使用以下一种方式将节点注册到apiserver中：使用主机名；使用标志覆盖主机名；或使用特定于云提供商的逻辑。
+	Kubelet使用PodSpec来工作,	PodSpec是描述pod的YAML或JSON对象。
+	Kubelet获取一组PodSpecs，这些PodSpecs通过各种机制（主要通过apiserver）提供，并确保在这些PodSpecs中描述的容器正在运行和健康。
+	Kubelet不管理由Kubernetes未创建的容器。
+	除了从apiserver的PodSpec中获取外，还有两种方式可以向Kubelet提供容器清单。
+	文件：作为命令行标志传递的路径。此路径下的文件将定期监视更新。
+	默认情况下，监视周期为20秒，并且可以通过标志进行配置。
+	HTTP端点：作为命令行参数传递的HTTP端点。
+	此端点每20秒进行一次检查（也可以通过标志进行配置）。`,
+		// Kubelet具有特殊的标志解析要求，以强制执行标志优先规则，
+		// 因此我们在下面的Run中手动进行所有解析。
+		// DisableFlagParsing = true 在args参数中提供了kubelet传递的完整标志集，
+		// 而没有Cobra的干扰。
 		DisableFlagParsing: true,
-		SilenceUsage:       true,
+		SilenceUsage:       true, // 这是一个选项，用于在发生错误时禁止使用。
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// initial flag parse, since we disable cobra's flag parsing
+			// 这是初始标志解析，因为我们禁用了Cobra的标志解析。
 			if err := cleanFlagSet.Parse(args); err != nil {
 				return fmt.Errorf("failed to parse kubelet flag: %w", err)
 			}
 
-			// check if there are non-flag arguments in the command line
+			// 检查命令行中是否有非标志参数。
 			cmds := cleanFlagSet.Args()
 			if len(cmds) > 0 {
 				return fmt.Errorf("unknown command %+s", cmds[0])
@@ -184,9 +174,9 @@ is checked every 20 seconds (also configurable with a flag).`,
 			// short-circuit on verflag
 			verflag.PrintAndExitIfRequested() // 检查 --version
 
-			// set feature gates from initial flags-based config
+			// 从初始基于标志的配置设置功能门。
 			if err := utilfeature.DefaultMutableFeatureGate.SetFromMap(kubeletConfig.FeatureGates); err != nil {
-				return fmt.Errorf("failed to set feature gates from initial flags-based config: %w", err)
+				return fmt.Errorf("无法从初始基于标志的配置设置功能门。: %w", err)
 			}
 
 			// validate the initial KubeletFlags
@@ -194,25 +184,26 @@ is checked every 20 seconds (also configurable with a flag).`,
 				return fmt.Errorf("failed to validate kubelet flags: %w", err)
 			}
 
-			if cleanFlagSet.Changed("pod-infra-container-image") {
-				klog.InfoS("--pod-infra-container-image will not be pruned by the image garbage collector in kubelet and should also be set in the remote runtime")
+			if cleanFlagSet.Changed("pod-infra-container-image") { // 如果在Parse()期间显式设置了标志，则返回true，否则返回false。
+				klog.InfoS("--pod-infra-container-image 不会被kubelet中的 image 垃圾收集器清除，并且还应在远程cri中设置。")
 			}
 
-			// load kubelet config file, if provided
-			if configFile := kubeletFlags.KubeletConfigFile; len(configFile) > 0 {
-				kubeletConfig, err = loadConfigFile(configFile)
+			// 如果提供了，则加载kubelet配置文件。
+			configFile := kubeletFlags.KubeletConfigFile
+			if len(configFile) > 0 {
+				kubeletConfig, err = loadConfigFile(configFile) // ✅
 				if err != nil {
 					return fmt.Errorf("failed to load kubelet config file, error: %w, path: %s", err, configFile)
 				}
-				// We must enforce flag precedence by re-parsing the command line into the new object.
-				// This is necessary to preserve backwards-compatibility across binary upgrades.
+				// 我们必须通过将命令行重新解析为新对象来强制执行标志优先级。
+				// 这是为了在二进制升级中保持向后兼容性。
 				// See issue #56171 for more details.
-				if err := kubeletConfigFlagPrecedence(kubeletConfig, args); err != nil {
+				if err := kubeletConfigFlagPrecedence(kubeletConfig, args); err != nil { // 优先级
 					return fmt.Errorf("failed to precedence kubeletConfigFlag: %w", err)
 				}
 				// update feature gates based on new config
 				if err := utilfeature.DefaultMutableFeatureGate.SetFromMap(kubeletConfig.FeatureGates); err != nil {
-					return fmt.Errorf("failed to set feature gates from initial flags-based config: %w", err)
+					return fmt.Errorf("从初始基于标志的配置中设置开关失败: %w", err)
 				}
 			}
 
@@ -239,7 +230,7 @@ is checked every 20 seconds (also configurable with a flag).`,
 				KubeletConfiguration: *kubeletConfig,
 			}
 
-			// use kubeletServer to construct the default KubeletDeps
+			// 使用kubeletServer构建默认的KubeletDeps。
 			kubeletDeps, err := UnsecuredDependencies(kubeletServer, utilfeature.DefaultFeatureGate)
 			if err != nil {
 				return fmt.Errorf("failed to construct kubelet dependencies: %w", err)
@@ -249,7 +240,7 @@ is checked every 20 seconds (also configurable with a flag).`,
 				klog.ErrorS(err, "kubelet running with insufficient permissions")
 			}
 
-			// make the kubelet's config safe for logging
+			// 使kubelet的配置对于日志记录是安全的。
 			config := kubeletServer.KubeletConfiguration.DeepCopy()
 			for k := range config.StaticPodURLHeader {
 				config.StaticPodURLHeader[k] = []string{"<masked>"}
@@ -257,7 +248,7 @@ is checked every 20 seconds (also configurable with a flag).`,
 			// log the kubelet's config for inspection
 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
 
-			// set up signal context for kubelet shutdown
+			// 为kubelet关闭设置信号上下文。
 			ctx := genericapiserver.SetupSignalContext()
 
 			utilfeature.DefaultMutableFeatureGate.AddMetrics()
@@ -266,13 +257,13 @@ is checked every 20 seconds (also configurable with a flag).`,
 		},
 	}
 
-	// keep cleanFlagSet separate, so Cobra doesn't pollute it with the global flags
+	// 保持cleanFlagSet单独，以便Cobra不会用全局标志污染它。
 	kubeletFlags.AddFlags(cleanFlagSet)
 	options.AddKubeletConfigFlags(cleanFlagSet, kubeletConfig)
 	options.AddGlobalFlags(cleanFlagSet)
 	cleanFlagSet.BoolP("help", "h", false, fmt.Sprintf("help for %s", cmd.Name()))
 
-	// ugly, but necessary, because Cobra's default UsageFunc and HelpFunc pollute the flagset with global flags
+	// 这很丑陋，但是必要的，因为Cobra的默认UsageFunc和HelpFunc会用全局标志污染flagset。
 	const usageFmt = "Usage:\n  %s\n\nFlags:\n%s"
 	cmd.SetUsageFunc(func(cmd *cobra.Command) error {
 		fmt.Fprintf(cmd.OutOrStderr(), usageFmt, cmd.UseLine(), cleanFlagSet.FlagUsagesWrapped(2))
@@ -345,13 +336,13 @@ func loadConfigFile(name string) (*kubeletconfiginternal.KubeletConfiguration, e
 	if err != nil {
 		return nil, fmt.Errorf(errFmt, name, err)
 	}
-	kc, err := loader.Load()
+	kc, err := loader.Load() // ✅ 涉及解析后的配置文件中的路径转换为绝对路径
 	if err != nil {
 		return nil, fmt.Errorf(errFmt, name, err)
 	}
 
-	// EvictionHard may be nil if it was not set in kubelet's config file.
-	// EvictionHard can have OS-specific fields, which is why there's no default value for it.
+	// 如果在kubelet的配置文件中没有设置，则EvictionHard可能为空。
+	// EvictionHard可以具有特定于操作系统的字段，这就是为什么没有默认值的原因。
 	// See: https://github.com/kubernetes/kubernetes/pull/110263
 	if kc.EvictionHard == nil {
 		kc.EvictionHard = eviction.DefaultEvictionHard
@@ -359,8 +350,8 @@ func loadConfigFile(name string) (*kubeletconfiginternal.KubeletConfiguration, e
 	return kc, err
 }
 
-// UnsecuredDependencies returns a Dependencies suitable for being run, or an error if the server setup
-// is not valid.  It will not start any background processes, and does not include authentication/authorization
+// UnsecuredDependencies 返回适合运行的Dependencies，如果服务器设置
+// 无效则返回错误。它不会启动任何后台进程，并且不包括身份验证/授权。
 func UnsecuredDependencies(s *options.KubeletServer, featureGate featuregate.FeatureGate) (*kubelet.Dependencies, error) {
 	// Initialize the TLS Options
 	tlsOptions, err := InitializeTLS(&s.KubeletFlags, &s.KubeletConfiguration)
@@ -403,10 +394,9 @@ func UnsecuredDependencies(s *options.KubeletServer, featureGate featuregate.Fea
 		TLSOptions:          tlsOptions}, nil
 }
 
-// Run runs the specified KubeletServer with the given Dependencies. This should never exit.
-// The kubeDeps argument may be nil - if so, it is initialized from the settings on KubeletServer.
-// Otherwise, the caller is assumed to have set up the Dependencies object and a default one will
-// not be generated.
+// Run 使用给定的 Dependencies 运行指定的KubeletServer。这应该永远不会退出。
+// kubeDeps参数可能为空-如果是这样，则从KubeletServer的设置中初始化它。
+// 否则，假定调用方已设置Dependencies对象，不会生成默认对象。
 func Run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Dependencies, featureGate featuregate.FeatureGate) error {
 	// To help debugging, immediately log version
 	klog.InfoS("Kubelet version", "kubeletVersion", version.Get())
@@ -487,22 +477,21 @@ func getReservedCPUs(machineInfo *cadvisorapi.MachineInfo, cpus string) (cpuset.
 }
 
 func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Dependencies, featureGate featuregate.FeatureGate) (err error) {
-	// Set global feature gates based on the value on the initial KubeletServer
+	// 根据初始KubeletServer上的值设置全局功能门。
 	err = utilfeature.DefaultMutableFeatureGate.SetFromMap(s.KubeletConfiguration.FeatureGates)
 	if err != nil {
 		return err
 	}
-	// validate the initial KubeletServer (we set feature gates first, because this validation depends on feature gates)
+	// 验证初始KubeletServer（我们首先设置功能门，因为此验证取决于功能门）。
 	if err := options.ValidateKubeletServer(s); err != nil {
 		return err
 	}
 
-	// Warn if MemoryQoS enabled with cgroups v1
-	if utilfeature.DefaultFeatureGate.Enabled(features.MemoryQoS) &&
-		!isCgroup2UnifiedMode() {
-		klog.InfoS("Warning: MemoryQoS feature only works with cgroups v2 on Linux, but enabled with cgroups v1")
+	// 如果使用cgroups v1启用了MemoryQoS，则发出警告。
+	if utilfeature.DefaultFeatureGate.Enabled(features.MemoryQoS) && !isCgroup2UnifiedMode() {
+		klog.InfoS("警告：MemoryQoS功能仅适用于Linux上的cgroups v2，但启用了cgroups v1。")
 	}
-	// Obtain Kubelet Lock File
+	// 获取Kubelet锁文件。
 	if s.ExitOnLockContention && s.LockFilePath == "" {
 		return errors.New("cannot exit on lock file contention: no lock file specified")
 	}
@@ -566,7 +555,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		return err
 	}
 
-	// if in standalone mode, indicate as much by setting all clients to nil
+	// 如果处于独立模式，则通过将所有客户端设置为nil来指示。
 	switch {
 	case standaloneMode:
 		kubeDeps.KubeClient = nil
@@ -651,7 +640,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		}
 	}
 
-	// Setup event recorder if required.
+	// 如果需要，则设置事件记录器。
 	makeEventRecorder(kubeDeps, nodeName)
 
 	if kubeDeps.ContainerManager == nil {
@@ -769,7 +758,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		kubeDeps.PodStartupLatencyTracker = kubeletutil.NewPodStartupLatencyTracker()
 	}
 
-	// TODO(vmarmol): Do this through container config.
+	// TODO（vmarmol）：通过容器配置执行此操作。
 	oomAdjuster := kubeDeps.OOMAdjuster
 	if err := oomAdjuster.ApplyOOMScoreAdj(0, int(s.OOMScoreAdj)); err != nil {
 		klog.InfoS("Failed to ApplyOOMScoreAdj", "err", err)
@@ -1007,8 +996,8 @@ func getNodeName(cloud cloudprovider.Interface, hostname string) (types.NodeName
 	return nodeName, nil
 }
 
-// InitializeTLS checks for a configured TLSCertFile and TLSPrivateKeyFile: if unspecified a new self-signed
-// certificate and key file are generated. Returns a configured server.TLSOptions object.
+// InitializeTLS 检查是否配置了TLSCertFile和TLSPrivateKeyFile：如果未指定，则生成新的自签名
+// 证书和密钥文件。返回一个配置的server.TLSOptions对象。
 func InitializeTLS(kf *options.KubeletFlags, kc *kubeletconfiginternal.KubeletConfiguration) (*server.TLSOptions, error) {
 	if !kc.ServerTLSBootstrap && kc.TLSCertFile == "" && kc.TLSPrivateKeyFile == "" {
 		kc.TLSCertFile = path.Join(kf.CertDirectory, "kubelet.crt")
@@ -1099,19 +1088,16 @@ func setContentTypeForClient(cfg *restclient.Config, contentType string) {
 	}
 }
 
-// RunKubelet is responsible for setting up and running a kubelet.  It is used in three different applications:
-//
-//	1 Integration tests
-//	2 Kubelet binary
-//	3 Standalone 'kubernetes' binary
-//
-// Eventually, #2 will be replaced with instances of #3
+// RunKubelet 负责设置和运行kubelet。
+// 它在三个不同的应用程序中使用：
+// 1 集成测试
+// 2 Kubelet二进制文件
 func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencies, runOnce bool) error {
 	hostname, err := nodeutil.GetHostname(kubeServer.HostnameOverride)
 	if err != nil {
 		return err
 	}
-	// Query the cloud provider for our node name, default to hostname if kubeDeps.Cloud == nil
+	// 如果kubeDeps.Cloud == nil，则查询云提供商提供给我们的节点名称，并默认为主机名。
 	nodeName, err := getNodeName(kubeDeps.Cloud, hostname)
 	if err != nil {
 		return err
@@ -1165,8 +1151,7 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 		return fmt.Errorf("failed to create kubelet: %w", err)
 	}
 
-	// NewMainKubelet should have set up a pod source config if one didn't exist
-	// when the builder was run. This is just a precaution.
+	// 如果在构建器运行时不存在pod源配置，则NewMainKubelet应该设置一个。这只是一个预防措施。
 	if kubeDeps.PodConfig == nil {
 		return fmt.Errorf("failed to create kubelet, pod source config was nil")
 	}
@@ -1176,14 +1161,14 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 		klog.ErrorS(err, "Failed to set rlimit on max file handles")
 	}
 
-	// process pods and exit.
+	// 处理pod并退出。
 	if runOnce {
 		if _, err := k.RunOnce(podCfg.Updates()); err != nil {
 			return fmt.Errorf("runonce failed: %w", err)
 		}
 		klog.InfoS("Started kubelet as runonce")
 	} else {
-		startKubelet(k, podCfg, &kubeServer.KubeletConfiguration, kubeDeps, kubeServer.EnableServer)
+		startKubelet(k, podCfg, &kubeServer.KubeletConfiguration, kubeDeps, kubeServer.EnableServer) // main
 		klog.InfoS("Started kubelet")
 	}
 	return nil
@@ -1200,7 +1185,7 @@ func startKubelet(k kubelet.Bootstrap, podCfg *config.PodConfig, kubeCfg *kubele
 	if kubeCfg.ReadOnlyPort > 0 {
 		go k.ListenAndServeReadOnly(netutils.ParseIPSloppy(kubeCfg.Address), uint(kubeCfg.ReadOnlyPort))
 	}
-	if utilfeature.DefaultFeatureGate.Enabled(features.KubeletPodResources) {
+	if utilfeature.DefaultFeatureGate.Enabled(features.KubeletPodResources) { // 启用kubelet的pod资源gRPC端点。
 		go k.ListenAndServePodResources()
 	}
 }

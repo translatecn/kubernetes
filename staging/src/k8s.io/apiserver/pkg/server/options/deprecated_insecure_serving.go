@@ -69,13 +69,13 @@ func (s *DeprecatedInsecureServingOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.IPVar(&s.BindAddress, "insecure-bind-address", s.BindAddress,
 		"The IP address on which to serve the --insecure-port (set to 0.0.0.0 or :: for listening in all interfaces and IP families).")
 	// Though this flag is deprecated, we discovered security concerns over how to do health checks without it e.g. #43784
-	fs.MarkDeprecated("insecure-bind-address", "This flag will be removed in a future version.")
+	fs.MarkDeprecated("insecure-bind-address", "将被移除")
 	fs.Lookup("insecure-bind-address").Hidden = false
 
 	fs.IntVar(&s.BindPort, "insecure-port", s.BindPort,
 		"The port on which to serve unsecured, unauthenticated access.")
 	// Though this flag is deprecated, we discovered security concerns over how to do health checks without it e.g. #43784
-	fs.MarkDeprecated("insecure-port", "This flag will be removed in a future version.")
+	fs.MarkDeprecated("insecure-port", "将被移除")
 	fs.Lookup("insecure-port").Hidden = false
 }
 

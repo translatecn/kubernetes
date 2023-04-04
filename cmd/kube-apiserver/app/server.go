@@ -75,7 +75,7 @@ import (
 	"k8s.io/kubernetes/cmd/kube-apiserver/app/options"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 	"k8s.io/kubernetes/pkg/capabilities"
-	"k8s.io/kubernetes/pkg/controlplane"
+	"k8s.io/kubernetes/pkg/controlplane" // 注册scheme
 	"k8s.io/kubernetes/pkg/controlplane/reconcilers"
 	generatedopenapi "k8s.io/kubernetes/pkg/generated/openapi"
 	"k8s.io/kubernetes/pkg/kubeapiserver"
@@ -162,8 +162,9 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 	if err != nil {
 		return err
 	}
-
+	var _ = new(aggregatorapiserver.APIAggregator).PrepareRun
 	prepared, err := server.PrepareRun()
+
 	if err != nil {
 		return err
 	}
@@ -171,7 +172,7 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 	return prepared.Run(stopCh)
 }
 
-// CreateServerChain creates the apiservers connected via delegation.
+// CreateServerChain 通过委托创建连接的API服务器。
 func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatorapiserver.APIAggregator, error) {
 	// 1、为 kubeAPIServer 创建配置
 	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions) // kube-api-server
@@ -250,7 +251,7 @@ func CreateProxyTransport() *http.Transport {
 	return proxyTransport
 }
 
-// CreateKubeAPIServerConfig creates all the resources for running the API server, but runs none of them
+// CreateKubeAPIServerConfig 创建运行API服务器所需的所有资源，但不运行任何资源。
 func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	*controlplane.Config,
 	aggregatorapiserver.ServiceResolver,
@@ -258,7 +259,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	error,
 ) {
 	proxyTransport := CreateProxyTransport()
-	// 1、构建 genericConfig
+	// 1、构建 genericConfig   获取主服务器选项并生成与之关联的通用API服务器配置
 	genericConfig, versionedInformers, serviceResolver, pluginInitializers, admissionPostStartHook, storageFactory, err := buildGenericConfig(s.ServerRunOptions, proxyTransport)
 	if err != nil {
 		return nil, nil, nil, err
@@ -298,7 +299,8 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 			VersionedInformers: versionedInformers,
 		},
 	}
-
+	//ClientCA -设置Client证书的签发机构：
+	//aggregated api server 和 aggregator 之问通信时，哪些Header中有用户信息，详见这里，
 	clientCAProvider, err := s.Authentication.ClientCert.GetClientCAContentProvider()
 	if err != nil {
 		return nil, nil, nil, err
@@ -346,6 +348,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 		pubKeys = append(pubKeys, keys...)
 	}
 	// 通过extra config查找所需的元数据。
+	// 客户端向API Server发一个请求，可以带上OpenID机构提供的身份信息，API Server可以据此识別出用户。这里配置API Server所使用的OpenID机构信息
 	config.ExtraConfig.ServiceAccountIssuerURL = s.Authentication.ServiceAccounts.Issuers[0]
 	config.ExtraConfig.ServiceAccountJWKSURI = s.Authentication.ServiceAccounts.JWKSURI
 	config.ExtraConfig.ServiceAccountPublicKeys = pubKeys
@@ -353,7 +356,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	return config, serviceResolver, pluginInitializers, nil
 }
 
-// BuildGenericConfig takes the master server options and produces the genericapiserver.Config associated with it
+// BuildGenericConfig 获取主服务器选项并生成与之关联的通用API服务器配置。
 func buildGenericConfig(
 	s *options.ServerRunOptions,
 	proxyTransport *http.Transport,
@@ -366,6 +369,23 @@ func buildGenericConfig(
 	storageFactory *serverstorage.DefaultStorageFactory,
 	lastErr error,
 ) {
+	//
+	//从Generic Server 得到 Config
+	//应用option中GenericServerRunoptions
+	//应用option中Secureserving
+	//应用option中Features
+	//应用optionfAPIEnablement
+	//应用option中EgressSelector
+	//应用option中Traces
+	//淮各OpenAPIConfig
+	//准备StorageFactory，考虑option中的etcd设置
+	//制作一个shared informer: versionedInforrers
+	//应用option中Authentication 到多处
+	//应用option中的audit设置
+	//制作pluginiinitializers, admissionPoststartHook
+	//应用option中Admission 到多处
+	//制作FlowControl.用于Priority和Fairness控制
+
 	// 1、为 genericConfig 设置默认值
 	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)                    // ✅
 	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource() // 表示哪个groupVersion启用,其资源启用/禁用.

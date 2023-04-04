@@ -184,14 +184,14 @@ func ListenAndServeKubeletServer(
 	}
 }
 
-// ListenAndServeKubeletReadOnlyServer initializes a server to respond to HTTP network requests on the Kubelet.
+// ListenAndServeKubeletReadOnlyServer 初始化服务器以响应Kubelet上的HTTP网络请求。
 func ListenAndServeKubeletReadOnlyServer(
 	host HostInterface,
 	resourceAnalyzer stats.ResourceAnalyzer,
 	address net.IP,
 	port uint) {
 	klog.InfoS("Starting to listen read-only", "address", address, "port", port)
-	// TODO: https://github.com/kubernetes/kubernetes/issues/109829 tracer should use WithPublicEndpoint
+	// TODO: https://github.com/kubernetes/kubernetes/issues/109829 追踪器应该使用WithPublicEndpoint。
 	s := NewServer(host, resourceAnalyzer, nil, oteltrace.NewNoopTracerProvider(), nil)
 
 	server := &http.Server{
@@ -254,7 +254,7 @@ type HostInterface interface {
 	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error)
 }
 
-// NewServer initializes and configures a kubelet.Server object to handle HTTP requests.
+// NewServer 初始化和配置kubelet.Server对象以处理HTTP请求。
 func NewServer(
 	host HostInterface,
 	resourceAnalyzer stats.ResourceAnalyzer,
@@ -356,8 +356,7 @@ func (s *Server) getMetricMethodBucket(method string) string {
 	return "other"
 }
 
-// InstallDefaultHandlers registers the default set of supported HTTP request
-// patterns with the restful Container.
+// InstallDefaultHandlers 使用restful Container注册支持的HTTP请求模式的默认集合。
 func (s *Server) InstallDefaultHandlers() {
 	s.addMetricsBucketMatcher("healthz")
 	healthz.InstallHandler(s.restfulCont,
@@ -371,12 +370,8 @@ func (s *Server) InstallDefaultHandlers() {
 	}
 	s.addMetricsBucketMatcher("pods")
 	ws := new(restful.WebService)
-	ws.
-		Path("/pods").
-		Produces(restful.MIME_JSON)
-	ws.Route(ws.GET("").
-		To(s.getPods).
-		Operation("getPods"))
+	ws.Path("/pods").Produces(restful.MIME_JSON)
+	ws.Route(ws.GET("").To(s.getPods).Operation("getPods"))
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("stats")
@@ -439,11 +434,21 @@ func (s *Server) InstallDefaultHandlers() {
 		s.addMetricsBucketMatcher("checkpoint")
 		ws = &restful.WebService{}
 		ws.Path("/checkpoint").Produces(restful.MIME_JSON)
-		ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").
-			To(s.checkpoint).
-			Operation("checkpoint"))
+		ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").To(s.checkpoint).Operation("checkpoint"))
 		s.restfulCont.Add(ws)
 	}
+
+	//go func() {
+	//	<-time.After(time.Second * 10)
+	//	for _, v := range s.restfulCont.RegisteredWebServices() {
+	//		for _, item := range v.Routes() {
+	//			fmt.Println(item.Method, item.Path)
+	//		}
+	//
+	//	}
+	//	fmt.Println(1)
+	//}()
+
 }
 
 // InstallDebuggingHandlers registers the HTTP request patterns that serve logs or run commands/containers
@@ -452,77 +457,42 @@ func (s *Server) InstallDebuggingHandlers() {
 
 	s.addMetricsBucketMatcher("run")
 	ws := new(restful.WebService)
-	ws.
-		Path("/run")
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").
-		To(s.getRun).
-		Operation("getRun"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").
-		To(s.getRun).
-		Operation("getRun"))
+	ws.Path("/run")
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").To(s.getRun).Operation("getRun"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").To(s.getRun).Operation("getRun"))
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("exec")
 	ws = new(restful.WebService)
-	ws.
-		Path("/exec")
-	ws.Route(ws.GET("/{podNamespace}/{podID}/{containerName}").
-		To(s.getExec).
-		Operation("getExec"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").
-		To(s.getExec).
-		Operation("getExec"))
-	ws.Route(ws.GET("/{podNamespace}/{podID}/{uid}/{containerName}").
-		To(s.getExec).
-		Operation("getExec"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").
-		To(s.getExec).
-		Operation("getExec"))
+	ws.Path("/exec")
+	ws.Route(ws.GET("/{podNamespace}/{podID}/{containerName}").To(s.getExec).Operation("getExec"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").To(s.getExec).Operation("getExec"))
+	ws.Route(ws.GET("/{podNamespace}/{podID}/{uid}/{containerName}").To(s.getExec).Operation("getExec"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").To(s.getExec).Operation("getExec"))
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("attach")
 	ws = new(restful.WebService)
-	ws.
-		Path("/attach")
-	ws.Route(ws.GET("/{podNamespace}/{podID}/{containerName}").
-		To(s.getAttach).
-		Operation("getAttach"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").
-		To(s.getAttach).
-		Operation("getAttach"))
-	ws.Route(ws.GET("/{podNamespace}/{podID}/{uid}/{containerName}").
-		To(s.getAttach).
-		Operation("getAttach"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").
-		To(s.getAttach).
-		Operation("getAttach"))
+	ws.Path("/attach")
+	ws.Route(ws.GET("/{podNamespace}/{podID}/{containerName}").To(s.getAttach).Operation("getAttach"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").To(s.getAttach).Operation("getAttach"))
+	ws.Route(ws.GET("/{podNamespace}/{podID}/{uid}/{containerName}").To(s.getAttach).Operation("getAttach"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").To(s.getAttach).Operation("getAttach"))
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("portForward")
 	ws = new(restful.WebService)
-	ws.
-		Path("/portForward")
-	ws.Route(ws.GET("/{podNamespace}/{podID}").
-		To(s.getPortForward).
-		Operation("getPortForward"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}").
-		To(s.getPortForward).
-		Operation("getPortForward"))
-	ws.Route(ws.GET("/{podNamespace}/{podID}/{uid}").
-		To(s.getPortForward).
-		Operation("getPortForward"))
-	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}").
-		To(s.getPortForward).
-		Operation("getPortForward"))
+	ws.Path("/portForward")
+	ws.Route(ws.GET("/{podNamespace}/{podID}").To(s.getPortForward).Operation("getPortForward"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}").To(s.getPortForward).Operation("getPortForward"))
+	ws.Route(ws.GET("/{podNamespace}/{podID}/{uid}").To(s.getPortForward).Operation("getPortForward"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}").To(s.getPortForward).Operation("getPortForward"))
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("containerLogs")
 	ws = new(restful.WebService)
-	ws.
-		Path("/containerLogs")
-	ws.Route(ws.GET("/{podNamespace}/{podID}/{containerName}").
-		To(s.getContainerLogs).
-		Operation("getContainerLogs"))
+	ws.Path("/containerLogs")
+	ws.Route(ws.GET("/{podNamespace}/{podID}/{containerName}").To(s.getContainerLogs).Operation("getContainerLogs"))
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("configz")
@@ -531,13 +501,20 @@ func (s *Server) InstallDebuggingHandlers() {
 	// The /runningpods endpoint is used for testing only.
 	s.addMetricsBucketMatcher("runningpods")
 	ws = new(restful.WebService)
-	ws.
-		Path("/runningpods/").
-		Produces(restful.MIME_JSON)
-	ws.Route(ws.GET("").
-		To(s.getRunningPods).
-		Operation("getRunningPods"))
+	ws.Path("/runningpods/").Produces(restful.MIME_JSON)
+	ws.Route(ws.GET("").To(s.getRunningPods).Operation("getRunningPods"))
 	s.restfulCont.Add(ws)
+
+	//go func() {
+	//	<-time.After(time.Second * 10)
+	//	for _, v := range s.restfulCont.RegisteredWebServices() {
+	//		for _, item := range v.Routes() {
+	//			fmt.Println(item.Method, item.Path)
+	//		}
+	//
+	//	}
+	//	fmt.Println(1)
+	//}()
 }
 
 // InstallDebuggingDisabledHandlers registers the HTTP request patterns that provide better error message
@@ -568,13 +545,8 @@ func (s *Server) InstallSystemLogHandler(enableSystemLogHandler bool) {
 	if enableSystemLogHandler {
 		ws := new(restful.WebService)
 		ws.Path(logsPath)
-		ws.Route(ws.GET("").
-			To(s.getLogs).
-			Operation("getLogs"))
-		ws.Route(ws.GET("/{logpath:*}").
-			To(s.getLogs).
-			Operation("getLogs").
-			Param(ws.PathParameter("logpath", "path to the log").DataType("string")))
+		ws.Route(ws.GET("").To(s.getLogs).Operation("getLogs"))
+		ws.Route(ws.GET("/{logpath:*}").To(s.getLogs).Operation("getLogs").Param(ws.PathParameter("logpath", "path to the log").DataType("string")))
 		s.restfulCont.Add(ws)
 	} else {
 		s.restfulCont.Handle(logsPath, getHandlerForDisabledEndpoint("logs endpoint is disabled."))

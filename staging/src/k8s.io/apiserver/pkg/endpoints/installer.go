@@ -180,7 +180,7 @@ var toDiscoveryKubeVerb = map[string]string{
 	"WATCHLIST":        "watch",
 }
 
-// Install handlers for API resources.
+// Install API资源的处理程序。 // ✅
 func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.ResourceInfo, *restful.WebService, []error) {
 	var apiResources []metav1.APIResource
 	var resourceInfos []*storageversion.ResourceInfo
@@ -196,7 +196,8 @@ func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.Resour
 	}
 	sort.Strings(paths)
 	for _, path := range paths {
-		apiResource, resourceInfo, err := a.registerResourceHandlers(path, a.group.Storage[path], ws)
+		// pod: 				 pkg/registry/core/pod/storage/storage.go:65
+		apiResource, resourceInfo, err := a.registerResourceHandlers(path, a.group.Storage[path], ws) // ✅
 		if err != nil {
 			errors = append(errors, fmt.Errorf("error in registering resource: %s, %v", path, err))
 		}
@@ -305,7 +306,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	if a.group.OptionsExternalVersion != nil {
 		optionsExternalVersion = *a.group.OptionsExternalVersion
 	}
-
+	// 1、获取被注册object的group与version；确定是不是subresource
 	resource, subresource, err := splitSubresource(path)
 	if err != nil {
 		return nil, nil, err
@@ -325,7 +326,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	defaultVersionedObject := indirectArbitraryPointer(versionedPtr)
 	kind := fqKindToRegister.Kind
 	isSubresource := len(subresource) > 0
-
+	// 2、确定其区不区分namespace
 	// If there is a subresource, namespace scoping is defined by the parent resource
 	var namespaceScoped bool
 	if isSubresource {
@@ -346,7 +347,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		}
 		namespaceScoped = scoper.NamespaceScoped()
 	}
-
+	// 3、根据传入的storage对象实现的接口，确定支持的各种操作 (verbs)
 	// what verbs are supported by the storage, used to know what verbs we support per path
 	creater, isCreater := storage.(rest.Creater)
 	namedCreater, isNamedCreater := storage.(rest.NamedCreater)
@@ -390,7 +391,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		}
 		versionedList = indirectArbitraryPointer(versionedListPtr)
 	}
-
+	// 4、创建 ListOptions, CreateOptipns,PatchOptioins, UpdateOptions以及其它各种options
 	versionedListOptions, err := a.group.Creater.New(optionsExternalVersion.WithKind("ListOptions"))
 	if err != nil {
 		return nil, nil, err
@@ -505,7 +506,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		// All listers must implement TableProvider
 		return nil, nil, fmt.Errorf("%q must implement TableConvertor", resource)
 	}
-
+	// 5、生成apiResource，备返回
 	var apiResource metav1.APIResource
 	if utilfeature.DefaultFeatureGate.Enabled(features.StorageVersionHash) &&
 		isStorageVersionProvider &&
@@ -517,7 +518,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		}
 		apiResource.StorageVersionHash = discovery.StorageVersionHash(gvk.Group, gvk.Version, gvk.Kind)
 	}
-
+	// 6、制作actions list，每个resource的每个verb—条记录
 	// Get the list of actions for the given scope.
 	switch {
 	case !namespaceScoped:
@@ -616,13 +617,12 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			actions = appendIf(actions, action{"WATCHLIST", "watch/" + resource, params, namer, true}, allowWatchList)
 		}
 	}
-
 	var resourceInfo *storageversion.ResourceInfo
 	if utilfeature.DefaultFeatureGate.Enabled(features.StorageVersionAPI) &&
 		utilfeature.DefaultFeatureGate.Enabled(features.APIServerIdentity) &&
 		isStorageVersionProvider &&
 		storageVersionProvider.StorageVersion() != nil {
-
+		// 7、决定放入etcd时使用的version；以及从etcd取出时可以转化为的version
 		versioner := storageVersionProvider.StorageVersion()
 		encodingGVK, err := getStorageVersionKind(versioner, storage, a.group.Typer)
 		if err != nil {
@@ -632,6 +632,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		if a.group.ConvertabilityChecker != nil {
 			decodableVersions = a.group.ConvertabilityChecker.VersionsForGroupKind(fqKindToRegister.GroupKind())
 		}
+		// 8、生成Resourcelnfo，备返回
 		resourceInfo = &storageversion.ResourceInfo{
 			GroupResource: schema.GroupResource{
 				Group:    a.group.GroupVersion.Group,
@@ -674,11 +675,13 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			return nil, nil, fmt.Errorf("all serializers in the group Serializer must have MediaTypeType and MediaTypeSubType set: %s", s.MediaType)
 		}
 	}
+	// 9、根据Serializer，得出支持的MediaTypes从而设置webservice的response中属性
 	mediaTypes, streamMediaTypes := negotiation.MediaTypesForSerializer(a.group.Serializer)
 	allMediaTypes := append(mediaTypes, streamMediaTypes...)
 	ws.Produces(allMediaTypes...)
 
 	kubeVerbs := map[string]struct{}{}
+	// 10、把以上各个环节得到的信息，放入reqScope中
 	reqScope := handlers.RequestScope{
 		Serializer:      a.group.Serializer,
 		ParameterCodec:  a.group.ParameterCodec,
@@ -710,6 +713,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	if a.group.MetaGroupVersion != nil {
 		reqScope.MetaGroupVersion = *a.group.MetaGroupVersion
 	}
+	// 11、视情况去计算reqScope的FieldManager属性
 	if a.group.OpenAPIModels != nil {
 		reqScope.FieldManager, err = fieldmanager.NewDefaultFieldManager(
 			a.group.TypeConverter,
@@ -725,6 +729,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			return nil, nil, fmt.Errorf("failed to create field manager: %v", err)
 		}
 	}
+	// 12、逐个处理Actions list中的action，基于reqScope等信息，为他们生成route并注册到webservice中去
 	for _, action := range actions {
 		producedObject := storageMeta.ProducesObject(action.Verb)
 		if producedObject == nil {

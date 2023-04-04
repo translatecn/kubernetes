@@ -118,54 +118,28 @@ type preparedAPIAggregator struct {
 	runnable runnable
 }
 
-// APIAggregator contains state for a Kubernetes cluster master/api server.
+// APIAggregator 包含Kubernetes集群的主控节点/ API服务器的状态。
 type APIAggregator struct {
-	GenericAPIServer *genericapiserver.GenericAPIServer
+	GenericAPIServer         *genericapiserver.GenericAPIServer
+	APIRegistrationInformers informers.SharedInformerFactory // 提供更容易嵌入的功能。
+	delegateHandler          http.Handler
 
-	// provided for easier embedding
-	APIRegistrationInformers informers.SharedInformerFactory
-
-	delegateHandler http.Handler
-
-	// proxyCurrentCertKeyContent holds he client cert used to identify this proxy. Backing APIServices use this to confirm the proxy's identity
-	proxyCurrentCertKeyContent certKeyFunc
+	proxyCurrentCertKeyContent certKeyFunc // 保存用于识别此代理的客户端证书。支持的APIServices使用此证书来确认代理的身份。
 	proxyTransport             *http.Transport
 
-	// proxyHandlers are the proxy handlers that are currently registered, keyed by apiservice.name
-	proxyHandlers map[string]*proxyHandler
-	// handledGroups are the groups that already have routes
-	handledGroups sets.String
+	proxyHandlers   map[string]*proxyHandler // 当前已注册的代理处理程序，按apiservice.name为键。
+	handledGroups   sets.String              // 已经具有路由的组。
+	lister          listers.APIServiceLister // 基于控制器状态，用于为/apis/聚合器查找添加组处理。
+	serviceResolver ServiceResolver          // 确定聚合器路由所需的信息。
 
-	// lister is used to add group handling for /apis/<group> aggregator lookups based on
-	// controller state
-	lister listers.APIServiceLister
-
-	// Information needed to determine routing for the aggregator
-	serviceResolver ServiceResolver
-
-	// Enable swagger and/or OpenAPI if these configs are non-nil.
-	openAPIConfig *openapicommon.Config
-
-	// Enable OpenAPI V3 if these configs are non-nil
-	openAPIV3Config *openapicommon.Config
-
-	// openAPIAggregationController downloads and merges OpenAPI v2 specs.
-	openAPIAggregationController *openapicontroller.AggregationController
-
-	// openAPIV3AggregationController downloads and caches OpenAPI v3 specs.
+	openAPIConfig                  *openapicommon.Config
+	openAPIV3Config                *openapicommon.Config
+	openAPIAggregationController   *openapicontroller.AggregationController
 	openAPIV3AggregationController *openapiv3controller.AggregationController
 
-	// discoveryAggregationController downloads and caches discovery documents
-	// from all aggregated apiservices so they are available from /apis endpoint
-	// when discovery with resources are requested
-	discoveryAggregationController DiscoveryAggregationController
-
-	// egressSelector selects the proper egress dialer to communicate with the custom apiserver
-	// overwrites proxyTransport dialer if not nil
-	egressSelector *egressselector.EgressSelector
-
-	// rejectForwardingRedirects is whether to allow to forward redirect response
-	rejectForwardingRedirects bool
+	discoveryAggregationController DiscoveryAggregationController // 从所有聚合的API服务中下载和缓存发现文档，以便在请求带有资源的发现时从/apis端点获取。
+	egressSelector                 *egressselector.EgressSelector // 选择适当的出口拨号器与自定义API服务器通信，如果不为nil，则覆盖proxyTransport拨号器。
+	rejectForwardingRedirects      bool                           // 是否允许转发重定向响应。
 }
 
 // Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
@@ -185,6 +159,7 @@ func (cfg *Config) Complete() CompletedConfig {
 }
 
 // NewWithDelegate returns a new instance of APIAggregator from the given config.
+// createAggregatorServer
 func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.DelegationTarget) (*APIAggregator, error) {
 	genericServer, err := c.GenericConfig.New("kube-aggregator", delegationTarget)
 	if err != nil {
@@ -377,10 +352,9 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 	return s, nil
 }
 
-// PrepareRun prepares the aggregator to run, by setting up the OpenAPI spec &
-// aggregated discovery document and calling the generic PrepareRun.
+// PrepareRun 注册openapi 相关的controller到post start hook中
 func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
-	// add post start hook before generic PrepareRun in order to be before /healthz installation
+	// 在通用PrepareRun之前添加启动后钩子，以便在/healthz安装之前。
 	if s.openAPIConfig != nil {
 		s.GenericAPIServer.AddPostStartHookOrDie("apiservice-openapi-controller", func(context genericapiserver.PostStartHookContext) error {
 			go s.openAPIAggregationController.Run(context.StopCh)
@@ -409,7 +383,7 @@ func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
 		})
 	}
 
-	prepared := s.GenericAPIServer.PrepareRun() // ✅
+	prepared := s.GenericAPIServer.PrepareRun() // ✅   kube-aggregator.PrepareRun
 
 	// 延迟OpenAPI的设置，直到委托有机会设置他们的OpenAPI处理程序
 	if s.openAPIConfig != nil {
@@ -442,6 +416,7 @@ func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
 }
 
 func (s preparedAPIAggregator) Run(stopCh <-chan struct{}) error {
+	// func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	return s.runnable.Run(stopCh)
 }
 

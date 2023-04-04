@@ -33,6 +33,11 @@ import (
 )
 
 func main() {
+	// InstallDefaultHandlers() {
+	// AddKubeletConfigFlags
+	// func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
+
+	// curl -k --key /etc/kubernetes/pki/apiserver-kubelet-client.key --cert /etc/kubernetes/pki/apiserver-kubelet-client.crt --cacert /etc/kubernetes/pki/ca.crt https://127.0.0.1:10250/pods
 	os.Args = kubelet.Init(os.Args)
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)

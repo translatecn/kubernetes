@@ -86,15 +86,12 @@ type managerImpl struct {
 	// records when a threshold was first observed
 	thresholdsFirstObservedAt thresholdsObservedAt
 	// records the set of thresholds that have been met (including graceperiod) but not yet resolved
-	thresholdsMet []evictionapi.Threshold
-	// signalToRankFunc maps a resource to ranking function for that resource.
-	signalToRankFunc map[evictionapi.Signal]rankFunc
-	// signalToNodeReclaimFuncs maps a resource to an ordered list of functions that know how to reclaim that resource.
-	signalToNodeReclaimFuncs map[evictionapi.Signal]nodeReclaimFuncs
+	thresholdsMet            []evictionapi.Threshold
+	signalToRankFunc         map[evictionapi.Signal]rankFunc         // 将资源->排名函数。
+	signalToNodeReclaimFuncs map[evictionapi.Signal]nodeReclaimFuncs // 将资源->如何回收该资源的有序函数列表。
 	// last observations from synchronize
 	lastObservations signalObservations
-	// dedicatedImageFs indicates if imagefs is on a separate device from the rootfs
-	dedicatedImageFs *bool
+	dedicatedImageFs *bool // 指示imagefs是否位于与rootfs不同的设备上
 	// thresholdNotifiers is a list of memory threshold notifiers which each notify for a memory eviction threshold
 	thresholdNotifiers []ThresholdNotifier
 	// thresholdsLastUpdated is the last time the thresholdNotifiers were updated.
@@ -138,7 +135,7 @@ func NewManager(
 	return manager, manager
 }
 
-// Admit rejects a pod if its not safe to admit for node stability.
+// Admit 如果不安全，就拒绝接受pod，以确保节点的稳定性。
 func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	m.RLock()
 	defer m.RUnlock()
@@ -170,7 +167,7 @@ func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	}
 
 	// reject pods when under memory pressure (if pod is best effort), or if under disk pressure.
-	klog.InfoS("Failed to admit pod to node", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
+	klog.InfoS("无法将pod分配到节点上。", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
 	return lifecycle.PodAdmitResult{
 		Admit:   false,
 		Reason:  Reason,
@@ -178,7 +175,7 @@ func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	}
 }
 
-// Start starts the control loop to observe and response to low compute resources.
+// Start 启动控制循环以观察和响应计算资源不足的情况。
 func (m *managerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc, podCleanedUpFunc PodCleanedUpFunc, monitoringInterval time.Duration) {
 	thresholdHandler := func(message string) {
 		klog.InfoS(message)
@@ -197,7 +194,7 @@ func (m *managerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePod
 			}
 		}
 	}
-	// start the eviction manager monitoring
+	// 开始驱逐管理器的监控。
 	go func() {
 		for {
 			if evictedPods := m.synchronize(diskInfoProvider, podFunc); evictedPods != nil {
@@ -231,27 +228,27 @@ func (m *managerImpl) IsUnderPIDPressure() bool {
 	return hasNodeCondition(m.nodeConditions, v1.NodePIDPressure)
 }
 
-// synchronize is the main control loop that enforces eviction thresholds.
-// Returns the pod that was killed, or nil if no pod was killed.
+// synchronize 是执行驱逐阈值的主要控制循环。
+// 返回被杀死的pod，如果没有被杀死，则返回nil。
 func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc) []*v1.Pod {
 	ctx := context.Background()
-	// if we have nothing to do, just return
+	// 如果我们没事做，就回去吧
 	thresholds := m.config.Thresholds
 	if len(thresholds) == 0 && !m.localStorageCapacityIsolation {
 		return nil
 	}
 
 	klog.V(3).InfoS("Eviction manager: synchronize housekeeping")
-	// build the ranking functions (if not yet known)
-	// TODO: have a function in cadvisor that lets us know if global housekeeping has completed
+	// 构建排序函数(如果还不知道)
+	// TODO: 是否在cadvisor中有一个函数可以让我们知道全局管家是否已经完成
 	if m.dedicatedImageFs == nil {
 		hasImageFs, ok := diskInfoProvider.HasDedicatedImageFs(ctx)
 		if ok != nil {
 			return nil
 		}
 		m.dedicatedImageFs = &hasImageFs
-		m.signalToRankFunc = buildSignalToRankFunc(hasImageFs)
-		m.signalToNodeReclaimFuncs = buildSignalToNodeReclaimFuncs(m.imageGC, m.containerGC, hasImageFs)
+		m.signalToRankFunc = buildSignalToRankFunc(hasImageFs)                                           // 将资源->排名函数。
+		m.signalToNodeReclaimFuncs = buildSignalToNodeReclaimFuncs(m.imageGC, m.containerGC, hasImageFs) // 将资源->如何回收该资源的有序函数列表。
 	}
 
 	activePods := podFunc()
@@ -270,8 +267,7 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 			}
 		}
 	}
-
-	// make observations and get a function to derive pod usage stats relative to those observations.
+	// 进行观察并获得一个函数，以派生相对于这些观察的pod使用统计数据。
 	observations, statsFunc := makeSignalObservations(summary)
 	debugLogObservations("observations", observations)
 
@@ -296,7 +292,7 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 		klog.V(3).InfoS("Eviction manager: node conditions - observed", "nodeCondition", nodeConditions)
 	}
 
-	// track when a node condition was last observed
+	// 跟踪节点状态最后观察到的时间
 	nodeConditionsLastObservedAt := nodeConditionsLastObservedAt(nodeConditions, m.nodeConditionsLastObservedAt, now)
 
 	// node conditions report true if it has been observed within the transition period window
@@ -309,7 +305,7 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	thresholds = thresholdsMetGracePeriod(thresholdsFirstObservedAt, now)
 	debugLogThresholdsWithObservation("thresholds - grace periods satisfied", thresholds, observations)
 
-	// update internal state
+	// 更新内部状态
 	m.Lock()
 	m.nodeConditions = nodeConditions
 	m.thresholdsFirstObservedAt = thresholdsFirstObservedAt
@@ -322,9 +318,8 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 
 	m.lastObservations = observations
 	m.Unlock()
-
-	// evict pods if there is a resource usage violation from local volume temporary storage
-	// If eviction happens in localStorageEviction function, skip the rest of eviction action
+	// 如果本地卷临时存储存在资源使用冲突，则清除pod
+	// 如果在localStorageEviction函数中发生了 evection，则跳过其余的 evection 动作
 	if m.localStorageCapacityIsolation {
 		if evictedPods := m.localStorageEviction(activePods, statsFunc); len(evictedPods) > 0 {
 			return evictedPods
@@ -381,7 +376,7 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 		}
 	}
 
-	// we kill at most a single pod during each eviction interval
+	// 我们在每次驱逐间隔中最多杀死一个pod
 	for i := range activePods {
 		pod := activePods[i]
 		gracePeriodOverride := int64(0)

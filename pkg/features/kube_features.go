@@ -505,11 +505,11 @@ const (
 	// All the node components such as CRI need to be running in the same user namespace.
 	KubeletInUserNamespace featuregate.Feature = "KubeletInUserNamespace"
 
-	// owner: @dashpole
+	// KubeletPodResources owner: @dashpole
 	// alpha: v1.13
 	// beta: v1.15
 	//
-	// Enables the kubelet's pod resources grpc endpoint
+	// 启用kubelet的pod资源gRPC端点。
 	KubeletPodResources featuregate.Feature = "KubeletPodResources"
 
 	// owner: @fromanirh

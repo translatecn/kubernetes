@@ -161,10 +161,8 @@ type KubeletConfiguration struct {
 	EnableDebuggingHandlers bool
 	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
 	EnableContentionProfiling bool
-	// healthzPort is the port of the localhost healthz endpoint (set to 0 to disable)
-	HealthzPort int32
-	// healthzBindAddress is the IP address for the healthz server to serve on
-	HealthzBindAddress string
+	HealthzPort               int32
+	HealthzBindAddress        string
 	// oomScoreAdj is The oom-score-adj value for kubelet process. Values
 	// must be within the range [-1000, 1000].
 	OOMScoreAdj int32

@@ -550,6 +550,7 @@ func (c *RecommendedConfig) Complete() CompletedConfig {
 
 // New ✅
 // 创建一个新服务器，该服务器在逻辑上将处理链与传递的server.name用于区分日志记录。
+// CreateKubeAPIServer
 func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*GenericAPIServer, error) {
 	if c.Serializer == nil {
 		return nil, fmt.Errorf("Genericapiserver.New() called with config.Serializer == nil")

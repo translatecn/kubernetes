@@ -36,8 +36,7 @@ import (
 
 const (
 	unsupportedEvictionSignal = "unsupported eviction signal %v"
-	// Reason is the reason reported back in status.
-	Reason = "Evicted"
+	Reason                    = "Evicted" // 是在Status中报告的原因。
 	// nodeLowMessageFmt is the message for evictions due to resource pressure.
 	nodeLowMessageFmt = "The node was low on resource: %v. "
 	// nodeConditionMessageFmt is the message for evictions due to resource pressure.
@@ -973,7 +972,7 @@ func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 	return signalToRankFunc
 }
 
-// PodIsEvicted returns true if the reported pod status is due to an eviction.
+// PodIsEvicted 如果报告的pod状态是由于驱逐而导致的，则返回true。
 func PodIsEvicted(podStatus v1.PodStatus) bool {
 	return podStatus.Phase == v1.PodFailed && podStatus.Reason == Reason
 }

@@ -129,6 +129,7 @@ func (cfg *Config) Complete() CompletedConfig {
 }
 
 // New 从给定的配置返回CustomResourceDefinitions的一个新实例。
+// createAPIExtensionsServer
 func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget) (*CustomResourceDefinitions, error) {
 	genericServer, err := c.GenericConfig.New("apiextensions-apiserver", delegationTarget)
 	if err != nil {

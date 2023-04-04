@@ -36,8 +36,6 @@ var kubeletLabels = sets.NewString(
 	v1.LabelHostname,
 	v1.LabelTopologyZone,
 	v1.LabelTopologyRegion,
-	v1.LabelFailureDomainBetaZone,
-	v1.LabelFailureDomainBetaRegion,
 	v1.LabelInstanceType,
 	v1.LabelInstanceTypeStable,
 	v1.LabelOSStable,
@@ -57,7 +55,6 @@ func KubeletLabels() []string {
 	return kubeletLabels.List()
 }
 
-// KubeletLabelNamespaces returns the list of label key namespaces kubelets are allowed to set on their own Node objects
 func KubeletLabelNamespaces() []string {
 	return kubeletLabelNamespaces.List()
 }

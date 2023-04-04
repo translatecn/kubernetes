@@ -64,7 +64,6 @@ var (
 	}
 
 	uswest2bBetaLabels = map[string]string{
-		v1.LabelFailureDomainBetaZone:   "us-west2-b",
 		v1.LabelFailureDomainBetaRegion: "us-west2",
 	}
 

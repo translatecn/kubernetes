@@ -206,10 +206,7 @@ type GenericAPIServer struct {
 	// EquivalentResourceRegistry provides information about resources equivalent to a given resource,
 	// and the kind associated with a given resource. As resources are installed, they are registered here.
 	EquivalentResourceRegistry runtime.EquivalentResourceRegistry
-
-	// delegationTarget is the next delegate in the chain. This is never nil.
-	delegationTarget DelegationTarget
-
+	delegationTarget           DelegationTarget // 是链中的下一个委托。这绝不是nil。
 	// HandlerChainWaitGroup allows you to wait for all chain handlers finish after the server shutdown.
 	HandlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
 
@@ -366,9 +363,9 @@ type preparedGenericAPIServer struct {
 	*GenericAPIServer
 }
 
-// PrepareRun does post API installation setup steps. It calls recursively the same function of the delegates.
+// PrepareRun 执行API安装设置步骤。它递归调用委托的相同函数。
 func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
-	s.delegationTarget.PrepareRun() // ✅
+	s.delegationTarget.PrepareRun() // ✅ kubeAPIServer.PrepareRun  apiExtensionsServer.PrepareRun
 
 	if s.openAPIConfig != nil && !s.skipOpenAPIInstallation {
 		s.OpenAPIVersionedService, s.StaticOpenAPISpec = routes.OpenAPI{
@@ -384,8 +381,8 @@ func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
 		}
 	}
 
-	s.installHealthz()
-	s.installLivez()
+	s.installHealthz() // ✅
+	s.installLivez()   // ✅
 
 	// as soon as shutdown is initiated, readiness should start failing
 	readinessStopCh := s.lifecycleSignals.ShutdownInitiated.Signaled()
@@ -393,7 +390,7 @@ func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
 	if err != nil {
 		klog.Errorf("Failed to install readyz shutdown check %s", err)
 	}
-	s.installReadyz()
+	s.installReadyz() // ✅
 
 	return preparedGenericAPIServer{s}
 }
@@ -436,6 +433,7 @@ func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
 // |                       listenerStoppedCh
 // |                                 |
 // |      HTTPServerStoppedListening (httpServerStoppedListeningCh)
+// 编织出server生命周期中的状态流转(利用channel机制）；关闭开始前调用pre shutdown hooks
 func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	delayedStopCh := s.lifecycleSignals.AfterShutdownDelayDuration
 	shutdownInitiatedCh := s.lifecycleSignals.ShutdownInitiated
@@ -507,7 +505,7 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 		}
 	}
 
-	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout) //
+	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout) // 触发启动http server，启动后触发post start hooks的执行
 	if err != nil {
 		return err
 	}
@@ -755,7 +753,7 @@ func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *A
 
 		apiGroupVersion.MaxRequestBodyBytes = s.maxRequestBodyBytes
 
-		discoveryAPIResources, r, err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer)
+		discoveryAPIResources, r, err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer) // ✅
 
 		if err != nil {
 			return fmt.Errorf("unable to setup API %v: %v", apiGroupInfo, err)
@@ -850,7 +848,7 @@ func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) erro
 	}
 
 	for _, apiGroupInfo := range apiGroupInfos {
-		if err := s.installAPIResources(APIGroupPrefix, apiGroupInfo, openAPIModels); err != nil {
+		if err := s.installAPIResources(APIGroupPrefix, apiGroupInfo, openAPIModels); err != nil { // ✅
 			return fmt.Errorf("unable to install api resources: %v", err)
 		}
 

@@ -419,7 +419,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	}
 
 	daemonEndpoints := &v1.NodeDaemonEndpoints{
-		KubeletEndpoint: v1.DaemonEndpoint{Port: kubeCfg.Port},
+		KubeletEndpoint: v1.DaemonEndpoint{Port: kubeCfg.Port}, // ✅
 	}
 
 	imageGCPolicy := images.ImageGCPolicy{
@@ -430,7 +430,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	enforceNodeAllocatable := kubeCfg.EnforceNodeAllocatable
 	if experimentalNodeAllocatableIgnoreEvictionThreshold {
-		// Do not provide kubeCfg.EnforceNodeAllocatable to eviction threshold parsing if we are not enforcing Evictions
+		// 如果我们不执行强制驱逐操作，不需要提供kubeCfg.EnforceNodeAllocatable
 		enforceNodeAllocatable = []string{}
 	}
 	thresholds, err := eviction.ParseThresholdConfig(enforceNodeAllocatable, kubeCfg.EvictionHard, kubeCfg.EvictionSoft, kubeCfg.EvictionSoftGracePeriod, kubeCfg.EvictionMinimumReclaim)
@@ -635,7 +635,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	klet.reasonCache = NewReasonCache()
 	klet.workQueue = queue.NewBasicWorkQueue(klet.clock)
-	klet.podWorkers = newPodWorkers(
+	klet.podWorkers = newPodWorkers( // 针对pod进行操作的
 		klet.syncPod,
 		klet.syncTerminatingPod,
 		klet.syncTerminatedPod,
@@ -1968,8 +1968,8 @@ func (kl *Kubelet) syncTerminatedPod(ctx context.Context, pod *v1.Pod, podStatus
 	klog.V(4).InfoS("syncTerminatedPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer klog.V(4).InfoS("syncTerminatedPod exit", "pod", klog.KObj(pod), "podUID", pod.UID)
 
-	// generate the final status of the pod
-	// TODO: should we simply fold this into TerminatePod? that would give a single pod update
+	// 生成pod的最终状态
+	// TODO：我们应该将其合并到TerminatePod中吗？这将提供单个pod更新。
 	apiPodStatus := kl.generateAPIPodStatus(pod, podStatus)
 
 	kl.statusManager.SetPodStatus(pod, apiPodStatus)
@@ -2516,7 +2516,7 @@ func (kl *Kubelet) ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfigur
 	server.ListenAndServeKubeletServer(kl, kl.resourceAnalyzer, kubeCfg, tlsOptions, auth, tp)
 }
 
-// ListenAndServeReadOnly runs the kubelet HTTP server in read-only mode.
+// ListenAndServeReadOnly 以只读模式运行kubelet HTTP服务器。
 func (kl *Kubelet) ListenAndServeReadOnly(address net.IP, port uint) {
 	server.ListenAndServeKubeletReadOnlyServer(kl, kl.resourceAnalyzer, address, port)
 }

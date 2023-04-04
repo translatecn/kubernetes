@@ -340,7 +340,8 @@ func (c *Config) Complete() CompletedConfig {
 	return CompletedConfig{&cfg}
 }
 
-// New returns a new instance of Master from the given config.
+// New CreateKubeAPIServer
+// returns a new instance of Master from the given config.
 // Certain config fields will be set to a default value if unset.
 // Certain config fields must be specified, including:
 //

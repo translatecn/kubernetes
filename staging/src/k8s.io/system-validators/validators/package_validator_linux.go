@@ -245,9 +245,10 @@ func extractUpstreamVersion(version string) string {
 
 // toSemVerRange converts the input to a semantic version range.
 // E.g., ">=1.0"             -> ">=1.0.x"
-//       ">=1"               -> ">=1.x"
-//       ">=1 <=2.3"         -> ">=1.x <=2.3.x"
-//       ">1 || >3.1.0 !4.2" -> ">1.x || >3.1.0 !4.2.x"
+//
+//	">=1"               -> ">=1.x"
+//	">=1 <=2.3"         -> ">=1.x <=2.3.x"
+//	">1 || >3.1.0 !4.2" -> ">1.x || >3.1.0 !4.2.x"
 func toSemVerRange(input string) string {
 	var output []string
 	fields := strings.Fields(input)

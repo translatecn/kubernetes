@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-// DefaultFs implements Filesystem using same-named functions from "os" and "io"
+// DefaultFs 使用“os”和“io”中同名函数实现文件系统。
 type DefaultFs struct {
 	root string
 }

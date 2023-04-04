@@ -1064,7 +1064,7 @@ func InitWindowsGcePdDriver() storageframework.TestDriver {
 				Min: "1Gi",
 			},
 			SupportedFsType: supportedTypes,
-			TopologyKeys:    []string{v1.LabelZoneFailureDomain},
+			TopologyKeys:    []string{},
 			Capabilities: map[storageframework.Capability]bool{
 				storageframework.CapControllerExpansion: false,
 				storageframework.CapPersistence:         true,

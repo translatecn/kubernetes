@@ -114,7 +114,7 @@ func (g *APIGroupVersion) InstallREST(container *restful.Container) ([]apidiscov
 		minRequestTimeout: g.MinRequestTimeout,
 	}
 
-	apiResources, resourceInfos, ws, registrationErrors := installer.Install()
+	apiResources, resourceInfos, ws, registrationErrors := installer.Install() // ✅
 	versionDiscoveryHandler := discovery.NewAPIVersionHandler(g.Serializer, g.GroupVersion, staticLister{apiResources})
 	versionDiscoveryHandler.AddToWebService(ws)
 	container.Add(ws) // ✅ 25个
