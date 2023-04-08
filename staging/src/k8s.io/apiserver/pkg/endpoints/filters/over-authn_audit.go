@@ -29,8 +29,7 @@ import (
 	"k8s.io/apiserver/pkg/endpoints/handlers/responsewriters"
 )
 
-// WithFailedAuthenticationAudit decorates a failed http.Handler used in WithAuthentication handler.
-// It is meant to log only failed authentication requests.
+// WithFailedAuthenticationAudit 修饰了在 WithAuthentication 处理程序中使用的失败的http.Handler。//它仅用于记录身份验证失败的请求。
 func WithFailedAuthenticationAudit(failedHandler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator) http.Handler {
 	if sink == nil || policy == nil {
 		return failedHandler
@@ -61,7 +60,7 @@ func WithFailedAuthenticationAudit(failedHandler http.Handler, sink audit.Sink, 
 func getAuthMethods(req *http.Request) string {
 	authMethods := []string{}
 
-	if _, _, ok := req.BasicAuth(); ok {
+	if _, _, ok := req.BasicAuth(); ok { // ✅
 		authMethods = append(authMethods, "basic")
 	}
 

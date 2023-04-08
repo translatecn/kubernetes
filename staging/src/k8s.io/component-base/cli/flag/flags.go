@@ -58,7 +58,7 @@ func InitFlags() {
 	})
 }
 
-// PrintFlags logs the flags in the flagset
+// PrintFlags 打印命令行参数
 func PrintFlags(flags *pflag.FlagSet) {
 	flags.VisitAll(func(flag *pflag.Flag) {
 		klog.V(1).Infof("FLAG: --%s=%q", flag.Name, flag.Value)

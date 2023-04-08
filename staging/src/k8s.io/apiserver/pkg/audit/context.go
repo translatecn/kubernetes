@@ -26,11 +26,9 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// The key type is unexported to prevent collisions
 type key int
 
-// auditKey is the context key for storing the audit context that is being
-// captured and the evaluated policy that applies to the given request.
+// auditKey 是上下文键，用于存储正在捕获的audit上下文以及适用于给定请求的评估策略。
 const auditKey key = iota
 
 // AuditContext holds the information for constructing the audit events for the current request.
@@ -156,10 +154,9 @@ func logAnnotation(ae *auditinternal.Event, key, value string) {
 	ae.Annotations[key] = value
 }
 
-// WithAuditContext returns a new context that stores the AuditContext.
 func WithAuditContext(parent context.Context) context.Context {
 	if AuditContextFrom(parent) != nil {
-		return parent // Avoid double registering.
+		return parent // 避免重复注册可以审计
 	}
 
 	return genericapirequest.WithValue(parent, auditKey, &AuditContext{})

@@ -24,13 +24,11 @@ import (
 )
 
 const (
-	// APIVersionInternal may be used if you are registering a type that should not
-	// be considered stable or serialized - it is a convention only and has no
-	// special behavior in this package.
+	// APIVersionInternal 如果您正在注册不应被视为稳定或序列化的类型，则可以使用APIVersionInternal -这只是一种约定，此包中没有特殊行为。
 	APIVersionInternal = "__internal"
 )
 
-// GroupVersioner refines a set of possible conversion targets into a single option.
+// GroupVersioner 将一组可能的转换目标精炼为单个选项。
 type GroupVersioner interface {
 	// KindForGroupVersionKinds returns a desired target group version kind for the given input, or returns ok false if no
 	// target is known. In general, if the return target is not in the input list, the caller is expected to invoke
@@ -161,19 +159,11 @@ type StreamSerializerInfo struct {
 	Framer
 }
 
-// NegotiatedSerializer is an interface used for obtaining encoders, decoders, and serializers
-// for multiple supported media types. This would commonly be accepted by a server component
-// that performs HTTP content negotiation to accept multiple formats.
+// NegotiatedSerializer 是一个接口，用于获取多种支持的媒体类型的编码器、解码器和序列化程序。这通常由执行HTTP内容协商以接受多种格式的服务器组件接受。
 type NegotiatedSerializer interface {
-	// SupportedMediaTypes is the media types supported for reading and writing single objects.
-	SupportedMediaTypes() []SerializerInfo
-
-	// EncoderForVersion returns an encoder that ensures objects being written to the provided
-	// serializer are in the provided group version.
-	EncoderForVersion(serializer Encoder, gv GroupVersioner) Encoder
-	// DecoderToVersion returns a decoder that ensures objects being read by the provided
-	// serializer are in the provided group version by default.
-	DecoderToVersion(serializer Decoder, gv GroupVersioner) Decoder
+	SupportedMediaTypes() []SerializerInfo                           // 是支持读取和写入单个对象的媒体类型。
+	EncoderForVersion(serializer Encoder, gv GroupVersioner) Encoder // 返回一个编码器，确保写入提供的序列化程序的对象在提供的组版本中。
+	DecoderToVersion(serializer Decoder, gv GroupVersioner) Decoder  // 返回一个解码器，该解码器默认情况下确保由提供的序列化程序读取的对象在提供的组版本中。
 }
 
 // ClientNegotiator handles turning an HTTP content type into the appropriate encoder.

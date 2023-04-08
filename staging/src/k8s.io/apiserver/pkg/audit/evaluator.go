@@ -25,12 +25,8 @@ import (
 // a given request. PolicyRuleEvaluator evaluates the audit policy against the
 // authorizer attributes and returns a RequestAuditConfig that applies to the request.
 type RequestAuditConfig struct {
-	// OmitStages is the stages that need to be omitted from being audited.
-	OmitStages []audit.Stage
-
-	// OmitManagedFields indicates whether to omit the managed fields of the request
-	// and response bodies from being written to the API audit log.
-	OmitManagedFields bool
+	OmitStages        []audit.Stage // 这些阶段需要从审计中省略。
+	OmitManagedFields bool          // 指示是否省略请求和响应正文的托管字段，以便不将其写入API审计日志中。
 }
 
 // RequestAuditConfigWithLevel includes Level at which the request is being audited.

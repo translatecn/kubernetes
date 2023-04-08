@@ -34,15 +34,13 @@ func NoMuxAndDiscoveryIncompleteKey(ctx context.Context) bool { // 没有Mux和�
 	return len(muxAndDiscoveryCompleteProtectionKeyValue) == 0
 }
 
-// WithMuxAndDiscoveryComplete puts the muxAndDiscoveryIncompleteKey in the context if a request has been made before muxAndDiscoveryCompleteSignal has been ready.
-// Putting the key protect us from returning a 404 response instead of a 503.
-// It is especially important for controllers like GC and NS since they act on 404s.
-//
-// The presence of the key is checked in the NotFoundHandler (staging/src/k8s.io/apiserver/pkg/util/notfoundhandler/not_found_handler.go)
-//
-// The primary reason this filter exists is to protect from a potential race between the client's requests reaching the NotFoundHandler and the server becoming ready.
-// Without the protection key a request could still get a 404 response when the registered signals changed their status just slightly before reaching the new handler.
-// In that case, the presence of the key will make the handler return a 503 instead of a 404.
+// WithMuxAndDiscoveryComplete 如果在muxAndDiscoveryCompleteSignal准备好之前进行了请求，则将muxAndDiscoveryIncompleteKey放入上下文中。
+// 放置 muxAndDiscoveryIncompleteKey 保护我们免受返回404响应而不是503的影响。
+// 对于像GC和NS这样的控制器尤其重要，因为它们会对404进行操作。
+// 在NotFoundHandler（staging/src/k8s.io/apiserver/pkg/util/notfoundhandler/not_found_handler.go）中检查muxAndDiscoveryIncompleteKey的存在
+// 此过滤器存在的主要原因是保护免受客户端请求到达NotFoundHandler和服务器变为就绪之间的潜在竞争的影响。
+// 如果没有保护密钥，则请求仍可能在注册的信号在到达新处理程序之前略微更改其状态时收到404响应。
+// 在这种情况下，密钥的存在将使处理程序返回503而不是404。
 func WithMuxAndDiscoveryComplete(handler http.Handler, muxAndDiscoveryCompleteSignal <-chan struct{}) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if muxAndDiscoveryCompleteSignal != nil && !isClosed(muxAndDiscoveryCompleteSignal) {
@@ -52,7 +50,7 @@ func WithMuxAndDiscoveryComplete(handler http.Handler, muxAndDiscoveryCompleteSi
 	})
 }
 
-// isClosed is a convenience function that simply check if the given chan has been closed
+// isClosed 这是一个方便的函数，仅检查给定的通道是否已关闭。
 func isClosed(ch <-chan struct{}) bool {
 	select {
 	case <-ch:

@@ -26,6 +26,8 @@ import (
 )
 
 func main() {
+	//kubectl get node  --profile=cpu  --profile-output=cpu.pprof
+	//go tool pprof -svg cpu.pprof  >cpu.svg
 	command := cmd.NewDefaultKubectlCommand()
 	if err := cli.RunNoErrOutput(command); err != nil {
 		// Pretty-print the error and exit with an error.

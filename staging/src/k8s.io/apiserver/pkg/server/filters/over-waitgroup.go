@@ -30,10 +30,8 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-// WithWaitGroup adds all non long-running requests to wait group, which is used for graceful shutdown.
+// WithWaitGroup 将所有非长时间运行的请求添加到等待组中，该组用于优雅的关闭。
 func WithWaitGroup(handler http.Handler, longRunning apirequest.LongRunningRequestCheck, wg *utilwaitgroup.SafeWaitGroup) http.Handler {
-	// NOTE: both WithWaitGroup and WithRetryAfter must use the same exact isRequestExemptFunc 'isRequestExemptFromRetryAfter,
-	// otherwise SafeWaitGroup might wait indefinitely and will prevent the server from shutting down gracefully.
 	return withWaitGroup(handler, longRunning, wg, isRequestExemptFromRetryAfter)
 }
 
@@ -47,16 +45,15 @@ func withWaitGroup(handler http.Handler, longRunning apirequest.LongRunningReque
 			return
 		}
 
-		if longRunning(req, requestInfo) {
+		if longRunning(req, requestInfo) { // 长时间运行的路由
 			handler.ServeHTTP(w, req)
 			return
 		}
 
 		if err := wg.Add(1); err != nil {
-			// shutdown delay duration has elapsed and SafeWaitGroup.Wait has been invoked,
-			// this means 'WithRetryAfter' has started sending Retry-After response.
-			// we are going to exempt the same set of requests that WithRetryAfter are
-			// exempting from being rejected with a Retry-After response.
+			//关闭延迟时间已经过去，并且已调用SafeWaitGroup.Wait，这意味着'WithRetryAfter'已经开始发送Retry-After响应。
+			//我们将豁免与WithRetryAfter豁免的相同请求集不受'Retry-After'响应的拒绝。
+			var _ = isRequestExemptFromRetryAfter
 			if isRequestExemptFn(req) {
 				handler.ServeHTTP(w, req)
 				return

@@ -118,7 +118,7 @@ func NewAPIServerCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
+			// 检查命令行参数
 			if errs := completedOptions.Validate(); len(errs) != 0 { // kube-apiserver 👌🏻
 				return utilerrors.NewAggregate(errs)
 			}
@@ -239,8 +239,11 @@ func CreateKubeAPIServer(kubeAPIServerConfig *controlplane.Config, delegateAPISe
 	return kubeAPIServer, nil
 }
 
-// CreateProxyTransport creates the dialer infrastructure to connect to the nodes.
+// CreateProxyTransport 创建和节点通信的结构体proxyTransport ，使用缓存长连接提高效率
 func CreateProxyTransport() *http.Transport {
+	//- transport的主要功能其实就是缓存了长连接
+	//- 用于大量http请求场景下的连接复用
+	//- 减少发送请求时TCP(TLS)连接建立的时间损耗
 	var proxyDialerFn utilnet.DialFunc
 	// Proxying to pods and services is IP-based... don't expect to be able to verify the hostname
 	proxyTLSClientConfig := &tls.Config{InsecureSkipVerify: true}
@@ -444,7 +447,7 @@ func buildGenericConfig(
 	if lastErr = s.Etcd.Complete(genericConfig.StorageObjectCountTracker, genericConfig.DrainedNotify(), genericConfig.AddPostStartHook); lastErr != nil {
 		return
 	}
-
+	// 创建存储工厂配置
 	storageFactoryConfig := kubeapiserver.NewStorageFactoryConfig()
 	storageFactoryConfig.APIResourceConfig = genericConfig.MergedResourceConfig
 	// 初始化 storageFactory
@@ -453,11 +456,12 @@ func buildGenericConfig(
 		return
 	}
 	// 2、初始化 RESTOptionsGetter，后期根据其获取操作 Etcd 的句柄，同时添加 etcd 的健康检查方法
+	// 将存储工厂应用到服务端运行对象中，后期可以通过RESTOptionsGetter获取操作 Etcd 的句柄
 	if lastErr = s.Etcd.ApplyWithStorageFactoryTo(storageFactory, genericConfig); lastErr != nil {
 		return
 	}
 
-	// 3、设置使用 protobufs 用来内部交互，并且禁用压缩功能
+	// 3、设置使用 protobufs 用来内部交互，并且禁用压缩功能   [因为内部网络速度快，没必要为了节省带宽而将cpu浪费在压缩和解压上]
 	genericConfig.LoopbackClientConfig.ContentConfig.ContentType = "application/vnd.kubernetes.protobuf"
 
 	genericConfig.LoopbackClientConfig.DisableCompression = true // 禁用自我通信的压缩功能，因为我们将在一个快速的本地网络上。

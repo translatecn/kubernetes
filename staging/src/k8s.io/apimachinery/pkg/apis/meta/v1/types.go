@@ -666,7 +666,6 @@ type Preconditions struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Status is a return value for calls that don't return other objects.
 type Status struct {
 	TypeMeta `json:",inline"`
 	// Standard list metadata.

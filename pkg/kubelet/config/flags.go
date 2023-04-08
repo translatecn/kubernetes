@@ -24,7 +24,10 @@ import (
 
 // ContainerRuntimeOptions defines options for the container runtime.
 type ContainerRuntimeOptions struct {
-	ContainerRuntime string // 是要使用的容器运行时。
+	// General Options.
+
+	// ContainerRuntime is the container runtime to use.
+	ContainerRuntime string
 	// RuntimeCgroups that container runtime is expected to be isolated in.
 	RuntimeCgroups string
 	// PodSandboxImage is the image whose network/ipc namespaces

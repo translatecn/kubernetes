@@ -17,15 +17,13 @@ limitations under the License.
 package filters
 
 import (
-	"net/http"
-
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
-
 	tracing "k8s.io/component-base/tracing"
+	"net/http"
 )
 
-// WithTracing adds tracing to requests if the incoming request is sampled
+// WithTracing 如果传入请求被采样，则为请求添加跟踪。   传播span
 func WithTracing(handler http.Handler, tp trace.TracerProvider) http.Handler {
 	opts := []otelhttp.Option{
 		otelhttp.WithPropagators(tracing.Propagators()),

@@ -457,15 +457,12 @@ func RecordDroppedRequest(req *http.Request, requestInfo *request.RequestInfo, c
 	}
 }
 
-// RecordRequestTermination records that the request was terminated early as part of a resource
-// preservation or apiserver self-defense mechanism (e.g. timeouts, maxinflight throttling,
-// proxyHandler errors). RecordRequestTermination should only be called zero or one times
-// per request.
+// RecordRequestTermination 记录请求被提前终止，作为资源保护或apiserver自卫机制的一部分（例如超时，最大并发限制，proxyHandler错误）。每个请求只应调用RecordRequestTermination零次或一次。
 func RecordRequestTermination(req *http.Request, requestInfo *request.RequestInfo, component string, code int) {
 	if requestInfo == nil {
 		requestInfo = &request.RequestInfo{Verb: req.Method, Path: req.URL.Path}
 	}
-	scope := CleanScope(requestInfo)
+	scope := CleanScope(requestInfo) // 请求范围
 
 	// We don't use verb from <requestInfo>, as this may be propagated from
 	// InstrumentRouteFunc which is registered in installer.go with predefined
@@ -596,7 +593,7 @@ func NormalizedVerb(req *http.Request) string {
 	return CleanVerb(verb, req)
 }
 
-// CleanScope returns the scope of the request.
+// CleanScope 返回请求的范围。
 func CleanScope(requestInfo *request.RequestInfo) string {
 	if requestInfo.Name != "" || requestInfo.Verb == "create" {
 		return "resource"

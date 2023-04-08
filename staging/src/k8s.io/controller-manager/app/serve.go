@@ -34,7 +34,6 @@ import (
 	_ "k8s.io/component-base/metrics/prometheus/workqueue" // for workqueue metric registration
 )
 
-// BuildHandlerChain builds a handler chain with a base handler and CompletedConfig.
 func BuildHandlerChain(apiHandler http.Handler, authorizationInfo *apiserver.AuthorizationInfo, authenticationInfo *apiserver.AuthenticationInfo) http.Handler {
 	requestInfoResolver := &apirequest.RequestInfoFactory{}
 	failedHandler := genericapifilters.Unauthorized(scheme.Codecs)

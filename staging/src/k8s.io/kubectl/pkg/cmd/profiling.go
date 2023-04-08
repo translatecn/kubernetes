@@ -32,8 +32,8 @@ var (
 )
 
 func addProfilingFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&profileName, "profile", "none", "Name of profile to capture. One of (none|cpu|heap|goroutine|threadcreate|block|mutex)")
-	flags.StringVar(&profileOutput, "profile-output", "profile.pprof", "Name of the file to write the profile to")
+	flags.StringVar(&profileName, "profile", "none", "要捕获的配置文件的名称。可以是以下之一（none|cpu|heap|goroutine|threadcreate|block|mutex）。")
+	flags.StringVar(&profileOutput, "profile-output", "profile.pprof", "输出的pprof结果文件")
 }
 
 func initProfiling() error {

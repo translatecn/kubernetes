@@ -310,7 +310,7 @@ func generateMediaTypeWithGVK(mediaType string, gvk *schema.GroupVersionKind) st
 	return mediaType
 }
 
-// ErrorNegotiated 将错误呈现到响应中。返回错误的HTTP状态代码。
+// ErrorNegotiated 将错误写到响应中。返回错误的HTTP状态代码。
 // 上下文是可选的，可以为nil。
 func ErrorNegotiated(err error, s runtime.NegotiatedSerializer, gv schema.GroupVersion, w http.ResponseWriter, req *http.Request) int {
 	status := ErrorToAPIStatus(err)

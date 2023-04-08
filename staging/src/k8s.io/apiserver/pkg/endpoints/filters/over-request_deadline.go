@@ -41,11 +41,10 @@ const (
 	invalidTimeoutInURL = "invalid timeout specified in the request URL"
 )
 
-// WithRequestDeadline determines the timeout duration applicable to the given request and sets a new context
-// with the appropriate deadline.
-// auditWrapper provides an http.Handler that audits a failed request.
-// longRunning returns true if he given request is a long running request.
-// requestTimeoutMaximum specifies the default request timeout value.
+// WithRequestDeadline 确定适用于给定请求的超时持续时间，并设置新的上下文具有适当的截止日期。
+// auditWrapper提供了一个http.Handler，用于审核失败的请求。
+// longRunning如果给定请求是长时间运行的请求，则返回true。
+// requestTimeoutMaximum指定默认请求超时值。
 func WithRequestDeadline(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator, longRunning request.LongRunningRequestCheck,
 	negotiatedSerializer runtime.NegotiatedSerializer, requestTimeoutMaximum time.Duration) http.Handler {
 	return withRequestDeadline(handler, sink, policy, longRunning, negotiatedSerializer, requestTimeoutMaximum, clock.RealClock{})
@@ -93,7 +92,7 @@ func withRequestDeadline(handler http.Handler, sink audit.Sink, policy audit.Pol
 			started = requestStartedTimestamp
 		}
 
-		ctx, cancel := context.WithDeadline(ctx, started.Add(timeout))
+		ctx, cancel := context.WithDeadline(ctx, started.Add(timeout)) // 添加上死亡超时时间
 		defer cancel()
 
 		req = req.WithContext(ctx)

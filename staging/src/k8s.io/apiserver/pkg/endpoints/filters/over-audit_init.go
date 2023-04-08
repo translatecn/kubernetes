@@ -26,10 +26,9 @@ import (
 	"github.com/google/uuid"
 )
 
-// WithAuditInit initializes the audit context and attaches the Audit-ID associated with a request.
-//
-// a. If the caller does not specify a value for Audit-ID in the request header, we generate a new audit ID
-// b. We echo the Audit-ID value to the caller via the response Header 'Audit-ID'.
+// WithAuditInit 初始化审核上下文并附加与请求关联的Audit-ID。
+// a. 如果调用者没有在请求标头中指定Audit-ID的值，则我们会生成新的审核ID
+// b. 我们通过响应标头“Audit-ID”向调用者回显Audit-ID值。
 func WithAuditInit(handler http.Handler) http.Handler {
 	return withAuditInit(handler, func() string {
 		return uuid.New().String()
@@ -38,7 +37,7 @@ func WithAuditInit(handler http.Handler) http.Handler {
 
 func withAuditInit(handler http.Handler, newAuditIDFunc func() string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := audit.WithAuditContext(r.Context())
+		ctx := audit.WithAuditContext(r.Context()) // 允许审计
 		r = r.WithContext(ctx)
 
 		auditID := r.Header.Get(auditinternal.HeaderAuditID)
@@ -46,16 +45,13 @@ func withAuditInit(handler http.Handler, newAuditIDFunc func() string) http.Hand
 			auditID = newAuditIDFunc()
 		}
 
-		// Note: we save the user specified value of the Audit-ID header as is, no truncation is performed.
+		// Note: 我们保存用户指定的Audit-ID标头值，不执行截断。
 		audit.WithAuditID(ctx, types.UID(auditID))
 
-		// We echo the Audit-ID in to the response header.
-		// It's not guaranteed Audit-ID http header is sent for all requests.
-		// For example, when user run "kubectl exec", apiserver uses a proxy handler
-		// to deal with the request, users can only get http headers returned by kubelet node.
-		//
-		// This filter will also be used by other aggregated api server(s). For an aggregated API
-		// we don't want to see the same audit ID appearing more than once.
+		// 我们将Audit-ID回显到响应标头中。
+		// 并不是所有请求都保证发送Audit-ID http标头。
+		// 例如，当用户运行“kubectl exec”时，apiserver 使用代理处理程序来处理请求，用户只能获取由kubelet节点返回的http标头。
+		// 此过滤器也将用于其他聚合的api服务器。对于聚合API我们不希望看到相同的审核ID出现超过一次。
 		if value := w.Header().Get(auditinternal.HeaderAuditID); len(value) == 0 {
 			w.Header().Set(auditinternal.HeaderAuditID, auditID)
 		}

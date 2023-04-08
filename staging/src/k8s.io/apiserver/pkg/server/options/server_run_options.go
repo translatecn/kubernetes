@@ -172,8 +172,7 @@ func (s *ServerRunOptions) AddUniversalFlags(fs *pflag.FlagSet) {
 	fs.IPVar(&s.AdvertiseAddress, "advertise-address", s.AdvertiseAddress, "将api-server通告给集群成员的IP地址.该地址必须能被集群的其他组件访问.如果为空,则使用--bind-address.如果没有指定--bind-address,则使用主机的默认接口.")
 	fs.StringSliceVar(&s.CorsAllowedOriginList, "cors-allowed-origins", s.CorsAllowedOriginList, "CORS允许的源列表,以逗号分隔.允许的原点可以是支持子域匹配的正则表达式.如果此列表为空,则CORS将不会启用.")
 	// https://zhuanlan.zhihu.com/p/130946490
-	fs.StringSliceVar(&s.HSTSDirectives, "strict-transport-security-directives", s.HSTSDirectives,
-		"HSTS指令列表,逗号分隔.例如:'max-age=31536000,includeSubDomains,preload'")
+	fs.StringSliceVar(&s.HSTSDirectives, "strict-transport-security-directives", s.HSTSDirectives, "HSTS指令列表,逗号分隔.例如:'max-age=31536000,includeSubDomains,preload'")
 	fs.StringVar(&s.ExternalHost, "external-hostname", s.ExternalHost, "为主机生成外部化url时使用的主机名(例如Swagger API Docs或OpenID Discovery).")
 	deprecatedMasterServiceNamespace := metav1.NamespaceDefault
 	fs.StringVar(&deprecatedMasterServiceNamespace, "master-service-namespace", deprecatedMasterServiceNamespace, "DEPRECATED:将Kubernetes主服务注入pod的命名空间.")

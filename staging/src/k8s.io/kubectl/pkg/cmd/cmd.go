@@ -291,7 +291,7 @@ func NewKubectlCommand(o KubectlOptions) *cobra.Command {
 
 			return initProfiling()
 		},
-		PersistentPostRunE: func(*cobra.Command, []string) error {
+		PersistentPostRunE: func(*cobra.Command, []string) error { // pprof统计结果落盘
 			if err := flushProfiling(); err != nil {
 				return err
 			}

@@ -44,47 +44,93 @@ import (
 
 const defaultRootDir = "/var/lib/kubelet"
 
+// KubeletFlags contains configuration flags for the Kubelet.
+// A configuration field should go in KubeletFlags instead of KubeletConfiguration if any of these are true:
+//   - its value will never, or cannot safely be changed during the lifetime of a node, or
+//   - its value cannot be safely shared between nodes at the same time (e.g. a hostname);
+//     KubeletConfiguration is intended to be shared between nodes.
+//
+// In general, please try to avoid adding flags or configuration fields,
+// we already have a confusingly large amount of them.
 type KubeletFlags struct {
-	KubeConfig          string // /etc/kubernetes/kubelet.conf
-	KubeletConfigFile   string // /var/lib/kubelet/config.yaml
-	BootstrapKubeconfig string // /etc/kubernetes/bootstrap-kubelet.conf
+	KubeConfig          string
+	BootstrapKubeconfig string
 
-	HostnameOverride string // 是用于标识kubelet的主机名，而不是实际主机名。
-	NodeIP           string
+	// HostnameOverride is the hostname used to identify the kubelet instead
+	// of the actual hostname.
+	HostnameOverride string
+	// NodeIP is IP address of the node.
+	// If set, kubelet will use this IP address for the node.
+	NodeIP string
 
+	// Container-runtime-specific options.
 	config.ContainerRuntimeOptions
 
+	// certDirectory is the directory where the TLS certs are located.
+	// If tlsCertFile and tlsPrivateKeyFile are provided, this flag will be ignored.
 	CertDirectory   string
 	CloudProvider   string // +optional
 	CloudConfigFile string // +optional
 	RootDirectory   string // 是放置kubelet文件（卷挂载等）的目录路径。
 
-	WindowsService       bool   // 如果kubelet在Windows上作为服务运行，则应将其设置为true。其对应的标志仅在Windows构建中注册。
+	// The Kubelet will load its initial configuration from this file.
+	// The path may be absolute or relative; relative paths are under the Kubelet's current working directory.
+	// Omit this flag to use the combination of built-in default configuration values and flags.
+	KubeletConfigFile string
+
+	WindowsService bool // 如果kubelet在Windows上作为服务运行，则应将其设置为true。其对应的标志仅在Windows构建中注册。
+
+	// WindowsPriorityClass设置与Kubelet进程关联的优先级类别
+	// 其对应的标志仅在Windows构建中注册
+	// Windows中任何进程的默认优先级类别为NORMAL_PRIORITY_CLASS。保持不变以保持向后兼容性。
+	// Source: https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
 	WindowsPriorityClass string // kubelet 进程优先级
 
-	RemoteRuntimeEndpoint                              string
-	RemoteImageEndpoint                                string
-	ExperimentalMounterPath                            string            // 是挂载程序二进制文件的路径。如果要使用默认的挂载路径，请留空。
-	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool              // 如果设置了此标志，则在计算节点可分配性时，将避免包含“EvictionHard”限制。
+	// remoteRuntimeEndpoint is the endpoint of remote runtime service
+	RemoteRuntimeEndpoint string
+	// remoteImageEndpoint is the endpoint of remote image service
+	RemoteImageEndpoint string
+	// experimentalMounterPath is the path of mounter binary. Leave empty to use the default mount path
+	ExperimentalMounterPath string
+	// This flag, if set, will avoid including `EvictionHard` limits while computing Node Allocatable.
+	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md) doc for more information.
+	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool
 	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签。
-
-	LockFilePath         string // kubelet 文件独占锁
-	ExitOnLockContention bool   // kubelet侦听锁文件上的inotify事件，当另一个进程尝试打开该文件时，释放它并退出。
-
-	MinimumGCAge            metav1.Duration // DEPRECATED FLAGS // minimumGCAge是完成的容器在进行垃圾回收之前的最小时间。
-	MaxPerPodContainerCount int32           // 是每个容器要保留的旧实例的最大数量。每个容器占用一些磁盘空间。
-	MaxContainerCount       int32           // 是要全局保留的容器旧实例的最大数量。每个容器占用一些磁盘空间。
-	MasterServiceNamespace  string          // 是应从中将kubernetes主服务注入到pod的命名空间。
+	// lockFilePath is the path that kubelet will use to as a lock file.
+	// It uses this file as a lock to synchronize with other kubelet processes
+	// that may be running.
+	LockFilePath string
+	// ExitOnLockContention is a flag that signifies to the kubelet that it is running
+	// in "bootstrap" mode. This requires that 'LockFilePath' has been set.
+	// This will cause the kubelet to listen to inotify events on the lock file,
+	// releasing it and exiting when another process tries to open that file.
+	ExitOnLockContention bool
+	// DEPRECATED FLAGS
+	// minimumGCAge is the minimum age for a finished container before it is
+	// garbage collected.
+	MinimumGCAge metav1.Duration
+	// maxPerPodContainerCount is the maximum number of old instances to
+	// retain per container. Each container takes up some disk space.
+	MaxPerPodContainerCount int32
+	// maxContainerCount is the maximum number of old instances of containers
+	// to retain globally. Each container takes up some disk space.
+	MaxContainerCount int32
+	// masterServiceNamespace is The namespace from which the kubernetes
+	// master services should be injected into pods.
+	MasterServiceNamespace string
 	// registerSchedulable tells the kubelet to register the node as
 	// schedulable. Won't have any effect if register-node is false.
 	// DEPRECATED: use registerWithTaints instead
 	RegisterSchedulable bool
-	// 如果设置了此标志，则指示kubelet将自已终止的pod的卷 依然保持挂载到节点。这对于调试与卷相关的问题可能很有用。
+	// This flag, if set, instructs the kubelet to keep volumes from terminated pods mounted to the node.
+	// This can be useful for debugging volume related issues.
 	KeepTerminatedPodVolumes bool
-	// SeccompDefault启用使用“RuntimeDefault”作为节点上所有工作负载的默认seccomp配置文件。// 要使用此标志，必须启用相应的SeccompDefault功能门。
+	// SeccompDefault enables the use of `RuntimeDefault` as the default seccomp profile for all workloads on the node.
+	// To use this flag, the corresponding SeccompDefault feature gate must be enabled.
 	SeccompDefault bool
 }
 
+// NewKubeletFlags will create a new KubeletFlags with default values
 func NewKubeletFlags() *KubeletFlags {
 	return &KubeletFlags{
 		ContainerRuntimeOptions: *NewContainerRuntimeOptions(),
@@ -231,7 +277,6 @@ func (s *KubeletServer) AddFlags(fs *pflag.FlagSet) {
 
 // AddFlags adds flags for a specific KubeletFlags to the specified FlagSet
 func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
-	// 用于覆盖/etc/kubernetes/kubelet.conf里的参数
 	fs := pflag.NewFlagSet("", pflag.ExitOnError)
 	defer func() {
 		// Unhide deprecated flags. We want deprecated flags to show in Kubelet help.
@@ -248,44 +293,54 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 	f.ContainerRuntimeOptions.AddFlags(fs)
 	f.addOSFlags(fs)
 
-	fs.StringVar(&f.KubeletConfigFile, "config", f.KubeletConfigFile, "Kubelet将从该文件加载其初始配置。路径可以是绝对或相对的；相对路径从Kubelet的当前工作目录开始。省略此标志以使用内置的默认配置值。命令行标志将覆盖此文件中的配置。")
-	fs.StringVar(&f.KubeConfig, "kubeconfig", f.KubeConfig, "kubeconfig文件的路径，指定如何连接到API服务器。提供--kubeconfig启用API服务器模式，省略--kubeconfig启用独立模式。")
-	fs.StringVar(&f.BootstrapKubeconfig, "bootstrap-kubeconfig", f.BootstrapKubeconfig, "用于获取kubelet客户端证书的kubeconfig文件的路径。如果--kubeconfig指定的文件不存在，则使用引导kubeconfig从API服务器请求客户端证书。成功后，将向--kubeconfig指定的路径写入引用生成的客户端证书和密钥的kubeconfig文件。客户端证书和密钥文件将存储在--cert-dir指向的目录中。")
-	fs.StringVar(&f.HostnameOverride, "hostname-override", f.HostnameOverride, "如果非空，将使用此字符串作为标识，而不是实际主机名。如果设置了--cloud-provider，则使用云提供程序确定节点的名称（请参阅云提供程序文档以确定主机名是否以及如何使用）")
-	fs.StringVar(&f.NodeIP, "node-ip", f.NodeIP, "节点的IP地址（或逗号分隔的双栈IP地址）。如果未设置，kubelet将使用节点的默认IPv4地址（如果有），或者如果没有IPv4地址，则使用其默认IPv6地址。您可以传递“::”以使其优先使用默认IPv6地址而不是默认IPv4地址。")
-	fs.StringVar(&f.CertDirectory, "cert-dir", f.CertDirectory, "TLS证书所在的目录。如果提供了--tls-cert-file和--tls-private-key-file，则将忽略此标志。")
-	fs.StringVar(&f.RootDirectory, "root-dir", f.RootDirectory, "管理kubelet文件（卷挂载等）的目录路径。")
-	fs.StringVar(&f.RemoteRuntimeEndpoint, "container-runtime-endpoint", f.RemoteRuntimeEndpoint, "远程运行时服务的终结点。Linux支持Unix域套接字，而Windows支持npipe和tcp终结点。示例：“unix:///path/to/runtime.sock”，“npipe:////./pipe/runtime”。")
-	fs.StringVar(&f.RemoteImageEndpoint, "image-service-endpoint", f.RemoteImageEndpoint, "远程镜像服务的地址。如果未指定，则默认情况下将与--container-runtime-endpoint相同。Linux支持Unix域套接字，而Windows支持npipe和tcp终结点。示例：“unix:///path/to/runtime.sock”，“npipe:////./pipe/runtime”")
+	fs.StringVar(&f.KubeletConfigFile, "config", f.KubeletConfigFile, "The Kubelet will load its initial configuration from this file. The path may be absolute or relative; relative paths start at the Kubelet's current working directory. Omit this flag to use the built-in default configuration values. Command-line flags override configuration from this file.")
+	fs.StringVar(&f.KubeConfig, "kubeconfig", f.KubeConfig, "Path to a kubeconfig file, specifying how to connect to the API server. Providing --kubeconfig enables API server mode, omitting --kubeconfig enables standalone mode.")
+
+	fs.StringVar(&f.BootstrapKubeconfig, "bootstrap-kubeconfig", f.BootstrapKubeconfig, "Path to a kubeconfig file that will be used to get client certificate for kubelet. "+
+		"If the file specified by --kubeconfig does not exist, the bootstrap kubeconfig is used to request a client certificate from the API server. "+
+		"On success, a kubeconfig file referencing the generated client certificate and key is written to the path specified by --kubeconfig. "+
+		"The client certificate and key file will be stored in the directory pointed by --cert-dir.")
+
+	fs.StringVar(&f.HostnameOverride, "hostname-override", f.HostnameOverride, "If non-empty, will use this string as identification instead of the actual hostname. If --cloud-provider is set, the cloud provider determines the name of the node (consult cloud provider documentation to determine if and how the hostname is used).")
+
+	fs.StringVar(&f.NodeIP, "node-ip", f.NodeIP, "IP address (or comma-separated dual-stack IP addresses) of the node. If unset, kubelet will use the node's default IPv4 address, if any, or its default IPv6 address if it has no IPv4 addresses. You can pass '::' to make it prefer the default IPv6 address rather than the default IPv4 address.")
+
+	fs.StringVar(&f.CertDirectory, "cert-dir", f.CertDirectory, "The directory where the TLS certs are located. "+
+		"If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.")
+
+	fs.StringVar(&f.RootDirectory, "root-dir", f.RootDirectory, "Directory path for managing kubelet files (volume mounts,etc).")
+
+	fs.StringVar(&f.RemoteRuntimeEndpoint, "container-runtime-endpoint", f.RemoteRuntimeEndpoint, "The endpoint of remote runtime service. Unix Domain Sockets are supported on Linux, while npipe and tcp endpoints are supported on Windows. Examples:'unix:///path/to/runtime.sock', 'npipe:////./pipe/runtime'")
+	fs.StringVar(&f.RemoteImageEndpoint, "image-service-endpoint", f.RemoteImageEndpoint, "The endpoint of remote image service. If not specified, it will be the same with --container-runtime-endpoint by default. Unix Domain Socket are supported on Linux, while npipe and tcp endpoints are supported on Windows. Examples:'unix:///path/to/runtime.sock', 'npipe:////./pipe/runtime'")
 
 	// 实验性标志。
 	bindableNodeLabels := cliflag.ConfigurationMap(f.NodeLabels)
 	fs.Var(&bindableNodeLabels, "node-labels", fmt.Sprintf("<警告：Alpha功能>在注册节点时添加的标签。标签必须是用“,”分隔的键=值对。在“kubernetes.io”命名空间中的标签必须以允许的前缀（%s）开头或在特定允许的集合（%s）中。", strings.Join(kubeletapis.KubeletLabelNamespaces(), ", "), strings.Join(kubeletapis.KubeletLabels(), ", ")))
-	fs.StringVar(&f.LockFilePath, "lock-file", f.LockFilePath, "<警告：Alpha功能> kubelet用作锁文件的文件路径。")
-	fs.BoolVar(&f.ExitOnLockContention, "exit-on-lock-contention", f.ExitOnLockContention, "kubelet是否应在锁文件争用时退出。")
-	fs.BoolVar(&f.SeccompDefault, "seccomp-default", f.SeccompDefault, "<警告：Beta功能> 启用使用“RuntimeDefault”作为所有工作负载的默认seccomp配置文件。必须启用SeccompDefault功能门以允许此标志，默认情况下禁用该标志。")
+	fs.StringVar(&f.LockFilePath, "lock-file", f.LockFilePath, "<Warning: Alpha feature> The path to file for kubelet to use as a lock file.")
+	fs.BoolVar(&f.ExitOnLockContention, "exit-on-lock-contention", f.ExitOnLockContention, "Whether kubelet should exit upon lock-file contention.")
+	fs.BoolVar(&f.SeccompDefault, "seccomp-default", f.SeccompDefault, "<Warning: Beta feature> Enable the use of `RuntimeDefault` as the default seccomp profile for all workloads. The SeccompDefault feature gate must be enabled to allow this flag, which is disabled per default.")
 
 	// DEPRECATED FLAGS
-	//fs.DurationVar(&f.MinimumGCAge.Duration, "minimum-container-ttl-duration", f.MinimumGCAge.Duration, "Minimum age for a finished container before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'")
-	//fs.MarkDeprecated("minimum-container-ttl-duration", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
-	//fs.Int32Var(&f.MaxPerPodContainerCount, "maximum-dead-containers-per-container", f.MaxPerPodContainerCount, "Maximum number of old instances to retain per container.  Each container takes up some disk space.")
-	//fs.MarkDeprecated("maximum-dead-containers-per-container", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
-	//fs.Int32Var(&f.MaxContainerCount, "maximum-dead-containers", f.MaxContainerCount, "Maximum number of old instances of containers to retain globally.  Each container takes up some disk space. To disable, set to a negative number.")
-	//fs.MarkDeprecated("maximum-dead-containers", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
-	//fs.StringVar(&f.MasterServiceNamespace, "master-service-namespace", f.MasterServiceNamespace, "将kubernetes主服务注入pod的命名空间")
-	//fs.MarkDeprecated("master-service-namespace", "将被移除")
-	//fs.BoolVar(&f.RegisterSchedulable, "register-schedulable", f.RegisterSchedulable, "Register the node as schedulable. Won't have any effect if register-node is false.")
-	//fs.MarkDeprecated("register-schedulable", "will be removed in a future version")
-	//fs.BoolVar(&f.KeepTerminatedPodVolumes, "keep-terminated-pod-volumes", f.KeepTerminatedPodVolumes, "Keep terminated pod volumes mounted to the node after the pod terminates.  Can be useful for debugging volume related issues.")
-	//fs.MarkDeprecated("keep-terminated-pod-volumes", "will be removed in a future version")
-	//fs.StringVar(&f.ExperimentalMounterPath, "experimental-mounter-path", f.ExperimentalMounterPath, "[实验性]挂载程序二进制文件的路径。如果要使用默认的挂载，请留空。")
-	//fs.MarkDeprecated("experimental-mounter-path", "将在1.25或更高版本中删除，以便使用CSI。")
-	//fs.StringVar(&f.CloudProvider, "cloud-provider", f.CloudProvider, "云服务提供商。设置为空字符串以在没有云提供程序的情况下运行。如果设置了，云提供程序确定节点的名称（请参阅云提供程序文档以确定主机名是否以及如何使用）。")
-	//fs.MarkDeprecated("cloud-provider", "将在1.25或更高版本中删除，以取代从Kubelet中删除云提供程序代码。")
-	//fs.StringVar(&f.CloudConfigFile, "cloud-config", f.CloudConfigFile, "云提供程序配置文件的路径。空字符串表示没有配置文件。")
-	//fs.MarkDeprecated("cloud-config", "将在1.25或更高版本中删除，以取代从Kubelet中删除云提供程序代码。")
-	//fs.BoolVar(&f.ExperimentalNodeAllocatableIgnoreEvictionThreshold, "experimental-allocatable-ignore-eviction", f.ExperimentalNodeAllocatableIgnoreEvictionThreshold, "当设置为“true”时，将在计算节点可分配性时忽略硬驱逐阈值。. See https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/ for more details. [default=false]")
-	//fs.MarkDeprecated("experimental-allocatable-ignore-eviction", "will be removed in 1.25 or later.")
+	fs.DurationVar(&f.MinimumGCAge.Duration, "minimum-container-ttl-duration", f.MinimumGCAge.Duration, "Minimum age for a finished container before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'")
+	fs.MarkDeprecated("minimum-container-ttl-duration", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
+	fs.Int32Var(&f.MaxPerPodContainerCount, "maximum-dead-containers-per-container", f.MaxPerPodContainerCount, "Maximum number of old instances to retain per container.  Each container takes up some disk space.")
+	fs.MarkDeprecated("maximum-dead-containers-per-container", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
+	fs.Int32Var(&f.MaxContainerCount, "maximum-dead-containers", f.MaxContainerCount, "Maximum number of old instances of containers to retain globally.  Each container takes up some disk space. To disable, set to a negative number.")
+	fs.MarkDeprecated("maximum-dead-containers", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
+	fs.StringVar(&f.MasterServiceNamespace, "master-service-namespace", f.MasterServiceNamespace, "将kubernetes主服务注入pod的命名空间")
+	fs.MarkDeprecated("master-service-namespace", "将被移除")
+	fs.BoolVar(&f.RegisterSchedulable, "register-schedulable", f.RegisterSchedulable, "Register the node as schedulable. Won't have any effect if register-node is false.")
+	fs.MarkDeprecated("register-schedulable", "will be removed in a future version")
+	fs.BoolVar(&f.KeepTerminatedPodVolumes, "keep-terminated-pod-volumes", f.KeepTerminatedPodVolumes, "Keep terminated pod volumes mounted to the node after the pod terminates.  Can be useful for debugging volume related issues.")
+	fs.MarkDeprecated("keep-terminated-pod-volumes", "will be removed in a future version")
+	fs.StringVar(&f.ExperimentalMounterPath, "experimental-mounter-path", f.ExperimentalMounterPath, "[Experimental] Path of mounter binary. Leave empty to use the default mount.")
+	fs.MarkDeprecated("experimental-mounter-path", "will be removed in 1.25 or later. in favor of using CSI.")
+	fs.StringVar(&f.CloudProvider, "cloud-provider", f.CloudProvider, "The provider for cloud services. Set to empty string for running with no cloud provider. If set, the cloud provider determines the name of the node (consult cloud provider documentation to determine if and how the hostname is used).")
+	fs.MarkDeprecated("cloud-provider", "will be removed in 1.25 or later, in favor of removing cloud provider code from Kubelet.")
+	fs.StringVar(&f.CloudConfigFile, "cloud-config", f.CloudConfigFile, "The path to the cloud provider configuration file. Empty string for no configuration file.")
+	fs.MarkDeprecated("cloud-config", "will be removed in 1.25 or later, in favor of removing cloud provider code from Kubelet.")
+	fs.BoolVar(&f.ExperimentalNodeAllocatableIgnoreEvictionThreshold, "experimental-allocatable-ignore-eviction", f.ExperimentalNodeAllocatableIgnoreEvictionThreshold, "When set to 'true', Hard Eviction Thresholds will be ignored while calculating Node Allocatable. See https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/ for more details. [default=false]")
+	fs.MarkDeprecated("experimental-allocatable-ignore-eviction", "will be removed in 1.25 or later.")
 }
 
 // AddKubeletConfigFlags 将特定的kubeletconfig.KubeletConfiguration的标志添加到指定的FlagSet中。
@@ -318,50 +373,67 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 		mainfs.AddFlagSet(fs)
 	}()
 
-	fs.BoolVar(&c.EnableServer, "enable-server", c.EnableServer, "启用Kubelet的服务器")
+	fs.BoolVar(&c.EnableServer, "enable-server", c.EnableServer, "启用Kubelet的服务器。")
 
-	fs.BoolVar(&c.FailSwapOn, "fail-swap-on", c.FailSwapOn, "如果节点上启用了SWAP空间，则使Kubelet无法启动。")
-	fs.StringVar(&c.StaticPodPath, "pod-manifest-path", c.StaticPodPath, "包含要运行的静态pod文件的目录路径，或单个静态pod文件的路径。以点开头的文件将被忽略。")
-	fs.DurationVar(&c.SyncFrequency.Duration, "sync-frequency", c.SyncFrequency.Duration, "同步运行容器和配置之间的最大时间间隔。")
-	fs.DurationVar(&c.FileCheckFrequency.Duration, "file-check-frequency", c.FileCheckFrequency.Duration, "检查配置文件以获取新数据的时间。")
-	fs.DurationVar(&c.HTTPCheckFrequency.Duration, "http-check-frequency", c.HTTPCheckFrequency.Duration, "检查http以获取新数据的时间。")
-	fs.StringVar(&c.StaticPodURL, "manifest-url", c.StaticPodURL, "用于从某个地址获取要运行的静态pod。")
-	fs.Var(cliflag.NewColonSeparatedMultimapStringString(&c.StaticPodURLHeader), "manifest-url-header", "在访问提供给--manifest-url的URL时要使用的逗号分隔的HTTP标头列表。具有相同名称的多个标头将按提供的相同顺序添加。可以重复使用此标志。例如：--manifest-url-header 'a:hello,b:again,c:world' --manifest-url-header 'b:beautiful'")
-	fs.Var(&utilflag.IPVar{Val: &c.Address}, "address", "Kubelet要服务的IP地址（设置为“0.0.0.0”或“::”以在所有接口和IP族上进行侦听）")
-	fs.Int32Var(&c.Port, "port", c.Port, "Kubelet要服务的端口。")
-	fs.Int32Var(&c.ReadOnlyPort, "read-only-port", c.ReadOnlyPort, "Kubelet要在其上提供只读端口，没有身份验证/授权（设置为0以禁用）")
+	fs.BoolVar(&c.FailSwapOn, "fail-swap-on", c.FailSwapOn, "Makes the Kubelet fail to start if swap is enabled on the node. ")
+	fs.StringVar(&c.StaticPodPath, "pod-manifest-path", c.StaticPodPath, "Path to the directory containing static pod files to run, or the path to a single static pod file. Files starting with dots will be ignored.")
+	fs.DurationVar(&c.SyncFrequency.Duration, "sync-frequency", c.SyncFrequency.Duration, "Max period between synchronizing running containers and config")
+	fs.DurationVar(&c.FileCheckFrequency.Duration, "file-check-frequency", c.FileCheckFrequency.Duration, "Duration between checking config files for new data")
+	fs.DurationVar(&c.HTTPCheckFrequency.Duration, "http-check-frequency", c.HTTPCheckFrequency.Duration, "Duration between checking http for new data")
+	fs.StringVar(&c.StaticPodURL, "manifest-url", c.StaticPodURL, "URL for accessing additional Pod specifications to run")
+	fs.Var(cliflag.NewColonSeparatedMultimapStringString(&c.StaticPodURLHeader), "manifest-url-header", "Comma-separated list of HTTP headers to use when accessing the url provided to --manifest-url. Multiple headers with the same name will be added in the same order provided. This flag can be repeatedly invoked. For example: --manifest-url-header 'a:hello,b:again,c:world' --manifest-url-header 'b:beautiful'")
+	fs.Var(&utilflag.IPVar{Val: &c.Address}, "address", "The IP address for the Kubelet to serve on (set to '0.0.0.0' or '::' for listening in all interfaces and IP families)")
+	fs.Int32Var(&c.Port, "port", c.Port, "The port for the Kubelet to serve on.")
+	fs.Int32Var(&c.ReadOnlyPort, "read-only-port", c.ReadOnlyPort, "The read-only port for the Kubelet to serve on with no authentication/authorization (set to 0 to disable)")
 
 	// Authentication
-	fs.BoolVar(&c.Authentication.Anonymous.Enabled, "anonymous-auth", c.Authentication.Anonymous.Enabled, "启用对Kubelet服务器的匿名请求。未被其他身份验证方法拒绝的请求将被视为匿名请求。匿名请求的用户名为system:anonymous，组名为system:unauthenticated。")
-	fs.BoolVar(&c.Authentication.Webhook.Enabled, "authentication-token-webhook", c.Authentication.Webhook.Enabled, "使用TokenReview API来确定承载令牌的身份验证。")
-	fs.DurationVar(&c.Authentication.Webhook.CacheTTL.Duration, "authentication-token-webhook-cache-ttl", c.Authentication.Webhook.CacheTTL.Duration, "缓存来自Webhook令牌验证器的响应的持续时间。")
-	fs.StringVar(&c.Authentication.X509.ClientCAFile, "client-ca-file", c.Authentication.X509.ClientCAFile, "如果设置，通过由client-ca-file中的任何一个机构签名的客户端证书呈现的任何请求都将使用与客户端证书的CommonName相对应的身份进行身份验证。")
+	fs.BoolVar(&c.Authentication.Anonymous.Enabled, "anonymous-auth", c.Authentication.Anonymous.Enabled,
+		"Enables anonymous requests to the Kubelet server. Requests that are not rejected by another "+
+			"authentication method are treated as anonymous requests. Anonymous requests have a username "+
+			"of system:anonymous, and a group name of system:unauthenticated.")
+	fs.BoolVar(&c.Authentication.Webhook.Enabled, "authentication-token-webhook", c.Authentication.Webhook.Enabled,
+		"Use the TokenReview API to determine authentication for bearer tokens.")
+	fs.DurationVar(&c.Authentication.Webhook.CacheTTL.Duration, "authentication-token-webhook-cache-ttl", c.Authentication.Webhook.CacheTTL.Duration,
+		"The duration to cache responses from the webhook token authenticator.")
+	fs.StringVar(&c.Authentication.X509.ClientCAFile, "client-ca-file", c.Authentication.X509.ClientCAFile,
+		"If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file "+
+			"is authenticated with an identity corresponding to the CommonName of the client certificate.")
 
 	// Authorization
-	fs.StringVar((*string)(&c.Authorization.Mode), "authorization-mode", string(c.Authorization.Mode), "Kubelet服务器的授权模式。有效选项为AlwaysAllow或Webhook。Webhook模式使用SubjectAccessReview API来确定授权。")
-	fs.DurationVar(&c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "authorization-webhook-cache-authorized-ttl", c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "缓存来自Webhook授权程序的“已授权”响应的持续时间。")
-	fs.DurationVar(&c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "authorization-webhook-cache-unauthorized-ttl", c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "缓存来自Webhook授权程序的“未授权”响应的持续时间。")
+	fs.StringVar((*string)(&c.Authorization.Mode), "authorization-mode", string(c.Authorization.Mode),
+		"Authorization mode for Kubelet server. Valid options are AlwaysAllow or Webhook. "+
+			"Webhook mode uses the SubjectAccessReview API to determine authorization.")
+	fs.DurationVar(&c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "authorization-webhook-cache-authorized-ttl", c.Authorization.Webhook.CacheAuthorizedTTL.Duration,
+		"The duration to cache 'authorized' responses from the webhook authorizer.")
+	fs.DurationVar(&c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "authorization-webhook-cache-unauthorized-ttl", c.Authorization.Webhook.CacheUnauthorizedTTL.Duration,
+		"The duration to cache 'unauthorized' responses from the webhook authorizer.")
 
-	fs.StringVar(&c.TLSCertFile, "tls-cert-file", c.TLSCertFile, "包含用于提供HTTPS的x509证书的文件（如果有中间证书，则连接在服务器证书之后）。如果未提供--tls-cert-file和--tls-private-key-file，则会为公共地址生成自签名证书和密钥，并保存到传递给--cert-dir的目录中。")
-	fs.StringVar(&c.TLSPrivateKeyFile, "tls-private-key-file", c.TLSPrivateKeyFile, "包含与--tls-cert-file匹配的x509私钥的文件。")
-	fs.BoolVar(&c.ServerTLSBootstrap, "rotate-server-certificates", c.ServerTLSBootstrap, "通过在证书过期接近时从kube-apiserver请求新证书来自动请求和轮换kubelet服务证书。需要启用RotateKubeletServerCertificate 开关，并批准提交的CSR对象。")
+	fs.StringVar(&c.TLSCertFile, "tls-cert-file", c.TLSCertFile,
+		"File containing x509 Certificate used for serving HTTPS (with intermediate certs, if any, concatenated after server cert). "+
+			"If --tls-cert-file and --tls-private-key-file are not provided, a self-signed certificate and key "+
+			"are generated for the public address and saved to the directory passed to --cert-dir.")
+	fs.StringVar(&c.TLSPrivateKeyFile, "tls-private-key-file", c.TLSPrivateKeyFile, "File containing x509 private key matching --tls-cert-file.")
+	fs.BoolVar(&c.ServerTLSBootstrap, "rotate-server-certificates", c.ServerTLSBootstrap, "Auto-request and rotate the kubelet serving certificates by requesting new certificates from the kube-apiserver when the certificate expiration approaches. Requires the RotateKubeletServerCertificate feature gate to be enabled, and approval of the submitted CertificateSigningRequest objects.")
 
-	tlsCipherPreferredValues := cliflag.PreferredTLSCipherNames() // 反回由crypto/tls实现的密码套件名称列表。
-	tlsCipherInsecureValues := cliflag.InsecureTLSCipherNames()   // 返回由crypto/tls实现的具有安全问题的密码套件名称列表。
+	tlsCipherPreferredValues := cliflag.PreferredTLSCipherNames()
+	tlsCipherInsecureValues := cliflag.InsecureTLSCipherNames()
 	fs.StringSliceVar(&c.TLSCipherSuites, "tls-cipher-suites", c.TLSCipherSuites,
-		"服务器的逗号分隔的密码套件列表。如果省略，则将使用默认的Go密码套件。\n"+
+		"Comma-separated list of cipher suites for the server. "+
+			"If omitted, the default Go cipher suites will be used. \n"+
 			"Preferred values: "+strings.Join(tlsCipherPreferredValues, ", ")+". \n"+
 			"Insecure values: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
 	tlsPossibleVersions := cliflag.TLSPossibleVersions()
-	fs.StringVar(&c.TLSMinVersion, "tls-min-version", c.TLSMinVersion, "支持的最低TLS版本。Possible values: "+strings.Join(tlsPossibleVersions, ", "))
-	fs.BoolVar(&c.RotateCertificates, "rotate-certificates", c.RotateCertificates, "<警告：Beta功能>通过在证书过期接近时从kube-apiserver请求新证书，自动轮换kubelet客户端证书。")
+	fs.StringVar(&c.TLSMinVersion, "tls-min-version", c.TLSMinVersion,
+		"Minimum TLS version supported. "+
+			"Possible values: "+strings.Join(tlsPossibleVersions, ", "))
+	fs.BoolVar(&c.RotateCertificates, "rotate-certificates", c.RotateCertificates, "<Warning: Beta feature> Auto rotate the kubelet client certificates by requesting new certificates from the kube-apiserver when the certificate expiration approaches.")
 
-	fs.Int32Var(&c.RegistryPullQPS, "registry-qps", c.RegistryPullQPS, "如果> 0，则将注册表拉取QPS限制为此值。如果为0，则无限制。")
-	fs.Int32Var(&c.RegistryBurst, "registry-burst", c.RegistryBurst, "突发式拉取的最大大小，临时允许拉取突发到此数字，同时仍不超过registry-qps。仅在--registry-qps> 0时使用。")
-	fs.Int32Var(&c.EventRecordQPS, "event-qps", c.EventRecordQPS, "限制事件创建的QPS。数字必须>= 0。如果为0，将使用DefaultQPS：5。")
-	fs.Int32Var(&c.EventBurst, "event-burst", c.EventBurst, "突发式事件记录的最大大小，临时允许事件记录突发到此数字，同时仍不超过event-qps。数字必须>= 0。如果为0，将使用DefaultBurst：10。")
+	fs.Int32Var(&c.RegistryPullQPS, "registry-qps", c.RegistryPullQPS, "If > 0, limit registry pull QPS to this value.  If 0, unlimited.")
+	fs.Int32Var(&c.RegistryBurst, "registry-burst", c.RegistryBurst, "Maximum size of a bursty pulls, temporarily allows pulls to burst to this number, while still not exceeding registry-qps. Only used if --registry-qps > 0")
+	fs.Int32Var(&c.EventRecordQPS, "event-qps", c.EventRecordQPS, "QPS to limit event creations. The number must be >= 0. If 0 will use DefaultQPS: 5.")
+	fs.Int32Var(&c.EventBurst, "event-burst", c.EventBurst, "Maximum size of a bursty event records, temporarily allows event records to burst to this number, while still not exceeding event-qps. The number must be >= 0. If 0 will use DefaultBurst: 10.")
 
-	fs.BoolVar(&c.EnableDebuggingHandlers, "enable-debugging-handlers", c.EnableDebuggingHandlers, "启用用于日志收集和本地运行容器和命令的服务器端点。")
+	fs.BoolVar(&c.EnableDebuggingHandlers, "enable-debugging-handlers", c.EnableDebuggingHandlers, "Enables server endpoints for log collection and local running of containers and commands")
 	fs.BoolVar(&c.EnableContentionProfiling, "contention-profiling", c.EnableContentionProfiling, "Enable lock contention profiling, if profiling is enabled")
 	fs.Int32Var(&c.HealthzPort, "healthz-port", c.HealthzPort, "The port of the localhost healthz endpoint (set to 0 to disable)")
 	fs.Var(&utilflag.IPVar{Val: &c.HealthzBindAddress}, "healthz-bind-address", "The IP address for the healthz server to serve on (set to '0.0.0.0' or '::' for listening in all interfaces and IP families)")

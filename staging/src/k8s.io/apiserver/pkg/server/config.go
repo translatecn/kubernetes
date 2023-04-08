@@ -107,12 +107,11 @@ type Config struct {
 	LoopbackClientConfig *restclient.Config             // 是一个与API服务器的特权环回连接的配置。这对于GenericAPIServer上的PostStartHooks的正常运行是必需的。  s.SecureServing.ApplyTo(&gener
 	EgressSelector       *egressselector.EgressSelector // EgressSelector为拨出站连接提供查找机制。它基于启动时读取的EgressSelectorConfiguration。
 
-	// RuleResolver is required to get the list of rules that apply to a given user
-	// in a given namespace
+	// 要获取适用于给定命名空间中给定用户的规则列表，需要RuleResolver。
 	RuleResolver          authorizer.RuleResolver
 	AdmissionControl      admission.Interface // 对给定的请求(包括内容)执行深度检查，以设置值并确定是否允许
 	CorsAllowedOriginList []string            // CORS允许的源列表
-	HSTSDirectives        []string
+	HSTSDirectives        []string            // https://zhuanlan.zhihu.com/p/130946490
 	// FlowControl, if not nil, gives priority and fairness to request handling
 	FlowControl utilflowcontrol.Interface
 
@@ -128,8 +127,8 @@ type Config struct {
 
 	// Version will enable the /version endpoint if non-nil
 	Version *version.Info
-	// AuditBackend is where audit events are sent to.
-	AuditBackend             audit.Backend
+
+	AuditBackend             audit.Backend             // 审计日志后端
 	AuditPolicyRuleEvaluator audit.PolicyRuleEvaluator // 决定是否以及如何审计请求的日志。
 	// ExternalAddress is the host name to use for external (public internet) facing URLs (e.g. Swagger)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
@@ -138,13 +137,11 @@ type Config struct {
 	TracerProvider tracing.TracerProvider // 可以提供跟踪程序,用于记录用于分布式跟踪的范围.
 
 	//===========================================================================
-	// Fields you probably don't care about changing
+	// 您可能不关心更改的字段。
 	//===========================================================================
 
-	// BuildHandlerChainFunc allows you to build custom handler chains by decorating the apiHandler.
-	BuildHandlerChainFunc func(apiHandler http.Handler, c *Config) (secure http.Handler)
-	// HandlerChainWaitGroup allows you to wait for all chain handlers exit after the server shutdown.
-	HandlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
+	BuildHandlerChainFunc func(apiHandler http.Handler, c *Config) (secure http.Handler) // 允许您通过装饰apiHandler构建自定义处理程序链。
+	HandlerChainWaitGroup *utilwaitgroup.SafeWaitGroup                                   // 在服务器关闭后，允许您等待所有链处理程序退出。
 	// DiscoveryAddresses is used to build the IPs pass to discovery. If nil, the ExternalAddress is
 	// always reported
 	DiscoveryAddresses discovery.Addresses
@@ -153,13 +150,9 @@ type Config struct {
 	// The default set of livez checks. There might be more added via AddHealthChecks dynamically.
 	LivezChecks []healthz.HealthChecker
 	// The default set of readyz-only checks. There might be more added via AddReadyzChecks dynamically.
-	ReadyzChecks []healthz.HealthChecker
-	// LegacyAPIGroupPrefixes is used to set up URL parsing for authorization and for validating requests
-	// to InstallLegacyAPIGroup. New API servers don't generally have legacy groups at all.
-	LegacyAPIGroupPrefixes sets.String
-	// RequestInfoResolver is used to assign attributes (used by admission and authorization) based on a request URL.
-	// Use-cases that are like kubelets may need to customize this.
-	RequestInfoResolver apirequest.RequestInfoResolver
+	ReadyzChecks           []healthz.HealthChecker
+	LegacyAPIGroupPrefixes sets.String                    // 用于设置URL解析以进行授权，并验证对InstallLegacyAPIGroup的请求。内置资源的前缀
+	RequestInfoResolver    apirequest.RequestInfoResolver // 根据请求URL分配属性（由审核和授权使用）。
 	// Serializer is required and provides the interface for serializing and converting objects to and from the wire
 	// The default (api.Codecs) usually works fine.
 	Serializer runtime.NegotiatedSerializer
@@ -171,10 +164,8 @@ type Config struct {
 	SkipOpenAPIInstallation bool
 
 	RESTOptionsGetter genericregistry.RESTOptionsGetter // 用来通过通用注册表构建RESTStorage类型。
+	RequestTimeout    time.Duration                     // 所有请求都将在此持续时间后超时,默认60s
 
-	// If specified, all requests except those which match the LongRunningFunc predicate will timeout
-	// after this duration.
-	RequestTimeout time.Duration
 	// If specified, long running requests such as watch will be allocated a random timeout between this value, and
 	// twice this value.  Note that it is up to the request handlers to ignore or honor this timeout. In seconds.
 	MinRequestTimeout int
@@ -196,15 +187,13 @@ type Config struct {
 	// The limit on the request size that would be accepted and decoded in a write request
 	// 0 means no limit.
 	MaxRequestBodyBytes         int64
-	MaxRequestsInFlight         int // 运行中的请求的最大数目.仅适用于非突变请求.400
-	MaxMutatingRequestsInFlight int // 运行中的请求的最大数目.适用于突变请求. 200
-	// Predicate which is true for paths of long-running http requests
-	LongRunningFunc apirequest.LongRunningRequestCheck
+	MaxRequestsInFlight         int                                // 运行中的请求的最大数目.仅适用于非突变请求.400
+	MaxMutatingRequestsInFlight int                                // 运行中的请求的最大数目.适用于突变请求. 200
+	LongRunningFunc             apirequest.LongRunningRequestCheck // 对于长时间运行的HTTP请求的路径为真。
 
-	// GoawayChance is the probability that send a GOAWAY to HTTP/2 clients. When client received
-	// GOAWAY, the in-flight requests will not be affected and new requests will use
-	// a new TCP connection to triggering re-balancing to another server behind the load balance.
-	// Default to 0, means never send GOAWAY. Max is 0.02 to prevent break the apiserver.
+	// GoawayChance是向HTTP/2客户端发送GOAWAY的概率。
+	// 当客户端收到GOAWAY时，正在进行的请求不会受到影响，并且新请求将使用新的TCP连接触发重新平衡到负载均衡后面的另一个服务器。
+	// 默认为0，表示从不发送GOAWAY。最大值为0.02，以防止破坏apiserver。
 	GoawayChance float64
 
 	MergedResourceConfig *serverstore.ResourceConfig // 表示哪个groupVersion启用,其资源启用/禁用.
@@ -218,13 +207,9 @@ type Config struct {
 	// in the storage per resource, so we can estimate width of incoming requests.
 	StorageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker
 
-	// ShutdownSendRetryAfter dictates when to initiate shutdown of the HTTP
-	// Server during the graceful termination of the apiserver. If true, we wait
-	// for non longrunning requests in flight to be drained and then initiate a
-	// shutdown of the HTTP Server. If false, we initiate a shutdown of the HTTP
-	// Server as soon as ShutdownDelayDuration has elapsed.
-	// If enabled, after ShutdownDelayDuration elapses, any incoming request is
-	// rejected with a 429 status code and a 'Retry-After' response.
+	// 在apiserver优雅终止期间指示何时启动HTTP服务器的关闭。如果为true，则等待正在进行中的非长时间运行请求被处理完毕，然后启动HTTP服务器的关闭。
+	// 如果为false，则在ShutdownDelayDuration已经过时后立即启动HTTP服务器的关闭。
+	// 如果启用，则在ShutdownDelayDuration过期后，任何传入的请求都将被拒绝，并带有429状态代码和'Retry-After'响应。
 	ShutdownSendRetryAfter bool
 
 	//===========================================================================
@@ -271,17 +256,12 @@ type SecureServingInfo struct {
 }
 
 type AuthenticationInfo struct {
-	// APIAudiences is a list of identifier that the API identifies as. This is
-	// used by some authenticators to validate audience bound credentials.
-	APIAudiences authenticator.Audiences
-	// Authenticator determines which subject is making the request
-	Authenticator authenticator.Request
+	APIAudiences  authenticator.Audiences // APIAudiences是API识别的标识符列表。这由某些身份验证器用于验证面向受众的凭据。
+	Authenticator authenticator.Request   // 确定哪个主体发出的请求
 }
 
 type AuthorizationInfo struct {
-	// Authorizer determines whether the subject is allowed to make the request based only
-	// on the RequestURI
-	Authorizer authorizer.Authorizer
+	Authorizer authorizer.Authorizer // 仅基于RequestURI确定是否允许主体发出请求。
 }
 
 func init() {
@@ -325,14 +305,12 @@ func NewConfig(codecs serializer.CodecFactory) *Config {
 		ShutdownDelayDuration:       time.Duration(0),
 		JSONPatchMaxCopyBytes:       int64(3 * 1024 * 1024), //  1.5MB是默认的客户端请求大小,以字节为单位 etcd服务器应该接受. 因为请求是json, 最终以proto 存储在etcd ,所以可以大小*2
 		MaxRequestBodyBytes:         int64(3 * 1024 * 1024),
-		// Default to treating watch as a long-running operation
-		// Generic API servers have no inherent long-running subresources
-		LongRunningFunc:           genericfilters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString()),
-		lifecycleSignals:          lifecycleSignals,
-		StorageObjectCountTracker: flowcontrolrequest.NewStorageObjectCountTracker(), // 跟踪每个资源的对象总数
-		APIServerID:               id,
-		StorageVersionManager:     storageversion.NewDefaultManager(),
-		TracerProvider:            tracing.NewNoopTracerProvider(),
+		LongRunningFunc:             genericfilters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString()),
+		lifecycleSignals:            lifecycleSignals,
+		StorageObjectCountTracker:   flowcontrolrequest.NewStorageObjectCountTracker(), // 跟踪每个资源的对象总数
+		APIServerID:                 id,
+		StorageVersionManager:       storageversion.NewDefaultManager(),
+		TracerProvider:              tracing.NewNoopTracerProvider(),
 	}
 }
 
@@ -548,7 +526,7 @@ func (c *RecommendedConfig) Complete() CompletedConfig {
 	return c.Config.Complete(c.SharedInformerFactory)
 }
 
-// New ✅
+// New ✅ 基础方法
 // 创建一个新服务器，该服务器在逻辑上将处理链与传递的server.name用于区分日志记录。
 // CreateKubeAPIServer
 func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*GenericAPIServer, error) {
@@ -562,7 +540,7 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 		return nil, fmt.Errorf("Genericapiserver.New() called with config.EquivalentResourceRegistry == nil")
 	}
 
-	handlerChainBuilder := func(handler http.Handler) http.Handler {
+	handlerChainBuilder := func(handler http.Handler) http.Handler { // 补充中间件
 		return c.BuildHandlerChainFunc(handler, c.Config)
 	}
 
@@ -774,6 +752,7 @@ func BuildHandlerChainWithStorageVersionPrecondition(apiHandler http.Handler, c 
 	return DefaultBuildHandlerChain(handler, c)
 }
 
+// DefaultBuildHandlerChain ✅
 func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 	handler := filterlatency.TrackCompleted(apiHandler)
 	handler = genericapifilters.WithAuthorization(handler, c.Authorization.Authorizer, c.Serializer)
@@ -798,42 +777,43 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 	handler = genericapifilters.WithAudit(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator, c.LongRunningFunc)
 	handler = filterlatency.TrackStarted(handler, c.TracerProvider, "audit")
 
-	failedHandler := genericapifilters.Unauthorized(c.Serializer)
+	failedHandler := genericapifilters.Unauthorized(c.Serializer) // 看能不能拿到requestInfo
 	failedHandler = genericapifilters.WithFailedAuthenticationAudit(failedHandler, c.AuditBackend, c.AuditPolicyRuleEvaluator)
 
 	failedHandler = filterlatency.TrackCompleted(failedHandler)
+
 	handler = filterlatency.TrackCompleted(handler)
-	handler = genericapifilters.WithAuthentication(handler, c.Authentication.Authenticator, failedHandler, c.Authentication.APIAudiences)
+	handler = genericapifilters.WithAuthentication(handler, c.Authentication.Authenticator, failedHandler, c.Authentication.APIAudiences) // ✅
 	handler = filterlatency.TrackStarted(handler, c.TracerProvider, "authentication")
 
-	handler = genericfilters.WithCORS(handler, c.CorsAllowedOriginList, nil, nil, nil, "true")
+	handler = genericfilters.WithCORS(handler, c.CorsAllowedOriginList, nil, nil, nil, "true") // ✅
 
-	// WithTimeoutForNonLongRunningRequests will call the rest of the request handling in a go-routine with the
-	// context with deadline. The go-routine can keep running, while the timeout logic will return a timeout to the client.
-	handler = genericfilters.WithTimeoutForNonLongRunningRequests(handler, c.LongRunningFunc)
+	// 将在具有截止日期的上下文中使用go-routine调用其余的请求处理。go-routine可以继续运行，而超时逻辑将向客户端返回超时。
+	handler = genericfilters.WithTimeoutForNonLongRunningRequests(handler, c.LongRunningFunc) // ✅
 
-	handler = genericapifilters.WithRequestDeadline(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator,
-		c.LongRunningFunc, c.Serializer, c.RequestTimeout)
-	handler = genericfilters.WithWaitGroup(handler, c.LongRunningFunc, c.HandlerChainWaitGroup)
+	handler = genericapifilters.WithRequestDeadline(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator, c.LongRunningFunc, c.Serializer, c.RequestTimeout) // ✅
+
+	handler = genericfilters.WithWaitGroup(handler, c.LongRunningFunc, c.HandlerChainWaitGroup) // ✅
+
 	if c.SecureServing != nil && !c.SecureServing.DisableHTTP2 && c.GoawayChance > 0 {
-		handler = genericfilters.WithProbabilisticGoaway(handler, c.GoawayChance)
+		handler = genericfilters.WithProbabilisticGoaway(handler, c.GoawayChance) // ✅
 	}
-	handler = genericapifilters.WithWarningRecorder(handler)
-	handler = genericapifilters.WithCacheControl(handler)
-	handler = genericfilters.WithHSTS(handler, c.HSTSDirectives)
+	handler = genericapifilters.WithWarningRecorder(handler)     // ✅
+	handler = genericapifilters.WithCacheControl(handler)        // ✅
+	handler = genericfilters.WithHSTS(handler, c.HSTSDirectives) // ✅
 	if c.ShutdownSendRetryAfter {
-		handler = genericfilters.WithRetryAfter(handler, c.lifecycleSignals.NotAcceptingNewRequest.Signaled())
+		handler = genericfilters.WithRetryAfter(handler, c.lifecycleSignals.NotAcceptingNewRequest.Signaled()) // ✅ 429 响应码
 	}
-	handler = genericfilters.WithHTTPLogging(handler)
+	handler = genericfilters.WithHTTPLogging(handler) // ✅
 	if utilfeature.DefaultFeatureGate.Enabled(genericfeatures.APIServerTracing) {
-		handler = genericapifilters.WithTracing(handler, c.TracerProvider)
+		handler = genericapifilters.WithTracing(handler, c.TracerProvider) // ✅
 	}
-	handler = genericapifilters.WithLatencyTrackers(handler)
-	handler = genericapifilters.WithRequestInfo(handler, c.RequestInfoResolver)
-	handler = genericapifilters.WithRequestReceivedTimestamp(handler)
-	handler = genericapifilters.WithMuxAndDiscoveryComplete(handler, c.lifecycleSignals.MuxAndDiscoveryComplete.Signaled())
-	handler = genericfilters.WithPanicRecovery(handler, c.RequestInfoResolver)
-	handler = genericapifilters.WithAuditInit(handler)
+	handler = genericapifilters.WithLatencyTrackers(handler)                                                                // ✅
+	handler = genericapifilters.WithRequestInfo(handler, c.RequestInfoResolver)                                             // ✅
+	handler = genericapifilters.WithRequestReceivedTimestamp(handler)                                                       // ✅
+	handler = genericapifilters.WithMuxAndDiscoveryComplete(handler, c.lifecycleSignals.MuxAndDiscoveryComplete.Signaled()) // ✅
+	handler = genericfilters.WithPanicRecovery(handler, c.RequestInfoResolver)                                              // ✅
+	handler = genericapifilters.WithAuditInit(handler)                                                                      // 注册允许审计的标记位、添加审计ID
 	return handler
 }
 
@@ -880,9 +860,10 @@ func installAPI(s *GenericAPIServer, c *Config) {
 	}
 }
 
+// NewRequestInfoResolver 根据请求URL分配属性（由审核和授权使用）。
 func NewRequestInfoResolver(c *Config) *apirequest.RequestInfoFactory {
-	apiPrefixes := sets.NewString(strings.Trim(APIGroupPrefix, "/")) // all possible API prefixes
-	legacyAPIPrefixes := sets.String{}                               // APIPrefixes that won't have groups (legacy)
+	apiPrefixes := sets.NewString(strings.Trim(APIGroupPrefix, "/")) // 所有资源的前缀集合。
+	legacyAPIPrefixes := sets.String{}                               // 内置资源的前缀集合
 	for legacyAPIPrefix := range c.LegacyAPIGroupPrefixes {
 		apiPrefixes.Insert(strings.Trim(legacyAPIPrefix, "/"))
 		legacyAPIPrefixes.Insert(strings.Trim(legacyAPIPrefix, "/"))

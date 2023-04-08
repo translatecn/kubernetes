@@ -38,7 +38,7 @@ type RequestInfoResolver interface {
 	NewRequestInfo(req *http.Request) (*RequestInfo, error)
 }
 
-// RequestInfo holds information parsed from the http.Request
+// RequestInfo 保存从http.Request解析出的信息。 ✅
 type RequestInfo struct {
 	// IsResourceRequest indicates whether or not the request is for an API resource or subresource
 	IsResourceRequest bool
@@ -70,25 +70,24 @@ type RequestInfo struct {
 // master's Mux.
 var specialVerbs = sets.NewString("proxy", "watch")
 
-// specialVerbsNoSubresources contains root verbs which do not allow subresources
+// specialVerbsNoSubresources 包含不允许子资源的根动词。
 var specialVerbsNoSubresources = sets.NewString("proxy")
 
-// namespaceSubresources contains subresources of namespace
-// this list allows the parser to distinguish between a namespace subresource, and a namespaced resource
+// namespaceSubresources 包含命名空间的子资源。 此列表允许解析器区分命名空间子资源和命名空间资源。
 var namespaceSubresources = sets.NewString("status", "finalize")
 
 // NamespaceSubResourcesForTest exports namespaceSubresources for testing in pkg/controlplane/master_test.go, so we never drift
 var NamespaceSubResourcesForTest = sets.NewString(namespaceSubresources.List()...)
 
 type RequestInfoFactory struct {
-	APIPrefixes          sets.String // without leading and trailing slashes
-	GrouplessAPIPrefixes sets.String // without leading and trailing slashes
+	APIPrefixes          sets.String // 所有资源的前缀集合    没有前和尾 斜杠。
+	GrouplessAPIPrefixes sets.String // 内置资源的前缀集合    没有前和尾 斜杠。
 }
 
-// TODO write an integration test against the swagger doc to test the RequestInfo and match up behavior to responses
-// NewRequestInfo returns the information from the http request.  If error is not nil, RequestInfo holds the information as best it is known before the failure
-// It handles both resource and non-resource requests and fills in all the pertinent information for each.
-// Valid Inputs:
+// NewRequestInfo TODO 编写针对swagger文档的集成测试，以测试RequestInfo并将行为与响应匹配
+// NewRequestInfo返回http请求的信息。如果错误不为nil，则RequestInfo在失败之前尽可能地保留信息
+// 它处理资源和非资源请求，并为每个请求填充所有相关信息。
+// 有效输入:
 // Resource paths
 // /apis/{api-group}/{version}/namespaces
 // /api/{version}/namespaces
@@ -98,11 +97,11 @@ type RequestInfoFactory struct {
 // /api/{version}/{resource}
 // /api/{version}/{resource}/{resourceName}
 //
-// Special verbs without subresources:
+// 没有子资源的特殊动词:
 // /api/{version}/proxy/{resource}/{resourceName}
 // /api/{version}/proxy/namespaces/{namespace}/{resource}/{resourceName}
 //
-// Special verbs with subresources:
+// 具有子资源的特殊动词:
 // /api/{version}/watch/{resource}
 // /api/{version}/watch/namespaces/{namespace}/{resource}
 //
@@ -115,8 +114,10 @@ type RequestInfoFactory struct {
 // /healthz
 // /
 func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, error) {
-	// start with a non-resource request until proven otherwise
+	//
 	requestInfo := RequestInfo{
+		APIPrefix:         "", // api、apis
+		APIGroup:          "",
 		IsResourceRequest: false,
 		Path:              req.URL.Path,
 		Verb:              strings.ToLower(req.Method),
@@ -128,16 +129,17 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 		return &requestInfo, nil
 	}
 
-	if !r.APIPrefixes.Has(currentParts[0]) {
+	if !r.APIPrefixes.Has(currentParts[0]) { // api 、apis
 		// return a non-resource request
 		return &requestInfo, nil
 	}
-	requestInfo.APIPrefix = currentParts[0]
+	requestInfo.APIPrefix = currentParts[0] //
 	currentParts = currentParts[1:]
-
 	if !r.GrouplessAPIPrefixes.Has(requestInfo.APIPrefix) {
-		// one part (APIPrefix) has already been consumed, so this is actually "do we have four parts?"
+		// apis 进来
+		// 一个部分（APIPrefix）已经被使用，所以这实际上是“我们有四个部分吗？”
 		if len(currentParts) < 3 {
+			// 没有group、version
 			// return a non-resource request
 			return &requestInfo, nil
 		}
@@ -150,10 +152,10 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	requestInfo.APIVersion = currentParts[0]
 	currentParts = currentParts[1:]
 
-	// handle input of form /{specialVerb}/*
+	// 处理特殊动词  proxy、watch
 	if specialVerbs.Has(currentParts[0]) {
 		if len(currentParts) < 2 {
-			return &requestInfo, fmt.Errorf("unable to determine kind and namespace from url, %v", req.URL)
+			return &requestInfo, fmt.Errorf("无法从URL确定类型和命名空间。 %v", req.URL)
 		}
 
 		requestInfo.Verb = currentParts[0]
@@ -176,13 +178,12 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 		}
 	}
 
-	// URL forms: /namespaces/{namespace}/{kind}/*, where parts are adjusted to be relative to kind
+	// URL forms: /namespaces/{namespace}/{kind}/*, 其中各部分被调整为相对于类型。
 	if currentParts[0] == "namespaces" {
 		if len(currentParts) > 1 {
 			requestInfo.Namespace = currentParts[1]
 
-			// if there is another step after the namespace name and it is not a known namespace subresource
-			// move currentParts to include it as a resource in its own right
+			// 如果命名空间名称后面还有另一步，并且它不是已知的命名空间子资源，则将currentParts移动以将其作为自己的资源包含。
 			if len(currentParts) > 2 && !namespaceSubresources.Has(currentParts[2]) {
 				currentParts = currentParts[2:]
 			}
@@ -191,7 +192,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 		requestInfo.Namespace = metav1.NamespaceNone
 	}
 
-	// parsing successful, so we now know the proper value for .Parts
+	// 解析成功，因此我们现在知道.Parts的正确值。
 	requestInfo.Parts = currentParts
 
 	// parts look like: resource/resourceName/subresource/other/stuff/we/don't/interpret
@@ -206,7 +207,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 		requestInfo.Resource = requestInfo.Parts[0]
 	}
 
-	// if there's no name on the request and we thought it was a get before, then the actual verb is a list or a watch
+	// 如果请求中没有名称，并且我们认为它是get之前，则实际动词是列表或观看。
 	if len(requestInfo.Name) == 0 && requestInfo.Verb == "get" {
 		opts := metainternalversion.ListOptions{}
 		if err := metainternalversionscheme.ParameterCodec.DecodeParameters(req.URL.Query(), metav1.SchemeGroupVersion, &opts); err != nil {
