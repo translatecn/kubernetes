@@ -89,6 +89,7 @@ type Config struct {
 
 // New 返回一个验证器请求、支持标准Kubernetes身份验证机制
 func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, error) {
+	// https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/
 	var authenticators []authenticator.Request
 	var tokenAuthenticators []authenticator.Token
 	securityDefinitions := spec.SecurityDefinitions{}

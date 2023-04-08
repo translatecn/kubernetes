@@ -49,15 +49,8 @@ func (f RequestFunc) AuthenticateRequest(req *http.Request) (*Response, bool, er
 	return f(req)
 }
 
-// Response is the struct returned by authenticator interfaces upon successful
-// authentication. It contains information about whether the authenticator
-// authenticated the request, information about the context of the
-// authentication, and information about the authenticated user.
+// Response 是身份验证器接口成功身份验证后返回的结构
 type Response struct {
-	// Audiences is the set of audiences the authenticator was able to validate
-	// the token against. If the authenticator is not audience aware, this field
-	// will be empty.
-	Audiences Audiences
-	// User is the UserInfo associated with the authentication context.
-	User user.Info
+	Audiences Audiences // openid connect 中规定的标识符列表，用于明确使用方
+	User      user.Info
 }
