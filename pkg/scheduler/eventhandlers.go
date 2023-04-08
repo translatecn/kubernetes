@@ -242,13 +242,14 @@ func assignedPod(pod *v1.Pod) bool {
 }
 
 // responsibleForPod returns true if the pod has asked to be scheduled by the given scheduler.
+// 如果 pod 已请求由给定的调度程序进行调度，则 responsibleForPod 返回 true。
 func responsibleForPod(pod *v1.Pod, profiles profile.Map) bool {
 	return profiles.HandlesSchedulerName(pod.Spec.SchedulerName)
 }
 
 // addAllEventHandlers is a helper function used in tests and in Scheduler
 // to add event handlers for various informers.
-// 如果熟悉informer概念的应该都不陌生！这里使用FilteringResourceEventHandler，增加过滤函数FilterFunc。
+// informer概念，这里使用FilteringResourceEventHandler，增加过滤函数FilterFunc。
 func addAllEventHandlers(
 	sched *Scheduler,
 	informerFactory informers.SharedInformerFactory,
@@ -256,8 +257,10 @@ func addAllEventHandlers(
 	gvkMap map[framework.GVK]framework.ActionType,
 ) {
 	// scheduled pod cache
+	// 处理已经调度pod的EventHandler
 	informerFactory.Core().V1().Pods().Informer().AddEventHandler(
 		cache.FilteringResourceEventHandler{
+			// 过滤是否为调度后的pod：主要是看 pod的pod.Spec.NodeName是否有值。
 			FilterFunc: func(obj interface{}) bool {
 				switch t := obj.(type) {
 				case *v1.Pod:
@@ -283,9 +286,12 @@ func addAllEventHandlers(
 		},
 	)
 	// unscheduled pod queue
+	// 处理未调度pod的EventHandler
 	informerFactory.Core().V1().Pods().Informer().AddEventHandler(
 		cache.FilteringResourceEventHandler{
 			FilterFunc: func(obj interface{}) bool {
+				// 过滤条件：有两个。
+				// 1. 是否已经调度 2. 是否正在被调度
 				switch t := obj.(type) {
 				case *v1.Pod:
 					return !assignedPod(t) && responsibleForPod(t, sched.Profiles)
@@ -310,6 +316,7 @@ func addAllEventHandlers(
 		},
 	)
 
+	// 处理 node的EventHandler
 	informerFactory.Core().V1().Nodes().Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    sched.addNodeToCache,

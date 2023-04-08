@@ -346,6 +346,7 @@ func (c *Config) Complete() CompletedConfig {
 // Certain config fields will be set to a default value if unset.
 // Certain config fields must be specified, including:
 // KubeletClientConfig
+// New 返回api-server实例
 func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget) (*Instance, error) {
 	if reflect.DeepEqual(c.ExtraConfig.KubeletClientConfig, kubeletclient.KubeletClientConfig{}) {
 		return nil, fmt.Errorf("Master.New() called with empty config.KubeletClientConfig")
@@ -599,6 +600,7 @@ func (m *Instance) InstallLegacyAPI(c *completedConfig, restOptionsGetter generi
 		ServiceAccountMaxExpiration: c.ExtraConfig.ServiceAccountMaxExpiration,
 		APIAudiences:                c.GenericConfig.Authentication.APIAudiences,
 	}
+
 	legacyRESTStorage, apiGroupInfo, err := legacyRESTStorageProvider.NewLegacyRESTStorage(c.ExtraConfig.APIResourceConfigSource, restOptionsGetter)
 	if err != nil {
 		return fmt.Errorf("error building core storage: %v", err)

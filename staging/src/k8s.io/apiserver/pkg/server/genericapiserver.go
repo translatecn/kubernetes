@@ -63,6 +63,7 @@ import (
 // Info about an API group.
 type APIGroupInfo struct {
 	PrioritizedVersions []schema.GroupVersion
+	// 从版本到资源再到存储的映射。
 	// Info about the resources in this group. It's a map from version to resource to the storage.
 	VersionedResourcesStorageMap map[string]map[string]rest.Storage
 	// OptionsExternalVersion controls the APIVersion used for common objects in the
@@ -79,6 +80,7 @@ type APIGroupInfo struct {
 	// Scheme includes all of the types used by this group and how to convert between them (or
 	// to convert objects from outside of this group that are accepted in this API).
 	// TODO: replace with interfaces
+	// scheme 包括该组使用的所有类型以及如何在它们之间转换
 	Scheme *runtime.Scheme
 	// NegotiatedSerializer controls how this group encodes and decodes data
 	NegotiatedSerializer runtime.NegotiatedSerializer
@@ -703,7 +705,10 @@ func (s *GenericAPIServer) installAPIResources(apiPrefix string, apiGroupInfo *A
 
 		apiGroupVersion.MaxRequestBodyBytes = s.maxRequestBodyBytes
 	
-		// 重要方法
+		// 重要方法，
+		// InstallREST的入参是restful.Container，他是golang http框架go-restful里面的一个重要对象，
+		// 在InstallREST里面构造出installer，installer包含资源的存储方法和资源对应api的前缀，
+		// 利用installer.Install()来创建出go-restful的webservice,webservice加入到传入得container，即完成api的注册。
 		discoveryAPIResources, r, err := apiGroupVersion.InstallREST(s.Handler.GoRestfulContainer)
 
 		if err != nil {

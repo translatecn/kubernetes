@@ -26,6 +26,13 @@ import (
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
 )
 
+/*
+	kube-scheduler 主要流程：
+	1. 获取到未调度的podList
+	2. 通过调度框架流程为pod选出一个适合的node(主要：过滤(去掉不符合的node)＋打分(取出评分最高的node))
+	3. 提交给kube-apiserver
+ */
+
 func main() {
 	// 启动scheduler入口
 	command := app.NewSchedulerCommand()
