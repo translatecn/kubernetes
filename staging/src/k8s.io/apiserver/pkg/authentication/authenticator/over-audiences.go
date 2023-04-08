@@ -28,7 +28,7 @@ const (
 	audiencesKey key = iota
 )
 
-// WithAudiences returns a context that stores a request's expected audiences.
+// WithAudiences 返回存储请求预期受众的上下文。
 func WithAudiences(ctx context.Context, auds Audiences) context.Context {
 	return context.WithValue(ctx, audiencesKey, auds)
 }
@@ -49,8 +49,7 @@ func (a Audiences) Has(taud string) bool {
 	return false
 }
 
-// Intersect intersects Audiences with a target Audiences and returns all
-// elements in both.
+// Intersect 获取交集
 func (a Audiences) Intersect(tauds Audiences) Audiences {
 	selected := Audiences{}
 	for _, taud := range tauds {

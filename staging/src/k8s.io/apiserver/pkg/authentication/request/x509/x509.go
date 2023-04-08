@@ -190,7 +190,7 @@ func NewDynamicCAVerifier(verifyOptionsFn VerifyOptionFunc, auth authenticator.R
 	return &Verifier{verifyOptionsFn, auth, allowedCommonNames}
 }
 
-// AuthenticateRequest verifies the presented client certificate, then delegates to the wrapped auth
+// AuthenticateRequest 验证呈现的客户端证书，然后委托给包装的身份验证程序。
 func (a *Verifier) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
 	if req.TLS == nil || len(req.TLS.PeerCertificates) == 0 {
 		return nil, false, nil

@@ -68,6 +68,7 @@ type caBundleAndVerifier struct {
 
 // NewDynamicCAContentFromFile 返回一个基于文件的CAContentProvider，自动重新加载内容。
 func NewDynamicCAContentFromFile(purpose, filename string) (*DynamicFileCAContent, error) {
+	//purpose 用途
 	if len(filename) == 0 {
 		return nil, fmt.Errorf("missing filename for ca bundle")
 	}

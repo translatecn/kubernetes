@@ -34,22 +34,20 @@ import (
 
 type recordMetrics func(context.Context, *authenticator.Response, bool, error, authenticator.Audiences, time.Time, time.Time)
 
-// WithAuthentication creates an http handler that tries to authenticate the given request as a user, and then
-// stores any such user found onto the provided context for the request. If authentication fails or returns an error
-// the failed handler is used. On success, "Authorization" header is removed from the request and handler
-// is invoked to serve the request.
+// WithAuthentication 创建一个http处理程序，尝试将给定的请求作为用户进行身份验证，然后将找到的任何此类用户存储在请求的提供的上下文中。
+// 如果身份验证失败或返回错误，则使用失败的处理程序。成功后，“Authorization”标头将从请求中删除，并调用处理程序来处理请求。
 func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences) http.Handler {
 	return withAuthentication(handler, auth, failed, apiAuds, recordAuthMetrics)
 }
 
 func withAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences, metrics recordMetrics) http.Handler {
 	if auth == nil {
-		klog.Warning("Authentication is disabled")
+		klog.Warning("身份验证已禁用。")
 		return handler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		authenticationStart := time.Now()
-
+		// apiAuds 是程序运行时，在命令行里配置的
 		if len(apiAuds) > 0 {
 			req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
 		}
@@ -60,7 +58,7 @@ func withAuthentication(handler http.Handler, auth authenticator.Request, failed
 		}()
 		if err != nil || !ok {
 			if err != nil {
-				klog.ErrorS(err, "Unable to authenticate the request")
+				klog.ErrorS(err, "无法对请求进行身份验证。")
 			}
 			failed.ServeHTTP(w, req)
 			return
@@ -95,6 +93,7 @@ func Unauthorized(s runtime.NegotiatedSerializer) http.Handler {
 	})
 }
 
+// 受众可以接受
 func audiencesAreAcceptable(apiAuds, responseAudiences authenticator.Audiences) bool {
 	if len(apiAuds) == 0 || len(responseAudiences) == 0 {
 		return true

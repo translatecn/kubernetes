@@ -68,7 +68,7 @@ type cacheWarning struct {
 	text  string
 }
 
-type cachedTokenAuthenticator struct {
+type CachedTokenAuthenticator struct {
 	authenticator authenticator.Token
 	cacheErrs     bool
 	successTTL    time.Duration
@@ -98,7 +98,7 @@ func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL,
 		panic(err) // rand should never fail
 	}
 
-	return &cachedTokenAuthenticator{
+	return &CachedTokenAuthenticator{
 		authenticator: authenticator,
 		cacheErrs:     cacheErrs,
 		successTTL:    successTTL,
@@ -118,7 +118,7 @@ func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL,
 }
 
 // AuthenticateToken implements authenticator.Token
-func (a *cachedTokenAuthenticator) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
+func (a *CachedTokenAuthenticator) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
 	record := a.doAuthenticateToken(ctx, token)
 	if !record.ok || record.err != nil {
 		return nil, false, record.err
@@ -132,7 +132,7 @@ func (a *cachedTokenAuthenticator) AuthenticateToken(ctx context.Context, token 
 	return record.resp, true, nil
 }
 
-func (a *cachedTokenAuthenticator) doAuthenticateToken(ctx context.Context, token string) *cacheRecord {
+func (a *CachedTokenAuthenticator) doAuthenticateToken(ctx context.Context, token string) *cacheRecord {
 	doneAuthenticating := stats.authenticating(ctx)
 
 	auds, audsOk := authenticator.AudiencesFrom(ctx)

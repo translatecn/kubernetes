@@ -20,3 +20,5 @@ Run
 
 
 
+
+- AuthenticateRequest 认证函数

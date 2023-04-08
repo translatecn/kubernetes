@@ -257,7 +257,7 @@ type SecureServingInfo struct {
 
 type AuthenticationInfo struct {
 	APIAudiences  authenticator.Audiences // APIAudiences是API识别的标识符列表。这由某些身份验证器用于验证面向受众的凭据。
-	Authenticator authenticator.Request   // 确定哪个主体发出的请求
+	Authenticator authenticator.Request   // 请求验证器
 }
 
 type AuthorizationInfo struct {
@@ -783,7 +783,7 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 	failedHandler = filterlatency.TrackCompleted(failedHandler)
 
 	handler = filterlatency.TrackCompleted(handler)
-	handler = genericapifilters.WithAuthentication(handler, c.Authentication.Authenticator, failedHandler, c.Authentication.APIAudiences) // ✅
+	handler = genericapifilters.WithAuthentication(handler, c.Authentication.Authenticator, failedHandler, c.Authentication.APIAudiences) // ✅ 认证
 	handler = filterlatency.TrackStarted(handler, c.TracerProvider, "authentication")
 
 	handler = genericfilters.WithCORS(handler, c.CorsAllowedOriginList, nil, nil, nil, "true") // ✅
@@ -892,8 +892,7 @@ func (s *SecureServingInfo) HostPort() (string, int, error) {
 }
 
 // AuthorizeClientBearerToken 将验证器和授权器包装在环回验证逻辑中
-// 如果指定了环回客户端配置并且它有一个不记名令牌。请注意，如果是authn或
-// authz是nil，这个函数不会添加一个令牌验证器或授权器。
+// 如果指定了环回客户端配置并且它有一个不记名令牌。请注意，如果是authn或authz是nil，这个函数不会添加一个令牌验证器或授权器。
 func AuthorizeClientBearerToken(loopback *restclient.Config, authn *AuthenticationInfo, authz *AuthorizationInfo) {
 	if loopback == nil || len(loopback.BearerToken) == 0 {
 		return

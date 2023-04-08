@@ -96,19 +96,21 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	// front-proxy, BasicAuth methods, local first, then remote
 	// 如果需要，添加前端代理身份验证器
 	if config.RequestHeaderConfig != nil {
-		requestHeaderAuthenticator := headerrequest.NewDynamicVerifyOptionsSecure(
+		requestHeaderAuthenticator := headerrequest.NewDynamicVerifyOptionsSecure( // 动态认证
 			config.RequestHeaderConfig.CAContentProvider.VerifyOptions,
 			config.RequestHeaderConfig.AllowedClientNames,
 			config.RequestHeaderConfig.UsernameHeaders,
 			config.RequestHeaderConfig.GroupHeaders,
 			config.RequestHeaderConfig.ExtraHeaderPrefixes,
 		)
+		var _ = requestHeaderAuthenticator.(*x509.Verifier).AuthenticateRequest
 		authenticators = append(authenticators, authenticator.WrapAudienceAgnosticRequest(config.APIAudiences, requestHeaderAuthenticator))
 	}
 
 	// X509 methods
 	if config.ClientCAContentProvider != nil {
 		certAuth := x509.NewDynamic(config.ClientCAContentProvider.VerifyOptions, x509.CommonNameUserConversion)
+		var _ = certAuth.AuthenticateRequest
 		authenticators = append(authenticators, certAuth)
 	}
 
@@ -119,6 +121,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if err != nil {
 			return nil, nil, err
 		}
+		var _ = tokenAuth.(*tokenfile.TokenAuthenticator).AuthenticateToken
 		tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, tokenAuth))
 	}
 	if len(config.ServiceAccountKeyFiles) > 0 {
@@ -126,6 +129,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if err != nil {
 			return nil, nil, err
 		}
+		var _ = serviceAccountAuth.(*serviceaccount.JwtTokenAuthenticator).AuthenticateToken
 		tokenAuthenticators = append(tokenAuthenticators, serviceAccountAuth)
 	}
 	if len(config.ServiceAccountIssuers) > 0 {
@@ -133,11 +137,12 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if err != nil {
 			return nil, nil, err
 		}
+		var _ = serviceAccountAuth.(*serviceaccount.JwtTokenAuthenticator).AuthenticateToken
 		tokenAuthenticators = append(tokenAuthenticators, serviceAccountAuth)
 	}
 	if config.BootstrapToken {
 		if config.BootstrapTokenAuthenticator != nil {
-			// TODO: 这有时可以为nil，因为
+			var _ = authenticator.AudAgnosticTokenAuthenticator{}.AuthenticateToken
 			tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, config.BootstrapTokenAuthenticator))
 		}
 	}
@@ -166,6 +171,8 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if err != nil {
 			return nil, nil, err
 		}
+
+		var _ = authenticator.AudAgnosticTokenAuthenticator{}.AuthenticateToken
 		tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, oidcAuth))
 	}
 	if len(config.WebhookTokenAuthnConfigFile) > 0 { // kube config格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。
@@ -173,7 +180,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if err != nil {
 			return nil, nil, err
 		}
-
+		var _ = webhookTokenAuth.(*tokencache.CachedTokenAuthenticator).AuthenticateToken
 		tokenAuthenticators = append(tokenAuthenticators, webhookTokenAuth)
 	}
 
@@ -184,6 +191,10 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if config.TokenSuccessCacheTTL > 0 || config.TokenFailureCacheTTL > 0 {
 			tokenAuth = tokencache.New(tokenAuth, true, config.TokenSuccessCacheTTL, config.TokenFailureCacheTTL)
 		}
+
+		var _ = new(bearertoken.Authenticator).AuthenticateRequest
+		var _ = new(websocket.ProtocolAuthenticator).AuthenticateRequest
+
 		authenticators = append(authenticators, bearertoken.New(tokenAuth), websocket.NewProtocolAuthenticator(tokenAuth))
 		securityDefinitions["BearerToken"] = &spec.SecurityScheme{
 			SecuritySchemeProps: spec.SecuritySchemeProps{
@@ -207,8 +218,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	authenticator = group.NewAuthenticatedGroupAdder(authenticator)
 
 	if config.Anonymous {
-		// If the authenticator chain returns an error, return an error (don't consider a bad bearer token
-		// or invalid username/password combination anonymous).
+		// 如果认证器链返回错误，则返回错误（不将错误的令牌或无效的用户名/密码组合视为匿名）。
 		authenticator = union.NewFailOnError(authenticator, anonymous.NewAuthenticator())
 	}
 

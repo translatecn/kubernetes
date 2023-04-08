@@ -125,7 +125,7 @@ func (o *BuiltInAuthenticationOptions) WithAll() *BuiltInAuthenticationOptions {
 		WithWebHook()
 }
 
-// WithAnonymous set default value for anonymous authentication
+// WithAnonymous 设置匿名认证的缺省值
 func (o *BuiltInAuthenticationOptions) WithAnonymous() *BuiltInAuthenticationOptions {
 	o.Anonymous = &AnonymousAuthenticationOptions{Allow: true}
 	return o
@@ -439,7 +439,7 @@ func (o *BuiltInAuthenticationOptions) ApplyTo(
 		authenticatorConfig.CustomDial = egressDialer
 	}
 
-	authInfo.Authenticator, openAPIConfig.SecurityDefinitions, err = authenticatorConfig.New()
+	authInfo.Authenticator, openAPIConfig.SecurityDefinitions, err = authenticatorConfig.New() // 认证集合创建
 	if openAPIV3Config != nil {
 		openAPIV3Config.SecurityDefinitions = openAPIConfig.SecurityDefinitions
 	}

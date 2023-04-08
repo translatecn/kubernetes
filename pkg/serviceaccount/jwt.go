@@ -229,7 +229,7 @@ func JWTTokenAuthenticator(issuers []string, keys []interface{}, implicitAuds au
 	for _, issuer := range issuers {
 		issuersMap[issuer] = true
 	}
-	return &jwtTokenAuthenticator{
+	return &JwtTokenAuthenticator{
 		issuers:      issuersMap,
 		keys:         keys,
 		implicitAuds: implicitAuds,
@@ -237,7 +237,7 @@ func JWTTokenAuthenticator(issuers []string, keys []interface{}, implicitAuds au
 	}
 }
 
-type jwtTokenAuthenticator struct {
+type JwtTokenAuthenticator struct {
 	issuers      map[string]bool
 	keys         []interface{}
 	validator    Validator
@@ -259,7 +259,7 @@ type Validator interface {
 	NewPrivateClaims() interface{}
 }
 
-func (j *jwtTokenAuthenticator) AuthenticateToken(ctx context.Context, tokenData string) (*authenticator.Response, bool, error) {
+func (j *JwtTokenAuthenticator) AuthenticateToken(ctx context.Context, tokenData string) (*authenticator.Response, bool, error) {
 	if !j.hasCorrectIssuer(tokenData) {
 		return nil, false, nil
 	}
@@ -328,7 +328,7 @@ func (j *jwtTokenAuthenticator) AuthenticateToken(ctx context.Context, tokenData
 //
 // Note: go-jose currently does not allow access to unverified JWS payloads.
 // See https://github.com/square/go-jose/issues/169
-func (j *jwtTokenAuthenticator) hasCorrectIssuer(tokenData string) bool {
+func (j *JwtTokenAuthenticator) hasCorrectIssuer(tokenData string) bool {
 	parts := strings.Split(tokenData, ".")
 	if len(parts) != 3 {
 		return false
