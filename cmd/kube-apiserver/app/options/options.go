@@ -89,9 +89,11 @@ type ServerRunOptions struct {
 	ShowHiddenMetricsForVersion string
 }
 
+// NewServerRunOptions 初始化ServerRunOptions对象
 // NewServerRunOptions creates a new ServerRunOptions object with default parameters
 func NewServerRunOptions() *ServerRunOptions {
 	s := ServerRunOptions{
+		// GenericServer 配置文件，重要
 		GenericServerRunOptions: genericoptions.NewServerRunOptions(),
 		Etcd:                    genericoptions.NewEtcdOptions(storagebackend.NewDefaultConfig(kubeoptions.DefaultEtcdPathPrefix, nil)),
 		SecureServing:           kubeoptions.NewSecureServingOptions(),

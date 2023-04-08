@@ -284,7 +284,8 @@ func New(client clientset.Interface,
 		return nil, fmt.Errorf("couldn't build extenders: %w", err)
 	}
 
-	// 3. informer的list接口对象，
+	// 3. informer的list接口对象
+	// scheduler 主要关注pod node两种资源
 	podLister := informerFactory.Core().V1().Pods().Lister()
 	nodeLister := informerFactory.Core().V1().Nodes().Lister()
 
@@ -330,7 +331,8 @@ func New(client clientset.Interface,
 		internalqueue.WithPreEnqueuePluginMap(preEnqueuePluginMap),
 	)
 
-	// 6. scheduler cache缓存
+	// 6. scheduler cache缓存，
+	// TODO 需要了解为何需要有cache 缓存
 	schedulerCache := internalcache.New(durationToExpireAssumedPod, stopEverything)
 
 	// Setup cache debugger.
