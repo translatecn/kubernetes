@@ -73,9 +73,8 @@ func MatchesUsername(namespace, name string, username string) bool {
 
 var invalidUsernameErr = fmt.Errorf("Username must be in the form %s", MakeUsername("namespace", "name"))
 
-// SplitUsername returns the namespace and ServiceAccount name embedded in the given username,
-// or an error if the username is not a valid name produced by MakeUsername
-func SplitUsername(username string) (string, string, error) {
+// SplitUsername ✅
+func SplitUsername(username string) (namespace string, name string, err error) {
 	if !strings.HasPrefix(username, ServiceAccountUsernamePrefix) {
 		return "", "", invalidUsernameErr
 	}
@@ -84,7 +83,7 @@ func SplitUsername(username string) (string, string, error) {
 	if len(parts) != 2 {
 		return "", "", invalidUsernameErr
 	}
-	namespace, name := parts[0], parts[1]
+	namespace, name = parts[0], parts[1]
 	if len(apimachineryvalidation.ValidateNamespaceName(namespace, false)) != 0 {
 		return "", "", invalidUsernameErr
 	}

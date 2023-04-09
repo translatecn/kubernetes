@@ -68,7 +68,7 @@ func WrapAudienceAgnosticRequest(implicit Audiences, delegate Request) Request {
 // ----------------------------------------------------------------------------------------
 
 type AudAgnosticTokenAuthenticator struct {
-	implicit Audiences
+	implicit Audiences // [https://kubernetes.default.svc.cluster.local]
 	delegate Token
 }
 

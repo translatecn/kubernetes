@@ -532,11 +532,11 @@ const (
 	// Stop auto-generation of secret-based service account tokens.
 	LegacyServiceAccountTokenNoAutoGeneration featuregate.Feature = "LegacyServiceAccountTokenNoAutoGeneration"
 
-	// owner: @zshihang
+	// LegacyServiceAccountTokenTracking owner: @zshihang
 	// kep: http://kep.k8s.io/2800
 	// alpha: v1.25
 	//
-	// Enables tracking of secret-based service account tokens usage.
+	// 启用基于密钥的服务帐户令牌使用跟踪。
 	LegacyServiceAccountTokenTracking featuregate.Feature = "LegacyServiceAccountTokenTracking"
 
 	// owner: @jinxu

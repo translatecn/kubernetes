@@ -24,4 +24,7 @@ Run
 - AuthenticateRequest 认证函数
 - DefaultBuildHandlerChain 中间件函数
 - https://blog.csdn.net/qq_24433609/article/details/127192871
-- 
+- https://devpress.csdn.net/k8s/62ee61a17e6682346618233f.html
+- https://www.ibm.com/docs/zh/was-liberty/base?topic=connect-configuring-json-web-token-authentication-openid
+- https://www.jianshu.com/p/75b865e55568
+
