@@ -27,4 +27,6 @@ Run
 - https://devpress.csdn.net/k8s/62ee61a17e6682346618233f.html
 - https://www.ibm.com/docs/zh/was-liberty/base?topic=connect-configuring-json-web-token-authentication-openid
 - https://www.jianshu.com/p/75b865e55568
+- https://kubernetes.io/zh-cn/docs/reference/access-authn-authz/authentication/
+- https://www.cnblogs.com/huanglingfa/p/13773344.html
 

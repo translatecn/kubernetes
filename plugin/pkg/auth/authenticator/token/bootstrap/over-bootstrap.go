@@ -62,10 +62,7 @@ func tokenErrorf(s *corev1.Secret, format string, i ...interface{}) {
 	klog.V(3).Infof(format, i...)
 }
 
-// AuthenticateToken tries to match the provided token to a bootstrap token secret
-// in a given namespace. If found, it authenticates the token in the
-// "system:bootstrappers" group and with the "system:bootstrap:(token-id)" username.
-//
+// AuthenticateToken 尝试将提供的令牌与给定命名空间中的引导令牌密钥进行匹配。如果找到，则使用“system:bootstrappers”组和“system:bootstrap:(token-id)”用户名对令牌进行身份验证。
 // All secrets must be of type "bootstrap.kubernetes.io/token". An example secret:
 //
 //	apiVersion: v1
@@ -88,6 +85,8 @@ func tokenErrorf(s *corev1.Secret, format string, i ...interface{}) {
 //
 //	( token-id ).( token-secret )
 func (t *TokenAuthenticator) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
+	// https://www.cnblogs.com/huanglingfa/p/13773344.html
+	// demo: 		07401b.f395accd246ae52d
 	tokenID, tokenSecret, err := bootstraptokenutil.ParseToken(token)
 	if err != nil {
 		// Token isn't of the correct form, ignore it.

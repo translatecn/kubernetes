@@ -47,6 +47,8 @@ const (
 
 var ErrNotInCluster = errors.New("unable to load in-cluster configuration, KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined")
 
+// Config
+// 1、作为外部 webhook认证
 type Config struct {
 	// Host must be a host string, a host:port pair, or a URL to the base of the apiserver.
 	// If a URL is given then the (optional) Path of that URL represents a prefix that must

@@ -18,6 +18,7 @@ package authenticator
 
 import (
 	"errors"
+	"k8s.io/kubernetes/plugin/pkg/auth/authenticator/token/bootstrap"
 	"time"
 
 	utilnet "k8s.io/apimachinery/pkg/util/net"
@@ -65,7 +66,7 @@ type Config struct {
 	ServiceAccountLookup      bool                    // --service-account-lookup
 	ServiceAccountIssuers     []string                // --service-account-issuer    JWT 签名颁发者
 	APIAudiences              authenticator.Audiences // 预先规定的调用者们  , 目前只有一个 https://kubernetes.default.svc.cluster.local
-	WebhookTokenAuthnVersion  string
+	WebhookTokenAuthnVersion  string                  // 代码写死 v1beta1
 	WebhookTokenAuthnCacheTTL time.Duration
 	// WebhookRetryBackoff specifies the backoff parameters for the authentication webhook retry logic.
 	// This allows us to configure the sleep time at each iteration and the maximum number of retries allowed
@@ -151,7 +152,8 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		}
 		if config.BootstrapToken {
 			if config.BootstrapTokenAuthenticator != nil {
-				var _ = new(authenticator.AudAgnosticTokenAuthenticator).AuthenticateToken
+				var _ = new(authenticator.AudAgnosticTokenAuthenticator).AuthenticateToken // ✅
+				var _ = new(bootstrap.TokenAuthenticator).AuthenticateToken                // ✅
 				tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, config.BootstrapTokenAuthenticator))
 			}
 		}
@@ -180,7 +182,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 			if err != nil {
 				return nil, nil, err
 			}
-
+			var _ = new(oidc.Authenticator).AuthenticateToken
 			var _ = new(authenticator.AudAgnosticTokenAuthenticator).AuthenticateToken
 			tokenAuthenticators = append(tokenAuthenticators,
 				authenticator.WrapAudienceAgnosticToken(config.APIAudiences, oidcAuth),
@@ -191,22 +193,22 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 			if err != nil {
 				return nil, nil, err
 			}
-			var _ = webhookTokenAuth.(*tokencache.CachedTokenAuthenticator).AuthenticateToken
+			var _ = webhookTokenAuth.(*tokencache.CachedTokenAuthenticator).AuthenticateToken // ✅
 			tokenAuthenticators = append(tokenAuthenticators, webhookTokenAuth)
 		}
 
 		if len(tokenAuthenticators) > 0 {
 			// 联合令牌验证器
-			var _ = new(tokenunion.UnionAuthTokenHandler).AuthenticateToken
+			var _ = new(tokenunion.UnionAuthTokenHandler).AuthenticateToken // ✅
 			tokenAuth := tokenunion.New(tokenAuthenticators...)
 			// 可选地缓存身份验证结果
 			if config.TokenSuccessCacheTTL > 0 || config.TokenFailureCacheTTL > 0 {
-				var _ = new(tokencache.CachedTokenAuthenticator).AuthenticateToken
+				var _ = new(tokencache.CachedTokenAuthenticator).AuthenticateToken // ✅
 				tokenAuth = tokencache.New(tokenAuth, true, config.TokenSuccessCacheTTL, config.TokenFailureCacheTTL)
 			}
 
-			var _ = new(bearertoken.Authenticator).AuthenticateRequest
-			var _ = new(websocket.ProtocolAuthenticator).AuthenticateRequest
+			var _ = new(bearertoken.Authenticator).AuthenticateRequest       // ✅
+			var _ = new(websocket.ProtocolAuthenticator).AuthenticateRequest // ✅
 
 			authenticators = append(authenticators,
 				bearertoken.New(tokenAuth),
@@ -232,12 +234,12 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	}
 
 	authenticator := union.New(authenticators...)
-	var _ = new(group.AuthenticatedGroupAdder).AuthenticateRequest
+	var _ = new(group.AuthenticatedGroupAdder).AuthenticateRequest // ✅
 	authenticator = group.NewAuthenticatedGroupAdder(authenticator)
 
 	if config.Anonymous {
 		// 如果认证器链返回错误，则返回错误（不将错误的令牌或无效的用户名/密码组合视为匿名）。
-		var _ = new(union.UnionAuthRequestHandler).AuthenticateRequest
+		var _ = new(union.UnionAuthRequestHandler).AuthenticateRequest // ✅
 		authenticator = union.NewFailOnError(authenticator, anonymous.NewAuthenticator())
 	}
 

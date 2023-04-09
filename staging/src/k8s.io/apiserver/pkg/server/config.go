@@ -779,7 +779,6 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 
 	failedHandler := genericapifilters.Unauthorized(c.Serializer) // 看能不能拿到requestInfo
 	failedHandler = genericapifilters.WithFailedAuthenticationAudit(failedHandler, c.AuditBackend, c.AuditPolicyRuleEvaluator)
-
 	failedHandler = filterlatency.TrackCompleted(failedHandler)
 
 	handler = filterlatency.TrackCompleted(handler)

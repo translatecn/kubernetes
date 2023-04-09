@@ -71,7 +71,7 @@ func NewFromInterface(tokenReview authenticationv1client.AuthenticationV1Interfa
 
 // New ✅
 func New(config *rest.Config, version string, implicitAuds authenticator.Audiences, retryBackoff wait.Backoff) (*WebhookTokenAuthenticator, error) {
-	tokenReview, err := tokenReviewInterfaceFromConfig(config, version, retryBackoff)
+	tokenReview, err := tokenReviewInterfaceFromConfig(config, version, retryBackoff) // ok
 	if err != nil {
 		return nil, err
 	}
@@ -94,22 +94,18 @@ func newWithBackoff(tokenReview tokenReviewer, retryBackoff wait.Backoff, implic
 
 // AuthenticateToken implements the authenticator.Token interface.
 func (w *WebhookTokenAuthenticator) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
-	// We take implicit audiences of the API server at WebhookTokenAuthenticator
-	// construction time. The outline of how we validate audience here is:
+	// We take implicit audiences of the API server at WebhookTokenAuthenticator construction time. The outline of how we validate audience here is:
 	//
 	// * if the ctx is not audience limited, don't do any audience validation.
 	// * if ctx is audience-limited, add the audiences to the tokenreview spec
-	//   * if the tokenreview returns with audiences in the status that intersect
-	//     with the audiences in the ctx, copy into the response and return success
-	//   * if the tokenreview returns without an audience in the status, ensure
-	//     the ctx audiences intersect with the implicit audiences, and set the
-	//     intersection in the response.
+	//   * if the tokenreview returns with audiences in the status that intersect with the audiences in the ctx, copy into the response and return success
+	//   * if the tokenreview returns without an audience in the status, ensure the ctx audiences intersect with the implicit audiences, and set the intersection in the response.
 	//   * otherwise return unauthenticated.
 	wantAuds, checkAuds := authenticator.AudiencesFrom(ctx)
 	r := &authenticationv1.TokenReview{
 		Spec: authenticationv1.TokenReviewSpec{
 			Token:     token,
-			Audiences: wantAuds,
+			Audiences: wantAuds, // --service-account-issuer   或者 --api-audiences 指定的
 		},
 	}
 	var (
@@ -132,6 +128,7 @@ func (w *WebhookTokenAuthenticator) AuthenticateToken(ctx context.Context, token
 		var statusCode int
 
 		start := time.Now()
+		var _ = new(tokenReviewV1Client).Create
 		result, statusCode, tokenReviewErr = w.tokenReview.Create(ctx, r, metav1.CreateOptions{})
 		latency := time.Since(start)
 
