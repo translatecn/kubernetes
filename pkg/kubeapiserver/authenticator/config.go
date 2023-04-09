@@ -193,6 +193,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 			if err != nil {
 				return nil, nil, err
 			}
+			var _ = new(webhook.WebhookTokenAuthenticator).AuthenticateToken                  // ✅
 			var _ = webhookTokenAuth.(*tokencache.CachedTokenAuthenticator).AuthenticateToken // ✅
 			tokenAuthenticators = append(tokenAuthenticators, webhookTokenAuth)
 		}
