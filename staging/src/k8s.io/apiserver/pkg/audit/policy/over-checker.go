@@ -96,12 +96,14 @@ func isOmitManagedFields(policyRule *audit.PolicyRule, policyDefault bool) bool 
 
 // Check whether the rule matches the request attrs.
 func ruleMatches(r *audit.PolicyRule, attrs authorizer.Attributes) bool {
+	// 1、匹配用户
 	user := attrs.GetUser()
 	if len(r.Users) > 0 {
 		if user == nil || !hasString(r.Users, user.GetName()) {
 			return false
 		}
 	}
+	// 2、匹配用户组
 	if len(r.UserGroups) > 0 {
 		if user == nil {
 			return false
@@ -117,6 +119,7 @@ func ruleMatches(r *audit.PolicyRule, attrs authorizer.Attributes) bool {
 			return false
 		}
 	}
+	// 匹配请求方式
 	if len(r.Verbs) > 0 {
 		if !hasString(r.Verbs, attrs.GetVerb()) {
 			return false

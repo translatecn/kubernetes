@@ -14,6 +14,7 @@ func Init(args []string) []string {
 	args = append(args, "--audit-log-maxsize=100")
 	args = append(args, "--audit-log-path=/var/log/kubernetes/audit.log2")
 	args = append(args, "--audit-policy-file=/etc/kubernetes/audit-policy.yml")
+
 	args = append(args, "--authorization-mode=Node,RBAC")
 	args = append(args, "--client-ca-file=/etc/kubernetes/pki/ca.crt")
 	args = append(args, "--enable-admission-plugins=NodeRestriction")
