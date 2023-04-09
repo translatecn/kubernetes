@@ -140,6 +140,8 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 	if !ok {
 		return nil, false, nil
 	}
+	// Intermediates 中间证书是一个可选的证书池，它不是信任anchors，但可用于形成从叶证书到根证书的链。
+	// 客户端证书
 	if optsCopy.Intermediates == nil && len(req.TLS.PeerCertificates) > 1 {
 		optsCopy.Intermediates = x509.NewCertPool()
 		for _, intermediate := range req.TLS.PeerCertificates[1:] {
@@ -190,7 +192,7 @@ func NewDynamicCAVerifier(verifyOptionsFn VerifyOptionFunc, auth authenticator.R
 	return &Verifier{verifyOptionsFn, auth, allowedCommonNames}
 }
 
-// AuthenticateRequest 验证呈现的客户端证书，然后委托给包装的身份验证程序。
+// AuthenticateRequest 验证客户端证书，然后委托给包装的身份验证程序。
 func (a *Verifier) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
 	if req.TLS == nil || len(req.TLS.PeerCertificates) == 0 {
 		return nil, false, nil
@@ -198,10 +200,11 @@ func (a *Verifier) AuthenticateRequest(req *http.Request) (*authenticator.Respon
 
 	// Use intermediates, if provided
 	optsCopy, ok := a.verifyOptionsFn()
-	// if there are intentionally no verify options, then we cannot authenticate this request
 	if !ok {
 		return nil, false, nil
 	}
+	// Intermediates 中间证书是一个可选的证书池，它不是信任anchors，但可用于形成从叶证书到根证书的链。
+	// 客户端证书
 	if optsCopy.Intermediates == nil && len(req.TLS.PeerCertificates) > 1 {
 		optsCopy.Intermediates = x509.NewCertPool()
 		for _, intermediate := range req.TLS.PeerCertificates[1:] {
@@ -220,7 +223,7 @@ func (a *Verifier) AuthenticateRequest(req *http.Request) (*authenticator.Respon
 
 func (a *Verifier) verifySubject(subject pkix.Name) error {
 	// No CN restrictions
-	if len(a.allowedCommonNames.Value()) == 0 {
+	if len(a.allowedCommonNames.Value()) == 0 { // [front-proxy-client]
 		return nil
 	}
 	// Enforce CN restrictions

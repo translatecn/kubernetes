@@ -245,7 +245,7 @@ func (c *DynamicFileCAContent) CurrentCABundleContent() (cabundle []byte) {
 	return c.caBundle.Load().(*caBundleAndVerifier).caBundle
 }
 
-// VerifyOptions provides verifyoptions compatible with authenticators
+// VerifyOptions 提供与身份验证器兼容的验证选项
 func (c *DynamicFileCAContent) VerifyOptions() (x509.VerifyOptions, bool) {
 	uncastObj := c.caBundle.Load()
 	if uncastObj == nil {
@@ -276,10 +276,8 @@ func newCABundleAndVerifier(name string, caBundle []byte) (*caBundleAndVerifier,
 	}, nil
 }
 
-// defaultVerifyOptions returns VerifyOptions that use the system root certificates, current time,
-// and requires certificates to be valid for client auth (x509.ExtKeyUsageClientAuth)
 func defaultVerifyOptions() x509.VerifyOptions {
 	return x509.VerifyOptions{
-		KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}, // 建立 TLS 连接时进行客户端验证
 	}
 }

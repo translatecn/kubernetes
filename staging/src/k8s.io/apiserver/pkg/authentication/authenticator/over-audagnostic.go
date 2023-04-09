@@ -24,8 +24,7 @@ import (
 
 func authenticate(ctx context.Context, implicitAuds Audiences, authenticate func() (*Response, bool, error)) (*Response, bool, error) {
 	targetAuds, ok := AudiencesFrom(ctx)
-	// We can remove this once api audiences is never empty. That will probably
-	// be N releases after TokenRequest is GA.
+	//一旦api audience不为空，我们就可以删除它。在TokenRequest是GA之后，可能会有N个发布。
 	if !ok {
 		return authenticate()
 	}
@@ -39,7 +38,7 @@ func authenticate(ctx context.Context, implicitAuds Audiences, authenticate func
 	}
 	if len(resp.Audiences) > 0 {
 		// maybe the authenticator was audience aware after all.
-		return nil, false, fmt.Errorf("audience agnostic authenticator wrapped an authenticator that returned audiences: %q", resp.Audiences)
+		return nil, false, fmt.Errorf("与受众无关的验证器包装了一个返回受众的验证器: %q", resp.Audiences)
 	}
 	resp.Audiences = auds
 	return resp, true, nil
@@ -65,6 +64,8 @@ func WrapAudienceAgnosticRequest(implicit Audiences, delegate Request) Request {
 		delegate: delegate,
 	}
 }
+
+// ----------------------------------------------------------------------------------------
 
 type AudAgnosticTokenAuthenticator struct {
 	implicit Audiences

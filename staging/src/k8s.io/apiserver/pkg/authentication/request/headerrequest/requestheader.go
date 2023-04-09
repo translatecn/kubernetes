@@ -52,15 +52,9 @@ func (s StaticStringSlice) Value() []string {
 }
 
 type requestHeaderAuthRequestHandler struct {
-	// nameHeaders are the headers to check (in order, case-insensitively) for an identity. The first header with a value wins.
-	nameHeaders StringSliceProvider
-
-	// groupHeaders are the headers to check (case-insensitively) for group membership.  All values of all headers will be added.
-	groupHeaders StringSliceProvider
-
-	// extraHeaderPrefixes are the head prefixes to check (case-insensitively) for filling in
-	// the user.Info.Extra.  All values of all matching headers will be added.
-	extraHeaderPrefixes StringSliceProvider
+	nameHeaders         StringSliceProvider // nameHeaders是要检查标识的头(按顺序，不区分大小写)。第一个有值的头文件胜出。
+	groupHeaders        StringSliceProvider // groupHeaders是用于检查组成员关系的头(不区分大小写)。所有标题的所有值都将被添加。
+	extraHeaderPrefixes StringSliceProvider // extraHeaderPrefixes是用于检查user.Info.Extra填充的头前缀(不区分大小写)。所有匹配头的所有值都将被添加。
 }
 
 func New(nameHeaders, groupHeaders, extraHeaderPrefixes []string) (authenticator.Request, error) {

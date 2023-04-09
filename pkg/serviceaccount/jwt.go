@@ -238,8 +238,8 @@ func JWTTokenAuthenticator(issuers []string, keys []interface{}, implicitAuds au
 }
 
 type JwtTokenAuthenticator struct {
-	issuers      map[string]bool
-	keys         []interface{}
+	issuers      map[string]bool // 颁发者
+	keys         []interface{}   // 公钥，用于加密
 	validator    Validator
 	implicitAuds authenticator.Audiences
 }

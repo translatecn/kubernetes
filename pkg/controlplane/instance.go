@@ -346,7 +346,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		return nil, fmt.Errorf("Master.New() called with empty config.KubeletClientConfig")
 	}
 
-	s, err := c.GenericConfig.New("kube-apiserver", delegationTarget)
+	s, err := c.GenericConfig.New("kube-apiserver", delegationTarget) // 构造中间件
 	if err != nil {
 		return nil, err
 	}

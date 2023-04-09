@@ -79,7 +79,7 @@ func NewCSV(path string) (*TokenAuthenticator, error) {
 			klog.Warningf("duplicate token has been found in token file '%s', record number '%d'", path, recordNum)
 		}
 		tokens[record[0]] = obj
-
+		// token,name,uid,group
 		if len(record) >= 4 {
 			obj.Groups = strings.Split(record[3], ",")
 		}

@@ -41,6 +41,7 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 }
 
 func withAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences, metrics recordMetrics) http.Handler {
+	// func (config Config) New() (authenticator.Request,
 	if auth == nil {
 		klog.Warning("身份验证已禁用。")
 		return handler
@@ -54,6 +55,7 @@ func withAuthentication(handler http.Handler, auth authenticator.Request, failed
 		resp, ok, err := auth.AuthenticateRequest(req)
 		authenticationFinish := time.Now()
 		defer func() {
+			//记录指标
 			metrics(req.Context(), resp, ok, err, apiAuds, authenticationStart, authenticationFinish)
 		}()
 		if err != nil || !ok {
@@ -70,8 +72,7 @@ func withAuthentication(handler http.Handler, auth authenticator.Request, failed
 			failed.ServeHTTP(w, req)
 			return
 		}
-
-		// authorization header is not required anymore in case of a successful authentication.
+		//如果认证成功，授权头不再需要。
 		req.Header.Del("Authorization")
 
 		req = req.WithContext(genericapirequest.WithUser(req.Context(), resp.User))
@@ -93,11 +94,11 @@ func Unauthorized(s runtime.NegotiatedSerializer) http.Handler {
 	})
 }
 
-// 受众可以接受
+// 是否可以接受  Audience
 func audiencesAreAcceptable(apiAuds, responseAudiences authenticator.Audiences) bool {
 	if len(apiAuds) == 0 || len(responseAudiences) == 0 {
 		return true
 	}
-
+	// 交集
 	return len(apiAuds.Intersect(responseAudiences)) > 0
 }

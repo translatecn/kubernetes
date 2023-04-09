@@ -276,11 +276,9 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 			"包含pem编码的x509 RSA或ECDSA私钥或公钥的文件，用于验证ServiceAccount令牌。"+
 				"指定的文件可以包含多个键，并且该标志可以在不同的文件中指定多次。如果未指定，则使用--tls-private-key-file。提供--service-account-signing-key-file时必须指定")
 
-		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup,
-			"如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。")
+		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup, "如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。")
 
-		fs.StringArrayVar(&o.ServiceAccounts.Issuers, "service-account-issuer", o.ServiceAccounts.Issuers,
-			"服务帐户令牌发行者的标识符.发行者将在已发行令牌的\"iss\"声明中声明此标识符.")
+		fs.StringArrayVar(&o.ServiceAccounts.Issuers, "service-account-issuer", o.ServiceAccounts.Issuers, "服务帐户令牌发行者的标识符.发行者将在已发行令牌的\"iss\"声明中声明此标识符.")
 
 		fs.StringVar(&o.ServiceAccounts.JWKSURI, "service-account-jwks-uri", o.ServiceAccounts.JWKSURI,
 			"覆盖在/.famous/openid-configuration swagger文档中JSON Web Key Set的URI。"+

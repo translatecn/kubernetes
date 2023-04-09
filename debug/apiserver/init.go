@@ -29,11 +29,13 @@ func Init(args []string) []string {
 	args = append(args, "--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname")
 	args = append(args, "--proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt")
 	args = append(args, "--proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key")
-	args = append(args, "--requestheader-allowed-names=front-proxy-client")
 	args = append(args, "--requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt")
+
+	args = append(args, "--requestheader-allowed-names=front-proxy-client")
 	args = append(args, "--requestheader-extra-headers-prefix=X-Remote-Extra-")
 	args = append(args, "--requestheader-group-headers=X-Remote-Group")
 	args = append(args, "--requestheader-username-headers=X-Remote-User")
+
 	args = append(args, "--secure-port=16443")
 	args = append(args, "--service-account-issuer=https://kubernetes.default.svc.cluster.local")
 	args = append(args, "--service-account-key-file=/etc/kubernetes/pki/sa.pub")

@@ -94,8 +94,8 @@ func (s *RequestHeaderAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&s.UsernameHeaders, "requestheader-username-headers", s.UsernameHeaders, "要检查用户名的请求头列表。“X-Remote-User”为常见参数。")
 	fs.StringSliceVar(&s.GroupHeaders, "requestheader-group-headers", s.GroupHeaders, "要检查组的请求头列表。建议使用X-Remote-Group。")
 	fs.StringSliceVar(&s.ExtraHeaderPrefixes, "requestheader-extra-headers-prefix", s.ExtraHeaderPrefixes, "要检查的请求头前缀列表。建议使用X-Remote-Extra-")
-	fs.StringVar(&s.ClientCAFile, "requestheader-client-ca-file", s.ClientCAFile, "在信任 --requesttheader-username-headers 指定的头中的用户名之前，用于验证传入请求上的客户端证书的根证书包。警告:通常不依赖于对传入请求已经完成的授权。")
-	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames, "允许在--requesttheader-username-headers指定的头中提供用户名的客户端证书公共名称列表。如果为空，则允许在--requestheader-client-ca-file中通过权威机构验证的任何客户端证书。")
+	fs.StringVar(&s.ClientCAFile, "requestheader-client-ca-file", s.ClientCAFile, "在信任 --requestheader-username-headers 指定的头中的用户名之前，用于验证传入请求上的客户端证书的根证书包。警告:通常不依赖于对传入请求已经完成的授权。")
+	fs.StringSliceVar(&s.AllowedNames, "requestheader-allowed-names", s.AllowedNames, "允许在--requestheader-username-headers指定的头中提供用户名的客户端证书公共名称列表。如果为空，则允许在--requestheader-client-ca-file中通过权威机构验证的任何客户端证书。")
 }
 
 // ToAuthenticationRequestHeaderConfig 用于验证请求头配置信息

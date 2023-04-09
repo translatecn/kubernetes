@@ -61,9 +61,9 @@ type Config struct {
 	OIDCGroupsPrefix          string
 	OIDCSigningAlgs           []string
 	OIDCRequiredClaims        map[string]string
-	ServiceAccountKeyFiles    []string // --service-account-key-file
-	ServiceAccountLookup      bool
-	ServiceAccountIssuers     []string
+	ServiceAccountKeyFiles    []string                // --service-account-key-file
+	ServiceAccountLookup      bool                    // --service-account-lookup
+	ServiceAccountIssuers     []string                // --service-account-issuer
 	APIAudiences              authenticator.Audiences // 预先规定的调用者们  , 目前只有一个 https://kubernetes.default.svc.cluster.local
 	WebhookTokenAuthnVersion  string
 	WebhookTokenAuthnCacheTTL time.Duration
@@ -89,6 +89,7 @@ type Config struct {
 
 // New 返回一个验证器请求、支持标准Kubernetes身份验证机制
 func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, error) {
+	// DefaultBuildHandlerChain
 	// https://kubernetes.io/zh/docs/reference/access-authn-authz/authentication/
 	var authenticators []authenticator.Request
 	var tokenAuthenticators []authenticator.Token
@@ -99,10 +100,10 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	if config.RequestHeaderConfig != nil {
 		requestHeaderAuthenticator := headerrequest.NewDynamicVerifyOptionsSecure( // 动态认证
 			config.RequestHeaderConfig.CAContentProvider.VerifyOptions,
-			config.RequestHeaderConfig.AllowedClientNames,
-			config.RequestHeaderConfig.UsernameHeaders,
-			config.RequestHeaderConfig.GroupHeaders,
-			config.RequestHeaderConfig.ExtraHeaderPrefixes,
+			config.RequestHeaderConfig.AllowedClientNames,  // [front-proxy-client]
+			config.RequestHeaderConfig.UsernameHeaders,     // [X-Remote-User]
+			config.RequestHeaderConfig.GroupHeaders,        // [X-Remote-Group]
+			config.RequestHeaderConfig.ExtraHeaderPrefixes, // [X-Remote-Extra-]
 		)
 		var _ = requestHeaderAuthenticator.(*x509.Verifier).AuthenticateRequest
 		authenticators = append(authenticators, authenticator.WrapAudienceAgnosticRequest(config.APIAudiences, requestHeaderAuthenticator))
@@ -114,7 +115,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		var _ = certAuth.AuthenticateRequest
 		authenticators = append(authenticators, certAuth)
 	}
-
+	// ---------------------------------🔽  token 认证 -----------------------------------------------
 	// Bearer token methods, local first, then remote
 	// 从本地的csv 认证文件加载用户
 	if len(config.TokenAuthFile) > 0 {
@@ -122,18 +123,24 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		if err != nil {
 			return nil, nil, err
 		}
-		var _ = tokenAuth.(*tokenfile.TokenAuthenticator).AuthenticateToken
+		var _ = tokenAuth.(*tokenfile.TokenAuthenticator).AuthenticateToken // ✅
 		tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, tokenAuth))
 	}
-	if len(config.ServiceAccountKeyFiles) > 0 {
-		serviceAccountAuth, err := newLegacyServiceAccountAuthenticator(config.ServiceAccountKeyFiles, config.ServiceAccountLookup, config.APIAudiences, config.ServiceAccountTokenGetter, config.SecretsWriter)
+	if len(config.ServiceAccountKeyFiles) > 0 { // --service-account-key-file
+		serviceAccountAuth, err := newLegacyServiceAccountAuthenticator(
+			config.ServiceAccountKeyFiles, // --service-account-key-file
+			config.ServiceAccountLookup,   // --service-account-lookup
+			config.APIAudiences,           // --service-account-issuer	https://kubernetes.default.svc.cluster.local
+			config.ServiceAccountTokenGetter,
+			config.SecretsWriter,
+		)
 		if err != nil {
 			return nil, nil, err
 		}
 		var _ = serviceAccountAuth.(*serviceaccount.JwtTokenAuthenticator).AuthenticateToken
 		tokenAuthenticators = append(tokenAuthenticators, serviceAccountAuth)
 	}
-	if len(config.ServiceAccountIssuers) > 0 {
+	if len(config.ServiceAccountIssuers) > 0 { // --service-account-issuer
 		serviceAccountAuth, err := newServiceAccountAuthenticator(config.ServiceAccountIssuers, config.ServiceAccountKeyFiles, config.APIAudiences, config.ServiceAccountTokenGetter)
 		if err != nil {
 			return nil, nil, err
@@ -174,7 +181,9 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 		}
 
 		var _ = authenticator.AudAgnosticTokenAuthenticator{}.AuthenticateToken
-		tokenAuthenticators = append(tokenAuthenticators, authenticator.WrapAudienceAgnosticToken(config.APIAudiences, oidcAuth))
+		tokenAuthenticators = append(tokenAuthenticators,
+			authenticator.WrapAudienceAgnosticToken(config.APIAudiences, oidcAuth),
+		)
 	}
 	if len(config.WebhookTokenAuthnConfigFile) > 0 { // kube config格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。
 		webhookTokenAuth, err := newWebhookTokenAuthenticator(config)
@@ -187,16 +196,21 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 
 	if len(tokenAuthenticators) > 0 {
 		// 联合令牌验证器
+		var _ = new(tokenunion.UnionAuthTokenHandler).AuthenticateToken
 		tokenAuth := tokenunion.New(tokenAuthenticators...)
 		// 可选地缓存身份验证结果
 		if config.TokenSuccessCacheTTL > 0 || config.TokenFailureCacheTTL > 0 {
+			var _ = new(tokencache.CachedTokenAuthenticator).AuthenticateToken
 			tokenAuth = tokencache.New(tokenAuth, true, config.TokenSuccessCacheTTL, config.TokenFailureCacheTTL)
 		}
 
 		var _ = new(bearertoken.Authenticator).AuthenticateRequest
 		var _ = new(websocket.ProtocolAuthenticator).AuthenticateRequest
 
-		authenticators = append(authenticators, bearertoken.New(tokenAuth), websocket.NewProtocolAuthenticator(tokenAuth))
+		authenticators = append(authenticators,
+			bearertoken.New(tokenAuth),
+			websocket.NewProtocolAuthenticator(tokenAuth),
+		)
 		securityDefinitions["BearerToken"] = &spec.SecurityScheme{
 			SecuritySchemeProps: spec.SecuritySchemeProps{
 				Type:        "apiKey",
@@ -206,6 +220,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 			},
 		}
 	}
+	// ---------------------------------🔼  token 认证 -----------------------------------------------
 
 	if len(authenticators) == 0 {
 		if config.Anonymous {
@@ -215,11 +230,12 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	}
 
 	authenticator := union.New(authenticators...)
-
+	var _ = new(group.AuthenticatedGroupAdder).AuthenticateRequest
 	authenticator = group.NewAuthenticatedGroupAdder(authenticator)
 
 	if config.Anonymous {
 		// 如果认证器链返回错误，则返回错误（不将错误的令牌或无效的用户名/密码组合视为匿名）。
+		var _ = new(union.UnionAuthRequestHandler).AuthenticateRequest
 		authenticator = union.NewFailOnError(authenticator, anonymous.NewAuthenticator())
 	}
 
@@ -267,6 +283,7 @@ func newAuthenticatorFromOIDCIssuerURL(opts oidc.Options) (authenticator.Token, 
 	return tokenAuthenticator, nil
 }
 
+// 内置的sa认证
 func newLegacyServiceAccountAuthenticator(keyfiles []string, lookup bool, apiAudiences authenticator.Audiences, serviceAccountGetter serviceaccount.ServiceAccountTokenGetter, secretsWriter typedv1core.SecretsGetter) (authenticator.Token, error) {
 	allPublicKeys := []interface{}{}
 	for _, keyfile := range keyfiles {
@@ -277,7 +294,12 @@ func newLegacyServiceAccountAuthenticator(keyfiles []string, lookup bool, apiAud
 		allPublicKeys = append(allPublicKeys, publicKeys...)
 	}
 
-	tokenAuthenticator := serviceaccount.JWTTokenAuthenticator([]string{serviceaccount.LegacyIssuer}, allPublicKeys, apiAudiences, serviceaccount.NewLegacyValidator(lookup, serviceAccountGetter, secretsWriter))
+	tokenAuthenticator := serviceaccount.JWTTokenAuthenticator(
+		[]string{serviceaccount.LegacyIssuer},
+		allPublicKeys,
+		apiAudiences,
+		serviceaccount.NewLegacyValidator(lookup, serviceAccountGetter, secretsWriter),
+	)
 	return tokenAuthenticator, nil
 }
 

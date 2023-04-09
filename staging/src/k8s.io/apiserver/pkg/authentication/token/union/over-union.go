@@ -23,8 +23,8 @@ import (
 	"k8s.io/apiserver/pkg/authentication/authenticator"
 )
 
-// unionAuthTokenHandler 使用验证器链验证令牌。令牌对象
-type unionAuthTokenHandler struct {
+// UnionAuthTokenHandler 使用验证器链验证令牌。令牌对象
+type UnionAuthTokenHandler struct {
 	Handlers    []authenticator.Token
 	FailOnError bool // 确定错误返回是否会使链短路
 }
@@ -33,18 +33,18 @@ func New(authTokenHandlers ...authenticator.Token) authenticator.Token {
 	if len(authTokenHandlers) == 1 {
 		return authTokenHandlers[0]
 	}
-	return &unionAuthTokenHandler{Handlers: authTokenHandlers, FailOnError: false}
+	return &UnionAuthTokenHandler{Handlers: authTokenHandlers, FailOnError: false}
 }
 
 func NewFailOnError(authTokenHandlers ...authenticator.Token) authenticator.Token {
 	if len(authTokenHandlers) == 1 {
 		return authTokenHandlers[0]
 	}
-	return &unionAuthTokenHandler{Handlers: authTokenHandlers, FailOnError: true}
+	return &UnionAuthTokenHandler{Handlers: authTokenHandlers, FailOnError: true}
 }
 
 // AuthenticateToken 使用验证器链对令牌进行身份验证。令牌对象。
-func (authHandler *unionAuthTokenHandler) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
+func (authHandler *UnionAuthTokenHandler) AuthenticateToken(ctx context.Context, token string) (*authenticator.Response, bool, error) {
 	var errlist []error
 	for _, currAuthRequestHandler := range authHandler.Handlers {
 		info, ok, err := currAuthRequestHandler.AuthenticateToken(ctx, token)

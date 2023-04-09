@@ -25,7 +25,6 @@ import (
 
 // AuthenticatedGroupAdder adds system:authenticated group when appropriate
 type AuthenticatedGroupAdder struct {
-	// Authenticator is delegated to make the authentication decision
 	Authenticator authenticator.Request
 }
 
@@ -54,7 +53,7 @@ func (g *AuthenticatedGroupAdder) AuthenticateRequest(req *http.Request) (*authe
 	newGroups = append(newGroups, r.User.GetGroups()...)
 	newGroups = append(newGroups, user.AllAuthenticated)
 
-	ret := *r // shallow copy
+	ret := *r // 浅拷贝
 	ret.User = &user.DefaultInfo{
 		Name:   r.User.GetName(),
 		UID:    r.User.GetUID(),

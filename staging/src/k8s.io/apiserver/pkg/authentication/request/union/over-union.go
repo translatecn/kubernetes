@@ -23,8 +23,8 @@ import (
 	"k8s.io/apiserver/pkg/authentication/authenticator"
 )
 
-// unionAuthRequestHandler authenticates requests using a chain of authenticator.Requests
-type unionAuthRequestHandler struct {
+// UnionAuthRequestHandler authenticates requests using a chain of authenticator.Requests
+type UnionAuthRequestHandler struct {
 	// Handlers is a chain of request authenticators to delegate to
 	Handlers []authenticator.Request
 	// FailOnError determines whether an error returns short-circuits the chain
@@ -37,7 +37,7 @@ func New(authRequestHandlers ...authenticator.Request) authenticator.Request {
 	if len(authRequestHandlers) == 1 {
 		return authRequestHandlers[0]
 	}
-	return &unionAuthRequestHandler{Handlers: authRequestHandlers, FailOnError: false}
+	return &UnionAuthRequestHandler{Handlers: authRequestHandlers, FailOnError: false}
 }
 
 // NewFailOnError returns a request authenticator that validates credentials using a chain of authenticator.Request objects.
@@ -46,11 +46,11 @@ func NewFailOnError(authRequestHandlers ...authenticator.Request) authenticator.
 	if len(authRequestHandlers) == 1 {
 		return authRequestHandlers[0]
 	}
-	return &unionAuthRequestHandler{Handlers: authRequestHandlers, FailOnError: true}
+	return &UnionAuthRequestHandler{Handlers: authRequestHandlers, FailOnError: true}
 }
 
 // AuthenticateRequest authenticates the request using a chain of authenticator.Request objects.
-func (authHandler *unionAuthRequestHandler) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
+func (authHandler *UnionAuthRequestHandler) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
 	//- 如果某一个认证方法报错就返回，说明认证没过
 	//- 如果某一个认证方法报ok，说明认证过了，直接return了，无需再运行其他认证了
 	//- 如果所有的认证方法都没报ok，则认证没过
