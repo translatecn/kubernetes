@@ -46,7 +46,7 @@ type Config struct {
 	PressureTransitionPeriod time.Duration
 	// Maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
 	MaxPodGracePeriodSeconds int64
-	Thresholds               []evictionapi.Threshold // 定义被监控的条件集，以触发驱逐。
+	Thresholds               []evictionapi.Threshold // 定义被监控的条件集,以触发驱逐。
 	// KernelMemcgNotification if true will integrate with the kernel memcg notification to determine if memory thresholds are crossed.
 	KernelMemcgNotification bool
 	// PodCgroupRoot is the cgroup which contains all pods.
@@ -70,7 +70,7 @@ type Manager interface {
 
 // DiskInfoProvider is responsible for informing the manager how disk is configured.
 type DiskInfoProvider interface {
-	HasDedicatedImageFs(ctx context.Context) (bool, error) // 如果imagefs与rootfs在不同的设备上，则返回true。
+	HasDedicatedImageFs(ctx context.Context) (bool, error) // 如果imagefs与rootfs在不同的设备上,则返回true。
 }
 
 // ImageGC is responsible for performing garbage collection of unused images.

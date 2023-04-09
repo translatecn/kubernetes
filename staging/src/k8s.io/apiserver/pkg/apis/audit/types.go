@@ -87,9 +87,8 @@ type Event struct {
 	Verb string
 	// Authenticated user information.
 	User authnv1.UserInfo
-	// Impersonated user information.
 	// +optional
-	ImpersonatedUser *authnv1.UserInfo
+	ImpersonatedUser *authnv1.UserInfo // 模拟的请求用户
 	// Source IPs, from where the request originated and intermediate proxies.
 	// The source IPs are listed from (in order):
 	// 1. X-Forwarded-For request header IPs

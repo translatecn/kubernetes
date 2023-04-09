@@ -71,18 +71,18 @@ type KubeletFlags struct {
 	CertDirectory   string
 	CloudProvider   string // +optional
 	CloudConfigFile string // +optional
-	RootDirectory   string // 是放置kubelet文件（卷挂载等）的目录路径。
+	RootDirectory   string // 是放置kubelet文件（卷挂载等）的目录路径.
 
 	// The Kubelet will load its initial configuration from this file.
 	// The path may be absolute or relative; relative paths are under the Kubelet's current working directory.
 	// Omit this flag to use the combination of built-in default configuration values and flags.
 	KubeletConfigFile string
 
-	WindowsService bool // 如果kubelet在Windows上作为服务运行，则应将其设置为true。其对应的标志仅在Windows构建中注册。
+	WindowsService bool // 如果kubelet在Windows上作为服务运行,则应将其设置为true.其对应的标志仅在Windows构建中注册.
 
 	// WindowsPriorityClass设置与Kubelet进程关联的优先级类别
 	// 其对应的标志仅在Windows构建中注册
-	// Windows中任何进程的默认优先级类别为NORMAL_PRIORITY_CLASS。保持不变以保持向后兼容性。
+	// Windows中任何进程的默认优先级类别为NORMAL_PRIORITY_CLASS.保持不变以保持向后兼容性.
 	// Source: https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
 	WindowsPriorityClass string // kubelet 进程优先级
 
@@ -95,7 +95,7 @@ type KubeletFlags struct {
 	// This flag, if set, will avoid including `EvictionHard` limits while computing Node Allocatable.
 	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md) doc for more information.
 	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool
-	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签。
+	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签.
 	// lockFilePath is the path that kubelet will use to as a lock file.
 	// It uses this file as a lock to synchronize with other kubelet processes
 	// that may be running.
@@ -145,7 +145,7 @@ func NewKubeletFlags() *KubeletFlags {
 	}
 }
 
-// ValidateKubeletFlags 验证Kubelet的配置标志，并在它们无效时返回错误。
+// ValidateKubeletFlags 验证Kubelet的配置标志,并在它们无效时返回错误.
 func ValidateKubeletFlags(f *KubeletFlags) error {
 	unknownLabels := sets.NewString()
 	invalidLabelErrs := make(map[string][]string)
@@ -208,7 +208,7 @@ func getLabelNamespace(key string) string {
 	return ""
 }
 
-// NewKubeletConfiguration 将创建具有默认值的新KubeletConfiguration。
+// NewKubeletConfiguration 将创建具有默认值的新KubeletConfiguration.
 func NewKubeletConfiguration() (*kubeletconfig.KubeletConfiguration, error) {
 	scheme, _, err := kubeletscheme.NewSchemeAndCodecs()
 	if err != nil {
@@ -224,9 +224,9 @@ func NewKubeletConfiguration() (*kubeletconfig.KubeletConfiguration, error) {
 	return config, nil
 }
 
-// applyLegacyDefaults将遗留的默认值应用于KubeletConfiguration，以
-// 保留命令行API。这用于构建默认的 KubeletConfiguration
-// 在第一轮标志解析之前。
+// applyLegacyDefaults将遗留的默认值应用于KubeletConfiguration,以
+// 保留命令行API.这用于构建默认的 KubeletConfiguration
+// 在第一轮标志解析之前.
 func applyLegacyDefaults(kc *kubeletconfig.KubeletConfiguration) {
 	// --anonymous-auth
 	kc.Authentication.Anonymous.Enabled = true
@@ -313,9 +313,9 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.StringVar(&f.RemoteRuntimeEndpoint, "container-runtime-endpoint", f.RemoteRuntimeEndpoint, "The endpoint of remote runtime service. Unix Domain Sockets are supported on Linux, while npipe and tcp endpoints are supported on Windows. Examples:'unix:///path/to/runtime.sock', 'npipe:////./pipe/runtime'")
 	fs.StringVar(&f.RemoteImageEndpoint, "image-service-endpoint", f.RemoteImageEndpoint, "The endpoint of remote image service. If not specified, it will be the same with --container-runtime-endpoint by default. Unix Domain Socket are supported on Linux, while npipe and tcp endpoints are supported on Windows. Examples:'unix:///path/to/runtime.sock', 'npipe:////./pipe/runtime'")
 
-	// 实验性标志。
+	// 实验性标志.
 	bindableNodeLabels := cliflag.ConfigurationMap(f.NodeLabels)
-	fs.Var(&bindableNodeLabels, "node-labels", fmt.Sprintf("<警告：Alpha功能>在注册节点时添加的标签。标签必须是用“,”分隔的键=值对。在“kubernetes.io”命名空间中的标签必须以允许的前缀（%s）开头或在特定允许的集合（%s）中。", strings.Join(kubeletapis.KubeletLabelNamespaces(), ", "), strings.Join(kubeletapis.KubeletLabels(), ", ")))
+	fs.Var(&bindableNodeLabels, "node-labels", fmt.Sprintf("<警告：Alpha功能>在注册节点时添加的标签.标签必须是用“,”分隔的键=值对.在“kubernetes.io”命名空间中的标签必须以允许的前缀（%s）开头或在特定允许的集合（%s）中.", strings.Join(kubeletapis.KubeletLabelNamespaces(), ", "), strings.Join(kubeletapis.KubeletLabels(), ", ")))
 	fs.StringVar(&f.LockFilePath, "lock-file", f.LockFilePath, "<Warning: Alpha feature> The path to file for kubelet to use as a lock file.")
 	fs.BoolVar(&f.ExitOnLockContention, "exit-on-lock-contention", f.ExitOnLockContention, "Whether kubelet should exit upon lock-file contention.")
 	fs.BoolVar(&f.SeccompDefault, "seccomp-default", f.SeccompDefault, "<Warning: Beta feature> Enable the use of `RuntimeDefault` as the default seccomp profile for all workloads. The SeccompDefault feature gate must be enabled to allow this flag, which is disabled per default.")
@@ -343,7 +343,7 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.MarkDeprecated("experimental-allocatable-ignore-eviction", "will be removed in 1.25 or later.")
 }
 
-// AddKubeletConfigFlags 将特定的kubeletconfig.KubeletConfiguration的标志添加到指定的FlagSet中。
+// AddKubeletConfigFlags 将特定的kubeletconfig.KubeletConfiguration的标志添加到指定的FlagSet中.
 func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfiguration) {
 	fs := pflag.NewFlagSet("", pflag.ExitOnError)
 	defer func() {
@@ -373,7 +373,7 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 		mainfs.AddFlagSet(fs)
 	}()
 
-	fs.BoolVar(&c.EnableServer, "enable-server", c.EnableServer, "启用Kubelet的服务器。")
+	fs.BoolVar(&c.EnableServer, "enable-server", c.EnableServer, "启用Kubelet的服务器.")
 
 	fs.BoolVar(&c.FailSwapOn, "fail-swap-on", c.FailSwapOn, "Makes the Kubelet fail to start if swap is enabled on the node. ")
 	fs.StringVar(&c.StaticPodPath, "pod-manifest-path", c.StaticPodPath, "Path to the directory containing static pod files to run, or the path to a single static pod file. Files starting with dots will be ignored.")
@@ -448,7 +448,7 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.Int32Var(&c.ImageGCHighThresholdPercent, "image-gc-high-threshold", c.ImageGCHighThresholdPercent, "The percent of disk usage after which image garbage collection is always run. Values must be within the range [0, 100], To disable image garbage collection, set to 100. ")
 	fs.Int32Var(&c.ImageGCLowThresholdPercent, "image-gc-low-threshold", c.ImageGCLowThresholdPercent, "The percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to. Values must be within the range [0, 100] and should not be larger than that of --image-gc-high-threshold.")
 	fs.DurationVar(&c.VolumeStatsAggPeriod.Duration, "volume-stats-agg-period", c.VolumeStatsAggPeriod.Duration, "Specifies interval for kubelet to calculate and cache the volume disk usage for all pods and volumes.  To disable volume calculations, set to a negative number.")
-	fs.Var(cliflag.NewMapStringBool(&c.FeatureGates), "feature-gates", "一组键值对，用于描述alpha/experimental特性的开关 。 "+
+	fs.Var(cliflag.NewMapStringBool(&c.FeatureGates), "feature-gates", "一组键值对,用于描述alpha/experimental特性的开关 . "+
 		"Options are:\n"+strings.Join(utilfeature.DefaultFeatureGate.KnownFeatures(), "\n"))
 	fs.StringVar(&c.KubeletCgroups, "kubelet-cgroups", c.KubeletCgroups, "Optional absolute name of cgroups to create and run the Kubelet in.")
 	fs.StringVar(&c.SystemCgroups, "system-cgroups", c.SystemCgroups, "Optional absolute name of cgroups in which to place all non-kernel processes that are not already inside a cgroup under '/'. Empty for no container. Rolling back the flag requires a reboot.")

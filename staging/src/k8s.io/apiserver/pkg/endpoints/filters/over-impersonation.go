@@ -37,7 +37,7 @@ import (
 	"k8s.io/apiserver/pkg/server/httplog"
 )
 
-// WithImpersonation is a filter that will inspect and check requests that attempt to change the user.Info for their requests
+// WithImpersonation 是一个筛选器，它将检查和试图更改用户的请求
 func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.NegotiatedSerializer) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		impersonationRequests, err := buildImpersonationRequests(req.Header)
@@ -57,13 +57,11 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.
 			responsewriters.InternalError(w, req, errors.New("no user found for request"))
 			return
 		}
-
-		// if groups are not specified, then we need to look them up differently depending on the type of user
-		// if they are specified, then they are the authority (including the inclusion of system:authenticated/system:unauthenticated groups)
+		// 如果未指定组，则需要根据用户类型以不同的方式查找它们
+		// 如果指定了组，则它们是权限机构 (including the inclusion of system:authenticated/system:unauthenticated groups)
 		groupsSpecified := len(req.Header[authenticationv1.ImpersonateGroupHeader]) > 0
 
-		// make sure we're allowed to impersonate each thing we're requesting.  While we're iterating through, start building username
-		// and group information
+		// 确保我们有权模拟我们请求的每个对象。在我们遍历时，开始构建用户名和组信息。
 		username := ""
 		groups := []string{}
 		userExtra := map[string][]string{}
@@ -122,7 +120,7 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.
 			}
 		}
 
-		if username != user.Anonymous {
+		if username != user.Anonymous { // system:anonymous
 			// When impersonating a non-anonymous user, include the 'system:authenticated' group
 			// in the impersonated user info:
 			// - if no groups were specified
@@ -191,9 +189,9 @@ func unescapeExtraKey(encodedKey string) string {
 	return key
 }
 
-// buildImpersonationRequests returns a list of objectreferences that represent the different things we're requesting to impersonate.
-// Also includes a map[string][]string representing user.Info.Extra
-// Each request must be authorized against the current user before switching contexts.
+// buildImpersonationRequests 返回一个对象引用列表，表示我们要模拟的不同对象。
+// 还包括一个表示user.Info.Extra的map[string][]string
+// 在切换上下文之前，必须对每个请求进行当前用户的授权。
 func buildImpersonationRequests(headers http.Header) ([]v1.ObjectReference, error) {
 	impersonationRequests := []v1.ObjectReference{}
 
@@ -208,21 +206,21 @@ func buildImpersonationRequests(headers http.Header) ([]v1.ObjectReference, erro
 	}
 
 	hasGroups := false
-	for _, group := range headers[authenticationv1.ImpersonateGroupHeader] {
+	for _, group := range headers[authenticationv1.ImpersonateGroupHeader] { // Impersonate-Group
 		hasGroups = true
 		impersonationRequests = append(impersonationRequests, v1.ObjectReference{Kind: "Group", Name: group})
 	}
 
 	hasUserExtra := false
 	for headerName, values := range headers {
-		if !strings.HasPrefix(headerName, authenticationv1.ImpersonateUserExtraHeaderPrefix) {
+		if !strings.HasPrefix(headerName, authenticationv1.ImpersonateUserExtraHeaderPrefix) { // Impersonate-Extra-
 			continue
 		}
 
 		hasUserExtra = true
 		extraKey := unescapeExtraKey(strings.ToLower(headerName[len(authenticationv1.ImpersonateUserExtraHeaderPrefix):]))
 
-		// make a separate request for each extra value they're trying to set
+		// 为他们试图设置的每个额外值提出单独的请求
 		for _, value := range values {
 			impersonationRequests = append(impersonationRequests,
 				v1.ObjectReference{
@@ -238,7 +236,7 @@ func buildImpersonationRequests(headers http.Header) ([]v1.ObjectReference, erro
 		}
 	}
 
-	requestedUID := headers.Get(authenticationv1.ImpersonateUIDHeader)
+	requestedUID := headers.Get(authenticationv1.ImpersonateUIDHeader) // Impersonate-Uid
 	hasUID := len(requestedUID) > 0
 	if hasUID {
 		impersonationRequests = append(impersonationRequests, v1.ObjectReference{

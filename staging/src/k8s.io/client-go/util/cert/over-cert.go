@@ -38,10 +38,10 @@ import (
 
 const duration365d = time.Hour * 24 * 365
 
-// Config 包含创建证书所需的基本字段  ,kube-apiserver 将提取的 User、Group 作为 RBAC 授权的用户标识；
+// Config 包含创建证书所需的基本字段  ,kube-apiserver 将提取的 User、Group 作为 RBAC 授权的用户标识;
 type Config struct {
-	CommonName   string   // CN：Common Name：kube-apiserver 从证书中提取该字段作为请求的用户名 (User Name),浏览器使用该字段验证网站是否合法；
-	Organization []string // O：Organization：kube-apiserver 从证书中提取该字段作为请求用户所属的组 (Group)；
+	CommonName   string   // CN：Common Name：kube-apiserver 从证书中提取该字段作为请求的用户名 (User Name),浏览器使用该字段验证网站是否合法;
+	Organization []string // O：Organization：kube-apiserver 从证书中提取该字段作为请求用户所属的组 (Group);
 	AltNames     AltNames
 	Usages       []x509.ExtKeyUsage
 }

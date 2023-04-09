@@ -135,7 +135,7 @@ func NewManager(
 	return manager, manager
 }
 
-// Admit 如果不安全，就拒绝接受pod，以确保节点的稳定性。
+// Admit 如果不安全,就拒绝接受pod,以确保节点的稳定性。
 func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	m.RLock()
 	defer m.RUnlock()
@@ -229,10 +229,10 @@ func (m *managerImpl) IsUnderPIDPressure() bool {
 }
 
 // synchronize 是执行驱逐阈值的主要控制循环。
-// 返回被杀死的pod，如果没有被杀死，则返回nil。
+// 返回被杀死的pod,如果没有被杀死,则返回nil。
 func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc) []*v1.Pod {
 	ctx := context.Background()
-	// 如果我们没事做，就回去吧
+	// 如果我们没事做,就回去吧
 	thresholds := m.config.Thresholds
 	if len(thresholds) == 0 && !m.localStorageCapacityIsolation {
 		return nil
@@ -267,7 +267,7 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 			}
 		}
 	}
-	// 进行观察并获得一个函数，以派生相对于这些观察的pod使用统计数据。
+	// 进行观察并获得一个函数,以派生相对于这些观察的pod使用统计数据。
 	observations, statsFunc := makeSignalObservations(summary)
 	debugLogObservations("observations", observations)
 
@@ -318,8 +318,8 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 
 	m.lastObservations = observations
 	m.Unlock()
-	// 如果本地卷临时存储存在资源使用冲突，则清除pod
-	// 如果在localStorageEviction函数中发生了 evection，则跳过其余的 evection 动作
+	// 如果本地卷临时存储存在资源使用冲突,则清除pod
+	// 如果在localStorageEviction函数中发生了 evection,则跳过其余的 evection 动作
 	if m.localStorageCapacityIsolation {
 		if evictedPods := m.localStorageEviction(activePods, statsFunc); len(evictedPods) > 0 {
 			return evictedPods

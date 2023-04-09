@@ -306,7 +306,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	if a.group.OptionsExternalVersion != nil {
 		optionsExternalVersion = *a.group.OptionsExternalVersion
 	}
-	// 1、获取被注册object的group与version；确定是不是subresource
+	// 1、获取被注册object的group与version;确定是不是subresource
 	resource, subresource, err := splitSubresource(path)
 	if err != nil {
 		return nil, nil, err
@@ -622,7 +622,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		utilfeature.DefaultFeatureGate.Enabled(features.APIServerIdentity) &&
 		isStorageVersionProvider &&
 		storageVersionProvider.StorageVersion() != nil {
-		// 7、决定放入etcd时使用的version；以及从etcd取出时可以转化为的version
+		// 7、决定放入etcd时使用的version;以及从etcd取出时可以转化为的version
 		versioner := storageVersionProvider.StorageVersion()
 		encodingGVK, err := getStorageVersionKind(versioner, storage, a.group.Typer)
 		if err != nil {

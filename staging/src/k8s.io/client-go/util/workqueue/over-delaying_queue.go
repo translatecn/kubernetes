@@ -224,7 +224,7 @@ func (q *delayingType) waitingLoop() {
 		case <-nextReadyAt: // 第一个元素的等待时间到了
 
 		case waitEntry := <-q.waitingForAddCh:
-			// 如果时间没到，就加到优先级队列里；如果时间到了，就加入到延时队列里
+			// 如果时间没到，就加到优先级队列里;如果时间到了，就加入到延时队列里
 			if waitEntry.readyAt.After(q.clock.Now()) {
 				insert(waitingForQueue, waitingEntryByData, waitEntry)
 			} else {

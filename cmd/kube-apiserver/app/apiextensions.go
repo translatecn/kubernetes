@@ -87,7 +87,7 @@ func createAPIExtensionsConfig(
 		},
 	}
 
-	// 我们需要清除 post start hook，这样我们就不会将它们多次添加到所有服务器(失败)
+	// 我们需要清除 post start hook,这样我们就不会将它们多次添加到所有服务器(失败)
 	apiextensionsConfig.GenericConfig.PostStartHooks = map[string]genericapiserver.PostStartHookConfigEntry{}
 
 	return apiextensionsConfig, nil

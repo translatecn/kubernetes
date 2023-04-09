@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// Signal 定义一个信号，该信号可以触发节点上的pod的驱逐。
+// Signal 定义一个信号,该信号可以触发节点上的pod的驱逐。
 type Signal string
 
 const (

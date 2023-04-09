@@ -430,7 +430,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	enforceNodeAllocatable := kubeCfg.EnforceNodeAllocatable
 	if experimentalNodeAllocatableIgnoreEvictionThreshold {
-		// 如果我们不执行强制驱逐操作，不需要提供kubeCfg.EnforceNodeAllocatable
+		// 如果我们不执行强制驱逐操作,不需要提供kubeCfg.EnforceNodeAllocatable
 		enforceNodeAllocatable = []string{}
 	}
 	thresholds, err := eviction.ParseThresholdConfig(enforceNodeAllocatable, kubeCfg.EvictionHard, kubeCfg.EvictionSoft, kubeCfg.EvictionSoftGracePeriod, kubeCfg.EvictionMinimumReclaim)

@@ -172,7 +172,7 @@ func Run(completeOptions completedServerRunOptions, stopCh <-chan struct{}) erro
 	return prepared.Run(stopCh)
 }
 
-// CreateServerChain 通过委托创建连接的API服务器。
+// CreateServerChain 通过委托创建连接的API服务器.
 func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatorapiserver.APIAggregator, error) {
 	// 1、为 kubeAPIServer 创建配置
 	kubeAPIServerConfig, serviceResolver, pluginInitializer, err := CreateKubeAPIServerConfig(completedOptions) // kube-api-server
@@ -180,7 +180,7 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 		return nil, err
 	}
 
-	// 2、判断是否配置了 APIExtensionsServer，创建 apiExtensionsConfig
+	// 2、判断是否配置了 APIExtensionsServer,创建 apiExtensionsConfig
 	// If additional API servers are added, they should be gated.
 	apiExtensionsConfig, err := createAPIExtensionsConfig(
 		*kubeAPIServerConfig.GenericConfig,
@@ -201,13 +201,13 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 
 	notFoundHandler := notfoundhandler.New(kubeAPIServerConfig.GenericConfig.Serializer, genericapifilters.NoMuxAndDiscoveryIncompleteKey)
 	// 3、初始化 APIExtensionsServer
-	//主要处理 CustomResourceDefinition（CRD）和 CustomResource（CR）的 REST 请求，也是 Delegation 的最后一环，如果对应 CR 不能被处理的话则会返回 404。
+	//主要处理 CustomResourceDefinition（CRD）和 CustomResource（CR）的 REST 请求,也是 Delegation 的最后一环,如果对应 CR 不能被处理的话则会返回 404.
 	apiExtensionsServer, err := createAPIExtensionsServer(apiExtensionsConfig, genericapiserver.NewEmptyDelegateWithCustomHandler(notFoundHandler))
 	if err != nil {
 		return nil, err
 	}
 	// 4、初始化 KubeAPIServer
-	//负责对请求的一些通用处理，认证、鉴权等，以及处理各个内建资源的 REST 服务；
+	//负责对请求的一些通用处理,认证、鉴权等,以及处理各个内建资源的 REST 服务;
 	kubeAPIServer, err := CreateKubeAPIServer(kubeAPIServerConfig, apiExtensionsServer.GenericAPIServer)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func CreateServerChain(completedOptions completedServerRunOptions) (*aggregatora
 		return nil, err
 	}
 	// 6、初始化 AggregatorServer
-	//暴露的功能类似于一个七层负载均衡，将来自用户的请求拦截转发给其他服务器，并且负责整个 APIServer 的 Discovery 功能；
+	//暴露的功能类似于一个七层负载均衡,将来自用户的请求拦截转发给其他服务器,并且负责整个 APIServer 的 Discovery 功能;
 	aggregatorServer, err := createAggregatorServer(aggregatorConfig, kubeAPIServer.GenericAPIServer, apiExtensionsServer.Informers)
 	if err != nil {
 		// we don't need special handling for innerStopCh because the aggregator server doesn't create any go routines
@@ -239,7 +239,7 @@ func CreateKubeAPIServer(kubeAPIServerConfig *controlplane.Config, delegateAPISe
 	return kubeAPIServer, nil
 }
 
-// CreateProxyTransport 创建和节点通信的结构体proxyTransport ，使用缓存长连接提高效率
+// CreateProxyTransport 创建和节点通信的结构体proxyTransport ,使用缓存长连接提高效率
 func CreateProxyTransport() *http.Transport {
 	//- transport的主要功能其实就是缓存了长连接
 	//- 用于大量http请求场景下的连接复用
@@ -254,7 +254,7 @@ func CreateProxyTransport() *http.Transport {
 	return proxyTransport
 }
 
-// CreateKubeAPIServerConfig 创建运行API服务器所需的所有资源，但不运行任何资源。
+// CreateKubeAPIServerConfig 创建运行API服务器所需的所有资源,但不运行任何资源.
 func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	*controlplane.Config,
 	aggregatorapiserver.ServiceResolver,
@@ -303,7 +303,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 		},
 	}
 	//ClientCA -设置Client证书的签发机构：
-	//aggregated api server 和 aggregator 之问通信时，哪些Header中有用户信息，详见这里，
+	//aggregated api server 和 aggregator 之问通信时,哪些Header中有用户信息,详见这里,
 	clientCAProvider, err := s.Authentication.ClientCert.GetClientCAContentProvider()
 	if err != nil {
 		return nil, nil, nil, err
@@ -350,8 +350,8 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 		}
 		pubKeys = append(pubKeys, keys...)
 	}
-	// 通过extra config查找所需的元数据。
-	// 客户端向API Server发一个请求，可以带上OpenID机构提供的身份信息，API Server可以据此识別出用户。这里配置API Server所使用的OpenID机构信息
+	// 通过extra config查找所需的元数据.
+	// 客户端向API Server发一个请求,可以带上OpenID机构提供的身份信息,API Server可以据此识別出用户.这里配置API Server所使用的OpenID机构信息
 	config.ExtraConfig.ServiceAccountIssuerURL = s.Authentication.ServiceAccounts.Issuers[0]
 	config.ExtraConfig.ServiceAccountJWKSURI = s.Authentication.ServiceAccounts.JWKSURI
 	config.ExtraConfig.ServiceAccountPublicKeys = pubKeys
@@ -359,7 +359,7 @@ func CreateKubeAPIServerConfig(s completedServerRunOptions) (
 	return config, serviceResolver, pluginInitializers, nil
 }
 
-// BuildGenericConfig 获取主服务器选项并生成与之关联的通用API服务器配置。
+// BuildGenericConfig 获取主服务器选项并生成与之关联的通用API服务器配置.
 func buildGenericConfig(
 	s *options.ServerRunOptions,
 	proxyTransport *http.Transport,
@@ -381,7 +381,7 @@ func buildGenericConfig(
 	//应用option中EgressSelector
 	//应用option中Traces
 	//淮各OpenAPIConfig
-	//准备StorageFactory，考虑option中的etcd设置
+	//准备StorageFactory,考虑option中的etcd设置
 	//制作一个shared informer: versionedInforrers
 	//应用option中Authentication 到多处
 	//应用option中的audit设置
@@ -455,16 +455,16 @@ func buildGenericConfig(
 	if lastErr != nil {
 		return
 	}
-	// 2、初始化 RESTOptionsGetter，后期根据其获取操作 Etcd 的句柄，同时添加 etcd 的健康检查方法
-	// 将存储工厂应用到服务端运行对象中，后期可以通过RESTOptionsGetter获取操作 Etcd 的句柄
+	// 2、初始化 RESTOptionsGetter,后期根据其获取操作 Etcd 的句柄,同时添加 etcd 的健康检查方法
+	// 将存储工厂应用到服务端运行对象中,后期可以通过RESTOptionsGetter获取操作 Etcd 的句柄
 	if lastErr = s.Etcd.ApplyWithStorageFactoryTo(storageFactory, genericConfig); lastErr != nil {
 		return
 	}
 
-	// 3、设置使用 protobufs 用来内部交互，并且禁用压缩功能   [因为内部网络速度快，没必要为了节省带宽而将cpu浪费在压缩和解压上]
+	// 3、设置使用 protobufs 用来内部交互,并且禁用压缩功能   [因为内部网络速度快,没必要为了节省带宽而将cpu浪费在压缩和解压上]
 	genericConfig.LoopbackClientConfig.ContentConfig.ContentType = "application/vnd.kubernetes.protobuf"
 
-	genericConfig.LoopbackClientConfig.DisableCompression = true // 禁用自我通信的压缩功能，因为我们将在一个快速的本地网络上。
+	genericConfig.LoopbackClientConfig.DisableCompression = true // 禁用自我通信的压缩功能,因为我们将在一个快速的本地网络上.
 	// 4、创建 clientset
 	kubeClientConfig := genericConfig.LoopbackClientConfig
 	clientgoExternalClient, err := clientgoclientset.NewForConfig(kubeClientConfig)
@@ -474,7 +474,7 @@ func buildGenericConfig(
 	}
 	versionedInformers = clientgoinformers.NewSharedInformerFactory(clientgoExternalClient, 10*time.Minute)
 
-	// Authentication.ApplyTo需要已经应用的OpenAPIConfig和EgressSelector（如果存在）。
+	// Authentication.ApplyTo需要已经应用的OpenAPIConfig和EgressSelector（如果存在）.
 	if lastErr = s.Authentication.ApplyTo( // 认证
 		&genericConfig.Authentication,
 		genericConfig.SecureServing,
@@ -487,7 +487,7 @@ func buildGenericConfig(
 		return
 	}
 
-	// 6、创建鉴权实例，包含：Node、RBAC、Webhook、ABAC、AlwaysAllow、AlwaysDeny
+	// 6、创建鉴权实例,包含：Node、RBAC、Webhook、ABAC、AlwaysAllow、AlwaysDeny
 	genericConfig.Authorization.Authorizer, genericConfig.RuleResolver, err = BuildAuthorizer(s, genericConfig.EgressSelector, versionedInformers)
 	if err != nil {
 		lastErr = fmt.Errorf("invalid authorization config: %v", err)

@@ -972,7 +972,7 @@ func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 	return signalToRankFunc
 }
 
-// PodIsEvicted 如果报告的pod状态是由于驱逐而导致的，则返回true。
+// PodIsEvicted 如果报告的pod状态是由于驱逐而导致的,则返回true。
 func PodIsEvicted(podStatus v1.PodStatus) bool {
 	return podStatus.Phase == v1.PodFailed && podStatus.Reason == Reason
 }

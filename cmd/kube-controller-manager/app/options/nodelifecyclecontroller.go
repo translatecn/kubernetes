@@ -40,7 +40,7 @@ func (o *NodeLifecycleControllerOptions) AddFlags(fs *pflag.FlagSet) {
 			"Must be N times more than kubelet's nodeStatusUpdateFrequency, "+
 			"where N means number of retries allowed for kubelet to post node status.")
 	fs.DurationVar(&o.PodEvictionTimeout.Duration, "pod-eviction-timeout", o.PodEvictionTimeout.Duration, "The grace period for deleting pods on failed nodes.")
-	fs.Float32Var(&o.NodeEvictionRate, "node-eviction-rate", 0.1, "在某个区域处于健康状态时（请参见--unhealthy-zone-threshold以获取healthy/unhealthy的定义），在节点故障时每秒删除pod的节点数量。在非多区域集群中，区域指整个集群。")
+	fs.Float32Var(&o.NodeEvictionRate, "node-eviction-rate", 0.1, "在某个区域处于健康状态时（请参见--unhealthy-zone-threshold以获取healthy/unhealthy的定义）,在节点故障时每秒删除pod的节点数量.在非多区域集群中,区域指整个集群.")
 	fs.Float32Var(&o.SecondaryNodeEvictionRate, "secondary-node-eviction-rate", 0.01, "Number of nodes per second on which pods are deleted in case of node failure when a zone is unhealthy (see --unhealthy-zone-threshold for definition of healthy/unhealthy). Zone refers to entire cluster in non-multizone clusters. This value is implicitly overridden to 0 if the cluster size is smaller than --large-cluster-size-threshold.")
 	fs.Int32Var(&o.LargeClusterSizeThreshold, "large-cluster-size-threshold", 50, "Number of nodes from which NodeController treats the cluster as large for the eviction logic purposes. --secondary-node-eviction-rate is implicitly overridden to 0 for clusters this size or smaller.")
 	fs.Float32Var(&o.UnhealthyZoneThreshold, "unhealthy-zone-threshold", 0.55, "Fraction of Nodes in a zone which needs to be not Ready (minimum 3) for zone to be treated as unhealthy. ")

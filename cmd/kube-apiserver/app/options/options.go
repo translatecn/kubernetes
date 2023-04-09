@@ -150,23 +150,23 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	fs.StringVar(&s.EndpointReconcilerType, "endpoint-reconciler-type", s.EndpointReconcilerType, "使用端点协调器("+strings.Join(reconcilers.AllTypes.Names(), ", ")+") master-count 已弃用,并将在未来的版本中删除.")
 	// See #14282 for details on how to test/try this option out.
 	// TODO: remove this comment once this option is tested in CI.
-	fs.IntVar(&s.KubernetesServiceNodePort, "kubernetes-service-node-port", s.KubernetesServiceNodePort, "如果非零，Kubernetes主服务(apiserver创建/维护的主服务)将是NodePort类型，使用这个作为端口的值。如果为0，则Kubernetes主服务的类型为ClusterIP。")
+	fs.IntVar(&s.KubernetesServiceNodePort, "kubernetes-service-node-port", s.KubernetesServiceNodePort, "如果非零,Kubernetes主服务(apiserver创建/维护的主服务)将是NodePort类型,使用这个作为端口的值.如果为0,则Kubernetes主服务的类型为ClusterIP.")
 	fs.StringVar(&s.ServiceClusterIPRanges, "service-cluster-ip-range", s.ServiceClusterIPRanges, "集群服务的IP范围.这不能与分配给节点或pod的任何IP范围重叠.最多允许2个双栈cidr")
 	fs.Var(&s.ServiceNodePortRange, "service-node-port-range", "为具有NodePort可见性的服务保留的端口范围  30000 - 32767")
 
 	// Kubelet related flags:
-	fs.StringSliceVar(&s.KubeletConfig.PreferredAddressTypes, "kubelet-preferred-address-types", s.KubeletConfig.PreferredAddressTypes, "用于kubelet连接的首选node address type列表。")
+	fs.StringSliceVar(&s.KubeletConfig.PreferredAddressTypes, "kubelet-preferred-address-types", s.KubeletConfig.PreferredAddressTypes, "用于kubelet连接的首选node address type列表.")
 	fs.UintVar(&s.KubeletConfig.Port, "kubelet-port", s.KubeletConfig.Port, "弃用: kubelet port.")
-	fs.MarkDeprecated("kubelet-port", "kubelet-port 已弃用并将被删除。")
+	fs.MarkDeprecated("kubelet-port", "kubelet-port 已弃用并将被删除.")
 	fs.UintVar(&s.KubeletConfig.ReadOnlyPort, "kubelet-read-only-port", s.KubeletConfig.ReadOnlyPort, "弃用: kubelet 只读端口")
-	fs.MarkDeprecated("kubelet-read-only-port", "kubelet-read-only-port 已弃用并将被删除。")
+	fs.MarkDeprecated("kubelet-read-only-port", "kubelet-read-only-port 已弃用并将被删除.")
 	fs.DurationVar(&s.KubeletConfig.HTTPTimeout, "kubelet-timeout", s.KubeletConfig.HTTPTimeout, "kubelet操作超时.")
-	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CertFile, "kubelet-client-certificate", s.KubeletConfig.TLSClientConfig.CertFile, "TLS的客户端证书文件的路径。")
-	fs.StringVar(&s.KubeletConfig.TLSClientConfig.KeyFile, "kubelet-client-key", s.KubeletConfig.TLSClientConfig.KeyFile, "TLS的客户端密钥文件的路径。")
-	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CAFile, "kubelet-certificate-authority", s.KubeletConfig.TLSClientConfig.CAFile, "证书颁发机构的证书文件的路径。")
-	fs.StringVar(&s.ProxyClientCertFile, "proxy-client-cert-file", s.ProxyClientCertFile, "客户端证书，用于在请求期间必须调用聚合器或kube-apiserver时证明它的身份。这包括代理请求到用户api服务器和调用webhook许可插件。")
-	fs.StringVar(&s.ProxyClientKeyFile, "proxy-client-key-file", s.ProxyClientKeyFile, "客户端证书的私钥，用于在请求期间必须调用聚合器或kube-apiserver时证明聚合器的身份。这包括代理请求到用户api服务器和调用webhook许可插件。")
-	fs.BoolVar(&s.EnableAggregatorRouting, "enable-aggregator-routing", s.EnableAggregatorRouting, "打开聚合器将请求路由到端点IP而不是集群IP。")
+	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CertFile, "kubelet-client-certificate", s.KubeletConfig.TLSClientConfig.CertFile, "TLS的客户端证书文件的路径.")
+	fs.StringVar(&s.KubeletConfig.TLSClientConfig.KeyFile, "kubelet-client-key", s.KubeletConfig.TLSClientConfig.KeyFile, "TLS的客户端密钥文件的路径.")
+	fs.StringVar(&s.KubeletConfig.TLSClientConfig.CAFile, "kubelet-certificate-authority", s.KubeletConfig.TLSClientConfig.CAFile, "证书颁发机构的证书文件的路径.")
+	fs.StringVar(&s.ProxyClientCertFile, "proxy-client-cert-file", s.ProxyClientCertFile, "客户端证书,用于在请求期间必须调用聚合器或kube-apiserver时证明它的身份.这包括代理请求到用户api服务器和调用webhook许可插件.")
+	fs.StringVar(&s.ProxyClientKeyFile, "proxy-client-key-file", s.ProxyClientKeyFile, "客户端证书的私钥,用于在请求期间必须调用聚合器或kube-apiserver时证明聚合器的身份.这包括代理请求到用户api服务器和调用webhook许可插件.")
+	fs.BoolVar(&s.EnableAggregatorRouting, "enable-aggregator-routing", s.EnableAggregatorRouting, "打开聚合器将请求路由到端点IP而不是集群IP.")
 	fs.BoolVar(&s.AggregatorRejectForwardingRedirects, "aggregator-reject-forwarding-redirect", s.AggregatorRejectForwardingRedirects, "聚合器拒绝将重定向响应转发回客户端.")
 	fs.StringVar(&s.ServiceAccountSigningKeyFile, "service-account-signing-key-file", s.ServiceAccountSigningKeyFile, "对sa用户进行jwt签名使用的 密钥文件.")
 

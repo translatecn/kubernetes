@@ -26,9 +26,9 @@ import (
 
 // Utility functions for the Kubelet's kubeletconfig API group
 
-// NewSchemeAndCodecs 是一个实用函数，返回一个Scheme和CodecFactory
+// NewSchemeAndCodecs 是一个实用函数,返回一个Scheme和CodecFactory
 // 它们理解kubeletconfig API组中的类型。传递mutators允许
-// 调整CodecFactory的行为，例如启用严格解码。
+// 调整CodecFactory的行为,例如启用严格解码。
 func NewSchemeAndCodecs(mutators ...serializer.CodecFactoryOptionsMutator) (*runtime.Scheme, *serializer.CodecFactory, error) {
 	scheme := runtime.NewScheme()
 	if err := kubeletconfig.AddToScheme(scheme); err != nil {

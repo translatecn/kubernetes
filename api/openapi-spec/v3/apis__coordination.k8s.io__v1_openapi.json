@@ -97,11 +97,11 @@
             "description": "acquireTime是acquire当前租约的时间."
           },
           "holderIdentity": {
-            "description": "holderIdentity 包含当前租约持有者的标识。",
+            "description": "holderIdentity 包含当前租约持有者的标识.",
             "type": "string"
           },
           "leaseDurationSeconds": {
-            "description": "leaseDurationSeconds 是一个租期的候选人需要租约的时间。这是根据最后观察到的RenewTime的时间来衡量的。",
+            "description": "leaseDurationSeconds 是一个租期的候选人需要租约的时间.这是根据最后观察到的RenewTime的时间来衡量的.",
             "format": "int32",
             "type": "integer"
           },

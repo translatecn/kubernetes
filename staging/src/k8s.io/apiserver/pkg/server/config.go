@@ -770,11 +770,11 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 	}
 
 	handler = filterlatency.TrackCompleted(handler)
-	handler = genericapifilters.WithImpersonation(handler, c.Authorization.Authorizer, c.Serializer)
+	handler = genericapifilters.WithImpersonation(handler, c.Authorization.Authorizer, c.Serializer) // 模拟用户请求  // ✅
 	handler = filterlatency.TrackStarted(handler, c.TracerProvider, "impersonation")
 
 	handler = filterlatency.TrackCompleted(handler)
-	handler = genericapifilters.WithAudit(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator, c.LongRunningFunc)
+	handler = genericapifilters.WithAudit(handler, c.AuditBackend, c.AuditPolicyRuleEvaluator, c.LongRunningFunc) // ✅
 	handler = filterlatency.TrackStarted(handler, c.TracerProvider, "audit")
 
 	failedHandler := genericapifilters.Unauthorized(c.Serializer) // 看能不能拿到requestInfo

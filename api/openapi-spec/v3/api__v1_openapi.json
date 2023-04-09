@@ -6851,7 +6851,7 @@
             "description": "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata"
           },
           "secrets": {
-            "description": "Secrets是在相同命名空间中，使用此ServiceAccount的Pod被允许使用的Secret列表。只有当此ServiceAccount具有设置为“true”的“kubernetes.io/enforce-mountable-secrets”注释时，Pod才受此列表的限制。不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥。相反，可以直接使用TokenRequest API请求令牌，或手动创建ServiceAccount令牌密钥。更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
+            "description": "Secrets是在相同命名空间中,使用此ServiceAccount的Pod被允许使用的Secret列表.只有当此ServiceAccount具有设置为“true”的“kubernetes.io/enforce-mountable-secrets”注释时,Pod才受此列表的限制.不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥.相反,可以直接使用TokenRequest API请求令牌,或手动创建ServiceAccount令牌密钥。更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
             "items": {
               "allOf": [
                 {

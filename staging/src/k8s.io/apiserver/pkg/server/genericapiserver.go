@@ -433,7 +433,7 @@ func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
 // |                       listenerStoppedCh
 // |                                 |
 // |      HTTPServerStoppedListening (httpServerStoppedListeningCh)
-// 编织出server生命周期中的状态流转(利用channel机制）；关闭开始前调用pre shutdown hooks
+// 编织出server生命周期中的状态流转(利用channel机制）;关闭开始前调用pre shutdown hooks
 func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	delayedStopCh := s.lifecycleSignals.AfterShutdownDelayDuration
 	shutdownInitiatedCh := s.lifecycleSignals.ShutdownInitiated

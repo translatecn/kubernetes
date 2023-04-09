@@ -93,7 +93,7 @@ var AllOrderedPlugins = []string{
 	defaultingressclass.PluginName,          // DefaultIngressClass
 	denyserviceexternalips.PluginName,       // DenyServiceExternalIPs
 
-	// 新的准入插件一般应该插在webhook,resourcequota上面 ；而deny插件必须走在最后
+	// 新的准入插件一般应该插在webhook,resourcequota上面 ;而deny插件必须走在最后
 	mutatingwebhook.PluginName,           // MutatingAdmissionWebhook
 	validatingadmissionpolicy.PluginName, // ValidatingAdmissionPolicy
 	validatingwebhook.PluginName,         // ValidatingAdmissionWebhook
