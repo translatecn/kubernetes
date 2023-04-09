@@ -83,7 +83,7 @@ func WithPriorityAndFairness(
 		initMaxInFlight(0, 0)
 		// Fetching these gauges is delayed until after their underlying metric has been registered
 		// so that this latches onto the efficient implementation.
-		waitingMark.readOnlyObserver = fcmetrics.GetWaitingReadonlyConcurrency()
+		waitingMark.nonMutatingObserver = fcmetrics.GetWaitingReadonlyConcurrency()
 		waitingMark.mutatingObserver = fcmetrics.GetWaitingMutatingConcurrency()
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

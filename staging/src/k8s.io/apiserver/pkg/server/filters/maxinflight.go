@@ -33,13 +33,10 @@ import (
 )
 
 const (
-	// Constant for the retry-after interval on rate limiting.
+	// 速率限制上重试间隔的常数。
 	// TODO: maybe make this dynamic? or user-adjustable?
 	retryAfter = "1"
-
-	// How often inflight usage metric should be updated. Because
-	// the metrics tracks maximal value over period making this
-	// longer will increase the metric value.
+	// 多久更新一次 flight 使用率指标。因为指标在一段时间内跟踪最大值，使其更长将增加指标值。
 	inflightUsageMetricUpdatePeriod = time.Second
 )
 
@@ -54,12 +51,14 @@ func handleError(w http.ResponseWriter, r *http.Request, err error) {
 	klog.Errorf(err.Error())
 }
 
-// requestWatermark is used to track maximal numbers of requests in a particular phase of handling
+// requestWatermark 用于跟踪在处理特定阶段的最大请求数。
 type requestWatermark struct {
-	phase                                string
-	readOnlyObserver, mutatingObserver   fcmetrics.RatioedGauge
-	lock                                 sync.Mutex
-	readOnlyWatermark, mutatingWatermark int
+	phase               string
+	nonMutatingObserver fcmetrics.RatioedGauge
+	mutatingObserver    fcmetrics.RatioedGauge
+	lock                sync.Mutex
+	readOnlyWatermark   int
+	mutatingWatermark   int
 }
 
 func (w *requestWatermark) recordMutating(mutatingVal int) {
@@ -74,7 +73,7 @@ func (w *requestWatermark) recordMutating(mutatingVal int) {
 }
 
 func (w *requestWatermark) recordReadOnly(readOnlyVal int) {
-	w.readOnlyObserver.Set(float64(readOnlyVal))
+	w.nonMutatingObserver.Set(float64(readOnlyVal))
 
 	w.lock.Lock()
 	defer w.lock.Unlock()
@@ -108,12 +107,11 @@ var initMaxInFlightOnce sync.Once
 
 func initMaxInFlight(nonMutatingLimit, mutatingLimit int) {
 	initMaxInFlightOnce.Do(func() {
-		// Fetching these gauges is delayed until after their underlying metric has been registered
-		// so that this latches onto the efficient implementation.
-		watermark.readOnlyObserver = fcmetrics.GetExecutingReadonlyConcurrency()
+		// 获取这些计量器的延迟直到它们的基础指标已注册，以便它们附着于有效的实现。
+		watermark.nonMutatingObserver = fcmetrics.GetExecutingReadonlyConcurrency()
 		watermark.mutatingObserver = fcmetrics.GetExecutingMutatingConcurrency()
 		if nonMutatingLimit != 0 {
-			watermark.readOnlyObserver.SetDenominator(float64(nonMutatingLimit))
+			watermark.nonMutatingObserver.SetDenominator(float64(nonMutatingLimit))
 			klog.V(2).InfoS("Set denominator for readonly requests", "limit", nonMutatingLimit)
 		}
 		if mutatingLimit != 0 {
