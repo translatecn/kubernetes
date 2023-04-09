@@ -1,4 +1,5 @@
 # https://blog.csdn.net/wanger5354/article/details/121786364
+#https://github.com/mfanjie/github-webhook/tree/master
 cat >> webhook-config.json <EOF
 {
   "kind": "Config",

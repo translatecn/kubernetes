@@ -16,5 +16,12 @@ func authByGithub(token string) (err error) {
 	if err != nil {
 		return err
 	}
+	//_ := authentication.TokenReviewStatus{
+	//	Authenticated: true,
+	//	User: authentication.UserInfo{
+	//		Username: *user.Login,
+	//		UID:      *user.Login,
+	//	},
+	//}
 	return nil
 }

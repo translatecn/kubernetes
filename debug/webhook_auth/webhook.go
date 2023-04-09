@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/golang/glog"
 	authentication "k8s.io/api/authentication/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"net/http"
 	"strings"
@@ -17,7 +18,12 @@ func (ctx *WebHookServer) serve(w http.ResponseWriter, r *http.Request) {
 	// 从APIServer中取出body
 	// 将body进行拆分, 取出type
 	// 根据type, 取出不同的认证数据
-	var req authentication.TokenReview
+	var req = authentication.TokenReview{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "authentication.k8s.io/v1beta1",
+			Kind:       "TokenReview",
+		},
+	}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&req)
 	if err != nil {
