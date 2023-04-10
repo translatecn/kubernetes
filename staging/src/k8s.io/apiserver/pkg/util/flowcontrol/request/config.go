@@ -32,19 +32,12 @@ const (
 
 var eventAdditionalDuration = 5 * time.Millisecond
 
-// WorkEstimatorConfig holds work estimator parameters.
+// WorkEstimatorConfig  估算负载的参数
 type WorkEstimatorConfig struct {
 	*ListWorkEstimatorConfig     `json:"listWorkEstimatorConfig,omitempty"`
 	*MutatingWorkEstimatorConfig `json:"mutatingWorkEstimatorConfig,omitempty"`
-
-	// MinimumSeats is the minimum number of seats a request must occupy.
-	MinimumSeats uint64 `json:"minimumSeats,omitempty"`
-	// MaximumSeats is the maximum number of seats a request can occupy
-	//
-	// NOTE: work_estimate_seats_samples metric uses the value of maximumSeats
-	// as the upper bound, so when we change maximumSeats we should also
-	// update the buckets of the metric.
-	MaximumSeats uint64 `json:"maximumSeats,omitempty"`
+	MinimumSeats                 uint64 `json:"minimumSeats,omitempty"` // 每个请求对应的最小工作量
+	MaximumSeats                 uint64 `json:"maximumSeats,omitempty"` // 每个请求对应的最大工作量
 }
 
 // ListWorkEstimatorConfig holds work estimator parameters related to list requests.
@@ -52,8 +45,7 @@ type ListWorkEstimatorConfig struct {
 	ObjectsPerSeat float64 `json:"objectsPerSeat,omitempty"`
 }
 
-// MutatingWorkEstimatorConfig holds work estimator
-// parameters related to watches of mutating objects.
+// MutatingWorkEstimatorConfig holds work estimator parameters related to watches of mutating objects.
 type MutatingWorkEstimatorConfig struct {
 	// TODO(wojtekt): Remove it once we tune the algorithm to not fail
 	// scalability tests.

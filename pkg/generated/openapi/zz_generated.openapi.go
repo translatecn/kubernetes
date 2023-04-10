@@ -32102,7 +32102,7 @@ func schema_k8sio_api_flowcontrol_v1alpha1_PriorityLevelConfiguration(ref common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PriorityLevelConfiguration represents the configuration of a priority level.",
+				Description: "PriorityLevelConfiguration 表示优先级级别的配置。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -33101,7 +33101,7 @@ func schema_k8sio_api_flowcontrol_v1beta1_PriorityLevelConfiguration(ref common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PriorityLevelConfiguration represents the configuration of a priority level.",
+				Description: "PriorityLevelConfiguration 表示优先级级别的配置。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -34100,7 +34100,7 @@ func schema_k8sio_api_flowcontrol_v1beta2_PriorityLevelConfiguration(ref common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PriorityLevelConfiguration represents the configuration of a priority level.",
+				Description: "PriorityLevelConfiguration 表示优先级级别的配置。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -35101,7 +35101,7 @@ func schema_k8sio_api_flowcontrol_v1beta3_PriorityLevelConfiguration(ref common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PriorityLevelConfiguration represents the configuration of a priority level.",
+				Description: "PriorityLevelConfiguration 表示优先级级别的配置。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {

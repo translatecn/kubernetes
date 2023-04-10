@@ -16,6 +16,8 @@ limitations under the License.
 
 package promise
 
+// 承诺
+
 import (
 	"sync"
 )

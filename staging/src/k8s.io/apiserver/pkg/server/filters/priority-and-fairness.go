@@ -67,16 +67,17 @@ func truncateLogField(s string) string {
 
 var initAPFOnce sync.Once
 
-// WithPriorityAndFairness limits the number of in-flight
-// requests in a fine-grained way.
+// WithPriorityAndFairness 以细粒度的方式限制正在进行的请求的数量。
 func WithPriorityAndFairness(
 	handler http.Handler,
 	longRunningRequestCheck apirequest.LongRunningRequestCheck,
 	fcIfc utilflowcontrol.Interface,
 	workEstimator flowcontrolrequest.WorkEstimatorFunc,
 ) http.Handler {
+	var _ = new(utilflowcontrol.TestableConfig)
+
 	if fcIfc == nil {
-		klog.Warningf("priority and fairness support not found, skipping")
+		klog.Warningf("未找到优先级和公平性支持，跳过。")
 		return handler
 	}
 	initAPFOnce.Do(func() {
@@ -100,7 +101,7 @@ func WithPriorityAndFairness(
 		}
 
 		isWatchRequest := watchVerbs.Has(requestInfo.Verb)
-
+		//使用BasicLongRunningRequestCheck检查是否是watch或者pprof debug等长时间运行的请求，因为这些请求不受限制
 		// Skip tracking long running non-watch requests.
 		if longRunningRequestCheck != nil && longRunningRequestCheck(r, requestInfo) && !isWatchRequest {
 			klog.V(6).Infof("Serving RequestInfo=%#+v, user.Info=%#+v as longrunning\n", requestInfo, user)
@@ -164,14 +165,14 @@ func WithPriorityAndFairness(
 			}
 		}
 
-		digest := utilflowcontrol.RequestDigest{
+		digest := utilflowcontrol.RequestDigest{ // 保存请求的必要信息以进行流量控制。
 			RequestInfo: requestInfo,
 			User:        user,
 		}
 
 		if isWatchRequest {
-			// This channel blocks calling handler.ServeHTTP() until closed, and is closed inside execute().
-			// If APF rejects the request, it is never closed.
+			// 此通道在调用handler.ServeHTTP()时阻塞，直到关闭，并在execute()中关闭。
+			//如果APF拒绝请求，则它永远不会关闭。
 			shouldStartWatchCh := make(chan struct{})
 
 			watchInitializationSignal := newInitializationSignal()

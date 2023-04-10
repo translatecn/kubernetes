@@ -102,7 +102,7 @@ const (
 // `afterExecution` must be called exactly once.
 type StartFunction func(ctx context.Context, hashValue uint64) (execute bool, afterExecution func())
 
-// RequestDigest holds necessary info from request for flow-control
+// RequestDigest 保存请求的必要信息以进行流量控制。
 type RequestDigest struct {
 	RequestInfo *request.RequestInfo
 	User        user.Info
@@ -172,10 +172,7 @@ type configController struct {
 	// numerical (decreasing logical) matching precedence.  Every
 	// FlowSchema in this slice is immutable.
 	flowSchemas apihelpers.FlowSchemaSequence
-
-	// priorityLevelStates maps the PriorityLevelConfiguration object
-	// name to the state for that level.  Every name referenced from a
-	// member of `flowSchemas` has an entry here.
+	// priorityLevelStates 将 PriorityLevelConfiguration 对象名称映射到该级别的状态。flowSchemas的成员引用的每个名称都在此处具有条目。
 	priorityLevelStates map[string]*priorityLevelState
 
 	// nominalCLSum is the sum of the nominalCL fields in the priorityLevelState records.
@@ -190,7 +187,7 @@ type updateAttempt struct {
 	updatedItems sets.String // FlowSchema names
 }
 
-// priorityLevelState holds the state specific to a priority level.
+// priorityLevelState 保存特定于优先级级别的状态。
 type priorityLevelState struct {
 	// the API object or prototype prescribing this level.  Nothing
 	// reached through this pointer is mutable.
@@ -260,7 +257,7 @@ func (stats *seatDemandStats) update(obs fq.IntegratorResults) {
 	stats.smoothed = math.Max(envelope, seatDemandSmoothingCoefficient*stats.smoothed+(1-seatDemandSmoothingCoefficient)*envelope)
 }
 
-// NewTestableController is extra flexible to facilitate testing
+// NewTestableController 非常灵活，以便于测试。
 func newTestableController(config TestableConfig) *configController {
 	cfgCtlr := &configController{
 		name:                   config.Name,
@@ -277,10 +274,9 @@ func newTestableController(config TestableConfig) *configController {
 		WatchTracker:           NewWatchTracker(),
 	}
 	klog.V(2).Infof("NewTestableController %q with serverConcurrencyLimit=%d, requestWaitLimit=%s, name=%s, asFieldManager=%q", cfgCtlr.name, cfgCtlr.serverConcurrencyLimit, cfgCtlr.requestWaitLimit, cfgCtlr.name, cfgCtlr.asFieldManager)
-	// Start with longish delay because conflicts will be between
-	// different processes, so take some time to go away.
+	// 从较长的延迟开始，因为冲突将在不同的进程之间发生，因此需要一些时间来消失。
 	cfgCtlr.configQueue = workqueue.NewNamedRateLimitingQueue(workqueue.NewItemExponentialFailureRateLimiter(200*time.Millisecond, 8*time.Hour), "priority_and_fairness_config_queue")
-	// ensure the data structure reflects the mandatory config
+	// 确保数据结构反映了强制配置。
 	cfgCtlr.lockAndDigestConfigObjects(nil, nil)
 	fci := config.InformerFactory.Flowcontrol().V1beta3()
 	pli := fci.PriorityLevelConfigurations()

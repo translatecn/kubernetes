@@ -203,9 +203,7 @@ type Config struct {
 	// it's intentionally marked private as it should never be overridden.
 	lifecycleSignals lifecycleSignals
 
-	// StorageObjectCountTracker is used to keep track of the total number of objects
-	// in the storage per resource, so we can estimate width of incoming requests.
-	StorageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker
+	StorageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker // 用于跟踪每个资源中存储对象的总数，以便我们可以估计传入请求的宽度。
 
 	// 在apiserver优雅终止期间指示何时启动HTTP服务器的关闭。如果为true，则等待正在进行中的非长时间运行请求被处理完毕，然后启动HTTP服务器的关闭。
 	// 如果为false，则在ShutdownDelayDuration已经过时后立即启动HTTP服务器的关闭。
@@ -307,7 +305,7 @@ func NewConfig(codecs serializer.CodecFactory) *Config {
 		MaxRequestBodyBytes:         int64(3 * 1024 * 1024),
 		LongRunningFunc:             genericfilters.BasicLongRunningRequestCheck(sets.NewString("watch"), sets.NewString()),
 		lifecycleSignals:            lifecycleSignals,
-		StorageObjectCountTracker:   flowcontrolrequest.NewStorageObjectCountTracker(), // 跟踪每个资源的对象总数
+		StorageObjectCountTracker:   flowcontrolrequest.NewStorageObjectCountTracker(), // 跟踪每个资源的对象总数,流控、公平队列
 		APIServerID:                 id,
 		StorageVersionManager:       storageversion.NewDefaultManager(),
 		TracerProvider:              tracing.NewNoopTracerProvider(),
@@ -760,13 +758,13 @@ func DefaultBuildHandlerChain(apiHandler http.Handler, c *Config) http.Handler {
 
 	if c.FlowControl != nil {
 		workEstimatorCfg := flowcontrolrequest.DefaultWorkEstimatorConfig()
-		requestWorkEstimator := flowcontrolrequest.NewWorkEstimator(
-			c.StorageObjectCountTracker.Get, c.FlowControl.GetInterestedWatchCount, workEstimatorCfg)
+		var _ = new(flowcontrolrequest.ObjectCountTracker)
+		requestWorkEstimator := flowcontrolrequest.NewWorkEstimator(c.StorageObjectCountTracker.Get, c.FlowControl.GetInterestedWatchCount, workEstimatorCfg)
 		handler = filterlatency.TrackCompleted(handler)
-		handler = genericfilters.WithPriorityAndFairness(handler, c.LongRunningFunc, c.FlowControl, requestWorkEstimator)
+		handler = genericfilters.WithPriorityAndFairness(handler, c.LongRunningFunc, c.FlowControl, requestWorkEstimator) //   限流
 		handler = filterlatency.TrackStarted(handler, c.TracerProvider, "priorityandfairness")
 	} else {
-		handler = genericfilters.WithMaxInFlightLimit(handler, c.MaxRequestsInFlight, c.MaxMutatingRequestsInFlight, c.LongRunningFunc)
+		handler = genericfilters.WithMaxInFlightLimit(handler, c.MaxRequestsInFlight, c.MaxMutatingRequestsInFlight, c.LongRunningFunc) // ✅ 单纯的，超出速率拒绝
 	}
 
 	handler = filterlatency.TrackCompleted(handler)

@@ -67,7 +67,7 @@ func TestStorageObjectCountTracker(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			fakeClock := &testclock.FakePassiveClock{}
-			tracker := &objectCountTracker{
+			tracker := &ObjectCountTracker{
 				clock:  fakeClock,
 				counts: map[string]*timestampedCount{},
 			}
@@ -94,7 +94,7 @@ func TestStorageObjectCountTracker(t *testing.T) {
 
 func TestStorageObjectCountTrackerWithPrune(t *testing.T) {
 	fakeClock := &testclock.FakePassiveClock{}
-	tracker := &objectCountTracker{
+	tracker := &ObjectCountTracker{
 		clock:  fakeClock,
 		counts: map[string]*timestampedCount{},
 	}

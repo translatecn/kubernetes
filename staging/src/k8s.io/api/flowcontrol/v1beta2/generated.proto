@@ -256,7 +256,7 @@ message PolicyRulesWithSubjects {
   repeated NonResourcePolicyRule nonResourceRules = 3;
 }
 
-// PriorityLevelConfiguration represents the configuration of a priority level.
+// PriorityLevelConfiguration 表示优先级级别的配置。
 message PriorityLevelConfiguration {
   // `metadata` is the standard object's metadata.
   // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata

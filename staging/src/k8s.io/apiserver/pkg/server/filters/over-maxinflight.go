@@ -55,7 +55,7 @@ func handleError(w http.ResponseWriter, r *http.Request, err error) {
 type requestWatermark struct {
 	phase               string
 	nonMutatingObserver fcmetrics.RatioedGauge
-	mutatingObserver    fcmetrics.RatioedGauge
+	mutatingObserver    fcmetrics.RatioedGauge // 记录当前值
 	lock                sync.Mutex
 	readOnlyWatermark   int
 	mutatingWatermark   int
@@ -175,10 +175,7 @@ func WithMaxInFlightLimit(
 
 			select {
 			case c <- true:
-				// We note the concurrency level both while the
-				// request is being served and after it is done being
-				// served, because both states contribute to the
-				// sampled stats on concurrency.
+				// 我们注意到在请求正在被服务和请求完成被服务后的并发级别，因为这两个状态都对并发采样统计产生贡献。
 				if isMutatingRequest {
 					watermark.recordMutating(len(c))
 				} else {
@@ -199,12 +196,15 @@ func WithMaxInFlightLimit(
 				// that they should always get an answer.  It's a super-admin or a loopback connection.
 				if currUser, ok := apirequest.UserFrom(ctx); ok {
 					for _, group := range currUser.GetGroups() {
-						if group == user.SystemPrivilegedGroup {
+						//default代表队列已满，但是如果请求的group中含有 system:masters，则放行 - 因为apiserver认为这个组是很重要的请求，不能被限流
+						if group == user.SystemPrivilegedGroup { // 特权组，不过滤
 							handler.ServeHTTP(w, r)
 							return
 						}
 					}
 				}
+				//直接返回错误
+
 				// We need to split this data between buckets used for throttling.
 				metrics.RecordDroppedRequest(r, requestInfo, metrics.APIServerComponent, isMutatingRequest)
 				metrics.RecordRequestTermination(r, requestInfo, metrics.APIServerComponent, http.StatusTooManyRequests)

@@ -40,7 +40,7 @@ import (
 // controller appears in an ObjectMeta ManagedFieldsEntry.Manager
 const ConfigConsumerAsFieldManager = "api-priority-and-fairness-config-consumer-v1"
 
-// Interface defines how the API Priority and Fairness filter interacts with the underlying system.
+// Interface 定义API优先级和公平性过滤器如何与底层系统交互。
 type Interface interface {
 	// Handle takes care of queuing and dispatching a request
 	// characterized by the given digest.  The given `noteFn` will be
@@ -145,16 +145,19 @@ type TestableConfig struct {
 	QueueSetFactory fq.QueueSetFactory
 }
 
-// NewTestable is extra flexible to facilitate testing
+// NewTestable 非常灵活，以便于测试。
 func NewTestable(config TestableConfig) Interface {
 	return newTestableController(config)
 }
 
-func (cfgCtlr *configController) Handle(ctx context.Context, requestDigest RequestDigest,
+func (cfgCtlr *configController) Handle(
+	ctx context.Context,
+	requestDigest RequestDigest,
 	noteFn func(fs *flowcontrol.FlowSchema, pl *flowcontrol.PriorityLevelConfiguration, flowDistinguisher string),
 	workEstimator func() fcrequest.WorkEstimate,
 	queueNoteFn fq.QueueNoteFn,
-	execFn func()) {
+	execFn func(),
+) {
 	fs, pl, isExempt, req, startWaitingTime := cfgCtlr.startRequest(ctx, requestDigest, noteFn, workEstimator, queueNoteFn)
 	queued := startWaitingTime != time.Time{}
 	if req == nil {

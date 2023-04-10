@@ -33,8 +33,7 @@ const (
 	// tests hit this code path.
 	pruneInterval = 1 * time.Hour
 
-	// the storage layer polls for object count at every 1m interval, we will allow
-	// up to 2-3 transient failures to get the latest count for a given resource.
+	// the storage layer polls for object count at every 1m interval, we will allow up to 2-3 transient failures to get the latest count for a given resource.
 	staleTolerationThreshold = 3 * time.Minute
 )
 
@@ -56,22 +55,14 @@ type StorageObjectCountTracker interface {
 	// Set is invoked to update the current number of total
 	// objects for the given resource
 	Set(string, int64)
-
-	// Get returns the total number of objects for the given resource.
-	// The following errors are returned:
-	//  - if the count has gone stale for a given resource due to transient
-	//    failures ObjectCountStaleErr is returned.
-	//  - if the given resource is not being tracked then
-	//    ObjectCountNotFoundErr is returned.
-	Get(string) (int64, error)
-
+	Get(string) (int64, error) // 获取每种资源的请求数量
 	// RunUntil starts all the necessary maintenance.
 	RunUntil(stopCh <-chan struct{})
 }
 
 // NewStorageObjectCountTracker 跟踪每个资源的对象总数
 func NewStorageObjectCountTracker() StorageObjectCountTracker {
-	return &objectCountTracker{
+	return &ObjectCountTracker{
 		clock:  &clock.RealClock{},
 		counts: map[string]*timestampedCount{},
 	}
@@ -84,16 +75,16 @@ type timestampedCount struct {
 	lastUpdatedAt time.Time
 }
 
-// objectCountTracker implements StorageObjectCountTracker with
+// ObjectCountTracker implements StorageObjectCountTracker with
 // reader/writer mutual exclusion lock.
-type objectCountTracker struct {
+type ObjectCountTracker struct {
 	clock clock.PassiveClock
 
 	lock   sync.RWMutex
 	counts map[string]*timestampedCount
 }
 
-func (t *objectCountTracker) Set(groupResource string, count int64) {
+func (t *ObjectCountTracker) Set(groupResource string, count int64) {
 	if count <= -1 {
 		// a value of -1 indicates that the 'Count' call failed to contact
 		// the storage layer, in most cases this error can be transient.
@@ -123,7 +114,7 @@ func (t *objectCountTracker) Set(groupResource string, count int64) {
 	}
 }
 
-func (t *objectCountTracker) Get(groupResource string) (int64, error) {
+func (t *ObjectCountTracker) Get(groupResource string) (int64, error) {
 	staleThreshold := t.clock.Now().Add(-staleTolerationThreshold)
 
 	t.lock.RLock()
@@ -131,6 +122,7 @@ func (t *objectCountTracker) Get(groupResource string) (int64, error) {
 
 	if item, ok := t.counts[groupResource]; ok {
 		if item.lastUpdatedAt.Before(staleThreshold) {
+			// 对象计数过时表明出现了退化，因此我们应该在此处保守，并为此列表请求分配最大座位数。// 注意：如果删除了CRD，则其计数将首先变为过时状态，然后修剪器将最终从缓存中删除CRD。
 			return item.count, ObjectCountStaleErr
 		}
 		return item.count, nil
@@ -139,7 +131,7 @@ func (t *objectCountTracker) Get(groupResource string) (int64, error) {
 }
 
 // RunUntil runs all the necessary maintenance.
-func (t *objectCountTracker) RunUntil(stopCh <-chan struct{}) {
+func (t *ObjectCountTracker) RunUntil(stopCh <-chan struct{}) {
 	wait.PollUntil(
 		pruneInterval,
 		func() (bool, error) {
@@ -149,7 +141,7 @@ func (t *objectCountTracker) RunUntil(stopCh <-chan struct{}) {
 	klog.InfoS("StorageObjectCountTracker pruner is exiting")
 }
 
-func (t *objectCountTracker) prune(threshold time.Duration) error {
+func (t *ObjectCountTracker) prune(threshold time.Duration) error {
 	oldestLastUpdatedAtAllowed := t.clock.Now().Add(-threshold)
 
 	// lock for writing

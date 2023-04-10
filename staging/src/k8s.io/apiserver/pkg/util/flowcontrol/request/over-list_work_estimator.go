@@ -39,9 +39,10 @@ func newListWorkEstimator(countFn objectCountGetterFunc, config *WorkEstimatorCo
 
 type listWorkEstimator struct {
 	config        *WorkEstimatorConfig
-	countGetterFn objectCountGetterFunc
+	countGetterFn objectCountGetterFunc // 获取每种资源的请求数量
 }
 
+// 预估、估算
 func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLevelName string) WorkEstimate {
 	requestInfo, ok := apirequest.RequestInfoFrom(r.Context())
 	if !ok {
@@ -63,20 +64,16 @@ func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLe
 	listOptions := metav1.ListOptions{}
 	if err := metav1.Convert_url_Values_To_v1_ListOptions(&query, &listOptions, nil); err != nil {
 		klog.ErrorS(err, "Failed to convert options while estimating work for the list request")
-
-		// This request is destined to fail in the validation layer,
-		// return maximumSeats for this request to be consistent.
+		// 这个请求注定会在验证层失败，为了保持一致，返回maximumSeats。
 		return WorkEstimate{InitialSeats: e.config.MaximumSeats}
 	}
-	isListFromCache := !shouldListFromStorage(query, &listOptions)
+	isListFromCache := !shouldListFromStorage(query, &listOptions) // 要不要从etcd 加载数据
 
 	numStored, err := e.countGetterFn(key(requestInfo))
 	switch {
 	case err == ObjectCountStaleErr:
-		// object count going stale is indicative of degradation, so we should
-		// be conservative here and allocate maximum seats to this list request.
-		// NOTE: if a CRD is removed, its count will go stale first and then the
-		// pruner will eventually remove the CRD from the cache.
+		// 对象计数过时表明出现了退化，因此我们应该在此处保守，并为此列表请求分配最大座位数。
+		// 注意：如果删除了CRD，则其计数将首先变为过时状态，然后修剪器将最终从缓存中删除CRD。
 		return WorkEstimate{InitialSeats: e.config.MaximumSeats}
 	case err == ObjectCountNotFoundErr:
 		// there are multiple scenarios in which we can see this error:
@@ -104,7 +101,7 @@ func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLe
 		listOptions.Limit < numStored {
 		limit = listOptions.Limit
 	}
-
+	// 估计要处理的对象
 	var estimatedObjectsToBeProcessed int64
 
 	switch {
@@ -117,11 +114,7 @@ func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLe
 	default:
 		estimatedObjectsToBeProcessed = 2 * limit
 	}
-
-	// for now, our rough estimate is to allocate one seat to each 100 obejcts that
-	// will be processed by the list request.
-	// we will come up with a different formula for the transformation function and/or
-	// fine tune this number in future iteratons.
+	// 目前，我们的粗略估计是为将由列表请求处理的每100个对象分配一个座位。我们将在未来的迭代中提出不同的转换函数公式和/或微调此数字。
 	seats := uint64(math.Ceil(float64(estimatedObjectsToBeProcessed) / e.config.ObjectsPerSeat))
 
 	// make sure we never return a seat of zero

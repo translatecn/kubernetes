@@ -79,13 +79,8 @@ func (a *AdmissionOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringSliceVar(&a.EnablePlugins, "enable-admission-plugins", a.EnablePlugins,
-		"除默认启用的插件外,应启用的许可插件("+strings.Join(a.defaultEnabledPluginNames(), ", ")+"). "+
-			"以逗号分隔的准入插件列表:"+strings.Join(a.Plugins.Registered(), ", ")+". "+"这个标志中插件的顺序并不重要.")
-	fs.StringSliceVar(&a.DisablePlugins, "disable-admission-plugins", a.DisablePlugins,
-		"应该禁用的允许插件,尽管它们在默认启用的插件列表中("+
-			strings.Join(a.defaultEnabledPluginNames(), ", ")+"). "+
-			"以逗号分隔的准入插件列表: "+strings.Join(a.Plugins.Registered(), ", ")+". "+"这个标志中插件的顺序并不重要.")
+	fs.StringSliceVar(&a.EnablePlugins, "enable-admission-plugins", a.EnablePlugins, "除默认启用的插件外,应启用的许可插件("+strings.Join(a.defaultEnabledPluginNames(), ", ")+"). 以逗号分隔的准入插件列表:"+strings.Join(a.Plugins.Registered(), ", ")+". "+"这个标志中插件的顺序并不重要.")
+	fs.StringSliceVar(&a.DisablePlugins, "disable-admission-plugins", a.DisablePlugins, "应该禁用的允许插件,尽管它们在默认启用的插件列表中("+strings.Join(a.defaultEnabledPluginNames(), ", ")+"). 以逗号分隔的准入插件列表: "+strings.Join(a.Plugins.Registered(), ", ")+". "+"这个标志中插件的顺序并不重要.")
 	fs.StringVar(&a.ConfigFile, "admission-control-config-file", a.ConfigFile, "带有准入控制配置的文件.")
 }
 

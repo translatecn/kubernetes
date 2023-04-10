@@ -328,7 +328,7 @@ type FlowSchemaConditionType string
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// PriorityLevelConfiguration represents the configuration of a priority level.
+// PriorityLevelConfiguration 表示优先级级别的配置。
 type PriorityLevelConfiguration struct {
 	metav1.TypeMeta
 	// `metadata` is the standard object's metadata.

@@ -360,7 +360,7 @@
         "type": "object"
       },
       "io.k8s.api.flowcontrol.v1beta3.PriorityLevelConfiguration": {
-        "description": "PriorityLevelConfiguration represents the configuration of a priority level.",
+        "description": "PriorityLevelConfiguration 表示优先级级别的配置。",
         "properties": {
           "apiVersion": {
             "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

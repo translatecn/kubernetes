@@ -29,4 +29,7 @@ Run
 - https://www.jianshu.com/p/75b865e55568
 - https://kubernetes.io/zh-cn/docs/reference/access-authn-authz/authentication/
 - https://www.cnblogs.com/huanglingfa/p/13773344.html
+- https://www.zhihu.com/people/yan-ting-shuai-41/posts?page=1
+- https://blog.csdn.net/sinat_37367944/article/details/116329588
+- 
 

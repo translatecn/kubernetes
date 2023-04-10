@@ -57,15 +57,8 @@ type ForgetWatchFunc func()
 // of watches in the system for the purpose of estimating the
 // cost of incoming mutating requests.
 type WatchTracker interface {
-	// RegisterWatch reqisters a watch based on the provided http.Request
-	// in the tracker. It returns the function that should be called
-	// to forget the watcher once it is finished.
-	RegisterWatch(r *http.Request) ForgetWatchFunc
-
-	// GetInterestedWatchCount returns the number of watches that are
-	// potentially interested in a request with a given RequestInfo
-	// for the purpose of estimating cost of that request.
-	GetInterestedWatchCount(requestInfo *request.RequestInfo) int
+	RegisterWatch(r *http.Request) ForgetWatchFunc                // 在跟踪器中注册基于提供的http.Request的观察。它返回应在完成观察器后调用的函数。
+	GetInterestedWatchCount(requestInfo *request.RequestInfo) int // 返回可能对具有给定RequestInfo的请求感兴趣的观察数，以估算该请求的成本。
 }
 
 // builtinIndexes represents of set of indexes registered in

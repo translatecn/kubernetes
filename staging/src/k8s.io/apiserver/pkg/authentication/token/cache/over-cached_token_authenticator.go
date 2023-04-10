@@ -25,6 +25,7 @@ import (
 	"errors"
 	"hash"
 	"io"
+	"k8s.io/apiserver/plugin/pkg/authenticator/token/webhook"
 	"runtime"
 	"sync"
 	"time"
@@ -195,6 +196,7 @@ func (a *CachedTokenAuthenticator) doAuthenticateToken(ctx context.Context, toke
 		ac := audit.AuditContextFrom(ctx)
 		ac.Event = ev
 
+		var _ = new(webhook.WebhookTokenAuthenticator).AuthenticateToken
 		record.resp, record.ok, record.err = a.authenticator.AuthenticateToken(ctx, token)
 		record.annotations = ev.Annotations
 		record.warnings = recorder.extractWarnings()
