@@ -359,11 +359,11 @@ func (cfgCtlr *configController) Run(stopCh <-chan struct{}) error {
 		return fmt.Errorf("Never achieved initial sync")
 	}
 
-	klog.Info("Running API Priority and Fairness config worker")
+	klog.Info("正在运行API优先级和公平性配置工作程序。")
 	go wait.Until(cfgCtlr.runWorker, time.Second, stopCh)
 
-	klog.Info("Running API Priority and Fairness periodic rebalancing process")
-	go wait.Until(cfgCtlr.updateBorrowing, borrowingAdjustmentPeriod, stopCh)
+	klog.Info("正在运行API优先级和公平性定期重新平衡进程。")
+	go wait.Until(cfgCtlr.updateBorrowing, borrowingAdjustmentPeriod, stopCh) // 10s
 
 	<-stopCh
 	klog.Info("Shutting down API Priority and Fairness config worker")
