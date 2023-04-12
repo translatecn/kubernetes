@@ -116,7 +116,7 @@ type RequestDigest struct {
 type configController struct {
 	name              string // varies in tests of fighting controllers
 	clock             clock.PassiveClock
-	queueSetFactory   fq.QueueSetFactory
+	queueSetFactory   fq.QueueSetFactory // ✅
 	reqsGaugeVec      metrics.RatioedGaugeVec
 	execSeatsGaugeVec metrics.RatioedGaugeVec
 
@@ -145,8 +145,7 @@ type configController struct {
 	// from server configuration.
 	serverConcurrencyLimit int
 
-	// requestWaitLimit comes from server configuration.
-	requestWaitLimit time.Duration
+	requestWaitLimit time.Duration // 来自服务器的配置
 
 	// watchTracker implements the necessary WatchTracker interface.
 	WatchTracker
@@ -196,10 +195,7 @@ type priorityLevelState struct {
 	// qsCompleter holds the QueueSetCompleter derived from `config`
 	// and `queues` if config is not exempt, nil otherwise.
 	qsCompleter fq.QueueSetCompleter
-
-	// The QueueSet for this priority level.  This is nil if and only
-	// if the priority level is exempt.
-	queues fq.QueueSet
+	queues      fq.QueueSet // 如果优先级级别被豁免，则此优先级级别的 QueueSet 为 nil，否则它将是一个有效的 QueueSet。
 
 	// quiescing==true indicates that this priority level should be
 	// removed when its queues have all drained.  May be true only if
@@ -210,17 +206,12 @@ type priorityLevelState struct {
 	// returned StartFunction
 	numPending int
 
-	// Observers tracking number of requests waiting, executing
-	reqsGaugePair metrics.RatioedGaugePair
-
-	// Observer of number of seats occupied throughout execution
-	execSeatsObs metrics.RatioedGauge
-
-	// Integrator of seat demand, reset every CurrentCL adjustment period
-	seatDemandIntegrator fq.Integrator
+	reqsGaugePair        metrics.RatioedGaugePair // 追踪请求的等待数、正在执行数
+	execSeatsObs         metrics.RatioedGauge     // 观察整个执行过程中被占用的座位数量
+	seatDemandIntegrator fq.Integrator            // 席位的需求，每隔一段时间 就会重置
 
 	// Gauge of seat demand / nominalCL
-	seatDemandRatioedGauge metrics.RatioedGauge
+	seatDemandRatioedGauge metrics.RatioedGauge // 席位的需求/
 
 	// seatDemandStats is derived from periodically examining the seatDemandIntegrator.
 	// The average, standard deviation, and high watermark come directly from the integrator.
@@ -229,14 +220,9 @@ type priorityLevelState struct {
 	// where A is seatDemandSmoothingCoefficient.
 	seatDemandStats seatDemandStats
 
-	// nominalCL is the nominal concurrency limit configured in the PriorityLevelConfiguration
-	nominalCL int
-
-	// minCL is the nominal limit less the lendable amount
-	minCL int
-
-	//maxCL is the nominal limit plus the amount that may be borrowed
-	maxCL int
+	nominalCL int // 标称并发限制
+	minCL     int // 在PriorityLevelConfiguration中是否配置了名义并发限制
+	maxCL     int //
 
 	// currentCL is the dynamically derived concurrency limit to impose for now
 	currentCL int
@@ -262,7 +248,7 @@ func newTestableController(config TestableConfig) *configController {
 	cfgCtlr := &configController{
 		name:                   config.Name,
 		clock:                  config.Clock,
-		queueSetFactory:        config.QueueSetFactory,
+		queueSetFactory:        config.QueueSetFactory, // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
 		reqsGaugeVec:           config.ReqsGaugeVec,
 		execSeatsGaugeVec:      config.ExecSeatsGaugeVec,
 		asFieldManager:         config.AsFieldManager,
@@ -461,7 +447,7 @@ func (cfgCtlr *configController) processNextWorkItem() bool {
 
 	func(obj interface{}) {
 		defer cfgCtlr.configQueue.Done(obj)
-		specificDelay, err := cfgCtlr.syncOne()
+		specificDelay, err := cfgCtlr.syncOne() // ✅
 		switch {
 		case err != nil:
 			klog.Error(err)
@@ -476,11 +462,7 @@ func (cfgCtlr *configController) processNextWorkItem() bool {
 	return true
 }
 
-// syncOne does one full synchronization.  It reads all the API
-// objects that configure API Priority and Fairness and updates the
-// local configController accordingly.
-// Only invoke this in the one and only worker goroutine
-func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err error) {
+func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err error) { // ✅
 	klog.V(5).Infof("%s syncOne at %s", cfgCtlr.name, cfgCtlr.clock.Now().Format(timeFmt))
 	all := labels.Everything()
 	newPLs, err := cfgCtlr.plLister.List(all)
@@ -491,7 +473,7 @@ func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err err
 	if err != nil {
 		return 0, fmt.Errorf("unable to list FlowSchema objects: %w", err)
 	}
-	return cfgCtlr.digestConfigObjects(newPLs, newFSs)
+	return cfgCtlr.digestConfigObjects(newPLs, newFSs) // ✅
 }
 
 // cfgMeal is the data involved in the process of digesting the API
@@ -531,10 +513,10 @@ type fsStatusUpdate struct {
 	oldValue   flowcontrol.FlowSchemaCondition
 }
 
-// digestConfigObjects is given all the API objects that configure
-// cfgCtlr and writes its consequent new configState.
-// Only invoke this in the one and only worker goroutine
-func (cfgCtlr *configController) digestConfigObjects(newPLs []*flowcontrol.PriorityLevelConfiguration, newFSs []*flowcontrol.FlowSchema) (time.Duration, error) {
+func (cfgCtlr *configController) digestConfigObjects( // ✅
+	newPLs []*flowcontrol.PriorityLevelConfiguration,
+	newFSs []*flowcontrol.FlowSchema,
+) (time.Duration, error) {
 	fsStatusUpdates := cfgCtlr.lockAndDigestConfigObjects(newPLs, newFSs)
 	var errs []error
 	currResult := updateAttempt{
@@ -624,7 +606,11 @@ func (cfgCtlr *configController) addUpdateResult(result updateAttempt) {
 	cfgCtlr.mostRecentUpdates = append([]updateAttempt{result}, cfgCtlr.mostRecentUpdates...)
 }
 
-func (cfgCtlr *configController) lockAndDigestConfigObjects(newPLs []*flowcontrol.PriorityLevelConfiguration, newFSs []*flowcontrol.FlowSchema) []fsStatusUpdate {
+// ✅
+func (cfgCtlr *configController) lockAndDigestConfigObjects( // ✅
+	newPLs []*flowcontrol.PriorityLevelConfiguration,
+	newFSs []*flowcontrol.FlowSchema,
+) []fsStatusUpdate {
 	cfgCtlr.lock.Lock()
 	defer cfgCtlr.lock.Unlock()
 	meal := cfgMeal{
@@ -658,8 +644,6 @@ func (cfgCtlr *configController) lockAndDigestConfigObjects(newPLs []*flowcontro
 	return meal.fsStatusUpdates
 }
 
-// Digest the new set of PriorityLevelConfiguration objects.
-// Pretend broken ones do not exist.
 func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfiguration) {
 	for _, pl := range newPLs {
 		state := meal.cfgCtlr.priorityLevelStates[pl.Name]
@@ -668,13 +652,19 @@ func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfi
 			state = &priorityLevelState{
 				reqsGaugePair:          metrics.RatioedGaugeVecPhasedElementPair(meal.cfgCtlr.reqsGaugeVec, 1, 1, labelValues),
 				execSeatsObs:           meal.cfgCtlr.execSeatsGaugeVec.NewForLabelValuesSafe(0, 1, labelValues),
-				seatDemandIntegrator:   fq.NewNamedIntegrator(meal.cfgCtlr.clock, pl.Name),
+				seatDemandIntegrator:   fq.NewNamedIntegrator(meal.cfgCtlr.clock, pl.Name), // 席位的需求，每隔一段时间 就会重置
 				seatDemandRatioedGauge: metrics.ApiserverSeatDemands.NewForLabelValuesSafe(0, 1, []string{pl.Name}),
 			}
 		}
-		qsCompleter, err := queueSetCompleterForPL(meal.cfgCtlr.queueSetFactory, state.queues,
-			pl, meal.cfgCtlr.requestWaitLimit, state.reqsGaugePair, state.execSeatsObs,
-			metrics.NewUnionGauge(state.seatDemandIntegrator, state.seatDemandRatioedGauge))
+		qsCompleter, err := queueSetCompleterForPL( // ✅
+			meal.cfgCtlr.queueSetFactory, // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
+			state.queues,
+			pl,
+			meal.cfgCtlr.requestWaitLimit, // 通过命令行参数计算出来的
+			state.reqsGaugePair,           // 追踪请求的等待数、正在执行数
+			state.execSeatsObs,            // 观察整个执行过程中被占用的座位数量
+			metrics.NewUnionGauge(state.seatDemandIntegrator, state.seatDemandRatioedGauge),
+		)
 		if err != nil {
 			klog.Warningf("Ignoring PriorityLevelConfiguration object %s because its spec (%s) is broken: %s", pl.Name, fcfmt.Fmt(pl.Spec), err)
 			continue
@@ -854,10 +844,8 @@ func (meal *cfgMeal) finishQueueSetReconfigsLocked() {
 	meal.cfgCtlr.updateBorrowingLocked(false, meal.newPLStates)
 }
 
-// queueSetCompleterForPL returns an appropriate QueueSetCompleter for the
-// given priority level configuration.  Returns nil if that config
-// does not call for limiting.  Returns nil and an error if the given
-// object is malformed in a way that is a problem for this package.
+// queueSetCompleterForPL 函数返回一个适当的 QueueSetCompleter，用于给定的优先级级别配置。
+// 如果该配置不需要限制，则返回 nil。
 func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flowcontrol.PriorityLevelConfiguration, requestWaitLimit time.Duration, reqsIntPair metrics.RatioedGaugePair, execSeatsObs metrics.RatioedGauge, seatDemandGauge metrics.Gauge) (fq.QueueSetCompleter, error) {
 	if (pl.Spec.Type == flowcontrol.PriorityLevelEnablementExempt) != (pl.Spec.Limited == nil) {
 		return nil, errors.New("broken union structure at the top")
@@ -872,7 +860,7 @@ func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flow
 	if (pl.Spec.Limited.LimitResponse.Type == flowcontrol.LimitResponseTypeReject) != (pl.Spec.Limited.LimitResponse.Queuing == nil) {
 		return nil, errors.New("broken union structure for limit response")
 	}
-	qcAPI := pl.Spec.Limited.LimitResponse.Queuing
+	qcAPI := pl.Spec.Limited.LimitResponse.Queuing // 排队的队列参数
 	qcQS := fq.QueuingConfig{Name: pl.Name}
 	if qcAPI != nil {
 		qcQS = fq.QueuingConfig{Name: pl.Name,
@@ -885,7 +873,7 @@ func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flow
 	var qsc fq.QueueSetCompleter
 	var err error
 	if queues != nil {
-		qsc, err = queues.BeginConfigChange(qcQS)
+		qsc, err = queues.BeginConfigChange(qcQS) // ✅
 	} else {
 		qsc, err = qsf.BeginConstruction(qcQS, reqsIntPair, execSeatsObs, seatDemandGauge)
 	}

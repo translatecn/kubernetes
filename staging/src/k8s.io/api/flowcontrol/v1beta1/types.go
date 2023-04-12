@@ -431,7 +431,7 @@ type PriorityLevelConfigurationSpec struct {
 	// +unionDiscriminator
 	Type PriorityLevelEnablement `json:"type" protobuf:"bytes,1,opt,name=type"`
 
-	// `limited` specifies how requests are handled for a Limited priority level.
+	// `limited`参数指定了如何处理一个  具有优先级 的请求。
 	// This field must be non-empty if and only if `type` is `"Limited"`.
 	// +optional
 	Limited *LimitedPriorityLevelConfiguration `json:"limited,omitempty" protobuf:"bytes,2,opt,name=limited"`
@@ -518,7 +518,7 @@ type LimitResponse struct {
 	// +unionDiscriminator
 	Type LimitResponseType `json:"type" protobuf:"bytes,1,opt,name=type"`
 
-	// `queuing` holds the configuration parameters for queuing.
+	// `queuing` 参数保存了队列 的配置参数。
 	// This field may be non-empty only if `type` is `"Queue"`.
 	// +optional
 	Queuing *QueuingConfiguration `json:"queuing,omitempty" protobuf:"bytes,2,opt,name=queuing"`
@@ -538,33 +538,18 @@ const (
 
 // QueuingConfiguration holds the configuration parameters for queuing
 type QueuingConfiguration struct {
-	// `queues` is the number of queues for this priority level. The
-	// queues exist independently at each apiserver. The value must be
-	// positive.  Setting it to 1 effectively precludes
-	// shufflesharding and thus makes the distinguisher method of
-	// associated flow schemas irrelevant.  This field has a default
-	// value of 64.
+	//`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。
+
 	// +optional
 	Queues int32 `json:"queues" protobuf:"varint,1,opt,name=queues"`
-
-	// `handSize` is a small positive number that configures the
-	// shuffle sharding of requests into queues.  When enqueuing a request
-	// at this priority level the request's flow identifier (a string
-	// pair) is hashed and the hash value is used to shuffle the list
-	// of queues and deal a hand of the size specified here.  The
-	// request is put into one of the shortest queues in that hand.
-	// `handSize` must be no larger than `queues`, and should be
-	// significantly smaller (so that a few heavy flows do not
-	// saturate most of the queues).  See the user-facing
-	// documentation for more extensive guidance on setting this
-	// field.  This field has a default value of 8.
+	// handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。
+	// 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。
+	// 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。
+	// 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。
 	// +optional
 	HandSize int32 `json:"handSize" protobuf:"varint,2,opt,name=handSize"`
+	// queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。
 
-	// `queueLengthLimit` is the maximum number of requests allowed to
-	// be waiting in a given queue of this priority level at a time;
-	// excess requests are rejected.  This value must be positive.  If
-	// not specified, it will be defaulted to 50.
 	// +optional
 	QueueLengthLimit int32 `json:"queueLengthLimit" protobuf:"varint,3,opt,name=queueLengthLimit"`
 }

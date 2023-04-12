@@ -99,7 +99,7 @@ func New(
 		RequestWaitLimit:       requestWaitLimit,
 		ReqsGaugeVec:           metrics.PriorityLevelConcurrencyGaugeVec,
 		ExecSeatsGaugeVec:      metrics.PriorityLevelExecutionSeatsGaugeVec,
-		QueueSetFactory:        fqs.NewQueueSetFactory(clk),
+		QueueSetFactory:        fqs.NewQueueSetFactory(clk), // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
 	})
 }
 
@@ -131,9 +131,7 @@ type TestableConfig struct {
 
 	// ServerConcurrencyLimit for the controller to enforce
 	ServerConcurrencyLimit int
-
-	// RequestWaitLimit configured on the server
-	RequestWaitLimit time.Duration
+	RequestWaitLimit       time.Duration // 服务器端配置的
 
 	// GaugeVec for metrics about requests, broken down by phase and priority_level
 	ReqsGaugeVec metrics.RatioedGaugeVec
@@ -141,8 +139,7 @@ type TestableConfig struct {
 	// RatioedGaugePairVec for metrics about seats occupied by all phases of execution
 	ExecSeatsGaugeVec metrics.RatioedGaugeVec
 
-	// QueueSetFactory for the queuing implementation
-	QueueSetFactory fq.QueueSetFactory
+	QueueSetFactory fq.QueueSetFactory // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
 }
 
 // NewTestable 非常灵活，以便于测试。

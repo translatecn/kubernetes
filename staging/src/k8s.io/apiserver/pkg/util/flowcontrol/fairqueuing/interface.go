@@ -55,9 +55,8 @@ type QueueSetCompleter interface {
 // .  Some day we may have connections between priority levels, but
 // today is not that day.
 type QueueSet interface {
-	// BeginConfigChange starts the two-step process of updating the
-	// configuration.  No change is made until Complete is called.  If
-	// `C := X.BeginConstruction(q)` then `C.Complete(d)` returns the
+	// BeginConfigChange 这段代码开始了更新配置的两步过程。在调用 Complete 方法之前，不会进行任何更改。
+	// If `C := X.BeginConstruction(q)` then `C.Complete(d)` returns the
 	// same value `X`.  If the QueuingConfig's DesiredNumQueues field
 	// is zero then the other queuing-specific config parameters are
 	// not changed, so that the queues continue draining as before.
@@ -107,26 +106,12 @@ type Request interface {
 	Finish(execute func()) (idle bool)
 }
 
-// QueuingConfig defines the configuration of the queuing aspect of a QueueSet.
 type QueuingConfig struct {
-	// Name is used to identify a queue set, allowing for descriptive information about its intended use
-	Name string
-
-	// DesiredNumQueues is the number of queues that the API says
-	// should exist now.  This may be zero, in which case
-	// QueueLengthLimit, HandSize, and RequestWaitLimit are ignored.
-	DesiredNumQueues int
-
-	// QueueLengthLimit is the maximum number of requests that may be waiting in a given queue at a time
-	QueueLengthLimit int
-
-	// HandSize is a parameter of shuffle sharding.  Upon arrival of a request, a queue is chosen by randomly
-	// dealing a "hand" of this many queues and then picking one of minimum length.
-	HandSize int
-
-	// RequestWaitLimit is the maximum amount of time that a request may wait in a queue.
-	// If, by the end of that time, the request has not been dispatched then it is rejected.
-	RequestWaitLimit time.Duration
+	Name             string
+	DesiredNumQueues int           // 是此优先级级别的队列数
+	QueueLengthLimit int           // 是此优先级级别的给定队列中允许等待的请求的最大数量
+	HandSize         int           // 用于shuffle的参数
+	RequestWaitLimit time.Duration // 是请求在队列中等待的最长时间。如果在这段时间结束时请求还没有被调度，则请求将被拒绝。
 }
 
 // DispatchingConfig defines the configuration of the dispatching aspect of a QueueSet.
