@@ -16,7 +16,7 @@ limitations under the License.
 
 package metrics
 
-// RatioedGaugeVecPhasedElementPair extracts a pair of elements that differ in handling phase
+// RatioedGaugeVecPhasedElementPair 提取在处理阶段中不同的一对元素。
 func RatioedGaugeVecPhasedElementPair(vec RatioedGaugeVec, initialWaitingDenominator, initialExecutingDenominator float64, labelValues []string) RatioedGaugePair {
 	return RatioedGaugePair{
 		RequestsWaiting:   vec.NewForLabelValuesSafe(0, initialWaitingDenominator, append([]string{LabelValueWaiting}, labelValues...)),

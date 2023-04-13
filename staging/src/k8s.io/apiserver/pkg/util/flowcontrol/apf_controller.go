@@ -377,6 +377,7 @@ func (cfgCtlr *configController) updateBorrowing() {
 }
 
 func (cfgCtlr *configController) updateBorrowingLocked(setCompleters bool, plStates map[string]*priorityLevelState) {
+	fmt.Println("updateBorrowingLocked", time.Now().Unix())
 	items := make([]allocProblemItem, 0, len(plStates))
 	plNames := make([]string, 0, len(plStates))
 	for plName, plState := range plStates {
@@ -443,9 +444,6 @@ func (cfgCtlr *configController) updateBorrowingLocked(setCompleters bool, plSta
 	metrics.SetFairFrac(float64(fairFrac))
 }
 
-// runWorker is the logic of the one and only worker goroutine.  We
-// limit the number to one in order to obviate explicit
-// synchronization around access to `cfgCtlr.mostRecentUpdates`.
 func (cfgCtlr *configController) runWorker() {
 	for cfgCtlr.processNextWorkItem() {
 	}
@@ -476,51 +474,34 @@ func (cfgCtlr *configController) processNextWorkItem() bool {
 	return true
 }
 
-// syncOne does one full synchronization.  It reads all the API
-// objects that configure API Priority and Fairness and updates the
-// local configController accordingly.
-// Only invoke this in the one and only worker goroutine
-func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err error) {
+// syncOne 执行一次完整的同步。它读取配置API优先级和公平性的所有API对象，并相应地更新本地configController。
+func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err error) { // ✅
 	klog.V(5).Infof("%s syncOne at %s", cfgCtlr.name, cfgCtlr.clock.Now().Format(timeFmt))
 	all := labels.Everything()
-	newPLs, err := cfgCtlr.plLister.List(all)
+	newPLs, err := cfgCtlr.plLister.List(all) // kubectl get prioritylevelconfigurations -o wide --show-labels
 	if err != nil {
 		return 0, fmt.Errorf("unable to list PriorityLevelConfiguration objects: %w", err)
 	}
-	newFSs, err := cfgCtlr.fsLister.List(all)
+	newFSs, err := cfgCtlr.fsLister.List(all) // kubectl get flowschemas -o wide --show-labels
 	if err != nil {
 		return 0, fmt.Errorf("unable to list FlowSchema objects: %w", err)
 	}
-	return cfgCtlr.digestConfigObjects(newPLs, newFSs)
+	return cfgCtlr.digestConfigObjects(newPLs, newFSs) // ✅
 }
 
-// cfgMeal is the data involved in the process of digesting the API
-// objects that configure API Priority and Fairness.  All the config
-// objects are digested together, because this is the simplest way to
-// cope with the various dependencies between objects.  The process of
-// digestion is done in four passes over config objects --- three
-// passes over PriorityLevelConfigurations and one pass over the
-// FlowSchemas --- with the work dvided among the passes according to
-// those dependencies.
 type cfgMeal struct {
-	cfgCtlr *configController
+	cfgCtlr     *configController
+	newPLStates map[string]*priorityLevelState // 新一轮循环发现的对象
+	shareSum    float64                        // 新配置中优先级级别的并发份额之和
 
-	newPLStates map[string]*priorityLevelState
-
-	// The sum of the concurrency shares of the priority levels in the
-	// new configuration
-	shareSum float64
-
-	// These keep track of which mandatory priority level config
-	// objects have been digested
+	// These keep track of which mandatory priority level config objects have been digested
 	haveExemptPL, haveCatchAllPL bool
 
 	// Buffered FlowSchema status updates to do.  Do them when the
 	// lock is not held, to avoid a deadlock due to such a request
 	// provoking a call into this controller while the lock held
 	// waiting on that request to complete.
-	fsStatusUpdates []fsStatusUpdate
-
+	fsStatusUpdates                          []fsStatusUpdate
 	maxWaitingRequests, maxExecutingRequests int
 }
 
@@ -531,11 +512,12 @@ type fsStatusUpdate struct {
 	oldValue   flowcontrol.FlowSchemaCondition
 }
 
-// digestConfigObjects is given all the API objects that configure
-// cfgCtlr and writes its consequent new configState.
-// Only invoke this in the one and only worker goroutine
-func (cfgCtlr *configController) digestConfigObjects(newPLs []*flowcontrol.PriorityLevelConfiguration, newFSs []*flowcontrol.FlowSchema) (time.Duration, error) {
-	fsStatusUpdates := cfgCtlr.lockAndDigestConfigObjects(newPLs, newFSs)
+// digestConfigObjects 获得所有配置cfgCtlr的API对象，并编写其随后的新configState
+func (cfgCtlr *configController) digestConfigObjects( // ✅
+	newPLs []*flowcontrol.PriorityLevelConfiguration,
+	newFSs []*flowcontrol.FlowSchema,
+) (time.Duration, error) {
+	fsStatusUpdates := cfgCtlr.lockAndDigestConfigObjects(newPLs, newFSs) // ✅
 	var errs []error
 	currResult := updateAttempt{
 		timeUpdated:  cfgCtlr.clock.Now(),
@@ -560,8 +542,7 @@ func (cfgCtlr *configController) digestConfigObjects(newPLs []*flowcontrol.Prior
 
 		if err := apply(cfgCtlr.flowcontrolClient.FlowSchemas(), fsu, cfgCtlr.asFieldManager); err != nil {
 			if apierrors.IsNotFound(err) {
-				// This object has been deleted.  A notification is coming
-				// and nothing more needs to be done here.
+				// 此对象已被删除。通知即将到来，这里不需要做更多的事情。
 				klog.V(5).Infof("%s at %s: attempted update of concurrently deleted FlowSchema %s; nothing more needs to be done", cfgCtlr.name, cfgCtlr.clock.Now().Format(timeFmt), fsu.flowSchema.Name)
 			} else {
 				errs = append(errs, fmt.Errorf("failed to set a status.condition for FlowSchema %s: %w", fsu.flowSchema.Name, err))
@@ -658,12 +639,13 @@ func (cfgCtlr *configController) lockAndDigestConfigObjects(newPLs []*flowcontro
 	return meal.fsStatusUpdates
 }
 
-// Digest the new set of PriorityLevelConfiguration objects.
-// Pretend broken ones do not exist.
+// 摘要新的PriorityLevelConfiguration对象集。
+// 假装损坏的对象不存在。
 func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfiguration) {
+	// meal.cfgCtlr 引用的对象不会变
 	for _, pl := range newPLs {
 		state := meal.cfgCtlr.priorityLevelStates[pl.Name]
-		if state == nil {
+		if state == nil { // 之前没有
 			labelValues := []string{pl.Name}
 			state = &priorityLevelState{
 				reqsGaugePair:          metrics.RatioedGaugeVecPhasedElementPair(meal.cfgCtlr.reqsGaugeVec, 1, 1, labelValues),
@@ -672,11 +654,17 @@ func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfi
 				seatDemandRatioedGauge: metrics.ApiserverSeatDemands.NewForLabelValuesSafe(0, 1, []string{pl.Name}),
 			}
 		}
-		qsCompleter, err := queueSetCompleterForPL(meal.cfgCtlr.queueSetFactory, state.queues,
-			pl, meal.cfgCtlr.requestWaitLimit, state.reqsGaugePair, state.execSeatsObs,
-			metrics.NewUnionGauge(state.seatDemandIntegrator, state.seatDemandRatioedGauge))
+		qsCompleter, err := queueSetCompleterForPL(
+			meal.cfgCtlr.queueSetFactory,
+			state.queues,
+			pl,
+			meal.cfgCtlr.requestWaitLimit,
+			state.reqsGaugePair,
+			state.execSeatsObs,
+			metrics.NewUnionGauge(state.seatDemandIntegrator, state.seatDemandRatioedGauge),
+		)
 		if err != nil {
-			klog.Warningf("Ignoring PriorityLevelConfiguration object %s because its spec (%s) is broken: %s", pl.Name, fcfmt.Fmt(pl.Spec), err)
+			klog.Warningf("忽略PriorityLevelConfiguration对象%s，因为其规范（%s）已损坏：%s", pl.Name, fcfmt.Fmt(pl.Spec), err)
 			continue
 		}
 		meal.newPLStates[pl.Name] = state
@@ -854,10 +842,8 @@ func (meal *cfgMeal) finishQueueSetReconfigsLocked() {
 	meal.cfgCtlr.updateBorrowingLocked(false, meal.newPLStates)
 }
 
-// queueSetCompleterForPL returns an appropriate QueueSetCompleter for the
-// given priority level configuration.  Returns nil if that config
-// does not call for limiting.  Returns nil and an error if the given
-// object is malformed in a way that is a problem for this package.
+// queueSetCompleterForPL returns an appropriate QueueSetCompleter for the given priority level configuration.
+// Returns nil if that config does not call for limiting.  Returns nil and an error if the given object is malformed in a way that is a problem for this package.
 func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flowcontrol.PriorityLevelConfiguration, requestWaitLimit time.Duration, reqsIntPair metrics.RatioedGaugePair, execSeatsObs metrics.RatioedGauge, seatDemandGauge metrics.Gauge) (fq.QueueSetCompleter, error) {
 	if (pl.Spec.Type == flowcontrol.PriorityLevelEnablementExempt) != (pl.Spec.Limited == nil) {
 		return nil, errors.New("broken union structure at the top")

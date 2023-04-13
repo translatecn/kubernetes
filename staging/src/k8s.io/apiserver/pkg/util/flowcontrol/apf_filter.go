@@ -104,45 +104,17 @@ func New(
 }
 
 type TestableConfig struct {
-	Name string
-
-	// Clock to use in timing deliberate delays
-	Clock clock.PassiveClock
-
-	// AsFieldManager is the string to use in the metadata for
-	// server-side apply.  Normally this is
-	// `ConfigConsumerAsFieldManager`.  This is exposed as a parameter
-	// so that a test of competing controllers can supply different
-	// values.
-	AsFieldManager string
-
-	// FoundToDangling maps the boolean indicating whether a
-	// FlowSchema's referenced PLC exists to the boolean indicating
-	// that FlowSchema's status should indicate a dangling reference.
-	// This is a parameter so that we can write tests of what happens
-	// when servers disagree on that bit of Status.
-	FoundToDangling func(bool) bool
-
-	// InformerFactory to use in building the controller
-	InformerFactory kubeinformers.SharedInformerFactory
-
-	// FlowcontrolClient to use for manipulating config objects
-	FlowcontrolClient flowcontrolclient.FlowcontrolV1beta3Interface
-
-	// ServerConcurrencyLimit for the controller to enforce
-	ServerConcurrencyLimit int
-
-	// RequestWaitLimit configured on the server
-	RequestWaitLimit time.Duration
-
-	// GaugeVec for metrics about requests, broken down by phase and priority_level
-	ReqsGaugeVec metrics.RatioedGaugeVec
-
-	// RatioedGaugePairVec for metrics about seats occupied by all phases of execution
-	ExecSeatsGaugeVec metrics.RatioedGaugeVec
-
-	// QueueSetFactory for the queuing implementation
-	QueueSetFactory fq.QueueSetFactory
+	Name                   string
+	Clock                  clock.PassiveClock                            // 用于计时故意延迟。
+	AsFieldManager         string                                        // 是在服务器端应用程序元数据中使用的字符串。通常为ConfigConsumerAsFieldManager。这是作为参数公开的，以便竞争控制器的测试可以提供不同的值。
+	FoundToDangling        func(bool) bool                               // FoundToDangling将布尔值映射到布尔值，指示FlowSchema引用的PLC是否存在，以及该FlowSchema的状态是否应指示悬空引用。
+	InformerFactory        kubeinformers.SharedInformerFactory           // 用于构建控制器的工具。
+	FlowcontrolClient      flowcontrolclient.FlowcontrolV1beta3Interface // 用于操作配置对象的工具。
+	ServerConcurrencyLimit int                                           //
+	RequestWaitLimit       time.Duration                                 //
+	ReqsGaugeVec           metrics.RatioedGaugeVec                       // 用于按阶段和优先级级别细分的请求度量。
+	ExecSeatsGaugeVec      metrics.RatioedGaugeVec                       // 用于关于执行所有阶段占用的座位的度量。
+	QueueSetFactory        fq.QueueSetFactory                            // 队列的实现
 }
 
 // NewTestable 非常灵活，以便于测试。

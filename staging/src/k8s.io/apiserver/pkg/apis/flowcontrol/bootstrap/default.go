@@ -272,14 +272,13 @@ var (
 		})
 )
 
-// Suggested FlowSchema objects.
-// Ordered by matching precedence, so that their interactions are easier
-// to follow while reading this source.
+// 建议的FlowSchema对象。
+// 按匹配优先级排序，以便在阅读此源代码时更容易跟踪它们的交互。
 var (
-	// the following flow schema exempts probes
+	// SuggestedFlowSchemaProbes 以下流程模式不用被探测
 	SuggestedFlowSchemaProbes = newFlowSchema(
 		"probes", "exempt", 2,
-		"", // distinguisherMethodType
+		"",
 		flowcontrol.PolicyRulesWithSubjects{
 			Subjects: groups(user.AllUnauthenticated, user.AllAuthenticated),
 			NonResourceRules: []flowcontrol.NonResourcePolicyRule{

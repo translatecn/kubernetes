@@ -36,8 +36,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// PriorityAndFairnessClassification identifies the results of
-// classification for API Priority and Fairness
+// PriorityAndFairnessClassification 标识API优先级和公平性分类结果。
 type PriorityAndFairnessClassification struct {
 	FlowSchemaName    string
 	FlowSchemaUID     apitypes.UID

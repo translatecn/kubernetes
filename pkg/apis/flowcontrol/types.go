@@ -55,8 +55,7 @@ const (
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// FlowSchema defines the schema of a group of flows. Note that a flow is made up of a set of inbound API requests with
-// similar attributes and is identified by a pair of strings: the name of the FlowSchema and a "flow distinguisher".
+// FlowSchema 用于对每个入站请求进行分类，并与一个 PriorityLevelConfigurations相匹配。
 type FlowSchema struct {
 	metav1.TypeMeta
 	// `metadata` is the standard object's metadata.
@@ -87,25 +86,15 @@ type FlowSchemaList struct {
 	Items []FlowSchema
 }
 
-// FlowSchemaSpec describes how the FlowSchema's specification looks like.
 type FlowSchemaSpec struct {
-	// `priorityLevelConfiguration` should reference a PriorityLevelConfiguration in the cluster. If the reference cannot
-	// be resolved, the FlowSchema will be ignored and marked as invalid in its status.
-	// Required.
-	PriorityLevelConfiguration PriorityLevelConfigurationReference
-	// `matchingPrecedence` is used to choose among the FlowSchemas that match a given request. The chosen
-	// FlowSchema is among those with the numerically lowest (which we take to be logically highest)
-	// MatchingPrecedence.  Each MatchingPrecedence value must be ranged in [1,10000].
-	// Note that if the precedence is not specified, it will be set to 1000 as default.
 	// +optional
-	MatchingPrecedence int32
-	// `distinguisherMethod` defines how to compute the flow distinguisher for requests that match this schema.
-	// `nil` specifies that the distinguisher is disabled and thus will always be the empty string.
+	PriorityLevelConfiguration PriorityLevelConfigurationReference // 引用
 	// +optional
-	DistinguisherMethod *FlowDistinguisherMethod
-	// `rules` describes which requests will match this flow schema. This FlowSchema matches a request if and only if
-	// at least one member of rules matches the request.
-	// if it is an empty slice, there will be no requests matching the FlowSchema.
+	MatchingPrecedence  int32                    // 匹配优先值 [1,10000]
+	DistinguisherMethod *FlowDistinguisherMethod // distinguisherMethod定义如何计算与此模式匹配的请求的流区分器。
+	// rules描述哪些请求将匹配此流程模式。当且仅当规则的至少一个成员与请求匹配时，此FlowSchema才会匹配请求。
+	// 如果它是一个空切片，则不会有请求匹配FlowSchema。
+
 	// +listType=set
 	// +optional
 	Rules []PolicyRulesWithSubjects
@@ -136,10 +125,7 @@ type FlowDistinguisherMethod struct {
 	Type FlowDistinguisherMethodType
 }
 
-// PriorityLevelConfigurationReference contains information that points to the "request-priority" being used.
 type PriorityLevelConfigurationReference struct {
-	// `name` is the name of the priority level configuration being referenced
-	// Required.
 	Name string
 }
 
@@ -328,7 +314,7 @@ type FlowSchemaConditionType string
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// PriorityLevelConfiguration 表示优先级级别的配置。
+// PriorityLevelConfiguration 定义隔离类型和可处理的并发预算量，还可以调整排队行为。
 type PriorityLevelConfiguration struct {
 	metav1.TypeMeta
 	// `metadata` is the standard object's metadata.
