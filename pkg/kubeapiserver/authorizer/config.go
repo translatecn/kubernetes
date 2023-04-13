@@ -38,7 +38,7 @@ import (
 	"k8s.io/kubernetes/plugin/pkg/auth/authorizer/rbac/bootstrappolicy"
 )
 
-// Config contains the data on how to authorize a request to the Kube API Server
+// Config ✅
 type Config struct {
 	AuthorizationModes []string
 
@@ -68,8 +68,6 @@ type Config struct {
 	CustomDial utilnet.DialFunc
 }
 
-// New returns the right sort of union of multiple authorizer.Authorizer objects
-// based on the authorizationMode or an error.
 func (config Config) New() (authorizer.Authorizer, authorizer.RuleResolver, error) {
 	if len(config.AuthorizationModes) == 0 {
 		return nil, nil, fmt.Errorf("at least one authorization mode must be passed")
@@ -81,7 +79,7 @@ func (config Config) New() (authorizer.Authorizer, authorizer.RuleResolver, erro
 	)
 
 	// Add SystemPrivilegedGroup as an authorizing group
-	superuserAuthorizer := authorizerfactory.NewPrivilegedGroups(user.SystemPrivilegedGroup)
+	superuserAuthorizer := authorizerfactory.NewPrivilegedGroups(user.SystemPrivilegedGroup) // "system:masters"
 	authorizers = append(authorizers, superuserAuthorizer)
 
 	for _, authorizationMode := range config.AuthorizationModes {

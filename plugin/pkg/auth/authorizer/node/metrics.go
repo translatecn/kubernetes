@@ -30,7 +30,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      nodeAuthorizerSubsystem,
 			Name:           "graph_actions_duration_seconds",
-			Help:           "Histogram of duration of graph actions in node authorizer.",
+			Help:           "请求时间直方图",
 			StabilityLevel: metrics.ALPHA,
 			// Start with 0.1ms with the last bucket being [~200ms, Inf)
 			Buckets: metrics.ExponentialBuckets(0.0001, 2, 12),

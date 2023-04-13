@@ -112,7 +112,7 @@ func (o *BuiltInAuthorizationOptions) AddFlags(fs *pflag.FlagSet) {
 // ToAuthorizationConfig convert BuiltInAuthorizationOptions to authorizer.Config
 func (o *BuiltInAuthorizationOptions) ToAuthorizationConfig(versionedInformerFactory versionedinformers.SharedInformerFactory) authorizer.Config {
 	return authorizer.Config{
-		AuthorizationModes:          o.Modes,
+		AuthorizationModes:          o.Modes, // NODE,RBAC
 		PolicyFile:                  o.PolicyFile,
 		WebhookConfigFile:           o.WebhookConfigFile,
 		WebhookVersion:              o.WebhookVersion,

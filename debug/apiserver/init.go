@@ -16,22 +16,26 @@ func Init(args []string) []string {
 	args = append(args, "--audit-policy-file=/etc/kubernetes/audit-policy.yml")
 
 	args = append(args, "--authorization-mode=Node,RBAC")
+
 	args = append(args, "--client-ca-file=/etc/kubernetes/pki/ca.crt")
 	args = append(args, "--enable-admission-plugins=NodeRestriction")
 	args = append(args, "--enable-aggregator-routing=true")
 	args = append(args, "--enable-bootstrap-token-auth=true")
+
 	args = append(args, "--etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt")
 	args = append(args, "--etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt")
 	args = append(args, "--etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key")
 	args = append(args, "--etcd-servers=https://127.0.0.1:2379")
+
 	args = append(args, "--feature-gates=EphemeralContainers=true")
+
 	args = append(args, "--kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt")
 	args = append(args, "--kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key")
 	args = append(args, "--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname")
 	args = append(args, "--proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt")
 	args = append(args, "--proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key")
-	args = append(args, "--requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt")
 
+	args = append(args, "--requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt")
 	args = append(args, "--requestheader-allowed-names=front-proxy-client")
 	args = append(args, "--requestheader-extra-headers-prefix=X-Remote-Extra-")
 	args = append(args, "--requestheader-group-headers=X-Remote-Group")
