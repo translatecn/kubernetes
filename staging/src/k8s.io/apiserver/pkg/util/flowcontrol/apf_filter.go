@@ -99,7 +99,7 @@ func New(
 		RequestWaitLimit:       requestWaitLimit,
 		ReqsGaugeVec:           metrics.PriorityLevelConcurrencyGaugeVec,
 		ExecSeatsGaugeVec:      metrics.PriorityLevelExecutionSeatsGaugeVec,
-		QueueSetFactory:        fqs.NewQueueSetFactory(clk),
+		QueueSetFactory:        fqs.NewQueueSetFactory(clk), // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
 	})
 }
 
@@ -111,10 +111,10 @@ type TestableConfig struct {
 	InformerFactory        kubeinformers.SharedInformerFactory           // 用于构建控制器的工具。
 	FlowcontrolClient      flowcontrolclient.FlowcontrolV1beta3Interface // 用于操作配置对象的工具。
 	ServerConcurrencyLimit int                                           //
-	RequestWaitLimit       time.Duration                                 //
+	RequestWaitLimit       time.Duration                                 // 服务器端配置的
 	ReqsGaugeVec           metrics.RatioedGaugeVec                       // 用于按阶段和优先级级别细分的请求度量。
 	ExecSeatsGaugeVec      metrics.RatioedGaugeVec                       // 用于关于执行所有阶段占用的座位的度量。
-	QueueSetFactory        fq.QueueSetFactory                            // 队列的实现
+	QueueSetFactory        fq.QueueSetFactory                            // 队列的实现   // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
 }
 
 // NewTestable 非常灵活，以便于测试。

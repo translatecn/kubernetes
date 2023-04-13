@@ -42,12 +42,6 @@ type Dealer struct {
 	handSize int
 }
 
-// NewDealer will create a Dealer with the given deckSize and handSize, will return error when
-// deckSize or handSize is invalid as below.
-// 1. deckSize or handSize is not positive
-// 2. handSize is greater than deckSize
-// 3. deckSize is impractically large (greater than 1<<26)
-// 4. required entropy bits of deckSize and handSize is greater than MaxHashBits
 func NewDealer(deckSize, handSize int) (*Dealer, error) {
 	if deckSize <= 0 || handSize <= 0 {
 		return nil, fmt.Errorf("deckSize %d or handSize %d is not positive", deckSize, handSize)

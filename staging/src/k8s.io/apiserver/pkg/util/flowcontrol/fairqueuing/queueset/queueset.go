@@ -49,8 +49,8 @@ type queueSetFactory struct {
 }
 
 // promiseFactory returns a WriteOnce
-// - whose Set method is invoked with the queueSet locked, and
-// - whose Get method is invoked with the queueSet not locked.
+// 具有 Set 方法的对象在 queueSet 被锁定时被调用，这意味着没有其他线程可以同时访问它。
+// 另一方面，该对象的 Get 方法在 queueSet 未被锁定时被调用，因此其他线程可能会同时访问它。
 // The parameters are the same as for `promise.NewWriteOnce`.
 type promiseFactory func(initial interface{}, doneCh <-chan struct{}, doneVal interface{}) promise.WriteOnce
 
@@ -177,16 +177,13 @@ func (qsf *queueSetFactory) BeginConstruction(qCfg fq.QueuingConfig, reqsGaugePa
 		dealer:               dealer}, nil
 }
 
-// checkConfig returns a non-nil Dealer if the config is valid and
-// calls for one, and returns a non-nil error if the given config is
-// invalid.
 func checkConfig(qCfg fq.QueuingConfig) (*shufflesharding.Dealer, error) {
 	if qCfg.DesiredNumQueues == 0 {
 		return nil, nil
 	}
-	dealer, err := shufflesharding.NewDealer(qCfg.DesiredNumQueues, qCfg.HandSize)
+	dealer, err := shufflesharding.NewDealer(qCfg.DesiredNumQueues, qCfg.HandSize) // 队列数, 用于shuffle的参数
 	if err != nil {
-		err = fmt.Errorf("the QueueSetConfig implies an invalid shuffle sharding config (DesiredNumQueues is deckSize): %w", err)
+		err = fmt.Errorf("QueueSetConfig 暗示了一种无效的随机分片配置（DesiredNumQueues 等于 deckSize）: %w", err)
 	}
 	return dealer, err
 }
@@ -219,8 +216,8 @@ func createQueues(n, baseIndex int) []*queue {
 	return fqqueues
 }
 
-func (qs *queueSet) BeginConfigChange(qCfg fq.QueuingConfig) (fq.QueueSetCompleter, error) {
-	dealer, err := checkConfig(qCfg)
+func (qs *queueSet) BeginConfigChange(qCfg fq.QueuingConfig) (fq.QueueSetCompleter, error) { // ✅
+	dealer, err := checkConfig(qCfg) // ✅
 	if err != nil {
 		return nil, err
 	}
@@ -341,8 +338,7 @@ func (qs *queueSet) StartRequest(ctx context.Context, workEstimate *fqrequest.Wo
 	return req, false
 }
 
-// ordinaryPromiseFactoryFactory is the promiseFactoryFactory that
-// a queueSetFactory would ordinarily use.
+// ordinaryPromiseFactoryFactory is the promiseFactoryFactory that a queueSetFactory would ordinarily use.
 // Test code might use something different.
 func ordinaryPromiseFactoryFactory(qs *queueSet) promiseFactory {
 	return promise.NewWriteOnce
