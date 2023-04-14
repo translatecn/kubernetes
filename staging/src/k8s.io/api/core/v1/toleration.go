@@ -26,7 +26,7 @@ func (t *Toleration) MatchToleration(tolerationToMatch *Toleration) bool {
 		t.Value == tolerationToMatch.Value
 }
 
-// ToleratesTaint checks if the toleration tolerates the taint.
+// ToleratesTaint 检查是否能容忍污染
 // The matching follows the rules below:
 // (1) Empty toleration.effect means to match all taint effects,
 //

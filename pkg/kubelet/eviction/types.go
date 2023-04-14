@@ -55,17 +55,11 @@ type Config struct {
 
 // Manager evaluates when an eviction threshold for node stability has been met on the node.
 type Manager interface {
-	// Start starts the control loop to monitor eviction thresholds at specified interval.
+	// Start 用来监控驱逐的阈值的
 	Start(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc, podCleanedUpFunc PodCleanedUpFunc, monitoringInterval time.Duration)
-
-	// IsUnderMemoryPressure returns true if the node is under memory pressure.
-	IsUnderMemoryPressure() bool
-
-	// IsUnderDiskPressure returns true if the node is under disk pressure.
-	IsUnderDiskPressure() bool
-
-	// IsUnderPIDPressure returns true if the node is under PID pressure.
-	IsUnderPIDPressure() bool
+	IsUnderMemoryPressure() bool // 返回内存是否有压力
+	IsUnderDiskPressure() bool   // 返回磁盘是否有压力
+	IsUnderPIDPressure() bool    // 返回PID是否有压力
 }
 
 // DiskInfoProvider is responsible for informing the manager how disk is configured.

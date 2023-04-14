@@ -831,8 +831,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		volumepathhandler.NewBlockVolumePathHandler())
 
 	klet.backOff = flowcontrol.NewBackOff(backOffPeriod, MaxContainerBackOff)
-
-	// setup eviction manager
+	// evictionManager的初始化
 	evictionManager, evictionAdmitHandler := eviction.NewManager(
 		klet.resourceAnalyzer,
 		evictionConfig,
@@ -847,6 +846,9 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	)
 
 	klet.evictionManager = evictionManager
+
+	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查，满足条件后才会继续创建Pod，通过Admit方法来检查
+	var _ = evictionAdmitHandler.Admit
 	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler)
 
 	// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.

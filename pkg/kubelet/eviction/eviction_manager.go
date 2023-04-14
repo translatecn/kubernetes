@@ -59,43 +59,29 @@ const (
 
 // managerImpl implements Manager
 type managerImpl struct {
-	//  used to track time
-	clock clock.WithTicker
-	// config is how the manager is configured
-	config Config
-	// the function to invoke to kill a pod
-	killPodFunc KillPodFunc
-	// the function to get the mirror pod by a given static pod
-	mirrorPodFunc MirrorPodFunc
-	// the interface that knows how to do image gc
-	imageGC ImageGC
-	// the interface that knows how to do container gc
-	containerGC ContainerGC
-	// protects access to internal state
+	clock         clock.WithTicker
+	config        Config
+	killPodFunc   KillPodFunc   // killpod的方法
+	mirrorPodFunc MirrorPodFunc // 获取静态pod的mirror pod 方法
+	imageGC       ImageGC
+	containerGC   ContainerGC
 	sync.RWMutex
-	// node conditions are the set of conditions present
-	nodeConditions []v1.NodeConditionType
-	// captures when a node condition was last observed based on a threshold being met
-	nodeConditionsLastObservedAt nodeConditionsObservedAt
+	nodeConditions               []v1.NodeConditionType   //  当前节点存在的问题集合
+	nodeConditionsLastObservedAt nodeConditionsObservedAt // 记录 nodecontions 上一次观察的时间
 	// nodeRef is a reference to the node
 	nodeRef *v1.ObjectReference
 	// used to record events about the node
-	recorder record.EventRecorder
-	// used to measure usage stats on system
-	summaryProvider stats.SummaryProvider
-	// records when a threshold was first observed
-	thresholdsFirstObservedAt thresholdsObservedAt
-	// records the set of thresholds that have been met (including graceperiod) but not yet resolved
-	thresholdsMet            []evictionapi.Threshold
-	signalToRankFunc         map[evictionapi.Signal]rankFunc         // 将资源->排名函数。
-	signalToNodeReclaimFuncs map[evictionapi.Signal]nodeReclaimFuncs // 将资源->如何回收该资源的有序函数列表。
+	recorder                  record.EventRecorder
+	summaryProvider           stats.SummaryProvider                   // 提供node和node上所有pods的最新status数据汇总，即 NodeStats and []PodStats。
+	thresholdsFirstObservedAt thresholdsObservedAt                    // 记录第一次阈值的时间
+	thresholdsMet             []evictionapi.Threshold                 // 保存已经触发但还没解决的Thresholds，包括那些处于grace period等待阶段的Thresholds。
+	signalToRankFunc          map[evictionapi.Signal]rankFunc         // 定义各Resource进行evict挑选时的排名方法。
+	signalToNodeReclaimFuncs  map[evictionapi.Signal]nodeReclaimFuncs // 定义各Resource进行回收时调用的方法
 	// last observations from synchronize
-	lastObservations signalObservations
-	dedicatedImageFs *bool // 指示imagefs是否位于与rootfs不同的设备上
-	// thresholdNotifiers is a list of memory threshold notifiers which each notify for a memory eviction threshold
-	thresholdNotifiers []ThresholdNotifier
-	// thresholdsLastUpdated is the last time the thresholdNotifiers were updated.
-	thresholdsLastUpdated time.Time
+	lastObservations      signalObservations
+	dedicatedImageFs      *bool               // 指示imagefs是否位于与rootfs不同的设备上
+	thresholdNotifiers    []ThresholdNotifier // 内存阈值通知器集合
+	thresholdsLastUpdated time.Time           // 上次thresholdNotifiers发通知的时间
 	// whether can support local storage capacity isolation
 	localStorageCapacityIsolation bool
 }
@@ -135,20 +121,22 @@ func NewManager(
 	return manager, manager
 }
 
-// Admit 如果不安全,就拒绝接受pod,以确保节点的稳定性。
+// Admit 评估一个pod是否可以被允许创建。
+// 用node的压力状态 做pod是否准入的依据，相当于影响调度的结果
 func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	m.RLock()
 	defer m.RUnlock()
-	if len(m.nodeConditions) == 0 {
+	if len(m.nodeConditions) == 0 { // 如果 node现在没有压力状态那么准入
 		return lifecycle.PodAdmitResult{Admit: true}
 	}
 	// Admit Critical pods even under resource pressure since they are required for system stability.
 	// https://github.com/kubernetes/kubernetes/issues/40573 has more details.
-	if kubelettypes.IsCriticalPod(attrs.Pod) {
+	if kubelettypes.IsCriticalPod(attrs.Pod) { // 如果是静态pod或者SystemCriticalPriority的高优则忽略节点压力状态准入
 		return lifecycle.PodAdmitResult{Admit: true}
 	}
 
 	// Conditions other than memory pressure reject all pods
+	//如果当前节点只有内存的压力，那么pod的qos类型为 非BestEffort则准入
 	nodeOnlyHasMemoryPressureCondition := hasNodeCondition(m.nodeConditions, v1.NodeMemoryPressure) && len(m.nodeConditions) == 1
 	if nodeOnlyHasMemoryPressureCondition {
 		notBestEffort := v1.PodQOSBestEffort != v1qos.GetPodQOS(attrs.Pod)
@@ -156,8 +144,8 @@ func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 			return lifecycle.PodAdmitResult{Admit: true}
 		}
 
-		// When node has memory pressure, check BestEffort Pod's toleration:
-		// admit it if tolerates memory pressure taint, fail for other tolerations, e.g. DiskPressure.
+		// 如果是BestEffort则要根据它的容忍类型判断
+
 		if v1helper.TolerationsTolerateTaint(attrs.Pod.Spec.Tolerations, &v1.Taint{
 			Key:    v1.TaintNodeMemoryPressure,
 			Effect: v1.TaintEffectNoSchedule,

@@ -26,9 +26,9 @@ const (
 	// that do not specify any priority class and there is no priority class
 	// marked as default.
 	DefaultPriorityWhenNoDefaultClassExists = 0
-	// HighestUserDefinablePriority is the highest priority for user defined priority classes. Priority values larger than 1 billion are reserved for Kubernetes system use.
+	// HighestUserDefinablePriority 用户定义的优先级类的最高优先级。优先级大于10亿的值保留给Kubernetes系统使用。
 	HighestUserDefinablePriority = int32(1000000000)
-	// SystemCriticalPriority is the beginning of the range of priority values for critical system components.
+	// SystemCriticalPriority 是关键系统组件的优先级值范围的开始。
 	SystemCriticalPriority = 2 * HighestUserDefinablePriority
 	// SystemPriorityClassPrefix is the prefix reserved for system priority class names. Other priority
 	// classes are not allowed to start with this prefix.

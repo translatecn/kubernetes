@@ -43,16 +43,10 @@ type Level string
 
 // Valid audit levels
 const (
-	// LevelNone disables auditing
-	LevelNone Level = "None"
-	// LevelMetadata provides the basic level of auditing.
-	LevelMetadata Level = "Metadata"
-	// LevelRequest provides Metadata level of auditing, and additionally
-	// logs the request object (does not apply for non-resource requests).
-	LevelRequest Level = "Request"
-	// LevelRequestResponse provides Request level of auditing, and additionally
-	// logs the response object (does not apply for non-resource requests).
-	LevelRequestResponse Level = "RequestResponse"
+	LevelNone            Level = "None"            // 符合这条规则的日志将不会记录。
+	LevelMetadata        Level = "Metadata"        // 记录请求的元数据（请求的用户、时间戳、资源、动词等等）， 但是不记录请求或者响应的消息体。
+	LevelRequest         Level = "Request"         // 记录事件的元数据和请求的消息体，但是不记录响应的消息体。 这不适用于非资源类型的请求。
+	LevelRequestResponse Level = "RequestResponse" // 记录事件的元数据，请求和响应的消息体。这不适用于非资源类型的请求。
 )
 
 // Stage defines the stages in request handling that audit events may be generated.

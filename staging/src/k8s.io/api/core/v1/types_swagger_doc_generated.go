@@ -2411,11 +2411,11 @@ func (Taint) SwaggerDoc() map[string]string {
 
 var map_Toleration = map[string]string{
 	"":                  "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
-	"key":               "Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.",
-	"operator":          "Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category.",
-	"value":             "Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.",
-	"effect":            "Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.",
-	"tolerationSeconds": "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.",
+	"key":               "容忍的污点key,空代表所有污点keys. 如果key为空,operator必须是Exists,代表容忍所有污点.",
+	"operator":          "Operator k,v的关系[Exists,Equal],默认Equal. ",
+	"value":             "Value 污点的值. 如果operator是Exists,这应该是空.",
+	"effect":            "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]",
+	"tolerationSeconds": "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
 }
 
 func (Toleration) SwaggerDoc() map[string]string {

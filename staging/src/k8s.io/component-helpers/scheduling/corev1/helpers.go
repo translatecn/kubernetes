@@ -59,7 +59,7 @@ func GetAvoidPodsFromNodeAnnotations(annotations map[string]string) (v1.AvoidPod
 	return avoidPods, nil
 }
 
-// TolerationsTolerateTaint checks if taint is tolerated by any of the tolerations.
+// TolerationsTolerateTaint 容忍污点
 func TolerationsTolerateTaint(tolerations []v1.Toleration, taint *v1.Taint) bool {
 	for i := range tolerations {
 		if tolerations[i].ToleratesTaint(taint) {

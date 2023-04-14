@@ -37,10 +37,8 @@ type PodAdmitResult struct {
 	Message string
 }
 
-// PodAdmitHandler is notified during pod admission.
 type PodAdmitHandler interface {
-	// Admit evaluates if a pod can be admitted.
-	Admit(attrs *PodAdmitAttributes) PodAdmitResult
+	Admit(attrs *PodAdmitAttributes) PodAdmitResult // 评估一个pod是否可以被允许。
 }
 
 // PodAdmitTarget maintains a list of handlers to invoke.

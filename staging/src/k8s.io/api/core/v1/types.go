@@ -3076,28 +3076,25 @@ const (
 // The pod this Toleration is attached to tolerates any taint that matches
 // the triple <key,value,effect> using the matching operator <operator>.
 type Toleration struct {
-	// Key is the taint key that the toleration applies to. Empty means match all taint keys.
-	// If the key is empty, operator must be Exists; this combination means to match all values and all keys.
+	// 容忍的污点key,空代表所有污点keys.
+	// 如果key为空,operator必须是Exists,代表容忍所有污点.
 	// +optional
 	Key string `json:"key,omitempty" protobuf:"bytes,1,opt,name=key"`
-	// Operator represents a key's relationship to the value.
-	// Valid operators are Exists and Equal. Defaults to Equal.
-	// Exists is equivalent to wildcard for value, so that a pod can
-	// tolerate all taints of a particular category.
+	// Operator k,v的关系[Exists,Equal],默认Equal.
 	// +optional
 	Operator TolerationOperator `json:"operator,omitempty" protobuf:"bytes,2,opt,name=operator,casttype=TolerationOperator"`
-	// Value is the taint value the toleration matches to.
-	// If the operator is Exists, the value should be empty, otherwise just a regular string.
+	// Value 污点的值，如果operator是Exists,这应该是空.
 	// +optional
 	Value string `json:"value,omitempty" protobuf:"bytes,3,opt,name=value"`
 	// Effect indicates the taint effect to match. Empty means match all taint effects.
-	// When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
+	// [空 ,NoSchedule, PreferNoSchedul, NoExecute ]
 	// +optional
 	Effect TaintEffect `json:"effect,omitempty" protobuf:"bytes,4,opt,name=effect,casttype=TaintEffect"`
 	// TolerationSeconds represents the period of time the toleration (which must be
 	// of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
 	// it is not set, which means tolerate the taint forever (do not evict). Zero and
 	// negative values will be treated as 0 (evict immediately) by the system.
+	// 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。
 	// +optional
 	TolerationSeconds *int64 `json:"tolerationSeconds,omitempty" protobuf:"varint,5,opt,name=tolerationSeconds"`
 }
@@ -5305,15 +5302,10 @@ type NodeConditionType string
 // The built-in set of conditions are:
 // NodeReachable, NodeLive, NodeReady, NodeSchedulable, NodeRunnable.
 const (
-	// NodeReady means kubelet is healthy and ready to accept pods.
-	NodeReady NodeConditionType = "Ready"
-	// NodeMemoryPressure means the kubelet is under pressure due to insufficient available memory.
-	NodeMemoryPressure NodeConditionType = "MemoryPressure"
-	// NodeDiskPressure means the kubelet is under pressure due to insufficient available disk.
-	NodeDiskPressure NodeConditionType = "DiskPressure"
-	// NodePIDPressure means the kubelet is under pressure due to insufficient available PID.
-	NodePIDPressure NodeConditionType = "PIDPressure"
-	// NodeNetworkUnavailable means that network for the node is not correctly configured.
+	NodeReady              NodeConditionType = "Ready"
+	NodeMemoryPressure     NodeConditionType = "MemoryPressure"
+	NodeDiskPressure       NodeConditionType = "DiskPressure"
+	NodePIDPressure        NodeConditionType = "PIDPressure"
 	NodeNetworkUnavailable NodeConditionType = "NetworkUnavailable"
 )
 

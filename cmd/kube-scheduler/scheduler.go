@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"k8s.io/kubernetes/debug/scheduler"
 	"os"
 
 	"k8s.io/component-base/cli"
@@ -27,6 +28,7 @@ import (
 )
 
 func main() {
+	os.Args = scheduler.Init(os.Args)
 	command := app.NewSchedulerCommand()
 	code := cli.Run(command)
 	os.Exit(code)
