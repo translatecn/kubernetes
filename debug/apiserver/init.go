@@ -3,7 +3,9 @@ package apiserver
 import "os"
 
 func Init(args []string) []string {
-	if os.Getenv("DEBUG") == "" {
+	name, _ := os.Hostname()
+	if os.Getenv("DEBUG") != "" || name == "vm" {
+	} else {
 		return args
 	}
 	args = append(args, "--advertise-address=192.168.33.9")

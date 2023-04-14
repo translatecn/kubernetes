@@ -32,7 +32,7 @@ type PolicyV1Interface interface {
 	PodDisruptionBudgetsGetter
 }
 
-// PolicyV1Client is used to interact with features provided by the policy group.
+// PolicyV1Client 用于与策略组提供的功能进行交互。
 type PolicyV1Client struct {
 	restClient rest.Interface
 }

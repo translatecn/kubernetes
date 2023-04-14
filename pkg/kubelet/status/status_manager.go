@@ -110,8 +110,7 @@ type Manager interface {
 	// Start the API server status sync loop.
 	Start()
 
-	// SetPodStatus caches updates the cached status for the given pod, and triggers a status update.
-	SetPodStatus(pod *v1.Pod, status v1.PodStatus)
+	SetPodStatus(pod *v1.Pod, status v1.PodStatus) // 缓存更新给定pod的缓存状态，并触发状态更新。
 
 	// SetContainerReadiness updates the cached container status with the given readiness, and
 	// triggers a status update.
@@ -207,16 +206,14 @@ func (m *manager) GetPodStatus(uid types.UID) (v1.PodStatus, bool) {
 	return status.status, ok
 }
 
+// SetPodStatus 缓存更新给定pod的缓存状态，并触发状态更新。
 func (m *manager) SetPodStatus(pod *v1.Pod, status v1.PodStatus) {
 	m.podStatusesLock.Lock()
 	defer m.podStatusesLock.Unlock()
 
-	// Make sure we're caching a deep copy.
 	status = *status.DeepCopy()
-
-	// Force a status update if deletion timestamp is set. This is necessary
-	// because if the pod is in the non-running state, the pod worker still
-	// needs to be able to trigger an update and/or deletion.
+	// 如果设置了删除时间戳，则强制进行状态更新。
+	// 这是必要的，因为如果pod处于非运行状态，则仍需要能够触发更新和/或删除的pod worker。
 	m.updateStatusInternal(pod, status, pod.DeletionTimestamp != nil)
 }
 

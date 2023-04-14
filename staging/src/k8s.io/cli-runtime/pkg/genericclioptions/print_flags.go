@@ -90,7 +90,7 @@ func (f *PrintFlags) AllowedFormats() []string {
 // ToPrinter returns a printer capable of
 // handling --output or --template printing.
 // Returns false if the specified outputFormat does not match a supported format.
-// Supported format types can be found in pkg/printers/printers.go
+// Supported format types can be found in pkg/printers/over-printers.go
 func (f *PrintFlags) ToPrinter() (printers.ResourcePrinter, error) {
 	outputFormat := ""
 	if f.OutputFormat != nil {

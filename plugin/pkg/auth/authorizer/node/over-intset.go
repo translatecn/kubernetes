@@ -16,9 +16,9 @@ limitations under the License.
 
 package node
 
-// intSet maintains a map of id to refcounts
+// intSet 维护一个id到引用计数的映射表。
 type intSet struct {
-	// members is a map of id to refcounts
+	// members 维护一个id到引用计数的映射表。
 	members map[int]int
 }
 

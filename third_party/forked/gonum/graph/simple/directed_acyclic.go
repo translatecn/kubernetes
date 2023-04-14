@@ -5,7 +5,7 @@ import (
 )
 
 // DirectedAcyclicGraph implements graph.Directed using UndirectedGraph,
-// which only stores one edge for any node pair.
+// 它只存储任意节点对的一条边。
 type DirectedAcyclicGraph struct {
 	*UndirectedGraph
 }

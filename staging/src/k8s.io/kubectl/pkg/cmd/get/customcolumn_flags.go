@@ -53,7 +53,7 @@ func (f *CustomColumnsPrintFlags) AllowedFormats() []string {
 // ToPrinter receives an templateFormat and returns a printer capable of
 // handling custom-column printing.
 // Returns false if the specified templateFormat does not match a supported format.
-// Supported format types can be found in pkg/printers/printers.go
+// Supported format types can be found in pkg/printers/over-printers.go
 func (f *CustomColumnsPrintFlags) ToPrinter(templateFormat string) (printers.ResourcePrinter, error) {
 	if len(templateFormat) == 0 {
 		return nil, genericclioptions.NoCompatiblePrinterError{}

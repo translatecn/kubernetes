@@ -42,7 +42,7 @@ type JSONYamlPrintFlags struct {
 // ToPrinter receives an outputFormat and returns a printer capable of
 // handling --output=(yaml|json) printing.
 // Returns false if the specified outputFormat does not match a supported format.
-// Supported Format types can be found in pkg/printers/printers.go
+// Supported Format types can be found in pkg/printers/over-printers.go
 func (f *JSONYamlPrintFlags) ToPrinter(outputFormat string) (printers.ResourcePrinter, error) {
 	var printer printers.ResourcePrinter
 

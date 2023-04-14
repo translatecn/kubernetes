@@ -488,7 +488,7 @@ func buildGenericConfig(
 	}
 
 	// 6、创建鉴权实例,包含：Node、RBAC、Webhook、ABAC、AlwaysAllow、AlwaysDeny
-	genericConfig.Authorization.Authorizer, genericConfig.RuleResolver, err = BuildAuthorizer(s, genericConfig.EgressSelector, versionedInformers)
+	genericConfig.Authorization.Authorizer, genericConfig.RuleResolver, err = BuildAuthorizer(s, genericConfig.EgressSelector, versionedInformers) // ✅
 	if err != nil {
 		lastErr = fmt.Errorf("invalid authorization config: %v", err)
 		return

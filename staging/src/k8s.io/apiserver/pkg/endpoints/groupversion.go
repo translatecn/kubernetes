@@ -50,7 +50,7 @@ type ConvertabilityChecker interface {
 // Where 'storage_key' points to a rest.Storage object stored in storage.
 // This object should contain all parameterization necessary for running a particular API version
 type APIGroupVersion struct {
-	Storage map[string]rest.Storage
+	Storage map[string]rest.Storage // 存储不同路由对应的后端存储
 
 	Root string
 

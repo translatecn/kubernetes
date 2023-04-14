@@ -264,7 +264,7 @@ type ListOptions struct {
 	Predicate SelectionPredicate
 	// Recursive determines whether the list or watch is defined for a single object located at the
 	// given key, or for the whole set of objects with the given key as a prefix.
-	Recursive bool
+	Recursive bool // 是否递归遍历
 	// ProgressNotify determines whether storage-originated bookmark (progress notify) events should
 	// be delivered to the users. The option is ignored for non-watch requests.
 	ProgressNotify bool

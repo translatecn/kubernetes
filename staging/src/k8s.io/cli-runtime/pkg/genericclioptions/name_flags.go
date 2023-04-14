@@ -52,7 +52,7 @@ func (f *NamePrintFlags) AllowedFormats() []string {
 // ToPrinter receives an outputFormat and returns a printer capable of
 // handling --output=name printing.
 // Returns false if the specified outputFormat does not match a supported format.
-// Supported format types can be found in pkg/printers/printers.go
+// Supported format types can be found in pkg/printers/over-printers.go
 func (f *NamePrintFlags) ToPrinter(outputFormat string) (printers.ResourcePrinter, error) {
 	namePrinter := &printers.NamePrinter{
 		Operation: f.Operation,

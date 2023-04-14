@@ -550,7 +550,7 @@ func labelAPIServerHeartbeat(lease *coordinationapiv1.Lease) error {
 	return nil
 }
 
-// InstallLegacyAPI will install the legacy APIs for the restStorageProviders if they are enabled.
+// InstallLegacyAPI ✅
 func (m *Instance) InstallLegacyAPI(c *completedConfig, restOptionsGetter generic.RESTOptionsGetter) error {
 	legacyRESTStorageProvider := corerest.LegacyRESTStorageProvider{
 		StorageFactory:              c.ExtraConfig.StorageFactory,

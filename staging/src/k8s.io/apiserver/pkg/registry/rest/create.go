@@ -34,59 +34,15 @@ import (
 	"k8s.io/apiserver/pkg/warning"
 )
 
-// RESTCreateStrategy defines the minimum validation, accepted input, and
-// name generation behavior to create an object that follows Kubernetes
-// API conventions.
+// RESTCreateStrategy 定义了最小验证、可接受的输入和名称生成行为
 type RESTCreateStrategy interface {
 	runtime.ObjectTyper
-	// The name generator is used when the standard GenerateName field is set.
-	// The NameGenerator will be invoked prior to validation.
-	names.NameGenerator
-
-	// NamespaceScoped returns true if the object must be within a namespace.
-	NamespaceScoped() bool
-	// PrepareForCreate is invoked on create before validation to normalize
-	// the object.  For example: remove fields that are not to be persisted,
-	// sort order-insensitive list fields, etc.  This should not remove fields
-	// whose presence would be considered a validation error.
-	//
-	// Often implemented as a type check and an initailization or clearing of
-	// status. Clear the status because status changes are internal. External
-	// callers of an api (users) should not be setting an initial status on
-	// newly created objects.
-	PrepareForCreate(ctx context.Context, obj runtime.Object)
-	// Validate returns an ErrorList with validation errors or nil.  Validate
-	// is invoked after default fields in the object have been filled in
-	// before the object is persisted.  This method should not mutate the
-	// object.
-	Validate(ctx context.Context, obj runtime.Object) field.ErrorList
-	// WarningsOnCreate returns warnings to the client performing a create.
-	// WarningsOnCreate is invoked after default fields in the object have been filled in
-	// and after Validate has passed, before Canonicalize is called, and the object is persisted.
-	// This method must not mutate the object.
-	//
-	// Be brief; limit warnings to 120 characters if possible.
-	// Don't include a "Warning:" prefix in the message (that is added by clients on output).
-	// Warnings returned about a specific field should be formatted as "path.to.field: message".
-	// For example: `spec.imagePullSecrets[0].name: invalid empty name ""`
-	//
-	// Use warning messages to describe problems the client making the API request should correct or be aware of.
-	// For example:
-	// - use of deprecated fields/labels/annotations that will stop working in a future release
-	// - use of obsolete fields/labels/annotations that are non-functional
-	// - malformed or invalid specifications that prevent successful handling of the submitted object,
-	//   but are not rejected by validation for compatibility reasons
-	//
-	// Warnings should not be returned for fields which cannot be resolved by the caller.
-	// For example, do not warn about spec fields in a subresource creation request.
-	WarningsOnCreate(ctx context.Context, obj runtime.Object) []string
-	// Canonicalize allows an object to be mutated into a canonical form. This
-	// ensures that code that operates on these objects can rely on the common
-	// form for things like comparison.  Canonicalize is invoked after
-	// validation has succeeded but before the object has been persisted.
-	// This method may mutate the object. Often implemented as a type check or
-	// empty method.
-	Canonicalize(obj runtime.Object)
+	names.NameGenerator                                                // 当设置标准GenerateName字段时使用名称生成器。NameGenerator将在验证之前被调用。
+	NamespaceScoped() bool                                             // 该对象是不是属于名称空间
+	PrepareForCreate(ctx context.Context, obj runtime.Object)          // 在BeforeCreate函数里调用，以规范化对象。例如:删除不持久化的字段，排序不区分顺序的列表字段，等等。这不应该删除将被认为是验证错误的字段。
+	Validate(ctx context.Context, obj runtime.Object) field.ErrorList  // 返回一个带有验证错误或nil的ErrorList。在持久化对象之前填充对象中的默认字段之后调用Validate。这个方法不应该改变对象。
+	WarningsOnCreate(ctx context.Context, obj runtime.Object) []string // Validate调用之后运行的，返回一系列的错误信息
+	Canonicalize(obj runtime.Object)                                   // WarningsOnCreate 调用之后运行的，在验证后规范化对象。
 }
 
 // BeforeCreate ensures that common operations for all resources are performed on creation. It only returns

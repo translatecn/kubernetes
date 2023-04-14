@@ -118,7 +118,7 @@ func NewManager(
 ) (Manager, lifecycle.PodAdmitHandler) {
 	manager := &managerImpl{
 		clock:                         clock,
-		killPodFunc:                   killPodFunc,
+		killPodFunc:                   killPodFunc, // ✅
 		mirrorPodFunc:                 mirrorPodFunc,
 		imageGC:                       imageGC,
 		containerGC:                   containerGC,

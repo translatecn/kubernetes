@@ -93,134 +93,42 @@ type GenericStore interface {
 //
 // TODO: make the default exposed methods exactly match a generic RESTStorage
 type Store struct {
-	// NewFunc returns a new instance of the type this registry returns for a
-	// GET of a single object, e.g.:
-	//
-	// curl GET /apis/group/version/namespaces/my-ns/myresource/name-of-object
-	NewFunc func() runtime.Object
+	NewFunc                  func() runtime.Object
+	NewListFunc              func() runtime.Object
+	DefaultQualifiedResource schema.GroupResource                                                          // 资源的复数名称
+	KeyRootFunc              func(ctx context.Context) string                                              // 存储在etcd上的根路径
+	KeyFunc                  func(ctx context.Context, name string) (string, error)                        // 返回某个对象、实例、集合的路径
+	ObjectNameFunc           func(obj runtime.Object) (string, error)                                      //
+	TTLFunc                  func(obj runtime.Object, existing uint64, update bool) (uint64, error)        // 对象持久化保存的过期时间
+	PredicateFunc            func(label labels.Selector, field fields.Selector) storage.SelectionPredicate // 返回一个对应于提供的标签和字段的匹配器。如果对象匹配给定的字段和标签选择器，返回的 SelectionPredicate应 该返回true。
+	EnableGarbageCollection  bool                                                                          // 影响Update和Delete请求的处理。启用垃圾收集允许终结器在存储区删除该对象之前完成该对象的终结工作。
+	DeleteCollectionWorkers  int                                                                           // 对集合中的项的删除请求并行数。
+	Decorator                func(runtime.Object)                                                          // 给用户返回时的，用于修改对象的钩子   返回的对象可以是单个对象（例如Pod）或列表类型（例如PodList）。
 
-	// NewListFunc returns a new list of the type this registry; it is the
-	// type returned when the resource is listed, e.g.:
-	//
-	// curl GET /apis/group/version/namespaces/my-ns/myresource
-	NewListFunc func() runtime.Object
+	CreateStrategy rest.RESTCreateStrategy // BeginCreate和CreateStrategy是两个不同的概念，用于在不同的阶段执行不同的操作。CreateStrategy用于定义创建的资源。
+	BeginCreate    BeginCreateFunc         // BeginCreate用于在创建资源之前执行一些准备工作。
+	AfterCreate    AfterCreateFunc
 
-	// DefaultQualifiedResource is the pluralized name of the resource.
-	// This field is used if there is no request info present in the context.
-	// See qualifiedResourceFromContext for details.
-	DefaultQualifiedResource schema.GroupResource
-
-	// KeyRootFunc returns the root etcd key for this resource; should not
-	// include trailing "/".  This is used for operations that work on the
-	// entire collection (listing and watching).
-	//
-	// KeyRootFunc and KeyFunc must be supplied together or not at all.
-	KeyRootFunc func(ctx context.Context) string
-
-	// KeyFunc returns the key for a specific object in the collection.
-	// KeyFunc is called for Create/Update/Get/Delete. Note that 'namespace'
-	// can be gotten from ctx.
-	//
-	// KeyFunc and KeyRootFunc must be supplied together or not at all.
-	KeyFunc func(ctx context.Context, name string) (string, error)
-
-	// ObjectNameFunc returns the name of an object or an error.
-	ObjectNameFunc func(obj runtime.Object) (string, error)
-
-	// TTLFunc returns the TTL (time to live) that objects should be persisted
-	// with. The existing parameter is the current TTL or the default for this
-	// operation. The update parameter indicates whether this is an operation
-	// against an existing object.
-	//
-	// Objects that are persisted with a TTL are evicted once the TTL expires.
-	TTLFunc func(obj runtime.Object, existing uint64, update bool) (uint64, error)
-
-	// PredicateFunc returns a matcher corresponding to the provided labels
-	// and fields. The SelectionPredicate returned should return true if the
-	// object matches the given field and label selectors.
-	PredicateFunc func(label labels.Selector, field fields.Selector) storage.SelectionPredicate
-
-	// EnableGarbageCollection affects the handling of Update and Delete
-	// requests. Enabling garbage collection allows finalizers to do work to
-	// finalize this object before the store deletes it.
-	//
-	// If any store has garbage collection enabled, it must also be enabled in
-	// the kube-controller-manager.
-	EnableGarbageCollection bool
-
-	// DeleteCollectionWorkers is the maximum number of workers in a single
-	// DeleteCollection call. Delete requests for the items in a collection
-	// are issued in parallel.
-	DeleteCollectionWorkers int
-
-	// Decorator is an optional exit hook on an object returned from the
-	// underlying storage. The returned object could be an individual object
-	// (e.g. Pod) or a list type (e.g. PodList). Decorator is intended for
-	// integrations that are above storage and should only be used for
-	// specific cases where storage of the value is not appropriate, since
-	// they cannot be watched.
-	Decorator func(runtime.Object)
-
-	// CreateStrategy implements resource-specific behavior during creation.
-	CreateStrategy rest.RESTCreateStrategy
-	// BeginCreate is an optional hook that returns a "transaction-like"
-	// commit/revert function which will be called at the end of the operation,
-	// but before AfterCreate and Decorator, indicating via the argument
-	// whether the operation succeeded.  If this returns an error, the function
-	// is not called.  Almost nobody should use this hook.
-	BeginCreate BeginCreateFunc
-	// AfterCreate implements a further operation to run after a resource is
-	// created and before it is decorated, optional.
-	AfterCreate AfterCreateFunc
-
-	// UpdateStrategy implements resource-specific behavior during updates.
 	UpdateStrategy rest.RESTUpdateStrategy
-	// BeginUpdate is an optional hook that returns a "transaction-like"
-	// commit/revert function which will be called at the end of the operation,
-	// but before AfterUpdate and Decorator, indicating via the argument
-	// whether the operation succeeded.  If this returns an error, the function
-	// is not called.  Almost nobody should use this hook.
-	BeginUpdate BeginUpdateFunc
-	// AfterUpdate implements a further operation to run after a resource is
-	// updated and before it is decorated, optional.
-	AfterUpdate AfterUpdateFunc
+	BeginUpdate    BeginUpdateFunc
+	AfterUpdate    AfterUpdateFunc
 
-	// DeleteStrategy implements resource-specific behavior during deletion.
 	DeleteStrategy rest.RESTDeleteStrategy
-	// AfterDelete implements a further operation to run after a resource is
-	// deleted and before it is decorated, optional.
-	AfterDelete AfterDeleteFunc
-	// ReturnDeletedObject determines whether the Store returns the object
-	// that was deleted. Otherwise, return a generic success status response.
-	ReturnDeletedObject bool
-	// ShouldDeleteDuringUpdate is an optional function to determine whether
-	// an update from existing to obj should result in a delete.
-	// If specified, this is checked in addition to standard finalizer,
-	// deletionTimestamp, and deletionGracePeriodSeconds checks.
+	AfterDelete    AfterDeleteFunc
+
+	ReturnDeletedObject bool // 是否返回删除的对象
+	// ShouldDeleteDuringUpdate是一个可选函数，用于确定从obj对象到现有对象的更新是否应该导致删除。
+	// 如果指定了，除了标准的终结器、deletionTimestamp和deletionGracePeriodSeconds检查外，还会检查这个。
 	ShouldDeleteDuringUpdate func(ctx context.Context, key string, obj, existing runtime.Object) bool
 
-	// TableConvertor is an optional interface for transforming items or lists
-	// of items into tabular output. If unset, the default will be used.
-	TableConvertor rest.TableConvertor
+	TableConvertor rest.TableConvertor // 输出格式转换
 
-	// ResetFieldsStrategy provides the fields reset by the strategy that
-	// should not be modified by the user.
-	ResetFieldsStrategy rest.ResetFieldsStrategy
+	ResetFieldsStrategy rest.ResetFieldsStrategy // 提供被策略重置的字段，用户不应该修改这些字段。
+	Storage             DryRunnableStorage       // 底层真实存储
+	StorageVersioner    runtime.GroupVersioner
 
-	// Storage is the interface for the underlying storage for the
-	// resource. It is wrapped into a "DryRunnableStorage" that will
-	// either pass-through or simply dry-run.
-	Storage DryRunnableStorage
-	// StorageVersioner outputs the <group/version/kind> an object will be
-	// converted to before persisted in etcd, given a list of possible
-	// kinds of the object.
-	// If the StorageVersioner is nil, apiserver will leave the
-	// storageVersionHash as empty in the discovery document.
-	StorageVersioner runtime.GroupVersioner
-
-	// DestroyFunc cleans up clients used by the underlying Storage; optional.
-	// If set, DestroyFunc has to be implemented in thread-safe way and
-	// be prepared for being called more than once.
+	// DestroyFunc 清除底层存储使用的客户端;可选的。
+	// 如果设置了，DestroyFunc必须以线程安全的方式实现，并为多次调用做好准备。
 	DestroyFunc func()
 }
 
@@ -752,13 +660,13 @@ func (e *Store) Get(ctx context.Context, name string, options *metav1.GetOptions
 	return obj, nil
 }
 
-// qualifiedResourceFromContext attempts to retrieve a GroupResource from the context's request info.
-// If the context has no request info, DefaultQualifiedResource is used.
+// qualifiedResourceFromContext 尝试从上下文的请求信息中检索GroupResource。
+// 如果上下文没有请求信息，则使用DefaultQualifiedResource。
 func (e *Store) qualifiedResourceFromContext(ctx context.Context) schema.GroupResource {
 	if info, ok := genericapirequest.RequestInfoFrom(ctx); ok {
 		return schema.GroupResource{Group: info.APIGroup, Resource: info.Resource}
 	}
-	// some implementations access storage directly and thus the context has no RequestInfo
+	// 一些实现直接访问存储，因此上下文没有RequestInfo
 	return e.DefaultQualifiedResource
 }
 
@@ -1027,7 +935,7 @@ func (e *Store) Delete(ctx context.Context, name string, deleteValidation rest.V
 		return nil, false, err
 	}
 	obj := e.NewFunc()
-	qualifiedResource := e.qualifiedResourceFromContext(ctx)
+	qualifiedResource := e.qualifiedResourceFromContext(ctx) // 复数名
 	if err = e.Storage.Get(ctx, key, storage.GetOptions{}, obj); err != nil {
 		return nil, false, storeerr.InterpretDeleteError(err, qualifiedResource, name)
 	}

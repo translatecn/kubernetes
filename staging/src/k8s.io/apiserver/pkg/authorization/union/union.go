@@ -41,7 +41,6 @@ func New(authorizationHandlers ...authorizer.Authorizer) authorizer.Authorizer {
 	return unionAuthzHandler(authorizationHandlers)
 }
 
-// Authorizes against a chain of authorizer.Authorizer objects and returns nil if successful and returns error if unsuccessful
 func (authzHandler unionAuthzHandler) Authorize(ctx context.Context, a authorizer.Attributes) (authorizer.Decision, string, error) {
 	var (
 		errlist    []error

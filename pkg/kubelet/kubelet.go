@@ -637,7 +637,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.workQueue = queue.NewBasicWorkQueue(klet.clock)
 	klet.podWorkers = newPodWorkers( // 针对pod进行操作的
 		klet.syncPod,
-		klet.syncTerminatingPod,
+		klet.syncTerminatingPod, // 设置终止一个pod的函数
 		klet.syncTerminatedPod,
 
 		kubeDeps.Recorder,
@@ -833,8 +833,18 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.backOff = flowcontrol.NewBackOff(backOffPeriod, MaxContainerBackOff)
 
 	// setup eviction manager
-	evictionManager, evictionAdmitHandler := eviction.NewManager(klet.resourceAnalyzer, evictionConfig,
-		killPodNow(klet.podWorkers, kubeDeps.Recorder), klet.podManager.GetMirrorPodByPod, klet.imageManager, klet.containerGC, kubeDeps.Recorder, nodeRef, klet.clock, kubeCfg.LocalStorageCapacityIsolation)
+	evictionManager, evictionAdmitHandler := eviction.NewManager(
+		klet.resourceAnalyzer,
+		evictionConfig,
+		killPodNow(klet.podWorkers, kubeDeps.Recorder), // ✅
+		klet.podManager.GetMirrorPodByPod,
+		klet.imageManager,
+		klet.containerGC,
+		kubeDeps.Recorder,
+		nodeRef,
+		klet.clock,
+		kubeCfg.LocalStorageCapacityIsolation,
+	)
 
 	klet.evictionManager = evictionManager
 	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler)
@@ -940,9 +950,7 @@ type Kubelet struct {
 
 	// onRepeatedHeartbeatFailure is called when a heartbeat operation fails more than once. optional.
 	onRepeatedHeartbeatFailure func()
-
-	// podWorkers handle syncing Pods in response to events.
-	podWorkers PodWorkers
+	podWorkers                 PodWorkers // 同步pod 状态到events
 
 	// resyncInterval is the interval between periodic full reconciliations of
 	// pods on this node.
@@ -1851,9 +1859,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 	return false, nil
 }
 
-// syncTerminatingPod is expected to terminate all running containers in a pod. Once this method
-// returns without error, the pod's local state can be safely cleaned up. If runningPod is passed,
-// we perform no status updates.
+// syncTerminatingPod 应终止pod中的所有运行容器。
+// 一旦此方法在没有错误的情况下返回，就可以安全地清理pod的本地状态。如果传递了runningPod，则我们不执行状态更新。
 func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, runningPod *kubecontainer.Pod, gracePeriod *int64, podStatusFn func(*v1.PodStatus)) error {
 	// TODO(#113606): connect this with the incoming context parameter, which comes from the pod worker.
 	// Currently, using that context causes test failures.
@@ -1861,9 +1868,7 @@ func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus 
 	klog.V(4).InfoS("syncTerminatingPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer klog.V(4).InfoS("syncTerminatingPod exit", "pod", klog.KObj(pod), "podUID", pod.UID)
 
-	// when we receive a runtime only pod (runningPod != nil) we don't need to update the status
-	// manager or refresh the status of the cache, because a successful killPod will ensure we do
-	// not get invoked again
+	// 当我们收到仅运行时的pod（runningPod！= nil）时，我们不需要更新状态管理器或刷新缓存的状态，因为成功的killPod将确保我们不会再次被调用。
 	if runningPod != nil {
 		// we kill the pod with the specified grace period since this is a termination
 		if gracePeriod != nil {
@@ -1871,7 +1876,7 @@ func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus 
 		} else {
 			klog.V(4).InfoS("Pod terminating with grace period", "pod", klog.KObj(pod), "podUID", pod.UID, "gracePeriod", nil)
 		}
-		if err := kl.killPod(ctx, pod, *runningPod, gracePeriod); err != nil {
+		if err := kl.killPod(ctx, pod, *runningPod, gracePeriod); err != nil { // 会调用CRI
 			kl.recorder.Eventf(pod, v1.EventTypeWarning, events.FailedToKillPod, "error killing pod: %v", err)
 			// there was an error killing the pod, so we return that error directly
 			utilruntime.HandleError(err)
@@ -1881,7 +1886,7 @@ func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus 
 		return nil
 	}
 
-	apiPodStatus := kl.generateAPIPodStatus(pod, podStatus)
+	apiPodStatus := kl.generateAPIPodStatus(pod, podStatus) // 设置 oom 这一类的消息
 	if podStatusFn != nil {
 		podStatusFn(&apiPodStatus)
 	}
@@ -2055,7 +2060,7 @@ func (kl *Kubelet) deletePod(pod *v1.Pod) error {
 		return fmt.Errorf("skipping delete because sources aren't ready yet")
 	}
 	klog.V(3).InfoS("Pod has been deleted and must be killed", "pod", klog.KObj(pod), "podUID", pod.UID)
-	kl.podWorkers.UpdatePod(UpdatePodOptions{
+	kl.podWorkers.UpdatePod(UpdatePodOptions{ // deletePod
 		Pod:        pod,
 		UpdateType: kubetypes.SyncPodKill,
 	})
@@ -2311,7 +2316,7 @@ func handleProbeSync(kl *Kubelet, update proberesults.Update, handler SyncHandle
 // If the pod has completed termination, dispatchWork will perform no action.
 func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
 	// Run the sync in an async worker.
-	kl.podWorkers.UpdatePod(UpdatePodOptions{
+	kl.podWorkers.UpdatePod(UpdatePodOptions{ // dispatchWork
 		Pod:        pod,
 		MirrorPod:  mirrorPod,
 		UpdateType: syncType,

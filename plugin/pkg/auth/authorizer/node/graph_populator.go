@@ -33,7 +33,7 @@ type graphPopulator struct {
 	graph *Graph
 }
 
-func AddGraphEventHandlers(
+func AddGraphEventHandlers( // ✅
 	graph *Graph,
 	nodes corev1informers.NodeInformer,
 	pods corev1informers.PodInformer,

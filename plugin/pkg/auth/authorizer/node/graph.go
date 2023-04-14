@@ -82,10 +82,8 @@ type Graph struct {
 	graph *simple.DirectedAcyclicGraph
 	// vertices is a map of type -> namespace -> name -> vertex
 	vertices map[vertexType]namespaceVertexMapping
-
 	// destinationEdgeIndex is a map of vertex -> set of destination IDs
-	destinationEdgeIndex map[int]*intSet
-	// destinationEdgeThreshold is the minimum number of distinct destination IDs at which to maintain an index
+	destinationEdgeIndex     map[int]*intSet
 	destinationEdgeThreshold int
 }
 
@@ -97,13 +95,10 @@ type nameVertexMapping map[string]*namedVertex
 
 func NewGraph() *Graph {
 	return &Graph{
-		vertices: map[vertexType]namespaceVertexMapping{},
-		graph:    simple.NewDirectedAcyclicGraph(0, 0),
-
-		destinationEdgeIndex: map[int]*intSet{},
-		// experimentally determined to be the point at which iteration adds an order of magnitude to the authz check.
-		// since maintaining indexes costs time/memory while processing graph changes, we don't want to make this too low.
-		destinationEdgeThreshold: 200,
+		vertices:                 map[vertexType]namespaceVertexMapping{},
+		graph:                    simple.NewDirectedAcyclicGraph(0, 0),
+		destinationEdgeIndex:     map[int]*intSet{},
+		destinationEdgeThreshold: 200, // 迭代多少次检查一次
 	}
 }
 
