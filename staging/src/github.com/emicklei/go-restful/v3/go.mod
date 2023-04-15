@@ -2,7 +2,6 @@ module github.com/emicklei/go-restful/v3
 
 go 1.13
 
-
 require (
 	github.com/emicklei/go-restful v2.16.0+incompatible
 	github.com/emicklei/go-restful-swagger12 v0.0.0-20201014110547-68ccff494617

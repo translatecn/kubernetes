@@ -138,13 +138,12 @@ func GetResourceRequestQuantity(pod *v1.Pod, resourceName v1.ResourceName) resou
 	for _, container := range pod.Spec.InitContainers {
 		if rQuantity, ok := container.Resources.Requests[resourceName]; ok {
 			if requestQuantity.Cmp(rQuantity) < 0 {
+				//ToDo why? 意味着init 是一个接着一个启动的么？
 				requestQuantity = rQuantity.DeepCopy()
 			}
 		}
 	}
-
-	// Add overhead for running a pod
-	// to the total requests if the resource total is non-zero
+	// 如果资源总数不为零，则将运行pod的开销添加到总请求中
 	if pod.Spec.Overhead != nil {
 		if podOverhead, ok := pod.Spec.Overhead[resourceName]; ok && !requestQuantity.IsZero() {
 			requestQuantity.Add(podOverhead)

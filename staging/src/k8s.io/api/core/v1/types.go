@@ -3297,12 +3297,10 @@ type PodSpec struct {
 	// Defaults to PreemptLowerPriority if unset.
 	// +optional
 	PreemptionPolicy *PreemptionPolicy `json:"preemptionPolicy,omitempty" protobuf:"bytes,31,opt,name=preemptionPolicy"`
-	// Overhead represents the resource overhead associated with running a pod for a given RuntimeClass.
-	// This field will be autopopulated at admission time by the RuntimeClass admission controller. If
-	// the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests.
-	// The RuntimeClass admission controller will reject Pod create requests which have the overhead already
-	// set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value
-	// defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero.
+	// Overhead 表示与运行给定RuntimeClass的pod相关的资源开销。
+	// 该字段将由RuntimeClass准入控制器在准入时自动填充。如果启用了RuntimeClass准入控制器，则在Pod创建请求中不能设置开销。
+	// RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求。
+	// 如果在PodSpec中配置并选择了RuntimeClass，则开销将被设置为相应的RuntimeClass中定义的值，否则它将保持未设置并视为零。
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md
 	// +optional
 	Overhead ResourceList `json:"overhead,omitempty" protobuf:"bytes,32,opt,name=overhead"`

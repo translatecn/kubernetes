@@ -1032,7 +1032,6 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.EmptyDirVolumeSource": {
-        "description": "Represents an empty directory for a pod. Empty directory volumes support ownership management and SELinux relabeling.",
         "properties": {
           "medium": {
             "description": "存储介质类型，empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
@@ -1044,7 +1043,7 @@
                 "$ref": "#/components/schemas/io.k8s.apimachinery.pkg.api.resource.Quantity"
               }
             ],
-            "description": "sizeLimit is the total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir"
+            "description": "sizeelimit是这个EmptyDir卷所需的本地存储总量。 大小限制也适用于内存介质。 内存介质EmptyDir的最大使用量将是这里指定的SizeLimit和pod中所有容器的内存限制之和之间的最小值。 默认为nil，这意味着限制是未定义的。 More info: http://kubernetes.io/docs/user-guide/volumes#emptydir"
           }
         },
         "type": "object"
@@ -2534,7 +2533,7 @@
               ],
               "default": {}
             },
-            "description": "Overhead represents the resource overhead associated with running a pod for a given RuntimeClass. This field will be autopopulated at admission time by the RuntimeClass admission controller. If the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests. The RuntimeClass admission controller will reject Pod create requests which have the overhead already set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
+            "description": "Overhead表示与运行给定RuntimeClass的pod相关的资源开销。 该字段将由RuntimeClass准入控制器在准入时自动填充。如果启用了RuntimeClass准入控制器，则在Pod创建请求中不能设置开销。 RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求。 如果在PodSpec中配置并选择了RuntimeClass，则开销将被设置为相应的RuntimeClass中定义的值，否则它将保持未设置并视为零。 More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
             "type": "object"
           },
           "preemptionPolicy": {
@@ -2542,7 +2541,7 @@
             "type": "string"
           },
           "priority": {
-            "description": "The priority value. Various system components use this field to find the priority of the pod. When Priority Admission Controller is enabled, it prevents users from setting this field. The admission controller populates this field from PriorityClassName. The higher the value, the higher the priority.",
+            "description": "当启用优先级准入控制器时，它会阻止用户设置此字段。准入控制器会从 PriorityClassName 中填充此字段。",
             "format": "int32",
             "type": "integer"
           },
@@ -3285,7 +3284,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.SeccompProfile"
               }
             ],
-            "description": "T\t//此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数iner. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows."
+            "description": "此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数"
           },
           "windowsOptions": {
             "allOf": [
@@ -3397,7 +3396,7 @@
         "description": "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
         "properties": {
           "effect": {
-            "description": "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
+            "description": "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
             "type": "string"
           },
           "key": {
@@ -3405,16 +3404,16 @@
             "type": "string"
           },
           "operator": {
-            "description": "Operator k,v的关系[Exists,Equal],默认Equal. ",
+            "description": "Operator k,v的关系[Exists,Equal],默认Equal.\n\n",
             "type": "string"
           },
           "tolerationSeconds": {
-            "description": "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
+            "description": "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system. 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
             "format": "int64",
             "type": "integer"
           },
           "value": {
-            "description": "Value 污点的值. 如果operator是Exists,这应该是空.",
+            "description": "Value 污点的值，如果operator是Exists,这应该是空.",
             "type": "string"
           }
         },
@@ -3650,7 +3649,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.GitRepoVolumeSource"
               }
             ],
-            "description": "GitRepo 表示特定版本的 Git 存储库。已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。"
+            "description": "GitRepo 表示特定版本的 Git 存储库。 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。"
           },
           "glusterfs": {
             "allOf": [
@@ -3678,7 +3677,7 @@
           },
           "name": {
             "default": "",
-            "description": "卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+            "description": "卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。 More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
             "type": "string"
           },
           "nfs": {
@@ -4688,7 +4687,6 @@
         "type": "object"
       },
       "io.k8s.apimachinery.pkg.apis.meta.v1.Status": {
-        "description": "Status is a return value for calls that don't return other objects.",
         "properties": {
           "apiVersion": {
             "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

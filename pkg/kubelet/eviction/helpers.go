@@ -343,8 +343,7 @@ func processUsage(processStats *statsapi.ProcessStats) uint64 {
 func localVolumeNames(pod *v1.Pod) []string {
 	result := []string{}
 	for _, volume := range pod.Spec.Volumes {
-		if volume.HostPath != nil ||
-			volumeutils.IsLocalEphemeralVolume(volume) {
+		if volume.HostPath != nil || volumeutils.IsLocalEphemeralVolume(volume) { // configmap、GitRepo、本地文件型 empty dir
 			result = append(result, volume.Name)
 		}
 	}
@@ -363,25 +362,6 @@ func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1
 		if hasFsStatsType(statsToMeasure, fsStatsLogs) {
 			disk.Add(*diskUsage(container.Logs))
 			inodes.Add(*inodeUsage(container.Logs))
-		}
-	}
-	return v1.ResourceList{
-		v1.ResourceEphemeralStorage: disk,
-		resourceInodes:              inodes,
-	}
-}
-
-// podLocalVolumeUsage aggregates pod local volumes disk usage and inode consumption for the specified stats to measure.
-func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.ResourceList {
-	disk := resource.Quantity{Format: resource.BinarySI}
-	inodes := resource.Quantity{Format: resource.DecimalSI}
-	for _, volumeName := range volumeNames {
-		for _, volumeStats := range podStats.VolumeStats {
-			if volumeStats.Name == volumeName {
-				disk.Add(*diskUsage(&volumeStats.FsStats))
-				inodes.Add(*inodeUsage(&volumeStats.FsStats))
-				break
-			}
 		}
 	}
 	return v1.ResourceList{
@@ -409,6 +389,25 @@ func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsSt
 		v1.ResourceEphemeralStorage: disk,
 		resourceInodes:              inodes,
 	}, nil
+}
+
+// podLocalVolumeUsage 聚合要度量的指定统计数据的pod本地卷、磁盘使用情况和inode消耗。
+func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.ResourceList {
+	disk := resource.Quantity{Format: resource.BinarySI}
+	inodes := resource.Quantity{Format: resource.DecimalSI}
+	for _, volumeName := range volumeNames {
+		for _, volumeStats := range podStats.VolumeStats {
+			if volumeStats.Name == volumeName {
+				disk.Add(*diskUsage(&volumeStats.FsStats))
+				inodes.Add(*inodeUsage(&volumeStats.FsStats))
+				break
+			}
+		}
+	}
+	return v1.ResourceList{
+		v1.ResourceEphemeralStorage: disk,
+		resourceInodes:              inodes,
+	}
 }
 
 // formatThreshold formats a threshold for logging.
@@ -559,7 +558,11 @@ func process(stats statsFunc) cmpFunc {
 }
 
 // exceedDiskRequests 比较pod的磁盘使用率是否超过它们的请求
-func exceedDiskRequests(stats statsFunc, fsStatsToMeasure []fsStatsType, diskResource v1.ResourceName) cmpFunc {
+func exceedDiskRequests(
+	stats statsFunc,
+	fsStatsToMeasure []fsStatsType, // 测量节点状态
+	diskResource v1.ResourceName,
+) cmpFunc {
 	return func(p1, p2 *v1.Pod) int {
 		var _ statsFunc = cachedStatsFunc(nil)
 		p1Stats, p1Found := stats(p1)
@@ -575,7 +578,7 @@ func exceedDiskRequests(stats statsFunc, fsStatsToMeasure []fsStatsType, diskRes
 			// prioritize evicting the pod which had an error getting stats
 			return cmpBool(p1Err != nil, p2Err != nil)
 		}
-
+		// 用于比较的类型
 		p1Disk := p1Usage[diskResource]
 		p2Disk := p2Usage[diskResource]
 		p1ExceedsRequests := p1Disk.Cmp(v1resource.GetResourceRequestQuantity(p1, diskResource)) == 1
@@ -637,11 +640,18 @@ func rankPIDPressure(pods []*v1.Pod, stats statsFunc) {
 }
 
 // rankDiskPressureFunc 返回一个 rankFunc，用于测量指定的文件系统统计信息。
-func rankDiskPressureFunc(fsStatsToMeasure []fsStatsType, diskResource v1.ResourceName) rankFunc {
+func rankDiskPressureFunc(
+	fsStatsToMeasure []fsStatsType, // 测量节点状态
+	diskResource v1.ResourceName,
+) rankFunc {
 	return func(pods []*v1.Pod, stats statsFunc) {
 		var _ statsFunc = cachedStatsFunc(nil)
 		orderedBy(
-			exceedDiskRequests(stats, fsStatsToMeasure, diskResource), //
+			exceedDiskRequests(
+				stats,            //
+				fsStatsToMeasure, // 测量节点状态
+				diskResource,     // 用于比较的类型
+			), //
 			priority, // 比较两个pod的优先级
 			disk(stats, fsStatsToMeasure, diskResource), //
 		).Sort(pods)
@@ -959,8 +969,8 @@ func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 		evictionapi.SignalPIDAvailable:               rankPIDPressure,
 	}
 	// usage of an imagefs is optional
-	if withImageFs {
-		// with an imagefs, nodefs pod rank func for eviction only includes logs and local volumes
+	if withImageFs { // 使用了不用的磁盘         imagefs 使用了单独
+		// 统计数组里边的子项，
 		signalToRankFunc[evictionapi.SignalNodeFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
 		signalToRankFunc[evictionapi.SignalNodeFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
 		// with an imagefs, imagefs pod rank func for eviction only includes rootfs

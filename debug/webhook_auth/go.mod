@@ -8,6 +8,7 @@ require (
 	github.com/google/go-github/v33 v33.0.0
 	golang.org/x/oauth2 v0.7.0
 	k8s.io/api v0.26.3
+	k8s.io/apimachinery v0.26.3
 	k8s.io/klog/v2 v2.80.1
 )
 
@@ -29,7 +30,6 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apimachinery v0.26.3 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect

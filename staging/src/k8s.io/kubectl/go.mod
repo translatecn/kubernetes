@@ -90,8 +90,6 @@ require (
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 )
 
-
-
 replace (
 	k8s.io/api => ../api
 	k8s.io/apimachinery => ../apimachinery

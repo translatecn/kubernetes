@@ -5,7 +5,7 @@
         "description": "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
         "properties": {
           "effect": {
-            "description": "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
+            "description": "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
             "type": "string"
           },
           "key": {
@@ -13,16 +13,16 @@
             "type": "string"
           },
           "operator": {
-            "description": "Operator k,v的关系[Exists,Equal],默认Equal. ",
+            "description": "Operator k,v的关系[Exists,Equal],默认Equal.\n\n",
             "type": "string"
           },
           "tolerationSeconds": {
-            "description": "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
+            "description": "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system. 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
             "format": "int64",
             "type": "integer"
           },
           "value": {
-            "description": "Value 污点的值. 如果operator是Exists,这应该是空.",
+            "description": "Value 污点的值，如果operator是Exists,这应该是空.",
             "type": "string"
           }
         },
@@ -862,7 +862,6 @@
         "type": "object"
       },
       "io.k8s.apimachinery.pkg.apis.meta.v1.Status": {
-        "description": "Status is a return value for calls that don't return other objects.",
         "properties": {
           "apiVersion": {
             "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

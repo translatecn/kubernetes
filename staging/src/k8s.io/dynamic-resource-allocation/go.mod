@@ -16,8 +16,6 @@ require (
 	k8s.io/kubelet v0.0.0
 )
 
-
-
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
