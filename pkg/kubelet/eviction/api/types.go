@@ -26,8 +26,9 @@ import (
 type Signal string
 
 const (
-	// SignalMemoryAvailable is memory available (i.e. capacity - workingSet), in bytes.
-	SignalMemoryAvailable Signal = "memory.available"
+	SignalMemoryAvailable            Signal = "memory.available"
+	SignalAllocatableMemoryAvailable Signal = "allocatableMemory.available"
+
 	// SignalNodeFsAvailable is amount of storage available on filesystem that kubelet uses for volumes, daemon logs, etc.
 	SignalNodeFsAvailable Signal = "nodefs.available"
 	// SignalNodeFsInodesFree is amount of inodes available on filesystem that kubelet uses for volumes, daemon logs, etc.
@@ -36,8 +37,6 @@ const (
 	SignalImageFsAvailable Signal = "imagefs.available"
 	// SignalImageFsInodesFree is amount of inodes available on filesystem that container runtime uses for storing images and container writable layers.
 	SignalImageFsInodesFree Signal = "imagefs.inodesFree"
-	// SignalAllocatableMemoryAvailable is amount of memory available for pod allocation (i.e. allocatable - workingSet (of pods), in bytes.
-	SignalAllocatableMemoryAvailable Signal = "allocatableMemory.available"
 	// SignalPIDAvailable is amount of PID available for pod allocation
 	SignalPIDAvailable Signal = "pid.available"
 )

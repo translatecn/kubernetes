@@ -57,13 +57,13 @@ const (
 	signalEmptyDirFsLimit string = "emptydirfs.limit"
 )
 
-// managerImpl implements Manager
-type managerImpl struct {
+// ManagerImpl implements Manager
+type ManagerImpl struct {
 	clock         clock.WithTicker
 	config        Config
 	killPodFunc   KillPodFunc   // killpod的方法
 	mirrorPodFunc MirrorPodFunc // 获取静态pod的mirror pod 方法
-	imageGC       ImageGC
+	imageGC       ImageGC       // 当node出现diskPressure condition时，imageGC进行unused images删除操作以回收disk space。
 	containerGC   ContainerGC
 	sync.RWMutex
 	nodeConditions               []v1.NodeConditionType   //  当前节点存在的问题集合
@@ -78,16 +78,15 @@ type managerImpl struct {
 	signalToRankFunc          map[evictionapi.Signal]rankFunc         // 定义各Resource进行evict挑选时的排名方法。
 	signalToNodeReclaimFuncs  map[evictionapi.Signal]nodeReclaimFuncs // 定义各Resource进行回收时调用的方法
 	// last observations from synchronize
-	lastObservations      signalObservations
-	dedicatedImageFs      *bool               // 指示imagefs是否位于与rootfs不同的设备上
-	thresholdNotifiers    []ThresholdNotifier // 内存阈值通知器集合
-	thresholdsLastUpdated time.Time           // 上次thresholdNotifiers发通知的时间
-	// whether can support local storage capacity isolation
-	localStorageCapacityIsolation bool
+	lastObservations              signalObservations
+	dedicatedImageFs              *bool               // 指示imagefs是否位于与rootfs不同的设备上
+	thresholdNotifiers            []ThresholdNotifier // 内存阈值通知器集合
+	thresholdsLastUpdated         time.Time           // 上次thresholdNotifiers发通知的时间
+	localStorageCapacityIsolation bool                // 是否支持本地存储容量隔离
 }
 
 // ensure it implements the required interface
-var _ Manager = &managerImpl{}
+var _ Manager = &ManagerImpl{}
 
 // NewManager returns a configured Manager and an associated admission handler to enforce eviction configuration.
 func NewManager(
@@ -102,7 +101,7 @@ func NewManager(
 	clock clock.WithTicker,
 	localStorageCapacityIsolation bool,
 ) (Manager, lifecycle.PodAdmitHandler) {
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                         clock,
 		killPodFunc:                   killPodFunc, // ✅
 		mirrorPodFunc:                 mirrorPodFunc,
@@ -123,7 +122,7 @@ func NewManager(
 
 // Admit 评估一个pod是否可以被允许创建。
 // 用node的压力状态 做pod是否准入的依据，相当于影响调度的结果
-func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
+func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	m.RLock()
 	defer m.RUnlock()
 	if len(m.nodeConditions) == 0 { // 如果 node现在没有压力状态那么准入
@@ -136,12 +135,12 @@ func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	}
 
 	// Conditions other than memory pressure reject all pods
-	//如果当前节点只有内存的压力，那么pod的qos类型为 非BestEffort则准入
+	// 如果当前节点只有内存的压力，那么pod的qos类型为 非 BestEffort[最低] 则准入
 	nodeOnlyHasMemoryPressureCondition := hasNodeCondition(m.nodeConditions, v1.NodeMemoryPressure) && len(m.nodeConditions) == 1
 	if nodeOnlyHasMemoryPressureCondition {
 		notBestEffort := v1.PodQOSBestEffort != v1qos.GetPodQOS(attrs.Pod)
 		if notBestEffort {
-			return lifecycle.PodAdmitResult{Admit: true}
+			return lifecycle.PodAdmitResult{Admit: true} // 低优先级的不让进、高优先级的让进
 		}
 
 		// 如果是BestEffort则要根据它的容忍类型判断
@@ -150,7 +149,7 @@ func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 			Key:    v1.TaintNodeMemoryPressure,
 			Effect: v1.TaintEffectNoSchedule,
 		}) {
-			return lifecycle.PodAdmitResult{Admit: true}
+			return lifecycle.PodAdmitResult{Admit: true} // 低优先级、但是容忍这个污点让进
 		}
 	}
 
@@ -164,12 +163,12 @@ func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 }
 
 // Start 启动控制循环以观察和响应计算资源不足的情况。
-func (m *managerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc, podCleanedUpFunc PodCleanedUpFunc, monitoringInterval time.Duration) {
+func (m *ManagerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc, podCleanedUpFunc PodCleanedUpFunc, monitoringInterval time.Duration) {
 	thresholdHandler := func(message string) {
 		klog.InfoS(message)
 		m.synchronize(diskInfoProvider, podFunc)
 	}
-	if m.config.KernelMemcgNotification {
+	if m.config.KernelMemcgNotification { // 如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。
 		for _, threshold := range m.config.Thresholds {
 			if threshold.Signal == evictionapi.SignalMemoryAvailable || threshold.Signal == evictionapi.SignalAllocatableMemoryAvailable {
 				notifier, err := NewMemoryThresholdNotifier(threshold, m.config.PodCgroupRoot, &CgroupNotifierFactory{}, thresholdHandler)
@@ -196,21 +195,21 @@ func (m *managerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePod
 }
 
 // IsUnderMemoryPressure returns true if the node is under memory pressure.
-func (m *managerImpl) IsUnderMemoryPressure() bool {
+func (m *ManagerImpl) IsUnderMemoryPressure() bool {
 	m.RLock()
 	defer m.RUnlock()
 	return hasNodeCondition(m.nodeConditions, v1.NodeMemoryPressure)
 }
 
 // IsUnderDiskPressure returns true if the node is under disk pressure.
-func (m *managerImpl) IsUnderDiskPressure() bool {
+func (m *ManagerImpl) IsUnderDiskPressure() bool {
 	m.RLock()
 	defer m.RUnlock()
 	return hasNodeCondition(m.nodeConditions, v1.NodeDiskPressure)
 }
 
 // IsUnderPIDPressure returns true if the node is under PID pressure.
-func (m *managerImpl) IsUnderPIDPressure() bool {
+func (m *ManagerImpl) IsUnderPIDPressure() bool {
 	m.RLock()
 	defer m.RUnlock()
 	return hasNodeCondition(m.nodeConditions, v1.NodePIDPressure)
@@ -218,7 +217,7 @@ func (m *managerImpl) IsUnderPIDPressure() bool {
 
 // synchronize 是执行驱逐阈值的主要控制循环。
 // 返回被杀死的pod,如果没有被杀死,则返回nil。
-func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc) []*v1.Pod {
+func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc) []*v1.Pod {
 	ctx := context.Background()
 	// 如果我们没事做,就回去吧
 	thresholds := m.config.Thresholds
@@ -227,16 +226,17 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	}
 
 	klog.V(3).InfoS("Eviction manager: synchronize housekeeping")
-	// 构建排序函数(如果还不知道)
-	// TODO: 是否在cadvisor中有一个函数可以让我们知道全局管家是否已经完成
 	if m.dedicatedImageFs == nil {
+		// 如果imagefs与rootfs在不同的设备上,则返回true。 是否有专用的 image fs
 		hasImageFs, ok := diskInfoProvider.HasDedicatedImageFs(ctx)
 		if ok != nil {
 			return nil
 		}
-		m.dedicatedImageFs = &hasImageFs
-		m.signalToRankFunc = buildSignalToRankFunc(hasImageFs)                                           // 将资源->排名函数。
-		m.signalToNodeReclaimFuncs = buildSignalToNodeReclaimFuncs(m.imageGC, m.containerGC, hasImageFs) // 将资源->如何回收该资源的有序函数列表。
+		m.dedicatedImageFs = &hasImageFs //
+		// 注册各个eviction signal所对应的资源排序方法    // 将资源->排名函数。
+		m.signalToRankFunc = buildSignalToRankFunc(hasImageFs)
+		// 将资源->如何回收该资源的有序函数列表。
+		m.signalToNodeReclaimFuncs = buildSignalToNodeReclaimFuncs(m.imageGC, m.containerGC, hasImageFs)
 	}
 
 	activePods := podFunc()
@@ -390,7 +390,7 @@ func (m *managerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	return nil
 }
 
-func (m *managerImpl) waitForPodsCleanup(podCleanedUpFunc PodCleanedUpFunc, pods []*v1.Pod) {
+func (m *ManagerImpl) waitForPodsCleanup(podCleanedUpFunc PodCleanedUpFunc, pods []*v1.Pod) {
 	timeout := m.clock.NewTimer(podCleanupTimeout)
 	defer timeout.Stop()
 	ticker := m.clock.NewTicker(podCleanupPollFreq)
@@ -415,7 +415,7 @@ func (m *managerImpl) waitForPodsCleanup(podCleanedUpFunc PodCleanedUpFunc, pods
 }
 
 // reclaimNodeLevelResources attempts to reclaim node level resources.  returns true if thresholds were satisfied and no pod eviction is required.
-func (m *managerImpl) reclaimNodeLevelResources(ctx context.Context, signalToReclaim evictionapi.Signal, resourceToReclaim v1.ResourceName) bool {
+func (m *ManagerImpl) reclaimNodeLevelResources(ctx context.Context, signalToReclaim evictionapi.Signal, resourceToReclaim v1.ResourceName) bool {
 	nodeReclaimFuncs := m.signalToNodeReclaimFuncs[signalToReclaim]
 	for _, nodeReclaimFunc := range nodeReclaimFuncs {
 		// attempt to reclaim the pressured resource.
@@ -449,7 +449,7 @@ func (m *managerImpl) reclaimNodeLevelResources(ctx context.Context, signalToRec
 
 // localStorageEviction checks the EmptyDir volume usage for each pod and determine whether it exceeds the specified limit and needs
 // to be evicted. It also checks every container in the pod, if the container overlay usage exceeds the limit, the pod will be evicted too.
-func (m *managerImpl) localStorageEviction(pods []*v1.Pod, statsFunc statsFunc) []*v1.Pod {
+func (m *ManagerImpl) localStorageEviction(pods []*v1.Pod, statsFunc statsFunc) []*v1.Pod {
 	evicted := []*v1.Pod{}
 	for _, pod := range pods {
 		podStats, ok := statsFunc(pod)
@@ -475,7 +475,7 @@ func (m *managerImpl) localStorageEviction(pods []*v1.Pod, statsFunc statsFunc) 
 	return evicted
 }
 
-func (m *managerImpl) emptyDirLimitEviction(podStats statsapi.PodStats, pod *v1.Pod) bool {
+func (m *ManagerImpl) emptyDirLimitEviction(podStats statsapi.PodStats, pod *v1.Pod) bool {
 	podVolumeUsed := make(map[string]*resource.Quantity)
 	for _, volume := range podStats.VolumeStats {
 		podVolumeUsed[volume.Name] = resource.NewQuantity(int64(*volume.UsedBytes), resource.BinarySI)
@@ -499,7 +499,7 @@ func (m *managerImpl) emptyDirLimitEviction(podStats statsapi.PodStats, pod *v1.
 	return false
 }
 
-func (m *managerImpl) podEphemeralStorageLimitEviction(podStats statsapi.PodStats, pod *v1.Pod) bool {
+func (m *ManagerImpl) podEphemeralStorageLimitEviction(podStats statsapi.PodStats, pod *v1.Pod) bool {
 	_, podLimits := apiv1resource.PodRequestsAndLimits(pod)
 	_, found := podLimits[v1.ResourceEphemeralStorage]
 	if !found {
@@ -524,7 +524,7 @@ func (m *managerImpl) podEphemeralStorageLimitEviction(podStats statsapi.PodStat
 	return false
 }
 
-func (m *managerImpl) containerEphemeralStorageLimitEviction(podStats statsapi.PodStats, pod *v1.Pod) bool {
+func (m *ManagerImpl) containerEphemeralStorageLimitEviction(podStats statsapi.PodStats, pod *v1.Pod) bool {
 	thresholdsMap := make(map[string]*resource.Quantity)
 	for _, container := range pod.Spec.Containers {
 		ephemeralLimit := container.Resources.Limits.StorageEphemeral()
@@ -552,7 +552,7 @@ func (m *managerImpl) containerEphemeralStorageLimitEviction(podStats statsapi.P
 	return false
 }
 
-func (m *managerImpl) evictPod(pod *v1.Pod, gracePeriodOverride int64, evictMsg string, annotations map[string]string, condition *v1.PodCondition) bool {
+func (m *ManagerImpl) evictPod(pod *v1.Pod, gracePeriodOverride int64, evictMsg string, annotations map[string]string, condition *v1.PodCondition) bool {
 	// If the pod is marked as critical and static, and support for critical pod annotations is enabled,
 	// do not evict such pods. Static pods are not re-admitted after evictions.
 	// https://github.com/kubernetes/kubernetes/issues/40573 has more details.

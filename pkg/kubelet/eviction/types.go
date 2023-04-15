@@ -28,16 +28,12 @@ import (
 	evictionapi "k8s.io/kubernetes/pkg/kubelet/eviction/api"
 )
 
-// fsStatsType defines the types of filesystem stats to collect.
-type fsStatsType string
+type fsStatsType string // 定义要收集的文件系统统计信息的类型。
 
 const (
-	// fsStatsLocalVolumeSource identifies stats for pod local volume sources.
-	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource"
-	// fsStatsLogs identifies stats for pod logs.
-	fsStatsLogs fsStatsType = "logs"
-	// fsStatsRoot identifies stats for pod container writable layers.
-	fsStatsRoot fsStatsType = "root"
+	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息。
+	fsStatsLogs              fsStatsType = "logs"              //   pod 日志的统计信息
+	fsStatsRoot              fsStatsType = "root"              //   pod 容器可写层的统计信息
 )
 
 // Config holds information about how eviction is configured.
@@ -47,8 +43,7 @@ type Config struct {
 	// Maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
 	MaxPodGracePeriodSeconds int64
 	Thresholds               []evictionapi.Threshold // 定义被监控的条件集,以触发驱逐。
-	// KernelMemcgNotification if true will integrate with the kernel memcg notification to determine if memory thresholds are crossed.
-	KernelMemcgNotification bool
+	KernelMemcgNotification  bool                    // 如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。
 	// PodCgroupRoot is the cgroup which contains all pods.
 	PodCgroupRoot string
 }

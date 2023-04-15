@@ -65,7 +65,7 @@ type VolumeSource struct {
 	// mount host directories as read/write.
 	// +optional
 	HostPath *HostPathVolumeSource
-	// EmptyDir represents a temporary directory that shares a pod's lifetime.
+	// emptyDir 表示一个临时目录，该目录与 pod 的生命周期共享。
 	// +optional
 	EmptyDir *EmptyDirVolumeSource
 	// GCEPersistentDisk represents a GCE Disk resource that is attached to a
@@ -76,10 +76,9 @@ type VolumeSource struct {
 	// kubelet's host machine and then exposed to the pod.
 	// +optional
 	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource
-	// GitRepo represents a git repository at a particular revision.
-	// DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an
-	// EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir
-	// into the Pod's container.
+	// GitRepo 表示特定版本的 Git 存储库。
+	// 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。
+
 	// +optional
 	GitRepo *GitRepoVolumeSource
 	// Secret represents a secret that should populate this volume.

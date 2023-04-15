@@ -48,9 +48,8 @@ const (
 	// podEphemeralStorageMessageFmt provides additional information for pods which have exceeded their ES limit
 	podEphemeralStorageMessageFmt = "Pod ephemeral local storage usage exceeds the total limit of containers %s. "
 	// emptyDirMessageFmt provides additional information for empty-dir volumes which have exceeded their size limit
-	emptyDirMessageFmt = "Usage of EmptyDir volume %q exceeds the limit %q. "
-	// inodes, number. internal to this module, used to account for local disk inode consumption.
-	resourceInodes v1.ResourceName = "inodes"
+	emptyDirMessageFmt                 = "Usage of EmptyDir volume %q exceeds the limit %q. "
+	resourceInodes     v1.ResourceName = "inodes" // inodes 是一个数字，用于在此模块内部计算本地磁盘的 inode 消耗。
 	// resourcePids, number. internal to this module, used to account for local pid consumption.
 	resourcePids v1.ResourceName = "pids"
 	// OffendingContainersKey is the key in eviction event annotations for the list of container names which exceeded their requests
@@ -352,7 +351,7 @@ func localVolumeNames(pod *v1.Pod) []string {
 	return result
 }
 
-// containerUsage aggregates container disk usage and inode consumption for the specified stats to measure.
+// containerUsage 聚合指定统计信息的容器磁盘使用量和 inode 消耗。
 func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1.ResourceList {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
@@ -391,16 +390,16 @@ func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.Re
 	}
 }
 
-// podDiskUsage aggregates pod disk usage and inode consumption for the specified stats to measure.
+// podDiskUsage 聚合指定统计信息的 pod 磁盘使用量和 inode 消耗。
 func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsStatsType) (v1.ResourceList, error) {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
 
-	containerUsageList := containerUsage(podStats, statsToMeasure)
+	containerUsageList := containerUsage(podStats, statsToMeasure) // fsStatsRoot、fsStatsLogs 只会统计这两项
 	disk.Add(containerUsageList[v1.ResourceEphemeralStorage])
 	inodes.Add(containerUsageList[resourceInodes])
 
-	if hasFsStatsType(statsToMeasure, fsStatsLocalVolumeSource) {
+	if hasFsStatsType(statsToMeasure, fsStatsLocalVolumeSource) { // fsStatsLocalVolumeSource 统计项
 		volumeNames := localVolumeNames(pod)
 		podLocalVolumeUsageList := podLocalVolumeUsage(volumeNames, podStats)
 		disk.Add(podLocalVolumeUsageList[v1.ResourceEphemeralStorage])
@@ -417,7 +416,7 @@ func formatThreshold(threshold evictionapi.Threshold) string {
 	return fmt.Sprintf("threshold(signal=%v, operator=%v, value=%v, gracePeriod=%v)", threshold.Signal, threshold.Operator, evictionapi.ThresholdValue(threshold.Value), threshold.GracePeriod)
 }
 
-// cachedStatsFunc returns a statsFunc based on the provided pod stats.
+// cachedStatsFunc 返回 构建针对pod统计信息的函数
 func cachedStatsFunc(podStats []statsapi.PodStats) statsFunc {
 	uid2PodStats := map[string]statsapi.PodStats{}
 	for i := range podStats {
@@ -559,9 +558,10 @@ func process(stats statsFunc) cmpFunc {
 	}
 }
 
-// exceedDiskRequests compares whether or not pods' disk usage exceeds their requests
+// exceedDiskRequests 比较pod的磁盘使用率是否超过它们的请求
 func exceedDiskRequests(stats statsFunc, fsStatsToMeasure []fsStatsType, diskResource v1.ResourceName) cmpFunc {
 	return func(p1, p2 *v1.Pod) int {
+		var _ statsFunc = cachedStatsFunc(nil)
 		p1Stats, p1Found := stats(p1)
 		p2Stats, p2Found := stats(p2)
 		if !p1Found || !p2Found {
@@ -636,10 +636,15 @@ func rankPIDPressure(pods []*v1.Pod, stats statsFunc) {
 	orderedBy(priority, process(stats)).Sort(pods)
 }
 
-// rankDiskPressureFunc returns a rankFunc that measures the specified fs stats.
+// rankDiskPressureFunc 返回一个 rankFunc，用于测量指定的文件系统统计信息。
 func rankDiskPressureFunc(fsStatsToMeasure []fsStatsType, diskResource v1.ResourceName) rankFunc {
 	return func(pods []*v1.Pod, stats statsFunc) {
-		orderedBy(exceedDiskRequests(stats, fsStatsToMeasure, diskResource), priority, disk(stats, fsStatsToMeasure, diskResource)).Sort(pods)
+		var _ statsFunc = cachedStatsFunc(nil)
+		orderedBy(
+			exceedDiskRequests(stats, fsStatsToMeasure, diskResource), //
+			priority, // 比较两个pod的优先级
+			disk(stats, fsStatsToMeasure, diskResource), //
+		).Sort(pods)
 	}
 }
 
@@ -657,7 +662,7 @@ func (a byEvictionPriority) Less(i, j int) bool {
 
 // makeSignalObservations derives observations using the specified summary provider.
 func makeSignalObservations(summary *statsapi.Summary) (signalObservations, statsFunc) {
-	// build the function to work against for pod stats
+	// 构建针对pod统计信息的函数
 	statsFunc := cachedStatsFunc(summary.Pods)
 	// build an evaluation context for current eviction signals
 	result := signalObservations{}
@@ -946,7 +951,7 @@ func isAllocatableEvictionThreshold(threshold evictionapi.Threshold) bool {
 	return threshold.Signal == evictionapi.SignalAllocatableMemoryAvailable
 }
 
-// buildSignalToRankFunc returns ranking functions associated with resources
+// buildSignalToRankFunc 注册各个eviction signal所对应的资源排序方法
 func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 	signalToRankFunc := map[evictionapi.Signal]rankFunc{
 		evictionapi.SignalMemoryAvailable:            rankMemoryPressure,

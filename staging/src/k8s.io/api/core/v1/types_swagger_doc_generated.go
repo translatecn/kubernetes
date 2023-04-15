@@ -492,7 +492,7 @@ func (DownwardAPIVolumeSource) SwaggerDoc() map[string]string {
 
 var map_EmptyDirVolumeSource = map[string]string{
 	"":          "Represents an empty directory for a pod. Empty directory volumes support ownership management and SELinux relabeling.",
-	"medium":    "medium represents what type of storage medium should back this directory. The default is \"\" which means to use the node's default medium. Must be an empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
+	"medium":    "存储介质类型，empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
 	"sizeLimit": "sizeLimit is the total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir",
 }
 
@@ -1664,7 +1664,7 @@ func (PodSignature) SwaggerDoc() map[string]string {
 
 var map_PodSpec = map[string]string{
 	"":                              "PodSpec is a description of a pod.",
-	"volumes":                       "List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes",
+	"volumes":                       "可以由该 pod 的容器挂载的卷的列表. More info: https://kubernetes.io/docs/concepts/storage/volumes",
 	"initContainers":                "List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/",
 	"containers":                    "List of containers belonging to the pod. Containers cannot currently be added or removed. There must be at least one container in a Pod. Cannot be updated.",
 	"ephemeralContainers":           "List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.",
@@ -2481,7 +2481,7 @@ func (TypedObjectReference) SwaggerDoc() map[string]string {
 
 var map_Volume = map[string]string{
 	"":     "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
-	"name": "name of the volume. Must be a DNS_LABEL and unique within the pod. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+	"name": "卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
 }
 
 func (Volume) SwaggerDoc() map[string]string {
@@ -2539,7 +2539,7 @@ var map_VolumeSource = map[string]string{
 	"emptyDir":              "emptyDir represents a temporary directory that shares a pod's lifetime. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
 	"gcePersistentDisk":     "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 	"awsElasticBlockStore":  "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
-	"gitRepo":               "gitRepo represents a git repository at a particular revision. DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container.",
+	"gitRepo":               "GitRepo 表示特定版本的 Git 存储库。已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。",
 	"secret":                "secret represents a secret that should populate this volume. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret",
 	"nfs":                   "nfs represents an NFS mount on the host that shares a pod's lifetime More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs",
 	"iscsi":                 "iscsi represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://examples.k8s.io/volumes/iscsi/README.md",

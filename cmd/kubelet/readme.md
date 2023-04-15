@@ -22,3 +22,10 @@ BestEffort（优先级最低）
 Burstable
 Guaranteed（优先级最高）
 ```
+
+#### rootfs 与 imagefs的区别
+```
+在 Kubernetes 中，rootfs 和 imagefs 是指容器的两个不同的文件系统。
+rootfs 是容器的根文件系统，是容器中所有文件和目录的基础。它通常是一个只读的文件系统，其中包含了容器镜像的基本文件和目录结构。
+imagefs 是容器镜像中的文件系统，包含了容器运行时所需的所有文件和目录。当容器启动时，imagefs 中的文件系统会被挂载到 rootfs 上，形成容器的完整文件系统。
+```

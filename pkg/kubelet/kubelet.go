@@ -848,7 +848,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.evictionManager = evictionManager
 
 	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查，满足条件后才会继续创建Pod，通过Admit方法来检查
-	var _ = evictionAdmitHandler.Admit
+	var _ = new(eviction.ManagerImpl).Admit
 	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler)
 
 	// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.

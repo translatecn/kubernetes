@@ -98,7 +98,7 @@ func Funcs(codecs runtimeserializer.CodecFactory) []interface{} {
 			obj.MakeIPTablesUtilChains = true
 			obj.IPTablesMasqueradeBit = kubeletconfigv1beta1.DefaultIPTablesMasqueradeBit
 			obj.IPTablesDropBit = kubeletconfigv1beta1.DefaultIPTablesDropBit
-			obj.CgroupsPerQOS = true
+			obj.CgroupsPerQOS = true // ✅
 			obj.CgroupDriver = "cgroupfs"
 			obj.EnforceNodeAllocatable = kubeletconfigv1beta1.DefaultNodeAllocatableEnforcement
 			obj.StaticPodURLHeader = make(map[string][]string)

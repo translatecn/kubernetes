@@ -34,8 +34,7 @@ const (
 
 // Volume represents a named volume in a pod that may be accessed by any container in the pod.
 type Volume struct {
-	// name of the volume.
-	// Must be a DNS_LABEL and unique within the pod.
+	// 卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 	// volumeSource represents the location and type of the mounted volume.
@@ -57,7 +56,7 @@ type VolumeSource struct {
 	// mount host directories as read/write.
 	// +optional
 	HostPath *HostPathVolumeSource `json:"hostPath,omitempty" protobuf:"bytes,1,opt,name=hostPath"`
-	// emptyDir represents a temporary directory that shares a pod's lifetime.
+	// emptyDir 表示一个临时目录，该目录与 pod 的生命周期共享。
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
 	// +optional
 	EmptyDir *EmptyDirVolumeSource `json:"emptyDir,omitempty" protobuf:"bytes,2,opt,name=emptyDir"`
@@ -71,10 +70,9 @@ type VolumeSource struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
 	// +optional
 	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource `json:"awsElasticBlockStore,omitempty" protobuf:"bytes,4,opt,name=awsElasticBlockStore"`
-	// gitRepo represents a git repository at a particular revision.
-	// DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an
-	// EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir
-	// into the Pod's container.
+
+	// GitRepo 表示特定版本的 Git 存储库。
+	// 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。
 	// +optional
 	GitRepo *GitRepoVolumeSource `json:"gitRepo,omitempty" protobuf:"bytes,5,opt,name=gitRepo"`
 	// secret represents a secret that should populate this volume.
@@ -721,20 +719,15 @@ type HostPathVolumeSource struct {
 	Type *HostPathType `json:"type,omitempty" protobuf:"bytes,2,opt,name=type"`
 }
 
-// Represents an empty directory for a pod.
-// Empty directory volumes support ownership management and SELinux relabeling.
 type EmptyDirVolumeSource struct {
-	// medium represents what type of storage medium should back this directory.
-	// The default is "" which means to use the node's default medium.
-	// Must be an empty string (default) or Memory.
+	// 存储介质类型，empty string (default) or Memory.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
 	// +optional
 	Medium StorageMedium `json:"medium,omitempty" protobuf:"bytes,1,opt,name=medium,casttype=StorageMedium"`
-	// sizeLimit is the total amount of local storage required for this EmptyDir volume.
-	// The size limit is also applicable for memory medium.
-	// The maximum usage on memory medium EmptyDir would be the minimum value between
-	// the SizeLimit specified here and the sum of memory limits of all containers in a pod.
-	// The default is nil which means that the limit is undefined.
+	// sizeelimit是这个EmptyDir卷所需的本地存储总量。
+	// 大小限制也适用于内存介质。
+	// 内存介质EmptyDir的最大使用量将是这里指定的SizeLimit和pod中所有容器的内存限制之和之间的最小值。
+	// 默认为nil，这意味着限制是未定义的。
 	// More info: http://kubernetes.io/docs/user-guide/volumes#emptydir
 	// +optional
 	SizeLimit *resource.Quantity `json:"sizeLimit,omitempty" protobuf:"bytes,2,opt,name=sizeLimit"`
@@ -3116,7 +3109,7 @@ type PodReadinessGate struct {
 
 // PodSpec is a description of a pod.
 type PodSpec struct {
-	// List of volumes that can be mounted by containers belonging to the pod.
+	// 可以由该 pod 的容器挂载的卷的列表.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes
 	// +optional
 	// +patchMergeKey=name
@@ -3274,11 +3267,7 @@ type PodSpec struct {
 	// default.
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty" protobuf:"bytes,24,opt,name=priorityClassName"`
-	// The priority value. Various system components use this field to find the
-	// priority of the pod. When Priority Admission Controller is enabled, it
-	// prevents users from setting this field. The admission controller populates
-	// this field from PriorityClassName.
-	// The higher the value, the higher the priority.
+	// 当启用优先级准入控制器时，它会阻止用户设置此字段。准入控制器会从 PriorityClassName 中填充此字段。
 	// +optional
 	Priority *int32 `json:"priority,omitempty" protobuf:"bytes,25,opt,name=priority"`
 	// Specifies the DNS parameters of a pod.
@@ -5390,24 +5379,16 @@ type ResourceName string
 // camel case, separating compound words.
 // Fully-qualified resource typenames are constructed from a DNS-style subdomain, followed by a slash `/` and a name.
 const (
-	// CPU, in cores. (500m = .5 cores)
-	ResourceCPU ResourceName = "cpu"
-	// Memory, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
-	ResourceMemory ResourceName = "memory"
-	// Volume size, in bytes (e,g. 5Gi = 5GiB = 5 * 1024 * 1024 * 1024)
-	ResourceStorage ResourceName = "storage"
-	// Local ephemeral storage, in bytes. (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
-	// The resource name for ResourceEphemeralStorage is alpha and it can change across releases.
-	ResourceEphemeralStorage ResourceName = "ephemeral-storage"
+	ResourceCPU              ResourceName = "cpu"               // CPU 核心数  (500m = .5 cores)
+	ResourceMemory           ResourceName = "memory"            // 内存大小 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+	ResourceStorage          ResourceName = "storage"           // 存储卷大小 bytes (e,g. 5Gi = 5GiB = 5 * 1024 * 1024 * 1024)
+	ResourceEphemeralStorage ResourceName = "ephemeral-storage" // 本地临时存储 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 )
 
 const (
-	// Default namespace prefix.
-	ResourceDefaultNamespacePrefix = "kubernetes.io/"
-	// Name prefix for huge page resources (alpha).
-	ResourceHugePagesPrefix = "hugepages-"
-	// Name prefix for storage resource limits
-	ResourceAttachableVolumesPrefix = "attachable-volumes-"
+	ResourceDefaultNamespacePrefix  = "kubernetes.io/"      // Default namespace prefix.
+	ResourceHugePagesPrefix         = "hugepages-"          // Name prefix for huge page resources (alpha).
+	ResourceAttachableVolumesPrefix = "attachable-volumes-" // Name prefix for storage resource limits
 )
 
 // ResourceList is a set of (resource name, quantity) pairs.

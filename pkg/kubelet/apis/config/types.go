@@ -208,13 +208,8 @@ type KubeletConfiguration struct {
 	// all non-kernel processes that are not already in a container. Empty
 	// for no container. Rolling back the flag requires a reboot.
 	SystemCgroups string
-	// CgroupRoot is the root cgroup to use for pods.
-	// If CgroupsPerQOS is enabled, this is the root of the QoS cgroup hierarchy.
-	CgroupRoot string
-	// Enable QoS based Cgroup hierarchy: top level cgroups for QoS Classes
-	// And all Burstable and BestEffort pods are brought up under their
-	// specific top level QoS cgroup.
-	CgroupsPerQOS bool
+	CgroupRoot    string // CgroupRoot是用于pod的根cgroup如果启用了CgroupsPerQOS，则这是QoS cgroup层次结构的根。
+	CgroupsPerQOS bool   // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup，所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下。
 	// driver that the kubelet uses to manipulate cgroups on the host (cgroupfs or systemd)
 	CgroupDriver string
 	// CPUManagerPolicy is the name of the policy to use.
@@ -349,10 +344,8 @@ type KubeletConfiguration struct {
 	// These sysctls are namespaced but not allowed by default.
 	// For example: "`kernel.msg*,net.ipv4.route.min_pmtu`"
 	// +optional
-	AllowedUnsafeSysctls []string
-	// kernelMemcgNotification if enabled, the kubelet will integrate with the kernel memcg
-	// notification to determine if memory eviction thresholds are crossed rather than polling.
-	KernelMemcgNotification bool
+	AllowedUnsafeSysctls    []string
+	KernelMemcgNotification bool // 如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。
 
 	/* the following fields are meant for Node Allocatable */
 

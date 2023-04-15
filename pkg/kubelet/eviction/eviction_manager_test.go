@@ -240,7 +240,7 @@ func TestMemoryPressure_VerifyPodStatus(t *testing.T) {
 					},
 				}
 				summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("1500Mi", podStats)}
-				manager := &managerImpl{
+				manager := &ManagerImpl{
 					clock:                        fakeClock,
 					killPodFunc:                  podKiller.killPodNow,
 					imageGC:                      diskGC,
@@ -341,7 +341,7 @@ func TestDiskPressureNodeFs_VerifyPodStatus(t *testing.T) {
 					},
 				}
 				summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("1.5Gi", "200Gi", podStats)}
-				manager := &managerImpl{
+				manager := &ManagerImpl{
 					clock:                        fakeClock,
 					killPodFunc:                  podKiller.killPodNow,
 					imageGC:                      diskGC,
@@ -438,7 +438,7 @@ func TestMemoryPressure(t *testing.T) {
 		},
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("2Gi", podStats)}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
@@ -612,7 +612,7 @@ func makeContainersByQOS(class v1.PodQOSClass) []v1.Container {
 }
 
 func TestAdmitUnderNodeConditions(t *testing.T) {
-	manager := &managerImpl{}
+	manager := &ManagerImpl{}
 	pods := []*v1.Pod{
 		newPod("guaranteed-pod", scheduling.DefaultPriorityWhenNoDefaultClassExists, makeContainersByQOS(v1.PodQOSGuaranteed), nil),
 		newPod("burstable-pod", scheduling.DefaultPriorityWhenNoDefaultClassExists, makeContainersByQOS(v1.PodQOSBurstable), nil),
@@ -703,7 +703,7 @@ func TestDiskPressureNodeFs(t *testing.T) {
 		},
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("16Gi", "200Gi", podStats)}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
@@ -895,7 +895,7 @@ func TestMinReclaim(t *testing.T) {
 		},
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("2Gi", podStats)}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
@@ -1035,7 +1035,7 @@ func TestNodeReclaimFuncs(t *testing.T) {
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("16Gi", "200Gi", podStats)}
 	diskGC := &mockDiskGC{fakeSummaryProvider: summaryProvider, err: nil}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
@@ -1284,7 +1284,7 @@ func TestInodePressureNodeFsInodes(t *testing.T) {
 		},
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("3Mi", "4Mi", podStats)}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
@@ -1493,7 +1493,7 @@ func TestStaticCriticalPodsAreNotEvicted(t *testing.T) {
 		},
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("2Gi", podStats)}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		mirrorPodFunc:                mirrorPodFunc,
@@ -1609,7 +1609,7 @@ func TestAllocatableMemoryPressure(t *testing.T) {
 		},
 	}
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("4Gi", podStats)}
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
@@ -1761,7 +1761,7 @@ func TestUpdateMemcgThreshold(t *testing.T) {
 	thresholdNotifier := NewMockThresholdNotifier(mockCtrl)
 	thresholdNotifier.EXPECT().UpdateThreshold(summaryProvider.result).Return(nil).Times(2)
 
-	manager := &managerImpl{
+	manager := &ManagerImpl{
 		clock:                        fakeClock,
 		killPodFunc:                  podKiller.killPodNow,
 		imageGC:                      diskGC,
