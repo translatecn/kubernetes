@@ -94,7 +94,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
 
-replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3
+
 
 replace (
 	k8s.io/api => ../api

@@ -5,7 +5,7 @@
         "description": "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
         "properties": {
           "effect": {
-            "description": "Effect NoSchedule, PreferNoScheduleNoExecute ]\n\n",
+            "description": "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
             "type": "string"
           },
           "key": {
@@ -13,7 +13,7 @@
             "type": "string"
           },
           "operator": {
-            "description": "Operator k,v的关系[Exists,Equal],默认Equal.",
+            "description": "Operator k,v的关系[Exists,Equal],默认Equal. ",
             "type": "string"
           },
           "tolerationSeconds": {

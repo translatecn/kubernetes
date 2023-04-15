@@ -16,7 +16,7 @@ require (
 	k8s.io/kubelet v0.0.0
 )
 
-replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3
+
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

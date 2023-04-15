@@ -3079,7 +3079,6 @@ type Toleration struct {
 	// Value 污点的值，如果operator是Exists,这应该是空.
 	// +optional
 	Value string `json:"value,omitempty" protobuf:"bytes,3,opt,name=value"`
-	// Effect indicates the taint effect to match. Empty means match all taint effects.
 	// [空 ,NoSchedule, PreferNoSchedul, NoExecute ]
 	// +optional
 	Effect TaintEffect `json:"effect,omitempty" protobuf:"bytes,4,opt,name=effect,casttype=TaintEffect"`

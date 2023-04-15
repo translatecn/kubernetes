@@ -99,7 +99,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3
+
 
 replace (
 	k8s.io/api => ../api

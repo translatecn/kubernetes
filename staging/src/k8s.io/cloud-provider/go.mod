@@ -118,4 +118,4 @@ replace (
 	k8s.io/kms => ../kms
 )
 
-replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3
+

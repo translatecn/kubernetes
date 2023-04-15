@@ -2835,7 +2835,6 @@ type Toleration struct {
 	// 如果operator是Exists,这应该是空.
 	// +optional
 	Value string
-	// Effect indicates the taint effect to match. Empty means match all taint effects.
 	// [空 ,NoSchedule, PreferNoSchedul, NoExecute ]
 	// +optional
 	Effect TaintEffect

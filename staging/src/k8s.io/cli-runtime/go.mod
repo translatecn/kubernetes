@@ -74,4 +74,3 @@ replace (
 	k8s.io/client-go => ../client-go
 )
 
-replace github.com/emicklei/go-restful/v3 => ../../../../3rd/github.com/emicklei/go-restful/v3

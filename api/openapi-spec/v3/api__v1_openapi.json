@@ -6753,7 +6753,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.SeccompProfile"
               }
             ],
-            "description": "此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数"
+            "description": "T\t//此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数iner. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows."
           },
           "windowsOptions": {
             "allOf": [
@@ -6851,7 +6851,7 @@
             "description": "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata"
           },
           "secrets": {
-            "description": "Secrets是在相同命名空间中,使用此ServiceAccount的Pod被允许使用的Secret列表.只有当此ServiceAccount具有设置为“true”的“kubernetes.io/enforce-mountable-secrets”注释时,Pod才受此列表的限制.不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥.相反,可以直接使用TokenRequest API请求令牌,或手动创建ServiceAccount令牌密钥。更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
+            "description": "Secrets是在相同命名空间中，使用此ServiceAccount的Pod被允许使用的Secret列表。只有当此ServiceAccount具有设置为“true”的“kubernetes.io/enforce-mountable-secrets”注释时，Pod才受此列表的限制。不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥。相反，可以直接使用TokenRequest API请求令牌，或手动创建ServiceAccount令牌密钥。更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
             "items": {
               "allOf": [
                 {
@@ -7339,7 +7339,7 @@
         "description": "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
         "properties": {
           "effect": {
-            "description": "Effect  [空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
+            "description": "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\n",
             "type": "string"
           },
           "key": {

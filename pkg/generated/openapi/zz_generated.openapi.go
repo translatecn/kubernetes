@@ -8210,8 +8210,7 @@ func schema_k8sio_api_authentication_v1_TokenReviewSpec(ref common.ReferenceCall
 					},
 					"audiences": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Audiences is a list of the identifiers that the resource server presented with the token identifies as. Audience-aware token authenticators will verify that the token was intended for at least one of the audiences in this list. If no audiences are provided, the audience will default to the audience of the Kubernetes apiserver.",
-							Type:        []string{"array"},
+							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -8252,7 +8251,7 @@ func schema_k8sio_api_authentication_v1_TokenReviewStatus(ref common.ReferenceCa
 					},
 					"audiences": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Audiences are audience identifiers chosen by the authenticator that are compatible with both the TokenReview and token. An identifier is any identifier in the intersection of the TokenReviewSpec audiences and the token's audiences. A client of the TokenReview API that sets the spec.audiences field should validate that a compatible audience identifier is returned in the status.audiences field to ensure that the TokenReview server is audience aware. If a TokenReview returns an empty status.audience field where status.authenticated is \"true\", the token is valid against the audience of the Kubernetes API server.",
+							Description: "Audiences 是身份验证器选择的与TokenReview和令牌兼容的受众标识符。标识符是TokenReviewSpec受众和令牌受众的交集中的任何标识符。 TokenReview API的客户端设置spec.audiences字段时，应验证返回的status.audiences字段中是否返回了兼容的受众标识符，以确保TokenReview服务器支持受众。 如果TokenReview返回一个空的status.audience字段，其中status.authenticated为“true”，则该令牌对Kubernetes API服务器的受众有效。",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -8477,8 +8476,7 @@ func schema_k8sio_api_authentication_v1beta1_TokenReviewSpec(ref common.Referenc
 					},
 					"audiences": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Audiences is a list of the identifiers that the resource server presented with the token identifies as. Audience-aware token authenticators will verify that the token was intended for at least one of the audiences in this list. If no audiences are provided, the audience will default to the audience of the Kubernetes apiserver.",
-							Type:        []string{"array"},
+							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -8519,7 +8517,7 @@ func schema_k8sio_api_authentication_v1beta1_TokenReviewStatus(ref common.Refere
 					},
 					"audiences": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Audiences are audience identifiers chosen by the authenticator that are compatible with both the TokenReview and token. An identifier is any identifier in the intersection of the TokenReviewSpec audiences and the token's audiences. A client of the TokenReview API that sets the spec.audiences field should validate that a compatible audience identifier is returned in the status.audiences field to ensure that the TokenReview server is audience aware. If a TokenReview returns an empty status.audience field where status.authenticated is \"true\", the token is valid against the audience of the Kubernetes API server.",
+							Description: "Audiences 是身份验证器选择的与TokenReview和令牌兼容的受众标识符。标识符是TokenReviewSpec受众和令牌受众的交集中的任何标识符。 TokenReview API的客户端设置spec.audiences字段时，应验证返回的status.audiences字段中是否返回了兼容的受众标识符，以确保TokenReview服务器支持受众。 如果TokenReview返回一个空的status.audience字段，其中status.authenticated为“true”，则该令牌对Kubernetes API服务器的受众有效。",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -15494,33 +15492,33 @@ func schema_k8sio_api_coordination_v1_LeaseSpec(ref common.ReferenceCallback) co
 				Properties: map[string]spec.Schema{
 					"holderIdentity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "holderIdentity 包含当前租约持有者的标识。",
+							Description: "holderIdentity contains the identity of the holder of a current lease.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"leaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseDurationSeconds 是一个租期的候选人需要租约的时间。这是根据最后观察到的RenewTime的时间来衡量的。",
+							Description: "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"acquireTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "acquireTime是acquire当前租约的时间.",
+							Description: "acquireTime is a time when the current lease was acquired.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"renewTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "renewTime 是当前租约持有人上次更新租约的时间.",
+							Description: "renewTime is a time when the current holder of a lease has last updated the lease.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions 租约被多少人持有过.",
+							Description: "leaseTransitions is the number of transitions of a lease between holders.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -15636,33 +15634,33 @@ func schema_k8sio_api_coordination_v1beta1_LeaseSpec(ref common.ReferenceCallbac
 				Properties: map[string]spec.Schema{
 					"holderIdentity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "holderIdentity 包含当前租约持有者的标识。",
+							Description: "holderIdentity contains the identity of the holder of a current lease.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"leaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseDurationSeconds 是一个租期的候选人需要租约的时间。这是根据最后观察到的RenewTime的时间来衡量的。",
+							Description: "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"acquireTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "acquireTime是acquire当前租约的时间.",
+							Description: "acquireTime is a time when the current lease was acquired.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"renewTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "renewTime 是当前租约持有人上次更新租约的时间.",
+							Description: "renewTime is a time when the current holder of a lease has last updated the lease.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions 租约被多少人持有过.",
+							Description: "leaseTransitions is the number of transitions of a lease between holders.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -17640,8 +17638,7 @@ func schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Represents an empty directory for a pod. Empty directory volumes support ownership management and SELinux relabeling.",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"medium": {
 						SchemaProps: spec.SchemaProps{
@@ -17652,7 +17649,7 @@ func schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref common.ReferenceCallback)
 					},
 					"sizeLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "sizeLimit is the total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir",
+							Description: "sizeelimit是这个EmptyDir卷所需的本地存储总量。 大小限制也适用于内存介质。 内存介质EmptyDir的最大使用量将是这里指定的SizeLimit和pod中所有容器的内存限制之和之间的最小值。 默认为nil，这意味着限制是未定义的。 More info: http://kubernetes.io/docs/user-guide/volumes#emptydir",
 							Ref:         ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
 						},
 					},
@@ -23414,7 +23411,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"priority": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The priority value. Various system components use this field to find the priority of the pod. When Priority Admission Controller is enabled, it prevents users from setting this field. The admission controller populates this field from PriorityClassName. The higher the value, the higher the priority.",
+							Description: "当启用优先级准入控制器时，它会阻止用户设置此字段。准入控制器会从 PriorityClassName 中填充此字段。",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -25815,7 +25812,7 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 					},
 					"seccompProfile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "T	//此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数iner. If seccomp options are provided at both the pod & container level, the container options override the pod options. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数",
 							Ref:         ref("k8s.io/api/core/v1.SeccompProfile"),
 						},
 					},
@@ -25949,7 +25946,7 @@ func schema_k8sio_api_core_v1_ServiceAccount(ref common.ReferenceCallback) commo
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Secrets是在相同命名空间中，使用此ServiceAccount的Pod被允许使用的Secret列表。只有当此ServiceAccount具有设置为“true”的“kubernetes.io/enforce-mountable-secrets”注释时，Pod才受此列表的限制。不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥。相反，可以直接使用TokenRequest API请求令牌，或手动创建ServiceAccount令牌密钥。更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
+							Description: "Secrets is a list of the secrets in the same namespace that pods running using this ServiceAccount are allowed to use. Pods are only limited to this list if this service account has a \"kubernetes.io/enforce-mountable-secrets\" annotation set to \"true\". This field should not be used to find auto-generated service account token secrets for use outside of pods. Instead, tokens can be requested directly using the TokenRequest API, or service account token secrets can be manually created. More info: https://kubernetes.io/docs/concepts/configuration/secret",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -26729,28 +26726,28 @@ func schema_k8sio_api_core_v1_Toleration(ref common.ReferenceCallback) common.Op
 					},
 					"operator": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Operator k,v的关系[Exists,Equal],默认Equal. ",
+							Description: "Operator k,v的关系[Exists,Equal],默认Equal.\n\nPossible enum values:\n - `\"Equal\"`\n - `\"Exists\"`",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"Equal", "Exists"}},
 					},
 					"value": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Value 污点的值. 如果operator是Exists,这应该是空.",
+							Description: "Value 污点的值，如果operator是Exists,这应该是空.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"effect": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\nPossible enum values:\n - `\"NoExecute\"` Evict any already-running pods that do not tolerate the taint. Currently enforced by NodeController.\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
+							Description: "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\nPossible enum values:\n - `\"NoExecute\"` Evict any already-running pods that do not tolerate the taint. Currently enforced by NodeController.\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"NoExecute", "NoSchedule", "PreferNoSchedule"}},
 					},
 					"tolerationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
+							Description: "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system. 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -27013,7 +27010,7 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+							Description: "卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。 More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -27045,7 +27042,7 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"gitRepo": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GitRepo 表示特定版本的 Git 存储库。已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。",
+							Description: "GitRepo 表示特定版本的 Git 存储库。 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。",
 							Ref:         ref("k8s.io/api/core/v1.GitRepoVolumeSource"),
 						},
 					},
@@ -27383,7 +27380,7 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"gitRepo": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GitRepo 表示特定版本的 Git 存储库。已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。",
+							Description: "GitRepo 表示特定版本的 Git 存储库。 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。",
 							Ref:         ref("k8s.io/api/core/v1.GitRepoVolumeSource"),
 						},
 					},
@@ -32359,15 +32356,14 @@ func schema_k8sio_api_flowcontrol_v1alpha1_QueuingConfiguration(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"queues": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"handSize": {
 						SchemaProps: spec.SchemaProps{
-							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
+							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -32375,10 +32371,9 @@ func schema_k8sio_api_flowcontrol_v1alpha1_QueuingConfiguration(ref common.Refer
 					},
 					"queueLengthLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 				},
@@ -33358,15 +33353,14 @@ func schema_k8sio_api_flowcontrol_v1beta1_QueuingConfiguration(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"queues": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"handSize": {
 						SchemaProps: spec.SchemaProps{
-							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
+							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -33374,10 +33368,9 @@ func schema_k8sio_api_flowcontrol_v1beta1_QueuingConfiguration(ref common.Refere
 					},
 					"queueLengthLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 				},
@@ -34357,15 +34350,14 @@ func schema_k8sio_api_flowcontrol_v1beta2_QueuingConfiguration(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"queues": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"handSize": {
 						SchemaProps: spec.SchemaProps{
-							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
+							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -34373,10 +34365,9 @@ func schema_k8sio_api_flowcontrol_v1beta2_QueuingConfiguration(ref common.Refere
 					},
 					"queueLengthLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 				},
@@ -35355,8 +35346,7 @@ func schema_k8sio_api_flowcontrol_v1beta3_QueuingConfiguration(ref common.Refere
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "QueuingConfiguration holds the configuration parameters for queuing",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"queues": {
 						SchemaProps: spec.SchemaProps{
@@ -35368,7 +35358,7 @@ func schema_k8sio_api_flowcontrol_v1beta3_QueuingConfiguration(ref common.Refere
 					},
 					"handSize": {
 						SchemaProps: spec.SchemaProps{
-							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
+							Description: "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -35376,7 +35366,7 @@ func schema_k8sio_api_flowcontrol_v1beta3_QueuingConfiguration(ref common.Refere
 					},
 					"queueLengthLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
+							Description: "queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -48726,7 +48716,7 @@ func schema_pkg_apis_meta_v1_ListOptions(ref common.ReferenceCallback) common.Op
 					},
 					"resourceVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "resourceVersion sets a constraint on what resource versions a request may be served from. See https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions for details.\n\nDefaults to unset",
+							Description: "resourceVersion 设置可以从哪些资源版本提供请求的约束 See https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions for details.\n\nDefaults to unset",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -48747,14 +48737,13 @@ func schema_pkg_apis_meta_v1_ListOptions(ref common.ReferenceCallback) common.Op
 					},
 					"limit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "limit is a maximum number of responses to return for a list call. If more items exist, the server will set the `continue` field on the list metadata to a value that can be used with the same initial query to retrieve the next set of results. Setting a limit may return fewer than the requested amount of items (up to zero items) in the event all requested objects are filtered out and clients should only use the presence of the continue field to determine whether more results are available. Servers may choose not to support the limit argument and will return all of the available results. If limit is specified and the continue field is empty, clients may assume that no more results are available. This field is not supported if watch is true.\n\nThe server guarantees that the objects returned when using continue will be identical to issuing a single list call without a limit - that is, no objects created, modified, or deleted after the first request is issued will be included in any subsequent continued requests. This is sometimes referred to as a consistent snapshot, and ensures that a client that is using limit to receive smaller chunks of a very large result can ensure they see all possible objects. If objects are updated during a chunked list the version of the object that was present at the time the first list result was calculated is returned.",
-							Type:        []string{"integer"},
-							Format:      "int64",
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 					"continue": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The continue option should be set when retrieving more results from the server. Since this value is server defined, clients may only use the continue value from a previous query result with identical query parameters (except for the value of continue) and the server may reject a continue value it does not recognize. If the specified continue value is no longer valid whether due to expiration (generally five to fifteen minutes) or a configuration change on the server, the server will respond with a 410 ResourceExpired error together with a continue token. If the client needs a consistent list, it must restart their list without the continue field. Otherwise, the client may send another list request with the token received with the 410 error, the server will respond with a list starting from the next key, but from the latest snapshot, which is inconsistent from the previous list results - objects that are created, modified, or deleted after the first list request will be included in the response, as long as their keys are after the \"next key\".\n\nThis field is not supported when watch is true. Clients may start a watch from the last resourceVersion value returned by the server and not miss any modifications.",
+							Description: "limit是一个列表调用返回的最大响应数。",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -49325,8 +49314,7 @@ func schema_pkg_apis_meta_v1_Status(ref common.ReferenceCallback) common.OpenAPI
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Status is a return value for calls that don't return other objects.",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -49983,7 +49971,7 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Unknown allows api objects with unknown types to be passed-through. This can be used to deal with the API objects from a plug-in. Unknown objects still have functioning TypeMeta features-- kind, version, etc. metadata and field mutatation.",
+				Description: "Unknown 允许传递未知类型的API对象。这可用于处理来自插件的API对象。未知对象仍然具有功能的TypeMeta特性—类型、版本等。 metadata and field mutatation.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apiVersion": {
@@ -50000,14 +49988,14 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 					},
 					"Raw": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Raw will hold the complete serialized object which couldn't be matched with a registered type. Most likely, nothing should be done with this except for passing it through the system.",
+							Description: "Raw 将保存无法与已注册类型匹配的完整序列化对象。除了让它通过系统之外，不应该对它做任何事情。",
 							Type:        []string{"string"},
 							Format:      "byte",
 						},
 					},
 					"ContentEncoding": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ContentEncoding is encoding used to encode 'Raw' data. Unspecified means no encoding.",
+							Description: "ContentEncoding 是用于编码“原始”数据的编码。未指定表示没有编码。",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -50015,7 +50003,7 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 					},
 					"ContentType": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ContentType  is serialization method used to serialize 'Raw'. Unspecified means ContentTypeJSON.",
+							Description: "ContentType 是用于序列化'Raw'的序列化方法。Unspecified表示ContentTypeJSON。",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
