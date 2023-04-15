@@ -3591,7 +3591,7 @@
               ],
               "default": {}
             },
-            "description": "Overhead表示与运行给定RuntimeClass的pod相关的资源开销。 该字段将由RuntimeClass准入控制器在准入时自动填充。如果启用了RuntimeClass准入控制器，则在Pod创建请求中不能设置开销。 RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求。 如果在PodSpec中配置并选择了RuntimeClass，则开销将被设置为相应的RuntimeClass中定义的值，否则它将保持未设置并视为零。 More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
+            "description": "Overhead 表示与运行给定RuntimeClass的pod相关的资源开销。 该字段将由RuntimeClass准入控制器在准入时自动填充。如果启用了RuntimeClass准入控制器，则在Pod创建请求中不能设置开销。 RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求。 如果在PodSpec中配置并选择了RuntimeClass，则开销将被设置为相应的RuntimeClass中定义的值，否则它将保持未设置并视为零。 More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
             "type": "object"
           },
           "preemptionPolicy": {
