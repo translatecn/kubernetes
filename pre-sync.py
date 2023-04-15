@@ -11,3 +11,4 @@ for line in res.strip().split('\n'):
         os.remove(os.path.abspath(os.path.join('/Users/acejilam/Desktop/kubernetes', line)))
     except Exception:
         pass
+os.system('./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
