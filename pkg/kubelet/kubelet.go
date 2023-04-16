@@ -974,8 +974,7 @@ type Kubelet struct {
 	// Optional, defaults to simple Docker implementation
 	runner kubecontainer.CommandRunner
 
-	// cAdvisor used for container information.
-	cadvisor cadvisor.Interface
+	cadvisor cadvisor.Interface // 提供运行容器的资源使用情况和性能特征
 
 	// Set to true to have the node register itself with the apiserver.
 	registerNode bool

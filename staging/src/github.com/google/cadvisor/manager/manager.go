@@ -162,7 +162,7 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, houskeepingConfig
 		}
 		klog.V(2).Infof("cAdvisor running in container: %q", selfContainer)
 	}
-
+	// 根据挂载点信息获取fsinfo对象
 	context := fs.Context{}
 
 	if err := container.InitializeFSContext(&context); err != nil {
@@ -203,7 +203,7 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, houskeepingConfig
 		rawContainerCgroupPathPrefixWhiteList: rawContainerCgroupPathPrefixWhiteList,
 		containerEnvMetadataWhiteList:         containerEnvMetadataWhiteList,
 	}
-
+	// 获取machineInfo，包含节点的机器信息
 	machineInfo, err := machine.Info(sysfs, fsInfo, inHostNamespace)
 	if err != nil {
 		return nil, err
@@ -284,6 +284,7 @@ func (m *manager) Start() error {
 	m.containerWatchers = append(m.containerWatchers, rawWatcher)
 
 	// Watch for OOMs.
+	// 启动对oom的监听
 	err = m.watchForNewOoms()
 	if err != nil {
 		klog.Warningf("Could not configure a source for OOM detection, disabling OOM events: %v", err)
@@ -308,6 +309,7 @@ func (m *manager) Start() error {
 
 	// Watch for new container.
 	quitWatcher := make(chan error)
+	// 启动对新容器的监听，添加相关的资源采集
 	err = m.watchForNewContainers(quitWatcher)
 	if err != nil {
 		return err
@@ -353,6 +355,7 @@ func (m *manager) destroyCollectors() {
 	}
 }
 
+// 定时更新机器信息给kubelet等使用
 func (m *manager) updateMachineInfo(quit chan error) {
 	ticker := time.NewTicker(*updateMachineInfoInterval)
 	for {
@@ -375,6 +378,7 @@ func (m *manager) updateMachineInfo(quit chan error) {
 	}
 }
 
+// 垃圾清理
 func (m *manager) globalHousekeeping(quit chan error) {
 	// Long housekeeping is either 100ms or half of the housekeeping interval.
 	longHousekeeping := 100 * time.Millisecond
@@ -1135,6 +1139,10 @@ func (m *manager) detectSubcontainers(containerName string) error {
 
 // Watches for new containers started in the system. Runs forever unless there is a setup error.
 func (m *manager) watchForNewContainers(quit chan error) error {
+	// - 处理由watcher生产者通过eventsChannel发来的ContainerEvent事件
+	//  - 如果是ContainerAdd就调用createContainer新增资源采集
+	//  - 如果是ContainerDelete就调用destroyContainer删除资源采集
+	//- createContainer内部逻辑较为复杂就不在这里展开了
 	watched := make([]watcher.ContainerWatcher, 0)
 	for _, watcher := range m.containerWatchers {
 		err := watcher.Start(m.eventsChannel)
@@ -1198,15 +1206,22 @@ func (m *manager) watchForNewContainers(quit chan error) error {
 }
 
 func (m *manager) watchForNewOoms() error {
+	//- watchForNewOoms中首先新建kmsg log 解析器 ，解析/dev/kmsg中的内核日志
+	//- 同时新建outStream chan 用作生产者和消费者之间的交互
 	klog.V(2).Infof("Started watching for new ooms in manager")
 	outStream := make(chan *oomparser.OomInstance, 10)
 	oomLog, err := oomparser.New()
 	if err != nil {
 		return err
 	}
+	// 启动生成者，就是从内核日志解析容器oom的日志，
+	//
+	//- 过程就是判断有没有invoked oom-killer:字段
+	//- 然后再用containerRegexp正则判断是容器进程的oom
 	go oomLog.StreamOoms(outStream)
 
 	go func() {
+		// 启动消费者产生oom 和oomKill event
 		for oomInstance := range outStream {
 			// Surface OOM and OOM kill events.
 			newEvent := &info.Event{

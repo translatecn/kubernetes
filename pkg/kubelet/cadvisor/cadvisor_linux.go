@@ -102,7 +102,7 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 	if usingLegacyStats || localStorageCapacityIsolation {
 		includedMetrics[cadvisormetrics.DiskUsageMetrics] = struct{}{}
 	}
-
+	// 创建cAdvisor container manager
 	duration := maxHousekeepingInterval
 	housekeepingConfig := manager.HouskeepingConfig{
 		Interval:     &duration,
@@ -110,7 +110,17 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 	}
 
 	// Create the cAdvisor container manager.
-	m, err := manager.New(memory.New(statsCacheDuration, nil), sysFs, housekeepingConfig, includedMetrics, http.DefaultClient, cgroupRoots, nil /* containerEnvMetadataWhiteList */, "" /* perfEventsFile */, time.Duration(0) /*resctrlInterval*/)
+	m, err := manager.New(
+		memory.New(statsCacheDuration, nil), // 代表一个内存的缓存，maxAge为2分钟
+		sysFs,                               // 代表底层的节点realfs对象
+		housekeepingConfig,                  // 代表清理的配置
+		includedMetrics,                     // 代表指标采集的大类
+		http.DefaultClient,                  // 代表http client
+		cgroupRoots,                         // 代表cgroup根
+		nil,
+		"", // 代表perf相关的文件
+		time.Duration(0),
+	)
 	if err != nil {
 		return nil, err
 	}

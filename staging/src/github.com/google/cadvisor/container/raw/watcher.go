@@ -68,6 +68,7 @@ func NewRawContainerWatcher() (watcher.ContainerWatcher, error) {
 
 func (w *rawContainerWatcher) Start(events chan watcher.ContainerEvent) error {
 	// Watch this container (all its cgroups) and all subdirectories.
+	// 遍历cgroups的顶级目录。调用watchDirectory查找里面的容器目录，并监听
 	watched := make([]string, 0)
 	for _, cgroupPath := range w.cgroupPaths {
 		_, err := w.watchDirectory(events, cgroupPath, "/")
@@ -84,6 +85,7 @@ func (w *rawContainerWatcher) Start(events chan watcher.ContainerEvent) error {
 	}
 
 	// Process the events received from the kernel.
+	// 外部的processEvent 处理内核发来的inotify事件，处理cgroup目录变动
 	go func() {
 		for {
 			select {
@@ -115,6 +117,7 @@ func (w *rawContainerWatcher) Stop() error {
 
 // Watches the specified directory and all subdirectories. Returns whether the path was
 // already being watched and an error (if any).
+// 读取启动时的cgroups目录， 内部产生了ContainerEvent
 func (w *rawContainerWatcher) watchDirectory(events chan watcher.ContainerEvent, dir string, containerName string) (bool, error) {
 	// Don't watch .mount cgroups because they never have containers as sub-cgroups.  A single container
 	// can have many .mount cgroups associated with it which can quickly exhaust the inotify watches on a node.
@@ -139,6 +142,7 @@ func (w *rawContainerWatcher) watchDirectory(events chan watcher.ContainerEvent,
 
 	// TODO(vmarmol): We should re-do this once we're done to ensure directories were not added in the meantime.
 	// Watch subdirectories as well.
+	// 读取目录中的子目录，然后找到subcontainerName，产生ContainerEvent发给events chan
 	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return alreadyWatching, err
@@ -175,6 +179,8 @@ func (w *rawContainerWatcher) watchDirectory(events chan watcher.ContainerEvent,
 }
 
 func (w *rawContainerWatcher) processEvent(event *inotify.Event, events chan watcher.ContainerEvent) error {
+	// 先根据inotify的类型，判断是容器cgroup目录创建还是删除
+	// 处理内核发来的inotify事件，处理cgroup目录变动
 	// Convert the inotify event type to a container create or delete.
 	var eventType watcher.ContainerEventType
 	switch {
@@ -203,7 +209,7 @@ func (w *rawContainerWatcher) processEvent(event *inotify.Event, events chan wat
 	if containerName == "" {
 		return fmt.Errorf("unable to detect container from watch event on directory %q", event.Name)
 	}
-
+	// 然后创建目录的就watchDirectory ，删除目录的就RemoveWatch
 	// Maintain the watch for the new or deleted container.
 	switch eventType {
 	case watcher.ContainerAdd:

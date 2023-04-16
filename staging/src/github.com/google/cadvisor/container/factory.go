@@ -193,6 +193,7 @@ func InitializeFSContext(context *fs.Context) error {
 	return nil
 }
 
+// InitializePlugins 遍历 plugins map，调用Register获得watcher
 func InitializePlugins(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics MetricSet) []watcher.ContainerWatcher {
 	pluginsLock.Lock()
 	defer pluginsLock.Unlock()
