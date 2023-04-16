@@ -1,14 +1,13 @@
 import os
-import subprocess
+import shutil
 
 os.system("sudo rm -rf vendor _output")
 os.system("go mod vendor")
-os.system('cp -fr  ./staging/src/ ./vendor/')
-res = subprocess.getoutput("find ./vendor|grep over-")
-for line in res.strip().split('\n'):
-    line = line.strip().replace('over-', '')
-    try:
-        os.remove(os.path.abspath(os.path.join('/Users/acejilam/Desktop/kubernetes', line)))
-    except Exception:
-        pass
-os.system('./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
+
+_, dirs, _ = list(os.walk('./staging/src/k8s.io'))[0]
+
+for _dir in dirs:
+    shutil.rmtree(os.path.join('./vendor/k8s.io', _dir), ignore_errors=True)
+    shutil.copytree(os.path.join('./staging/src/k8s.io', _dir), os.path.join('./vendor/k8s.io', _dir))
+
+os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
