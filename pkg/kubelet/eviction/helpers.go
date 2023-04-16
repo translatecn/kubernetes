@@ -525,7 +525,8 @@ func memory(stats statsFunc) cmpFunc {
 			// prioritize evicting the pod for which no stats were found
 			return cmpBool(!p1Found, !p2Found)
 		}
-
+		//- 如果pod 的内存使用是否达到它的requests则较大
+		//- 对于使用内存达到requests的则按照使用量再排序
 		// adjust p1, p2 usage relative to the request (if any)
 		p1Memory := memoryUsage(p1Stats.Memory)
 		p1Request := v1resource.GetResourceRequestQuantity(p1, v1.ResourceMemory)
@@ -665,6 +666,7 @@ func (a byEvictionPriority) Len() int      { return len(a) }
 func (a byEvictionPriority) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 // Less ranks memory before all other resources, and ranks thresholds with no resource to reclaim last
+// 对应的将内存排在前面，优先驱逐
 func (a byEvictionPriority) Less(i, j int) bool {
 	_, jSignalHasResource := signalToResource[a[j].Signal]
 	return a[i].Signal == evictionapi.SignalMemoryAvailable || a[i].Signal == evictionapi.SignalAllocatableMemoryAvailable || !jSignalHasResource
@@ -675,6 +677,7 @@ func makeSignalObservations(summary *statsapi.Summary) (signalObservations, stat
 	// 构建针对pod统计信息的函数
 	statsFunc := cachedStatsFunc(summary.Pods)
 	// build an evaluation context for current eviction signals
+	// 跟据传入的节点summary，获取各个驱逐信号对应的singleObservations和Pod的StatsFunc
 	result := signalObservations{}
 
 	if memory := summary.Node.Memory; memory != nil && memory.AvailableBytes != nil && memory.WorkingSetBytes != nil {
@@ -968,6 +971,7 @@ func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 		evictionapi.SignalAllocatableMemoryAvailable: rankMemoryPressure,
 		evictionapi.SignalPIDAvailable:               rankPIDPressure,
 	}
+	// todo ,这里为什么这么区分
 	// usage of an imagefs is optional
 	if withImageFs { // 使用了不用的磁盘         imagefs 使用了单独
 		// 统计数组里边的子项，
@@ -992,7 +996,7 @@ func PodIsEvicted(podStatus v1.PodStatus) bool {
 	return podStatus.Phase == v1.PodFailed && podStatus.Reason == Reason
 }
 
-// buildSignalToNodeReclaimFuncs returns reclaim functions associated with resources.
+// buildSignalToNodeReclaimFuncs 注册节点资源回收方法
 func buildSignalToNodeReclaimFuncs(imageGC ImageGC, containerGC ContainerGC, withImageFs bool) map[evictionapi.Signal]nodeReclaimFuncs {
 	signalToReclaimFunc := map[evictionapi.Signal]nodeReclaimFuncs{}
 	// usage of an imagefs is optional
@@ -1000,11 +1004,11 @@ func buildSignalToNodeReclaimFuncs(imageGC ImageGC, containerGC ContainerGC, wit
 		// with an imagefs, nodefs pressure should just delete logs
 		signalToReclaimFunc[evictionapi.SignalNodeFsAvailable] = nodeReclaimFuncs{}
 		signalToReclaimFunc[evictionapi.SignalNodeFsInodesFree] = nodeReclaimFuncs{}
-		// with an imagefs, imagefs pressure should delete unused images
+		// with an imagefs, imagefs pressure should  删除无用镜像
 		signalToReclaimFunc[evictionapi.SignalImageFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
 		signalToReclaimFunc[evictionapi.SignalImageFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
 	} else {
-		// without an imagefs, nodefs pressure should delete logs, and unused images
+		// without an imagefs, nodefs pressure should delete logs, and  删除无用镜像
 		// since imagefs and nodefs share a common device, they share common reclaim functions
 		signalToReclaimFunc[evictionapi.SignalNodeFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
 		signalToReclaimFunc[evictionapi.SignalNodeFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}

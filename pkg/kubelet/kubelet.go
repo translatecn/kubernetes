@@ -528,7 +528,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		masterServiceNamespace:                  masterServiceNamespace,
 		streamingConnectionIdleTimeout:          kubeCfg.StreamingConnectionIdleTimeout.Duration,
 		recorder:                                kubeDeps.Recorder,
-		cadvisor:                                kubeDeps.CAdvisorInterface,
+		cadvisor:                                kubeDeps.CAdvisorInterface, // 后续kubeDeps.CAdvisorInterface对象会被赋值给kubelet的cadvisor
 		cloud:                                   kubeDeps.Cloud,
 		externalCloudProvider:                   cloudprovider.IsExternal(cloudProvider),
 		providerID:                              providerID,
@@ -844,7 +844,8 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		klet.clock,
 		kubeCfg.LocalStorageCapacityIsolation,
 	)
-
+	//- evictionManager做本机驱逐pod的判定和清除
+	//- evictionAdmitHandler用来kubelet创建Pod前进依据本机的资源压力进行准入检查
 	klet.evictionManager = evictionManager
 
 	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查，满足条件后才会继续创建Pod，通过Admit方法来检查

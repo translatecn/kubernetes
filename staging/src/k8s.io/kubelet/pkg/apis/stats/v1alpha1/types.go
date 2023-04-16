@@ -221,8 +221,7 @@ type MemoryStats struct {
 	// Total memory in use. This includes all memory regardless of when it was accessed.
 	// +optional
 	UsageBytes *uint64 `json:"usageBytes,omitempty"`
-	// The amount of working set memory. This includes recently accessed memory,
-	// dirty memory, and kernel memory. WorkingSetBytes is <= UsageBytes
+	// 工作集内存的数量。这包括最近访问的内存、脏内存和内核内存. WorkingSetBytes is <= UsageBytes[包括缓存]
 	// +optional
 	WorkingSetBytes *uint64 `json:"workingSetBytes,omitempty"`
 	// The amount of anonymous and swap cache memory (includes transparent

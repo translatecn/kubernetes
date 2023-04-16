@@ -239,9 +239,9 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 		m.signalToNodeReclaimFuncs = buildSignalToNodeReclaimFuncs(m.imageGC, m.containerGC, hasImageFs)
 	}
 
-	activePods := podFunc()
+	activePods := podFunc() // 获取pods
 	updateStats := true
-	summary, err := m.summaryProvider.Get(ctx, updateStats)
+	summary, err := m.summaryProvider.Get(ctx, updateStats) // 获取node的状态summary
 	if err != nil {
 		klog.ErrorS(err, "Eviction manager: failed to get summary stats")
 		return nil
@@ -255,15 +255,16 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 			}
 		}
 	}
-	// 进行观察并获得一个函数,以派生相对于这些观察的pod使用统计数据。
 	observations, statsFunc := makeSignalObservations(summary)
 	debugLogObservations("observations", observations)
 
 	// determine the set of thresholds met independent of grace period
+	// 计算得出当前触发阈值的threshold集合
 	thresholds = thresholdsMet(thresholds, observations, false)
 	debugLogThresholdsWithObservation("thresholds - ignoring grace period", thresholds, observations)
 
 	// determine the set of thresholds previously met that have not yet satisfied the associated min-reclaim
+	// merge之前的已经触发的但还没恢复的thresholds
 	if len(m.thresholdsMet) > 0 {
 		thresholdsNotYetResolved := thresholdsMet(m.thresholdsMet, observations, true)
 		thresholds = mergeThresholds(thresholds, thresholdsNotYetResolved)
@@ -275,6 +276,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	thresholdsFirstObservedAt := thresholdsFirstObservedAt(thresholds, m.thresholdsFirstObservedAt, now)
 
 	// the set of node conditions that are triggered by currently observed thresholds
+	//转换得到nodeConditions
 	nodeConditions := nodeConditions(thresholds)
 	if len(nodeConditions) > 0 {
 		klog.V(3).InfoS("Eviction manager: node conditions - observed", "nodeCondition", nodeConditions)
@@ -290,6 +292,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	}
 
 	// determine the set of thresholds we need to drive eviction behavior (i.e. all grace periods are met)
+	//过滤出满足优雅删除的thresholds
 	thresholds = thresholdsMetGracePeriod(thresholdsFirstObservedAt, now)
 	debugLogThresholdsWithObservation("thresholds - grace periods satisfied", thresholds, observations)
 
@@ -301,6 +304,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	m.thresholdsMet = thresholds
 
 	// determine the set of thresholds whose stats have been updated since the last sync
+	//从这轮的观察结果中去掉上一轮的观察结果出现的thresholds
 	thresholds = thresholdsUpdatedStats(thresholds, observations, m.lastObservations)
 	debugLogThresholdsWithObservation("thresholds - updated stats", thresholds, observations)
 
@@ -320,6 +324,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	}
 
 	// rank the thresholds by eviction priority
+	//按照驱逐的优先级给thresholds排序
 	sort.Sort(byEvictionPriority(thresholds))
 	thresholdToReclaim, resourceToReclaim, foundAny := getReclaimableThreshold(thresholds)
 	if !foundAny {
@@ -331,6 +336,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	m.recorder.Eventf(m.nodeRef, v1.EventTypeWarning, "EvictionThresholdMet", "Attempting to reclaim %s", resourceToReclaim)
 
 	// check if there are node-level resources we can reclaim to reduce pressure before evicting end-user pods.
+	//按照优先级最高的threshold回收节点资源，意思是先判断能否回收节点资源
 	if m.reclaimNodeLevelResources(ctx, thresholdToReclaim.Signal, resourceToReclaim) {
 		klog.InfoS("Eviction manager: able to reduce resource pressure without evicting pods.", "resourceName", resourceToReclaim)
 		return nil
@@ -339,6 +345,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	klog.InfoS("Eviction manager: must evict pod(s) to reclaim", "resourceName", resourceToReclaim)
 
 	// rank the pods for eviction
+	//使用rank方法排序
 	rank, ok := m.signalToRankFunc[thresholdToReclaim.Signal]
 	if !ok {
 		klog.ErrorS(nil, "Eviction manager: no ranking function for signal", "threshold", thresholdToReclaim.Signal)
@@ -364,7 +371,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 		}
 	}
 
-	// 我们在每次驱逐间隔中最多杀死一个pod
+	// 执行驱逐动作,我们在每次驱逐间隔中最多杀死一个pod
 	for i := range activePods {
 		pod := activePods[i]
 		gracePeriodOverride := int64(0)
