@@ -247,12 +247,12 @@ const (
 	// Enables support for Device Plugins
 	DevicePlugins featuregate.Feature = "DevicePlugins"
 
-	// owner: @RenaudWasTaken @dashpole
+	// DisableAcceleratorUsageMetrics owner: @RenaudWasTaken @dashpole
 	// alpha: v1.19
 	// beta: v1.20
 	// ga: v1.25
 	//
-	// Disables Accelerator Metrics Collected by Kubelet
+	// 禁用Kubelet收集的加速器指标。
 	DisableAcceleratorUsageMetrics featuregate.Feature = "DisableAcceleratorUsageMetrics"
 
 	// owner: @andrewsykim

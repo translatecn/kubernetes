@@ -25,17 +25,14 @@ import (
 	cadvisorfs "github.com/google/cadvisor/fs"
 )
 
-// imageFsInfoProvider knows how to translate the configured runtime
-// to its file system label for images.
+// imageFsInfoProvider 知道如何将配置的运行时转换为映像的文件系统标签。
 type imageFsInfoProvider struct {
 	runtimeEndpoint string
 }
 
-// ImageFsInfoLabel returns the image fs label for the configured runtime.
-// For remote runtimes, it handles additional runtimes natively understood by cAdvisor.
+// ImageFsInfoLabel 返回已配置运行时的镜像文件系统标签
 func (i *imageFsInfoProvider) ImageFsInfoLabel() (string, error) {
-	// This is a temporary workaround to get stats for cri-o from cadvisor
-	// and should be removed.
+	// This is a temporary workaround to get stats for cri-o from cadvisor and should be removed.
 	// Related to https://github.com/kubernetes/kubernetes/issues/51798
 	if i.runtimeEndpoint == CrioSocket || i.runtimeEndpoint == "unix://"+CrioSocket {
 		return cadvisorfs.LabelCrioImages, nil
@@ -45,5 +42,5 @@ func (i *imageFsInfoProvider) ImageFsInfoLabel() (string, error) {
 
 // NewImageFsInfoProvider returns a provider for the specified runtime configuration.
 func NewImageFsInfoProvider(runtimeEndpoint string) ImageFsInfoProvider {
-	return &imageFsInfoProvider{runtimeEndpoint: runtimeEndpoint}
+	return &imageFsInfoProvider{runtimeEndpoint: runtimeEndpoint} // unix:///run/containerd/containerd.sock
 }

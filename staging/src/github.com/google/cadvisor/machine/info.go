@@ -74,7 +74,7 @@ func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.Mach
 		return nil, err
 	}
 
-	memoryByType, err := GetMachineMemoryByType(memoryControllerPath)
+	memoryByType, err := GetMachineMemoryByType(memoryControllerPath) // 根据给定的内存类型获取机器的内存大小
 	if err != nil {
 		return nil, err
 	}
@@ -84,12 +84,12 @@ func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.Mach
 		return nil, err
 	}
 
-	hugePagesInfo, err := sysinfo.GetHugePagesInfo(sysFs, hugepagesDirectory)
+	hugePagesInfo, err := sysinfo.GetHugePagesInfo(sysFs, hugepagesDirectory) // 获取内存大页的使用情况
 	if err != nil {
 		return nil, err
 	}
 
-	filesystems, err := fsInfo.GetGlobalFsInfo()
+	filesystems, err := fsInfo.GetGlobalFsInfo() // 获取指定路径所在的文件系统信息。
 	if err != nil {
 		klog.Errorf("Failed to get global filesystem information: %v", err)
 	}
@@ -104,7 +104,7 @@ func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.Mach
 		klog.Errorf("Failed to get network devices: %v", err)
 	}
 
-	topology, numCores, err := GetTopology(sysFs)
+	topology, numCores, err := GetTopology(sysFs) // 拓扑结构
 	if err != nil {
 		klog.Errorf("Failed to get topology information: %v", err)
 	}

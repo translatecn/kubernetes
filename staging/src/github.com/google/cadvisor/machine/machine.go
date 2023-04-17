@@ -99,7 +99,7 @@ func GetSockets(procInfo []byte) int {
 	return numSocket
 }
 
-// GetClockSpeed returns the CPU clock speed, given a []byte formatted as the /proc/cpuinfo file.
+// GetClockSpeed CPU时钟速度
 func GetClockSpeed(procInfo []byte) (uint64, error) {
 	// First look through sys to find a max supported cpu frequency.
 	if utils.FileExists(maxFreqFile) {
@@ -154,6 +154,7 @@ func GetMachineMemoryCapacity() (uint64, error) {
 // https://www.kernel.org/doc/Documentation/admin-guide/ras.rst.
 // Full list of memory types can be found in edac_mc.c
 // (https://github.com/torvalds/linux/blob/v5.5/drivers/edac/edac_mc.c#L198)
+// 根据给定的内存类型获取机器的内存大小
 func GetMachineMemoryByType(edacPath string) (map[string]*info.MemoryInfo, error) {
 	memory := map[string]*info.MemoryInfo{}
 	names, err := ioutil.ReadDir(edacPath)

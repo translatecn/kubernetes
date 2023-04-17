@@ -633,9 +633,15 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	}
 	// 调用 cadvisor.New 生成kubeDeps.CAdvisorInterface对象
 	if kubeDeps.CAdvisorInterface == nil {
-		imageFsInfoProvider := cadvisor.NewImageFsInfoProvider(s.RemoteRuntimeEndpoint)
+		imageFsInfoProvider := cadvisor.NewImageFsInfoProvider(s.RemoteRuntimeEndpoint) // unix:///run/containerd/containerd.sock
 		//后续kubeDeps.CAdvisorInterface对象会被赋值给kubelet的cadvisor
-		kubeDeps.CAdvisorInterface, err = cadvisor.New(imageFsInfoProvider, s.RootDirectory, cgroupRoots, cadvisor.UsingLegacyCadvisorStats(s.RemoteRuntimeEndpoint), s.LocalStorageCapacityIsolation)
+		kubeDeps.CAdvisorInterface, err = cadvisor.New(
+			imageFsInfoProvider, //
+			s.RootDirectory,     // /var/lib/kubelet
+			cgroupRoots,         //
+			cadvisor.UsingLegacyCadvisorStats(s.RemoteRuntimeEndpoint), // 是不是内置CRI
+			s.LocalStorageCapacityIsolation,                            // 是否启用disk   requests、limit检查
+		)
 		if err != nil {
 			return err
 		}

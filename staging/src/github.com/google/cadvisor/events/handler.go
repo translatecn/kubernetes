@@ -125,14 +125,13 @@ func NewEventChannel(watchID int) *EventChannel {
 	}
 }
 
-// Policy specifying how many events to store.
-// MaxAge is the max duration for which to keep events.
-// MaxNumEvents is the max number of events to keep (-1 for no limit).
+// StoragePolicy 指定存储多少事件的策略。
+// MaxAge是保留事件的最大持续时间。
+// MaxNumEvents是要保留的最大事件数(-1表示没有限制)。
 type StoragePolicy struct {
 	// Defaults limites, used if a per-event limit is not set.
 	DefaultMaxAge       time.Duration
 	DefaultMaxNumEvents int
-
 	// Per-event type limits.
 	PerTypeMaxAge       map[info.EventType]time.Duration
 	PerTypeMaxNumEvents map[info.EventType]int

@@ -160,7 +160,7 @@ var pluginsLock sync.Mutex
 var plugins = make(map[string]Plugin)
 
 type Plugin interface {
-	// InitializeFSContext is invoked when populating an fs.Context object for a new manager.
+	// InitializeFSContext 在填充fs时调用。上下文对象用于新管理器。
 	// A returned error here is fatal.
 	InitializeFSContext(context *fs.Context) error
 

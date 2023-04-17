@@ -81,17 +81,11 @@ type partition struct {
 }
 
 type RealFsInfo struct {
-	// Map from block device path to partition information.
-	partitions map[string]partition
-	// Map from label to block device path.
-	// Labels are intent-specific tags that are auto-detected.
-	labels map[string]string
-	// Map from mountpoint to mount information.
-	mounts map[string]mount.Info
-	// devicemapper client
-	dmsetup devicemapper.DmsetupClient
-	// fsUUIDToDeviceName is a map from the filesystem UUID to its device name.
-	fsUUIDToDeviceName map[string]string
+	partitions         map[string]partition       // 块设备-> 分区信息
+	labels             map[string]string          // labels(自动设置的、记录了一些关键的挂载点)->设备路径
+	mounts             map[string]mount.Info      // 挂载点-> 挂在信息
+	dmsetup            devicemapper.DmsetupClient //
+	fsUUIDToDeviceName map[string]string          // 文件系统ID->设备
 }
 
 func NewFsInfo(context Context) (FsInfo, error) {
@@ -111,7 +105,7 @@ func NewFsInfo(context Context) (FsInfo, error) {
 		klog.Warningf("Failed to get disk UUID mapping, getting disk info by uuid will not work: %v", err)
 	}
 
-	// Avoid devicemapper container mounts - these are tracked by the ThinPoolWatcher
+	// 避免使用devicemapper容器挂载，这些挂载由ThinPoolWatcher跟踪。
 	excluded := []string{fmt.Sprintf("%s/devicemapper/mnt", context.Docker.Root)}
 	fsInfo := &RealFsInfo{
 		partitions:         processMounts(mounts, excluded),
@@ -121,12 +115,10 @@ func NewFsInfo(context Context) (FsInfo, error) {
 		fsUUIDToDeviceName: fsUUIDToDeviceName,
 	}
 
-	for _, mnt := range mounts {
+	for _, mnt := range mounts { // cat /proc/self/mountinfo
 		fsInfo.mounts[mnt.Mountpoint] = *mnt
 	}
-
-	// need to call this before the log line below printing out the partitions, as this function may
-	// add a "partition" for devicemapper to fsInfo.partitions
+	//在打印分区之前需要调用此函数，因为此函数可能会向fsInfo.partitions添加一个“分区”以处理devicemapper。
 	fsInfo.addDockerImagesLabel(context, mounts)
 	fsInfo.addCrioImagesLabel(context, mounts)
 
@@ -263,7 +255,7 @@ func (i *RealFsInfo) getDockerDeviceMapperInfo(context DockerContext) (string, *
 	}, nil
 }
 
-// addSystemRootLabel attempts to determine which device contains the mount for /.
+// addSystemRootLabel 尝试确定哪个设备包含了/挂载点
 func (i *RealFsInfo) addSystemRootLabel(mounts []*mount.Info) {
 	for _, m := range mounts {
 		if m.Mountpoint == "/" {

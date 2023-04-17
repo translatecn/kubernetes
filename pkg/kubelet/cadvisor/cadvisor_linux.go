@@ -81,7 +81,7 @@ func init() {
 
 // New creates a new cAdvisor Interface for linux systems.
 func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots []string, usingLegacyStats, localStorageCapacityIsolation bool) (Interface, error) {
-	sysFs := sysfs.NewRealSysFs()
+	sysFs := sysfs.NewRealSysFs() // 结构体
 
 	includedMetrics := cadvisormetrics.MetricSet{
 		cadvisormetrics.CpuUsageMetrics:     struct{}{},
@@ -94,7 +94,7 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 		cadvisormetrics.OOMMetrics:          struct{}{},
 	}
 
-	// Only add the Accelerator metrics if the feature is inactive
+	// 仅在该功能处于非活动状态时添加加速器指标。
 	if !utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DisableAcceleratorUsageMetrics) {
 		includedMetrics[cadvisormetrics.AcceleratorUsageMetrics] = struct{}{}
 	}
@@ -125,7 +125,7 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 		return nil, err
 	}
 
-	if _, err := os.Stat(rootPath); err != nil {
+	if _, err := os.Stat(rootPath); err != nil { // /var/lib/kubelet  写死的
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(path.Clean(rootPath), 0750); err != nil {
 				return nil, fmt.Errorf("error creating root directory %q: %v", rootPath, err)

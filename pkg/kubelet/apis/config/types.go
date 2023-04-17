@@ -447,13 +447,10 @@ type KubeletConfiguration struct {
 	// +optional
 	Tracing *tracingapi.TracingConfiguration
 
-	// LocalStorageCapacityIsolation enables local ephemeral storage isolation feature. The default setting is true.
-	// This feature allows users to set request/limit for container's ephemeral storage and manage it in a similar way
-	// as cpu and memory. It also allows setting sizeLimit for emptyDir volume, which will trigger pod eviction if disk
-	// usage from the volume exceeds the limit.
-	// This feature depends on the capability of detecting correct root file system disk usage. For certain systems,
-	// such as kind rootless, if this capability cannot be supported, the feature LocalStorageCapacityIsolation should be
-	// disabled. Once disabled, user should not set request/limit for container's ephemeral storage, or sizeLimit for emptyDir.
+	// LocalStorageCapacityIsolation 启用本地临时存储隔离功能。默认设置为true。此功能允许用户为容器的临时存储设置request/limit，并以类似于CPU和内存的方式进行管理。它还允许为emptyDir卷设置sizeLimit，如果来自卷的磁盘使用超过限制，则会触发Pod驱逐。
+	//
+	// 此功能取决于检测正确的根文件系统磁盘使用情况的能力。对于某些系统，例如kind rootless，如果无法支持此功能，则应禁用LocalStorageCapacityIsolation。一旦禁用，用户不应为容器的临时存储设置请求/限制，或为emptyDir设置sizeLimit。
+
 	// +optional
 	LocalStorageCapacityIsolation bool
 }

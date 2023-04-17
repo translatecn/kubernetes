@@ -53,11 +53,11 @@ import (
 )
 
 var globalHousekeepingInterval = flag.Duration("global_housekeeping_interval", 1*time.Minute, "Interval between global housekeepings")
-var updateMachineInfoInterval = flag.Duration("update_machine_info_interval", 5*time.Minute, "Interval between machine info updates.")
-var logCadvisorUsage = flag.Bool("log_cadvisor_usage", false, "Whether to log the usage of the cAdvisor container")
-var eventStorageAgeLimit = flag.String("event_storage_age_limit", "default=24h", "Max length of time for which to store events (per type). Value is a comma separated list of key values, where the keys are event types (e.g.: creation, oom) or \"default\" and the value is a duration. Default is applied to all non-specified event types")
-var eventStorageEventLimit = flag.String("event_storage_event_limit", "default=100000", "Max number of events to store (per type). Value is a comma separated list of key values, where the keys are event types (e.g.: creation, oom) or \"default\" and the value is an integer. Default is applied to all non-specified event types")
-var applicationMetricsCountLimit = flag.Int("application_metrics_count_limit", 100, "Max number of application metrics to store (per container)")
+var updateMachineInfoInterval = flag.Duration("update_machine_info_interval", 5*time.Minute, "机器信息更新的间隔。")
+var logCadvisorUsage = flag.Bool("log_cadvisor_usage", false, "是否记录cAdvisor容器的使用日志")
+var eventStorageAgeLimit = flag.String("event_storage_age_limit", "default=24h", "存储事件的最大时间长度(每种类型)。Value是一个以逗号分隔的键值列表，其中键是事件类型(例如:creation, oom)或“default”，Value是持续时间。Default应用于所有非指定的事件类型")
+var eventStorageEventLimit = flag.String("event_storage_event_limit", "default=100000", "要存储的最大事件数(每种类型)。Value是一个以逗号分隔的键值列表，其中键是事件类型(例如:creation, oom)或“default”，Value是一个整数。Default应用于所有非指定的事件类型")
+var applicationMetricsCountLimit = flag.Int("application_metrics_count_limit", 100, "要存储的最大应用程序度量数(每个容器)")
 
 // The namespace under which Docker aliases are unique.
 const DockerNamespace = "docker"
@@ -151,11 +151,16 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, houskeepingConfig
 		return nil, fmt.Errorf("manager requires memory storage")
 	}
 
-	// Detect the container we are running on.
+	// 检测我们正在运行的容器。
 	selfContainer := "/"
 	var err error
-	// Avoid using GetOwnCgroupPath on cgroup v2 as it is not supported by libcontainer
-	if !cgroups.IsCgroup2UnifiedMode() {
+	// 避免在cgroup v2上使用GetOwnCgroupPath，因为它不受libcontainer支持。
+	//
+	//cgroup是Linux内核中的一个特性，用于限制和隔离进程的资源使用。cgroup有两个版本，即cgroup v1和cgroup v2。在cgroup v1中，
+	//每个进程都有自己的cgroup路径，可以使用GetOwnCgroupPath函数来获取它的路径。但是，在cgroup v2中，每个进程的cgroup路径是动态生成的，无法使用GetOwnCgroupPath函数来获取它的路径。
+	//
+	//因此，如果在cgroup v2上使用GetOwnCgroupPath函数，可能会导致错误或不可预测的结果。为了避免这种情况，建议在cgroup v2上使用其他函数或工具来获取进程的cgroup路径，或者使用cgroup v1来进行进程隔离。
+	if !cgroups.IsCgroup2UnifiedMode() { // 不是 v2 unified 模式
 		selfContainer, err = cgroups.GetOwnCgroup("cpu")
 		if err != nil {
 			return nil, err
@@ -164,20 +169,24 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, houskeepingConfig
 	}
 	// 根据挂载点信息获取fsinfo对象
 	context := fs.Context{}
-
 	if err := container.InitializeFSContext(&context); err != nil {
 		return nil, err
 	}
 
-	fsInfo, err := fs.NewFsInfo(context)
+	fsInfo, err := fs.NewFsInfo(context) // ✅
 	if err != nil {
 		return nil, err
 	}
 
-	// If cAdvisor was started with host's rootfs mounted, assume that its running
-	// in its own namespaces.
+	// 如果使用主机的rootfs启动了cAdvisor，则假定它在自己的命名空间中运行。
 	inHostNamespace := false
-	if _, err := os.Stat("/rootfs/proc"); os.IsNotExist(err) {
+	_, err = os.Stat("/rootfs/proc")
+	if os.IsNotExist(err) {
+		//rootfs是Linux系统中的一个特殊文件系统，它包含了系统启动时必需的文件和目录。在Docker等容器平台中，rootfs通常被用于构建容器镜像。如果在主机上挂载了rootfs，并使用它来启动cAdvisor，则可以假定cAdvisor在自己的命名空间中运行，这意味着它无法直接访问主机上的其他进程或资源。
+		//
+		//在这种情况下，cAdvisor需要使用一些特殊的技巧来获取系统信息和指标。例如，它可以使用procfs文件系统来获取主机上的进程信息，或者使用cgroup文件系统来获取容器的资源使用情况。此外，cAdvisor还可以使用一些Linux内核特性，例如UTS命名空间和网络命名空间，来隔离自身并获取更多的系统信息。
+		//
+		//需要注意的是，使用rootfs启动cAdvisor可能会带来一些安全风险和性能问题，因此建议在必要时才使用这种方式启动cAdvisor，并采取必要的安全措施和优化措施。
 		inHostNamespace = true
 	}
 
@@ -190,7 +199,7 @@ func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, houskeepingConfig
 		memoryCache:                           memoryCache,
 		fsInfo:                                fsInfo,
 		sysFs:                                 sysfs,
-		cadvisorContainer:                     selfContainer,
+		cadvisorContainer:                     selfContainer, // /
 		inHostNamespace:                       inHostNamespace,
 		startupTime:                           time.Now(),
 		maxHousekeepingInterval:               *houskeepingConfig.Interval,

@@ -84,12 +84,9 @@ type KubeletFlags struct {
 	// 其对应的标志仅在Windows构建中注册
 	// Windows中任何进程的默认优先级类别为NORMAL_PRIORITY_CLASS.保持不变以保持向后兼容性.
 	// Source: https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
-	WindowsPriorityClass string // kubelet 进程优先级
-
-	// remoteRuntimeEndpoint is the endpoint of remote runtime service
-	RemoteRuntimeEndpoint string
-	// remoteImageEndpoint is the endpoint of remote image service
-	RemoteImageEndpoint string
+	WindowsPriorityClass  string // kubelet 进程优先级
+	RemoteRuntimeEndpoint string // 远程CRI端点
+	RemoteImageEndpoint   string // 远程镜像服务端点
 	// experimentalMounterPath is the path of mounter binary. Leave empty to use the default mount path
 	ExperimentalMounterPath string
 	// This flag, if set, will avoid including `EvictionHard` limits while computing Node Allocatable.
