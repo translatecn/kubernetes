@@ -146,7 +146,17 @@ type HouskeepingConfig = struct {
 }
 
 // New takes a memory storage and returns a new manager.
-func New(memoryCache *memory.InMemoryCache, sysfs sysfs.SysFs, houskeepingConfig HouskeepingConfig, includedMetricsSet container.MetricSet, collectorHTTPClient *http.Client, rawContainerCgroupPathPrefixWhiteList, containerEnvMetadataWhiteList []string, perfEventsFile string, resctrlInterval time.Duration) (Manager, error) {
+func New(
+	memoryCache *memory.InMemoryCache,
+	sysfs sysfs.SysFs,
+	houskeepingConfig HouskeepingConfig,
+	includedMetricsSet container.MetricSet,
+	collectorHTTPClient *http.Client,
+	rawContainerCgroupPathPrefixWhiteList,
+	containerEnvMetadataWhiteList []string,
+	perfEventsFile string,
+	resctrlInterval time.Duration,
+) (Manager, error) {
 	if memoryCache == nil {
 		return nil, fmt.Errorf("manager requires memory storage")
 	}
@@ -250,29 +260,28 @@ type namespacedContainerName struct {
 }
 
 type manager struct {
-	containers               map[namespacedContainerName]*containerData
-	containersLock           sync.RWMutex
-	memoryCache              *memory.InMemoryCache
-	fsInfo                   fs.FsInfo
-	sysFs                    sysfs.SysFs
-	machineMu                sync.RWMutex // protects machineInfo
-	machineInfo              info.MachineInfo
-	quitChannels             []chan error
-	cadvisorContainer        string
-	inHostNamespace          bool
-	eventHandler             events.EventManager
-	startupTime              time.Time
-	maxHousekeepingInterval  time.Duration
-	allowDynamicHousekeeping bool
-	includedMetrics          container.MetricSet
-	containerWatchers        []watcher.ContainerWatcher
-	eventsChannel            chan watcher.ContainerEvent
-	collectorHTTPClient      *http.Client
-	nvidiaManager            stats.Manager
-	perfManager              stats.Manager
-	resctrlManager           resctrl.Manager
-	// List of raw container cgroup path prefix whitelist.
-	rawContainerCgroupPathPrefixWhiteList []string
+	containers                            map[namespacedContainerName]*containerData
+	containersLock                        sync.RWMutex
+	memoryCache                           *memory.InMemoryCache
+	fsInfo                                fs.FsInfo
+	sysFs                                 sysfs.SysFs
+	machineMu                             sync.RWMutex // protects machineInfo
+	machineInfo                           info.MachineInfo
+	quitChannels                          []chan error
+	cadvisorContainer                     string // cadvisor容器的名称  /
+	inHostNamespace                       bool
+	eventHandler                          events.EventManager
+	startupTime                           time.Time
+	maxHousekeepingInterval               time.Duration
+	allowDynamicHousekeeping              bool
+	includedMetrics                       container.MetricSet
+	containerWatchers                     []watcher.ContainerWatcher
+	eventsChannel                         chan watcher.ContainerEvent
+	collectorHTTPClient                   *http.Client
+	nvidiaManager                         stats.Manager
+	perfManager                           stats.Manager
+	resctrlManager                        resctrl.Manager
+	rawContainerCgroupPathPrefixWhiteList []string // 这是一个原始容器的 cgroup 路径前缀白名单列表。  为nil
 	// List of container env prefix whitelist, the matched container envs would be collected into metrics as extra labels.
 	containerEnvMetadataWhiteList []string
 }
@@ -292,14 +301,13 @@ func (m *manager) Start() error {
 	}
 	m.containerWatchers = append(m.containerWatchers, rawWatcher)
 
-	// Watch for OOMs.
 	// 启动对oom的监听
 	err = m.watchForNewOoms()
 	if err != nil {
 		klog.Warningf("Could not configure a source for OOM detection, disabling OOM events: %v", err)
 	}
 
-	// If there are no factories, don't start any housekeeping and serve the information we do have.
+	// 如果没有容器工厂，则不要启动任何清理工作，并提供我们已有的信息。
 	if !container.HasFactories() {
 		return nil
 	}
@@ -878,6 +886,7 @@ func (m *manager) GetProcessList(containerName string, options v2.RequestOptions
 	return ps, nil
 }
 
+// 注册收集器
 func (m *manager) registerCollectors(collectorConfigs map[string]string, cont *containerData) error {
 	for k, v := range collectorConfigs {
 		configFile, err := cont.ReadFile(v, m.inHostNamespace)
@@ -958,7 +967,7 @@ func (m *manager) createContainerLocked(containerName string, watchSource watche
 			}
 		}
 	}
-	if m.includedMetrics.Has(container.PerfMetrics) {
+	if m.includedMetrics.Has(container.PerfMetrics) { // cadvisormetrics.MetricSet
 		perfCgroupPath, err := handler.GetCgroupPath("perf_event")
 		if err != nil {
 			klog.Warningf("Error getting perf_event cgroup path: %q", err)
@@ -970,7 +979,7 @@ func (m *manager) createContainerLocked(containerName string, watchSource watche
 		}
 	}
 
-	if m.includedMetrics.Has(container.ResctrlMetrics) {
+	if m.includedMetrics.Has(container.ResctrlMetrics) { // cadvisormetrics.MetricSet
 		cont.resctrlCollector, err = m.resctrlManager.GetCollector(containerName, func() ([]string, error) {
 			return cont.getContainerPids(m.inHostNamespace)
 		}, len(m.machineInfo.Topology))
@@ -980,7 +989,7 @@ func (m *manager) createContainerLocked(containerName string, watchSource watche
 	}
 
 	// Add collectors
-	labels := handler.GetContainerLabels()
+	labels := handler.GetContainerLabels() // 处理器的标签
 	collectorConfigs := collector.GetCollectorConfigs(labels)
 	err = m.registerCollectors(collectorConfigs, cont)
 	if err != nil {
@@ -1227,7 +1236,7 @@ func (m *manager) watchForNewOoms() error {
 	//
 	//- 过程就是判断有没有invoked oom-killer:字段
 	//- 然后再用containerRegexp正则判断是容器进程的oom
-	go oomLog.StreamOoms(outStream)
+	go oomLog.StreamOoms(outStream) // 开始解析/dev/kmsg里的日志
 
 	go func() {
 		// 启动消费者产生oom 和oomKill event
@@ -1238,7 +1247,7 @@ func (m *manager) watchForNewOoms() error {
 				Timestamp:     oomInstance.TimeOfDeath,
 				EventType:     info.EventOom,
 			}
-			err := m.eventHandler.AddEvent(newEvent)
+			err := m.eventHandler.AddEvent(newEvent) // EventOom
 			if err != nil {
 				klog.Errorf("failed to add OOM event for %q: %v", oomInstance.ContainerName, err)
 			}
@@ -1255,7 +1264,7 @@ func (m *manager) watchForNewOoms() error {
 					},
 				},
 			}
-			err = m.eventHandler.AddEvent(newEvent)
+			err = m.eventHandler.AddEvent(newEvent) // EventOomKill
 			if err != nil {
 				klog.Errorf("failed to add OOM kill event for %q: %v", oomInstance.ContainerName, err)
 			}

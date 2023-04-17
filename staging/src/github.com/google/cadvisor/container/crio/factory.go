@@ -151,7 +151,7 @@ func Register(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics
 	}
 
 	klog.V(1).Infof("Registering CRI-O factory")
-	f := &crioFactory{
+	_crio := &crioFactory{
 		client:             client,
 		cgroupSubsystems:   cgroupSubsystems,
 		fsInfo:             fsInfo,
@@ -161,6 +161,6 @@ func Register(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics
 		includedMetrics:    includedMetrics,
 	}
 
-	container.RegisterContainerHandlerFactory(f, []watcher.ContainerWatchSource{watcher.Raw})
+	container.RegisterContainerHandlerFactory(_crio, []watcher.ContainerWatchSource{watcher.Raw})
 	return nil
 }

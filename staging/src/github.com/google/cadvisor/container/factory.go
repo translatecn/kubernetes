@@ -31,17 +31,16 @@ type ContainerHandlerFactory interface {
 	// Create a new ContainerHandler using this factory. CanHandleAndAccept() must have returned true.
 	NewContainerHandler(name string, metadataEnvAllowList []string, inHostNamespace bool) (c ContainerHandler, err error)
 
-	// Returns whether this factory can handle and accept the specified container.
+	// CanHandleAndAccept 返回此工厂是否可以处理和接受指定的容器。
 	CanHandleAndAccept(name string) (handle bool, accept bool, err error)
 
-	// Name of the factory.
 	String() string
 
 	// Returns debugging information. Map of lines per category.
 	DebugInfo() map[string][]string
 }
 
-// MetricKind represents the kind of metrics that cAdvisor exposes.
+// MetricKind 表示cAdvisor公开的度量类型。
 type MetricKind string
 
 const (
@@ -163,9 +162,7 @@ type Plugin interface {
 	// InitializeFSContext 在填充fs时调用。上下文对象用于新管理器。
 	// A returned error here is fatal.
 	InitializeFSContext(context *fs.Context) error
-
-	// Register is invoked when starting a manager. It can optionally return a container watcher.
-	// A returned error is logged, but is not fatal.
+	// Register 调用寄存器。它可以选择返回一个容器监视器。 返回的错误被记录，但不是致命的。
 	Register(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics MetricSet) (watcher.ContainerWatcher, error)
 }
 
@@ -200,6 +197,9 @@ func InitializePlugins(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includ
 
 	containerWatchers := []watcher.ContainerWatcher{}
 	for name, plugin := range plugins {
+		//var _ = containerd.Register
+		//var _ = crio.Register
+		//var _ = systemd.Register
 		watcher, err := plugin.Register(factory, fsInfo, includedMetrics)
 		if err != nil {
 			klog.V(5).Infof("Registration of the %s container factory failed: %v", name, err)
@@ -218,8 +218,6 @@ var (
 	factoriesLock sync.RWMutex
 )
 
-// Register a ContainerHandlerFactory. These should be registered from least general to most general
-// as they will be asked in order whether they can handle a particular container.
 func RegisterContainerHandlerFactory(factory ContainerHandlerFactory, watchTypes []watcher.ContainerWatchSource) {
 	factoriesLock.Lock()
 	defer factoriesLock.Unlock()

@@ -41,7 +41,7 @@ import (
 // (empty string), and the value is the unified cgroup mount point.
 func GetCgroupSubsystems(includedMetrics container.MetricSet) (map[string]string, error) {
 	if cgroups.IsCgroup2UnifiedMode() {
-		return map[string]string{"": fs2.UnifiedMountpoint}, nil
+		return map[string]string{"": fs2.UnifiedMountpoint}, nil // /sys/fs/cgroup
 	}
 	// Get all cgroup mounts.
 	allCgroups, err := cgroups.GetCgroupMounts(true)

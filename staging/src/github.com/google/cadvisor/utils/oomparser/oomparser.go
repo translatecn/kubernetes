@@ -49,10 +49,10 @@ type OomInstance struct {
 	// accurate to the minute
 	TimeOfDeath time.Time
 	// the absolute name of the container that OOMed
-	ContainerName string
+	ContainerName string // oom_memcg
 	// the absolute name of the container that was killed
 	// due to the OOM.
-	VictimContainerName string
+	VictimContainerName string // task_memcg
 	// the constraint that triggered the OOM.  One of CONSTRAINT_NONE,
 	// CONSTRAINT_CPUSET, CONSTRAINT_MEMORY_POLICY, CONSTRAINT_MEMCG
 	Constraint string
@@ -119,12 +119,16 @@ func checkIfStartOfOomMessages(line string) bool {
 // - 过程就是判断有没有invoked oom-killer:字段
 // - 然后再用containerRegexp正则判断是容器进程的oom
 func (p *OomParser) StreamOoms(outStream chan<- *OomInstance) {
+	// func (p *parser) Parse() <-chan Message {
 	kmsgEntries := p.parser.Parse()
 	defer p.parser.Close()
-
+	// 6,727,35945901675,-;oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=cri-containerd-f69706726f784bfb90a8a6378a41d684f1ed23508ef32ba586e477509f121867.scope,mems_allowed=0,oom_memcg=/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod233b806c_04ce_433c_9e64_cf4c323e6c16.slice,task_memcg=/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod233b806c_04ce_433c_9e64_cf4c323e6c16.slice/cri-containerd-f69706726f784bfb90a8a6378a41d684f1ed23508ef32ba586e477509f121867.scope,task=python,pid=988370,uid=0
 	for msg := range kmsgEntries {
 		isOomMessage := checkIfStartOfOomMessages(msg.Message)
 		if isOomMessage {
+			// 6,727,35945901675,-;oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=cri-containerd-f69706726f784bfb90a8a6378a41d684f1ed23508ef32ba586e477509f121867.scope,mems_allowed=0,
+			//oom_memcg=/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod233b806c_04ce_433c_9e64_cf4c323e6c16.slice,task_memcg=/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod233b806c_04ce_433c_9e64_cf4c323e6c16.slice/cri-containerd-f69706726f784bfb90a8a6378a41d684f1ed23508ef32ba586e477509f121867.scope,
+			//task=python,pid=988370,uid=0
 			oomCurrentInstance := &OomInstance{
 				ContainerName:       "/",
 				VictimContainerName: "/",

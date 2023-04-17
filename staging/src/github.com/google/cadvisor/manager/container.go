@@ -45,7 +45,18 @@ import (
 )
 
 // Housekeeping interval.
-var enableLoadReader = flag.Bool("enable_load_reader", false, "Whether to enable cpu load reader")
+
+// 在Linux系统中，负载平均值（load average）表示系统中正在运行和等待运行的进程数。负载平均值通常是一个三元组，分别表示1分钟、5分钟和15分钟的平均值。负载平均值越高，表示系统的负荷越大，可能需要增加系统资源或优化应用程序。
+//
+//在cAdvisor中，可以使用负载平均值来监视系统的负载情况。为了平滑负载平均值，cAdvisor使用了一个衰减值（decay value）来计算加权平均值。衰减值表示前一次计算的负载平均值对当前负载平均值的影响程度，衰减值越大，前一次计算的负载平均值对当前负载平均值的影响就越小，从而使负载平均值更平滑。
+//
+//在cAdvisor中，使用10秒的间隔长度来计算负载平均值，衰减值的默认值为0.5。这意味着前一次计算的负载平均值对当前负载平均值的影响为50%，当前负载平均值的影响为50%。如果需要调整衰减值，可以在cAdvisor的配置文件中设置load_average_decay参数。例如，将衰减值设置为0.8：
+//
+//"load_average_decay": 0.8
+//
+//需要注意的是，衰减值的选择需要根据实际情况进行评估和测试，以确保负载平均值能够反映系统的负荷情况，并且不会受到噪声的影响。
+
+var enableLoadReader = flag.Bool("enable_load_reader", false, "是否启用CPU负载读取器。")
 var HousekeepingInterval = flag.Duration("housekeeping_interval", 1*time.Second, "Interval between container housekeepings")
 
 // TODO: replace regular expressions with something simpler, such as strings.Split().
@@ -58,9 +69,9 @@ var cgroupMemoryPathRegExp = regexp.MustCompile(`memory[^:]*:(.*?)[,;$]`)
 var cgroupCPUPathRegExp = regexp.MustCompile(`cpu[^:]*:(.*?)[,;$]`)
 
 type containerInfo struct {
-	info.ContainerReference
-	Subcontainers []info.ContainerReference
-	Spec          info.ContainerSpec
+	info.ContainerReference                           // 引用包含足够的信息来唯一标识容器
+	Subcontainers           []info.ContainerReference //
+	Spec                    info.ContainerSpec        //
 }
 
 type containerData struct {
@@ -81,8 +92,7 @@ type containerData struct {
 	//  used to track time
 	clock clock.Clock
 
-	// Decay value used for load average smoothing. Interval length of 10 seconds is used.
-	loadDecay float64
+	loadDecay float64 // 用于平滑负载平均值的衰减值。使用10秒的间隔长度。
 
 	// Whether to log the usage of this container when it is updated.
 	logUsage bool
@@ -451,7 +461,7 @@ func newContainerData(containerName string, memoryCache *memory.InMemoryCache, h
 		nvidiaCollector:          &stats.NoopCollector{},
 		resctrlCollector:         &stats.NoopCollector{},
 	}
-	cont.info.ContainerReference = ref
+	cont.info.ContainerReference = ref // 引用包含足够的信息来唯一标识容器
 
 	cont.loadDecay = math.Exp(float64(-cont.housekeepingInterval.Seconds() / 10))
 

@@ -80,10 +80,7 @@ type EventManager interface {
 	// WatchEvents() allows a caller to register for receiving events based on the specified request.
 	// On successful registration, an EventChannel object is returned.
 	WatchEvents(request *Request) (*EventChannel, error)
-	// GetEvents() returns all detected events based on the filters specified in request.
 	GetEvents(request *Request) ([]*info.Event, error)
-	// AddEvent allows the caller to add an event to an EventManager
-	// object
 	AddEvent(event *info.Event) error
 	// Cancels a previously requested watch event.
 	StopWatch(watchID int)

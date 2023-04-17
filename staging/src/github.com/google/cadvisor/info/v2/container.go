@@ -266,9 +266,8 @@ type RequestOptions struct {
 	// Type of container identifier specified - TypeName (default) or TypeDocker
 	IdType string `json:"type"`
 	// Number of stats to return, -1 means no limit.
-	Count int `json:"count"`
-	// Whether to include stats for child subcontainers.
-	Recursive bool `json:"recursive"`
+	Count     int  `json:"count"`
+	Recursive bool `json:"recursive"` // 是否包含子容器的统计信息
 	// Update stats if they are older than MaxAge
 	// nil indicates no update, and 0 will always trigger an update.
 	MaxAge *time.Duration `json:"max_age"`

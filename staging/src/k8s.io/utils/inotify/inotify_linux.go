@@ -9,23 +9,23 @@
 Package inotify implements a wrapper for the Linux inotify system.
 
 Example:
-    watcher, err := inotify.NewWatcher()
-    if err != nil {
-        log.Fatal(err)
-    }
-    err = watcher.Watch("/tmp")
-    if err != nil {
-        log.Fatal(err)
-    }
-    for {
-        select {
-        case ev := <-watcher.Event:
-            log.Println("event:", ev)
-        case err := <-watcher.Error:
-            log.Println("error:", err)
-        }
-    }
 
+	watcher, err := inotify.NewWatcher()
+	if err != nil {
+	    log.Fatal(err)
+	}
+	err = watcher.Watch("/tmp")
+	if err != nil {
+	    log.Fatal(err)
+	}
+	for {
+	    select {
+	    case ev := <-watcher.Event:
+	        log.Println("event:", ev)
+	    case err := <-watcher.Error:
+	        log.Println("error:", err)
+	    }
+	}
 */
 package inotify // import "k8s.io/utils/inotify"
 
@@ -137,6 +137,7 @@ func (w *Watcher) RemoveWatch(path string) error {
 
 // readEvents reads from the inotify file descriptor, converts the
 // received events into Event objects and sends them via the Event channel
+// 读取通知
 func (w *Watcher) readEvents() {
 	var buf [syscall.SizeofInotifyEvent * 4096]byte
 

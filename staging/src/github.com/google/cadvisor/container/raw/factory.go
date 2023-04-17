@@ -35,22 +35,11 @@ var (
 )
 
 type rawFactory struct {
-	// Factory for machine information.
 	machineInfoFactory info.MachineInfoFactory
-
-	// Information about the cgroup subsystems.
-	cgroupSubsystems map[string]string
-
-	// Information about mounted filesystems.
-	fsInfo fs.FsInfo
-
-	// Watcher for inotify events.
-	watcher *common.InotifyWatcher
-
-	// List of metrics to be included.
-	includedMetrics map[container.MetricKind]struct{}
-
-	// List of raw container cgroup path prefix whitelist.
+	cgroupSubsystems   map[string]string
+	fsInfo             fs.FsInfo
+	watcher            *common.InotifyWatcher
+	includedMetrics    map[container.MetricKind]struct{}
 	rawPrefixWhiteList []string
 }
 
@@ -95,13 +84,13 @@ func Register(machineInfoFactory info.MachineInfoFactory, fsInfo fs.FsInfo, incl
 		return fmt.Errorf("failed to find supported cgroup mounts for the raw factory")
 	}
 
-	watcher, err := common.NewInotifyWatcher()
+	watcher, err := common.NewInotifyWatcher() // 接受系统事件
 	if err != nil {
 		return err
 	}
 
 	klog.V(1).Infof("Registering Raw factory")
-	factory := &rawFactory{
+	_raw := &rawFactory{
 		machineInfoFactory: machineInfoFactory,
 		fsInfo:             fsInfo,
 		cgroupSubsystems:   cgroupSubsystems,
@@ -109,6 +98,6 @@ func Register(machineInfoFactory info.MachineInfoFactory, fsInfo fs.FsInfo, incl
 		includedMetrics:    includedMetrics,
 		rawPrefixWhiteList: rawPrefixWhiteList,
 	}
-	container.RegisterContainerHandlerFactory(factory, []watch.ContainerWatchSource{watch.Raw})
+	container.RegisterContainerHandlerFactory(_raw, []watch.ContainerWatchSource{watch.Raw})
 	return nil
 }

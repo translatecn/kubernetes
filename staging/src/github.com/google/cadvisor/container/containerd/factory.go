@@ -143,7 +143,7 @@ func Register(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics
 	}
 
 	klog.V(1).Infof("Registering containerd factory")
-	f := &containerdFactory{
+	_container := &containerdFactory{
 		cgroupSubsystems:   cgroupSubsystems,
 		client:             client,
 		fsInfo:             fsInfo,
@@ -152,6 +152,6 @@ func Register(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics
 		includedMetrics:    includedMetrics,
 	}
 
-	container.RegisterContainerHandlerFactory(f, []watcher.ContainerWatchSource{watcher.Raw})
+	container.RegisterContainerHandlerFactory(_container, []watcher.ContainerWatchSource{watcher.Raw})
 	return nil
 }

@@ -115,3 +115,36 @@ $ echo N > /proc/sys/vm/hugepage_nr
 
 其中，N为Huge Pages的数量。需要注意的是，修改hugepage_nr参数的值可能需要root权限，并且可能会影响系统的性能和稳定性。因此，在修改该参数之前，需要仔细评估和测试系统的性能和稳定性。
 ```
+
+
+#### inotify_init
+```
+fd, errno := syscall.InotifyInit1(syscall.IN_CLOEXEC)
+
+inotify是Linux内核提供的一种机制，用于监视文件系统事件。通过inotify，应用程序可以实时监视文件或目录的创建、修改、删除等事件，并在事件发生时进行相应的处理。
+inotify_init 系统调用可以创建一个inotify实例，并返回一个文件描述符，该文件描述符可以用于监视文件系统事件。
+```
+
+
+
+
+
+#### oom
+```
+6,727,35945901675,-;oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),
+cpuset=cri-containerd-f69706726f784bfb90a8a6378a41d684f1ed23508ef32ba586e477509f121867.scope,mems_allowed=0,
+oom_memcg=/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod233b806c_04ce_433c_9e64_cf4c323e6c16.slice,
+task_memcg=/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod233b806c_04ce_433c_9e64_cf4c323e6c16.slice/cri-containerd-f69706726f784bfb90a8a6378a41d684f1ed23508ef32ba586e477509f121867.scope,
+task=python,pid=988370,uid=0
+
+
+3,728,35945901683,-;Memory cgroup out of memory: Killed process 988370 (python) total-vm:9783776kB, anon-rss:95724kB, file-rss:3268kB, shmem-rss:0kB, UID:0 pgtables:240kB oom_score_adj:995
+
+```
+
+
+
+
+
+# ToDo
+- registerCollectors

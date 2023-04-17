@@ -55,7 +55,7 @@ func newRawContainerHandler(name string, cgroupSubsystems map[string]string, mac
 		return nil, err
 	}
 
-	cgroupPaths := common.MakeCgroupPaths(cgroupSubsystems, name)
+	cgroupPaths := common.MakeCgroupPaths(cgroupSubsystems, name) // 填充容器后缀
 
 	cgroupManager, err := libcontainer.NewCgroupManager(name, cgroupPaths)
 	if err != nil {

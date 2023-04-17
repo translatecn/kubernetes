@@ -79,21 +79,12 @@ type ContainerSpec struct {
 	Image string `json:"image,omitempty"`
 }
 
-// Container reference contains enough information to uniquely identify a container
+// ContainerReference 引用包含足够的信息来唯一标识容器
 type ContainerReference struct {
-	// The container id
-	Id string `json:"id,omitempty"`
-
-	// The absolute name of the container. This is unique on the machine.
-	Name string `json:"name"`
-
-	// Other names by which the container is known within a certain namespace.
-	// This is unique within that namespace.
-	Aliases []string `json:"aliases,omitempty"`
-
-	// Namespace under which the aliases of a container are unique.
-	// An example of a namespace is "docker" for Docker containers.
-	Namespace string `json:"namespace,omitempty"`
+	Id        string   `json:"id,omitempty"`
+	Name      string   `json:"name"`
+	Aliases   []string `json:"aliases,omitempty"`
+	Namespace string   `json:"namespace,omitempty"`
 }
 
 // Sorts by container name.

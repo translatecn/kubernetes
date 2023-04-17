@@ -57,8 +57,7 @@ type ContainerHandler interface {
 	// Returns absolute cgroup path for the requested resource.
 	GetCgroupPath(resource string) (string, error)
 
-	// Returns container labels, if available.
-	GetContainerLabels() map[string]string
+	GetContainerLabels() map[string]string // 获取容器label
 
 	// Returns the container's ip address, if available
 	GetContainerIPAddress() string

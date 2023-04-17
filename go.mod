@@ -250,6 +250,7 @@ require (
 
 replace (
 	github.com/google/cadvisor => ./staging/src/github.com/google/cadvisor
+	github.com/opencontainers/runc => ./staging/src/github.com/opencontainers/runc
 	k8s.io/api => ./staging/src/k8s.io/api
 	k8s.io/apiextensions-apiserver => ./staging/src/k8s.io/apiextensions-apiserver
 	k8s.io/apimachinery => ./staging/src/k8s.io/apimachinery
@@ -280,4 +281,5 @@ replace (
 	k8s.io/sample-cli-plugin => ./staging/src/k8s.io/sample-cli-plugin
 	k8s.io/sample-controller => ./staging/src/k8s.io/sample-controller
 	k8s.io/utils => ./staging/src/k8s.io/utils
+
 )
