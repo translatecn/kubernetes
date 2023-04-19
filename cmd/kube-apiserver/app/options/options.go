@@ -95,6 +95,7 @@ func NewServerRunOptions() *ServerRunOptions {
 	s := ServerRunOptions{
 		// GenericServer 配置文件，重要
 		GenericServerRunOptions: genericoptions.NewServerRunOptions(),
+		// etcd配置
 		Etcd:                    genericoptions.NewEtcdOptions(storagebackend.NewDefaultConfig(kubeoptions.DefaultEtcdPathPrefix, nil)),
 		SecureServing:           kubeoptions.NewSecureServingOptions(),
 		Audit:                   genericoptions.NewAuditOptions(),

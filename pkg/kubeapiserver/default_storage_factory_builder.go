@@ -55,7 +55,9 @@ func DefaultWatchCacheSizes() map[schema.GroupResource]int {
 }
 
 // NewStorageFactoryConfig returns a new StorageFactoryConfig set up with necessary resource overrides.
+// 定义编码方式与需要覆盖的资源
 func NewStorageFactoryConfig() *StorageFactoryConfig {
+	// storage与资源的url路径相关，所以与GVR相关
 	resources := []schema.GroupVersionResource{
 		// If a resource has to be stored in a version that is not the
 		// latest, then it can be listed here. Usually this is the case
@@ -74,7 +76,7 @@ func NewStorageFactoryConfig() *StorageFactoryConfig {
 	}
 
 	return &StorageFactoryConfig{
-		Serializer:                legacyscheme.Codecs,
+		Serializer:                legacyscheme.Codecs,	// 序列化器初始化
 		DefaultResourceEncoding:   serverstorage.NewDefaultResourceEncodingConfig(legacyscheme.Scheme),
 		ResourceEncodingOverrides: resources,
 	}
@@ -109,16 +111,19 @@ type completedStorageFactoryConfig struct {
 }
 
 // New returns a new storage factory created from the completed storage factory configuration.
+// 初始化DefaultStorageFactory对象
 func (c *completedStorageFactoryConfig) New() (*serverstorage.DefaultStorageFactory, error) {
 	resourceEncodingConfig := resourceconfig.MergeResourceEncodingConfigs(c.DefaultResourceEncoding, c.ResourceEncodingOverrides)
+	//
 	storageFactory := serverstorage.NewDefaultStorageFactory(
-		c.StorageConfig,
-		c.DefaultStorageMediaType,
-		c.Serializer,
+		c.StorageConfig,	// 定义如何创建底层存储的连接，包含各种存储接口的storage.Interface实现的认证信息
+		c.DefaultStorageMediaType,	// 数据格式 ex: application/json
+		c.Serializer,				// 序列化器 legacyscheme.Codecs
 		resourceEncodingConfig,
-		c.APIResourceConfig,
-		SpecialDefaultResourcePrefixes)
+		c.APIResourceConfig,		// api是否启用的资源版本表
+		SpecialDefaultResourcePrefixes)	// 前缀
 
+	// 相同资源的绑定，定义不同版本的查找顺序
 	storageFactory.AddCohabitatingResources(networking.Resource("networkpolicies"), extensions.Resource("networkpolicies"))
 	storageFactory.AddCohabitatingResources(apps.Resource("deployments"), extensions.Resource("deployments"))
 	storageFactory.AddCohabitatingResources(apps.Resource("daemonsets"), extensions.Resource("daemonsets"))
