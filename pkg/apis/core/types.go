@@ -2910,8 +2910,7 @@ type PodSpec struct {
 	// requirements.
 	// +optional
 	NodeName string
-	// SecurityContext holds pod-level security attributes and common container settings.
-	// Optional: Defaults to empty.  See type description for default values of each field.
+	//SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。
 	// +optional
 	SecurityContext *PodSecurityContext
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
@@ -3151,9 +3150,7 @@ const (
 	FSGroupChangeAlways PodFSGroupChangePolicy = "Always"
 )
 
-// PodSecurityContext holds pod-level security attributes and common container settings.
-// Some fields are also present in container.securityContext.  Field values of
-// container.securityContext take precedence over field values of PodSecurityContext.
+// PodSecurityContext 是Kubernetes中用于定义Pod级别的安全属性和设置的对象
 type PodSecurityContext struct {
 	// Use the host's network namespace.  If this option is set, the ports that will be
 	// used must be specified.

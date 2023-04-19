@@ -23009,7 +23009,7 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodSecurityContext holds pod-level security attributes and common container settings. Some fields are also present in container.securityContext.  Field values of container.securityContext take precedence over field values of PodSecurityContext.",
+				Description: "PodSecurityContext 是Kubernetes中用于定义Pod级别的安全属性和设置的对象",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"seLinuxOptions": {
@@ -23317,7 +23317,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"securityContext": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.",
+							Description: "SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。",
 							Ref:         ref("k8s.io/api/core/v1.PodSecurityContext"),
 						},
 					},

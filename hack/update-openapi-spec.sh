@@ -49,7 +49,7 @@ kube::golang::setup_env
 
 TMP_DIR=$(mktemp -d /tmp/update-openapi-spec.XXXX)
 ETCD_HOST=${ETCD_HOST:-127.0.0.1}
-ETCD_PORT=${ETCD_PORT:-2379}
+ETCD_PORT=${ETCD_PORT:-12379}
 API_PORT=${API_PORT:-8050}
 API_HOST=${API_HOST:-127.0.0.1}
 API_LOGFILE=${API_LOGFILE:-/tmp/openapi-api-server.log}

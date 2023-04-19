@@ -3223,8 +3223,7 @@ type PodSpec struct {
 	// +k8s:conversion-gen=false
 	// +optional
 	ShareProcessNamespace *bool `json:"shareProcessNamespace,omitempty" protobuf:"varint,27,opt,name=shareProcessNamespace"`
-	// SecurityContext holds pod-level security attributes and common container settings.
-	// Optional: Defaults to empty.  See type description for default values of each field.
+	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。
 	// +optional
 	SecurityContext *PodSecurityContext `json:"securityContext,omitempty" protobuf:"bytes,14,opt,name=securityContext"`
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
@@ -3632,9 +3631,7 @@ const (
 	FSGroupChangeAlways PodFSGroupChangePolicy = "Always"
 )
 
-// PodSecurityContext holds pod-level security attributes and common container settings.
-// Some fields are also present in container.securityContext.  Field values of
-// container.securityContext take precedence over field values of PodSecurityContext.
+// PodSecurityContext 是Kubernetes中用于定义Pod级别的安全属性和设置的对象
 type PodSecurityContext struct {
 	// The SELinux context to be applied to all containers.
 	// If unspecified, the container runtime will allocate a random SELinux context for each

@@ -4,10 +4,25 @@ import shutil
 os.system("sudo rm -rf vendor _output")
 os.system("go mod vendor")
 
-_, dirs, _ = list(os.walk('./staging/src/k8s.io'))[0]
 
-for _dir in dirs:
-    shutil.rmtree(os.path.join('./vendor/k8s.io', _dir), ignore_errors=True)
-    shutil.copytree(os.path.join('./staging/src/k8s.io', _dir), os.path.join('./vendor/k8s.io', _dir))
+def catch_dir(path, level: int):
+    res = []
+    for cur, dirs, _ in os.walk(path):
+        for _dir in dirs:
+            p = os.path.join(cur, _dir)
+            if p.count(os.sep) == 3 + level:
+                res.append(p.strip('./staging/src/'))
+    return res
 
-os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
+
+item = 'k8s.io'
+for _item in catch_dir(f'./staging/src/{item}', 1):
+    shutil.rmtree(f'./vendor/{_item}', ignore_errors=True)
+    shutil.copytree(f'./staging/src/{_item}', f'./vendor/{_item}')
+
+item = 'github.com'
+for _item in catch_dir(f'./staging/src/{item}', 2):
+    shutil.rmtree(f'./vendor/{_item}', ignore_errors=True)
+    shutil.copytree(f'./staging/src/{_item}', f'./vendor/{_item}')
+#
+# os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
