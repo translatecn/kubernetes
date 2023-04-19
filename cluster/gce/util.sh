@@ -2348,7 +2348,7 @@ function kube-up() {
     create-loadbalancer
     # If replication of master fails, we need to ensure that the replica is removed from etcd clusters.
     if ! replicate-master; then
-      remove-replica-from-etcd 2379 true || true
+      remove-replica-from-etcd 12379 true || true
       remove-replica-from-etcd 4002 false || true
     fi
   else
@@ -2423,7 +2423,7 @@ function create-network() {
       --project "${NETWORK_PROJECT}" \
       --network "${NETWORK}" \
       --source-ranges "10.0.0.0/8" \
-      --allow "tcp:1-2379,tcp:2382-65535,udp:1-65535,icmp" \
+      --allow "tcp:1-12379,tcp:2382-65535,udp:1-65535,icmp" \
       --target-tags "${MASTER_TAG}"&
   fi
 
@@ -2767,7 +2767,7 @@ function create-master() {
       --project "${NETWORK_PROJECT}" \
       --network "${NETWORK}" \
       --source-tags "${MASTER_TAG}" \
-      --allow "tcp:2380,tcp:2381" \
+      --allow "tcp:12380,tcp:2381" \
       --target-tags "${MASTER_TAG}" &
   fi
 
@@ -2867,7 +2867,7 @@ function replicate-master() {
   echo "Experimental: replicating existing master ${EXISTING_MASTER_ZONE}/${EXISTING_MASTER_NAME} as ${ZONE}/${REPLICA_NAME}"
 
   # Before we do anything else, we should configure etcd to expect more replicas.
-  if ! add-replica-to-etcd 2379 2380 true; then
+  if ! add-replica-to-etcd 12379 12380 true; then
     echo "Failed to add master replica to etcd cluster."
     return 1
   fi
@@ -3607,7 +3607,7 @@ function kube-down() {
   set-existing-master
 
   # Un-register the master replica from etcd and events etcd.
-  remove-replica-from-etcd 2379 true
+  remove-replica-from-etcd 12379 true
   remove-replica-from-etcd 4002 false
 
   # Delete the master replica (if it exists).

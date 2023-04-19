@@ -1362,8 +1362,8 @@ run_rc_tests() {
   # Post-condition: expose succeeded
   kube::test::if_has_string "${output_message}" 'etcd-server exposed'
   # Post-condition: generated service has both ports from the exposed pod
-  kube::test::get_object_assert 'service etcd-server' "{{$port_name}} {{$port_field}}" 'port-1 2380'
-  kube::test::get_object_assert 'service etcd-server' "{{${second_port_name:?}}} {{${second_port_field:?}}}" 'port-2 2379'
+  kube::test::get_object_assert 'service etcd-server' "{{$port_name}} {{$port_field}}" 'port-1 12380'
+  kube::test::get_object_assert 'service etcd-server' "{{${second_port_name:?}}} {{${second_port_field:?}}}" 'port-2 12379'
   # Clean-up
   kubectl delete svc etcd-server "${kube_flags[@]}"
 

@@ -148,7 +148,7 @@ func AggregateCheckResults(results []CheckResult) AggregateCheckResult {
 
 var (
 	defaultChecks      []func() Check
-	experimentalChecks []func() Check
+	experimentalChecks []func() Check // 实验性
 )
 
 func addCheck(f func() Check) {

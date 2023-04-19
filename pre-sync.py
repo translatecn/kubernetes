@@ -11,7 +11,7 @@ def catch_dir(path, level: int):
         for _dir in dirs:
             p = os.path.join(cur, _dir)
             if p.count(os.sep) == 3 + level:
-                res.append(p.strip('./staging/src/'))
+                res.append(p[len('./staging/src/'):])
     return res
 
 
@@ -24,5 +24,5 @@ item = 'github.com'
 for _item in catch_dir(f'./staging/src/{item}', 2):
     shutil.rmtree(f'./vendor/{_item}', ignore_errors=True)
     shutil.copytree(f'./staging/src/{_item}', f'./vendor/{_item}')
-#
-# os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
+
+os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')

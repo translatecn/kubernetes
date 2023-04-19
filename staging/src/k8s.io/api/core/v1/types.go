@@ -3633,12 +3633,6 @@ const (
 
 // PodSecurityContext 是Kubernetes中用于定义Pod级别的安全属性和设置的对象
 type PodSecurityContext struct {
-	// The SELinux context to be applied to all containers.
-	// If unspecified, the container runtime will allocate a random SELinux context for each
-	// container.  May also be set in SecurityContext.  If set in
-	// both SecurityContext and PodSecurityContext, the value specified in SecurityContext
-	// takes precedence for that container.
-	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	SELinuxOptions *SELinuxOptions `json:"seLinuxOptions,omitempty" protobuf:"bytes,1,opt,name=seLinuxOptions"`
 	// The Windows specific settings applied to all containers.
@@ -3655,20 +3649,8 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsUser *int64 `json:"runAsUser,omitempty" protobuf:"varint,2,opt,name=runAsUser"`
-	// The GID to run the entrypoint of the container process.
-	// Uses runtime default if unset.
-	// May also be set in SecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence
-	// for that container.
-	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsGroup *int64 `json:"runAsGroup,omitempty" protobuf:"varint,6,opt,name=runAsGroup"`
-	// Indicates that the container must run as a non-root user.
-	// If true, the Kubelet will validate the image at runtime to ensure that it
-	// does not run as UID 0 (root) and fail to start the container if it does.
-	// If unset or false, no such validation will be performed.
-	// May also be set in SecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence.
 	// +optional
 	RunAsNonRoot *bool `json:"runAsNonRoot,omitempty" protobuf:"varint,3,opt,name=runAsNonRoot"`
 	// A list of groups applied to the first process run in each container, in addition
@@ -6511,9 +6493,7 @@ type DownwardAPIProjection struct {
 	Items []DownwardAPIVolumeFile `json:"items,omitempty" protobuf:"bytes,1,rep,name=items"`
 }
 
-// SecurityContext holds security configuration that will be applied to a container.
-// Some fields are present in both SecurityContext and PodSecurityContext.  When both
-// are set, the values in SecurityContext take precedence.
+// SecurityContext 是Kubernetes中用于定义安全属性和设置的对象。
 type SecurityContext struct {
 	// The capabilities to add/drop when running containers.
 	// Defaults to the default set of capabilities granted by the container runtime.
@@ -6539,11 +6519,6 @@ type SecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is linux.
 	// +optional
 	WindowsOptions *WindowsSecurityContextOptions `json:"windowsOptions,omitempty" protobuf:"bytes,10,opt,name=windowsOptions"`
-	// The UID to run the entrypoint of the container process.
-	// Defaults to user specified in image metadata if unspecified.
-	// May also be set in PodSecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence.
-	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsUser *int64 `json:"runAsUser,omitempty" protobuf:"varint,4,opt,name=runAsUser"`
 	// The GID to run the entrypoint of the container process.

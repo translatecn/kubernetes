@@ -2910,7 +2910,7 @@ type PodSpec struct {
 	// requirements.
 	// +optional
 	NodeName string
-	//SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。
+	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。
 	// +optional
 	SecurityContext *PodSecurityContext
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
@@ -3191,12 +3191,6 @@ type PodSecurityContext struct {
 	// +k8s:conversion-gen=false
 	// +optional
 	HostUsers *bool
-	// The SELinux context to be applied to all containers.
-	// If unspecified, the container runtime will allocate a random SELinux context for each
-	// container.  May also be set in SecurityContext.  If set in
-	// both SecurityContext and PodSecurityContext, the value specified in SecurityContext
-	// takes precedence for that container.
-	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	SELinuxOptions *SELinuxOptions
 	// The Windows specific settings applied to all containers.
@@ -3205,29 +3199,10 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is linux.
 	// +optional
 	WindowsOptions *WindowsSecurityContextOptions
-	// The UID to run the entrypoint of the container process.
-	// Defaults to user specified in image metadata if unspecified.
-	// May also be set in SecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence
-	// for that container.
-	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsUser *int64
-	// The GID to run the entrypoint of the container process.
-	// Uses runtime default if unset.
-	// May also be set in SecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence
-	// for that container.
-	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsGroup *int64
-	// Indicates that the container must run as a non-root user.
-	// If true, the Kubelet will validate the image at runtime to ensure that it
-	// does not run as UID 0 (root) and fail to start the container if it does.
-	// If unset or false, no such validation will be performed.
-	// May also be set in SecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence
-	// for that container.
 	// +optional
 	RunAsNonRoot *bool
 	// A list of groups applied to the first process run in each container, in addition
@@ -5518,9 +5493,7 @@ type ComponentStatusList struct {
 	Items []ComponentStatus
 }
 
-// SecurityContext holds security configuration that will be applied to a container.
-// Some fields are present in both SecurityContext and PodSecurityContext.  When both
-// are set, the values in SecurityContext take precedence.
+// PodSecurityContext 是Kubernetes中用于定义安全属性和设置的对象。
 type SecurityContext struct {
 	// The capabilities to add/drop when running containers.
 	// Defaults to the default set of capabilities granted by the container runtime.

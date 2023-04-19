@@ -492,9 +492,9 @@ EOF
 function compute-etcd-params {
 	local params="${ETCD_TEST_ARGS:-}"
 	params+=" --name=etcd-$(hostname -s)"
-	params+=" --listen-peer-urls=http://127.0.0.1:2380"
-	params+=" --advertise-client-urls=http://127.0.0.1:2379"
-	params+=" --listen-client-urls=http://0.0.0.0:2379"
+	params+=" --listen-peer-urls=http://127.0.0.1:12380"
+	params+=" --advertise-client-urls=http://127.0.0.1:12379"
+	params+=" --listen-client-urls=http://0.0.0.0:12379"
 
 	# Enable apiserver->etcd auth.
 	params+=" --client-cert-auth"
@@ -522,7 +522,7 @@ function compute-etcd-events-params {
 # Computes command line arguments to be passed to apiserver.
 function compute-kube-apiserver-params {
 	local params="--insecure-bind-address=0.0.0.0"
-	params+=" --etcd-servers=${ETCD_SERVERS:-http://127.0.0.1:2379}"
+	params+=" --etcd-servers=${ETCD_SERVERS:-http://127.0.0.1:12379}"
 	if [[ -z "${ETCD_SERVERS:-}" ]]; then
 		params+=" --etcd-servers-overrides=${ETCD_SERVERS_OVERRIDES:-/events#${EVENT_STORE_URL}}"
 	elif [[ -n "${ETCD_SERVERS_OVERRIDES:-}" ]]; then

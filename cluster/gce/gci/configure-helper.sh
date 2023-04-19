@@ -1949,7 +1949,7 @@ function start-etcd-servers {
     chown -R "${ETCD_RUNASUSER}":"${ETCD_RUNASGROUP}" /mnt/disks/master-pd/var/etcd
   fi
   prepare-log-file /var/log/etcd.log "${ETCD_RUNASUSER:-0}"
-  prepare-etcd-manifest "" "2379" "2380" "200m" "etcd.manifest"
+  prepare-etcd-manifest "" "12379" "112380" "200m" "etcd.manifest"
 
   prepare-log-file /var/log/etcd-events.log "${ETCD_RUNASUSER:-0}"
   prepare-etcd-manifest "-events" "4002" "2381" "100m" "etcd-events.manifest"

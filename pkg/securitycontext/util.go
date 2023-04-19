@@ -58,9 +58,7 @@ func HasWindowsHostProcessRequest(pod *v1.Pod, container *v1.Container) bool {
 	return *effectiveSc.WindowsOptions.HostProcess
 }
 
-// DetermineEffectiveSecurityContext returns a synthesized SecurityContext for reading effective configurations
-// from the provided pod's and container's security context. Container's fields take precedence in cases where both
-// are set
+// DetermineEffectiveSecurityContext 返回一个合成的SecurityContext，用于从提供的pod和容器的安全上下文中读取有效配置。在两者都设置的情况下，容器的字段优先
 func DetermineEffectiveSecurityContext(pod *v1.Pod, container *v1.Container) *v1.SecurityContext {
 	effectiveSc := securityContextFromPodSecurityContext(pod)
 	containerSc := container.SecurityContext
@@ -160,6 +158,7 @@ func DetermineEffectiveRunAsUser(pod *v1.Pod, container *v1.Container) (*int64, 
 	return runAsUser, true
 }
 
+// 容器级别的安全上下文
 func securityContextFromPodSecurityContext(pod *v1.Pod) *v1.SecurityContext {
 	if pod.Spec.SecurityContext == nil {
 		return nil

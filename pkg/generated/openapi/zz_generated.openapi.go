@@ -25740,7 +25740,7 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "SecurityContext holds security configuration that will be applied to a container. Some fields are present in both SecurityContext and PodSecurityContext.  When both are set, the values in SecurityContext take precedence.",
+				Description: "PodSecurityContext 是Kubernetes中用于定义安全属性和设置的对象。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"capabilities": {
