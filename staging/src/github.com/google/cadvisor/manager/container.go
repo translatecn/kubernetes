@@ -57,7 +57,7 @@ import (
 //需要注意的是，衰减值的选择需要根据实际情况进行评估和测试，以确保负载平均值能够反映系统的负荷情况，并且不会受到噪声的影响。
 
 var enableLoadReader = flag.Bool("enable_load_reader", false, "是否启用CPU负载读取器。")
-var HousekeepingInterval = flag.Duration("housekeeping_interval", 1*time.Second, "Interval between container housekeepings")
+var HousekeepingInterval = flag.Duration("housekeeping_interval", 1*time.Second, "容器清理的间隔")
 
 // TODO: replace regular expressions with something simpler, such as strings.Split().
 // cgroup type chosen to fetch the cgroup path of a process.
@@ -101,11 +101,8 @@ type containerData struct {
 	stop chan struct{}
 
 	// Tells the container to immediately collect stats
-	onDemandChan chan chan struct{}
-
-	// Runs custom metric collectors.
-	collectorManager collector.CollectorManager
-
+	onDemandChan     chan chan struct{}
+	collectorManager collector.CollectorManager // 自定义指标控制器
 	// nvidiaCollector updates stats for Nvidia GPUs attached to the container.
 	nvidiaCollector stats.Collector
 
@@ -113,7 +110,7 @@ type containerData struct {
 	perfCollector stats.Collector
 
 	// resctrlCollector updates stats for resctrl controller.
-	resctrlCollector stats.Collector
+	resctrlCollector stats.Collector // resctr是一种Linux内核功能，用于对进程和容器的资源使用进行限制和控制。
 }
 
 // jitter returns a time.Duration between duration and duration + maxFactor * duration,
@@ -127,12 +124,12 @@ func jitter(duration time.Duration, maxFactor float64) time.Duration {
 	return wait
 }
 
-func (cd *containerData) Start() error {
+func (cd *containerData) Start() error { // ✅
 	go cd.housekeeping()
 	return nil
 }
 
-func (cd *containerData) Stop() error {
+func (cd *containerData) Stop() error { // ✅
 	err := cd.memoryCache.RemoveContainer(cd.info.Name)
 	if err != nil {
 		return err
@@ -169,7 +166,7 @@ func (cd *containerData) OnDemandHousekeeping(maxAge time.Duration) {
 	}
 }
 
-// notifyOnDemand notifies all calls to OnDemandHousekeeping that housekeeping is finished
+// notifyOnDemand 通知所有对OnDemandHousekeeping的调用，清洁工作已经完成
 func (cd *containerData) notifyOnDemand() {
 	for {
 		select {
@@ -433,7 +430,16 @@ func (cd *containerData) parsePsLine(line, cadvisorContainer string, inHostNames
 	return &info, nil
 }
 
-func newContainerData(containerName string, memoryCache *memory.InMemoryCache, handler container.ContainerHandler, logUsage bool, collectorManager collector.CollectorManager, maxHousekeepingInterval time.Duration, allowDynamicHousekeeping bool, clock clock.Clock) (*containerData, error) {
+func newContainerData(
+	containerName string,
+	memoryCache *memory.InMemoryCache,
+	handler container.ContainerHandler,
+	logUsage bool,
+	collectorManager collector.CollectorManager,
+	maxHousekeepingInterval time.Duration,
+	allowDynamicHousekeeping bool,
+	clock clock.Clock,
+) (*containerData, error) {
 	if memoryCache == nil {
 		return nil, fmt.Errorf("nil memory storage")
 	}
@@ -515,9 +521,9 @@ func (cd *containerData) nextHousekeepingInterval() time.Duration {
 	return jitter(cd.housekeepingInterval, 1.0)
 }
 
-// TODO(vmarmol): Implement stats collecting as a custom collector.
+// TODO(vmarmol): 将统计数据收集实现为自定义收集器。
 func (cd *containerData) housekeeping() {
-	// Start any background goroutines - must be cleaned up in cd.handler.Cleanup().
+	// 启动任何后台goroutines -必须在cd.handler.Cleanup()中清理。
 	cd.handler.Start()
 	defer cd.handler.Cleanup()
 
@@ -531,6 +537,7 @@ func (cd *containerData) housekeeping() {
 	}
 
 	// Long housekeeping is either 100ms or half of the housekeeping interval.
+	// Housekeeping是指对系统中的资源进行清理和维护的操作
 	longHousekeeping := 100 * time.Millisecond
 	if *HousekeepingInterval/2 < longHousekeeping {
 		longHousekeeping = *HousekeepingInterval / 2
@@ -541,7 +548,7 @@ func (cd *containerData) housekeeping() {
 	houseKeepingTimer := cd.clock.NewTimer(0 * time.Second)
 	defer houseKeepingTimer.Stop()
 	for {
-		if !cd.housekeepingTick(houseKeepingTimer.C(), longHousekeeping) {
+		if !cd.housekeepingTick(houseKeepingTimer.C(), longHousekeeping) { // ✅
 			return
 		}
 		// Stop and drain the timer so that it is safe to reset it
@@ -582,7 +589,8 @@ func (cd *containerData) housekeeping() {
 	}
 }
 
-func (cd *containerData) housekeepingTick(timer <-chan time.Time, longHousekeeping time.Duration) bool {
+// ✅
+func (cd *containerData) housekeepingTick(timer <-chan time.Time, longHousekeeping time.Duration) bool { // ✅
 	select {
 	case <-cd.stop:
 		// Stop housekeeping when signaled.
@@ -604,7 +612,7 @@ func (cd *containerData) housekeepingTick(timer <-chan time.Time, longHousekeepi
 	if duration >= longHousekeeping {
 		klog.V(3).Infof("[%s] Housekeeping took %s", cd.info.Name, duration)
 	}
-	cd.notifyOnDemand()
+	cd.notifyOnDemand() // 清理所有堵塞在清理上的任务
 	cd.lock.Lock()
 	defer cd.lock.Unlock()
 	cd.statsLastUpdatedTime = cd.clock.Now()
@@ -700,14 +708,11 @@ func (cd *containerData) updateStats() error {
 
 	var nvidiaStatsErr error
 	if cd.nvidiaCollector != nil {
-		// This updates the Accelerators field of the stats struct
+		// 这将更新stats结构的Accelerators字段
 		nvidiaStatsErr = cd.nvidiaCollector.UpdateStats(stats)
 	}
-
 	perfStatsErr := cd.perfCollector.UpdateStats(stats)
-
 	resctrlStatsErr := cd.resctrlCollector.UpdateStats(stats)
-
 	ref, err := cd.handler.ContainerReference()
 	if err != nil {
 		// Ignore errors if the container is dead.

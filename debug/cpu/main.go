@@ -10,7 +10,7 @@ func main() {
 	reader, _ := netlink.New()
 	tick := time.Tick(time.Second)
 	for _ = range tick {
-		load, _ := reader.GetCpuLoad("/", "sys/fs/cgroup")
+		load, _ := reader.GetCpuLoad("/", "/sys/fs/cgroup/user.slice/user-129.slice")
 		fmt.Println(load)
 	}
 }

@@ -268,9 +268,9 @@ type manager struct {
 	machineMu                             sync.RWMutex // protects machineInfo
 	machineInfo                           info.MachineInfo
 	quitChannels                          []chan error
-	cadvisorContainer                     string // cadvisor容器的名称  /
-	inHostNamespace                       bool
-	eventHandler                          events.EventManager
+	cadvisorContainer                     string              // cadvisor容器的名称  /
+	inHostNamespace                       bool                //
+	eventHandler                          events.EventManager //
 	startupTime                           time.Time
 	maxHousekeepingInterval               time.Duration
 	allowDynamicHousekeeping              bool
@@ -286,23 +286,23 @@ type manager struct {
 	containerEnvMetadataWhiteList []string
 }
 
-// Start the container manager.
+// Start the container manager. 一次性的
 func (m *manager) Start() error {
 	m.containerWatchers = container.InitializePlugins(m, m.fsInfo, m.includedMetrics)
 
-	err := raw.Register(m, m.fsInfo, m.includedMetrics, m.rawContainerCgroupPathPrefixWhiteList)
+	err := raw.Register(m, m.fsInfo, m.includedMetrics, m.rawContainerCgroupPathPrefixWhiteList) // ✅
 	if err != nil {
 		klog.Errorf("Registration of the raw container factory failed: %v", err)
 	}
 
-	rawWatcher, err := raw.NewRawContainerWatcher()
+	rawWatcher, err := raw.NewRawContainerWatcher() // ✅
 	if err != nil {
 		return err
 	}
-	m.containerWatchers = append(m.containerWatchers, rawWatcher)
+	m.containerWatchers = append(m.containerWatchers, rawWatcher) // ✅
 
 	// 启动对oom的监听
-	err = m.watchForNewOoms()
+	err = m.watchForNewOoms() // ✅
 	if err != nil {
 		klog.Warningf("Could not configure a source for OOM detection, disabling OOM events: %v", err)
 	}
@@ -318,7 +318,7 @@ func (m *manager) Start() error {
 		return err
 	}
 	klog.V(2).Infof("Starting recovery of all containers")
-	err = m.detectSubcontainers("/")
+	err = m.detectSubcontainers("/") // 检测子容器, 检测要添加或删除的所有容器
 	if err != nil {
 		return err
 	}
@@ -886,7 +886,7 @@ func (m *manager) GetProcessList(containerName string, options v2.RequestOptions
 	return ps, nil
 }
 
-// 注册收集器
+// 注册指标收集器
 func (m *manager) registerCollectors(collectorConfigs map[string]string, cont *containerData) error {
 	for k, v := range collectorConfigs {
 		configFile, err := cont.ReadFile(v, m.inHostNamespace)
@@ -915,243 +915,6 @@ func (m *manager) registerCollectors(collectorConfigs map[string]string, cont *c
 			}
 		}
 	}
-	return nil
-}
-
-// Create a container.
-func (m *manager) createContainer(containerName string, watchSource watcher.ContainerWatchSource) error {
-	m.containersLock.Lock()
-	defer m.containersLock.Unlock()
-
-	return m.createContainerLocked(containerName, watchSource)
-}
-
-func (m *manager) createContainerLocked(containerName string, watchSource watcher.ContainerWatchSource) error {
-	namespacedName := namespacedContainerName{
-		Name: containerName,
-	}
-
-	// Check that the container didn't already exist.
-	if _, ok := m.containers[namespacedName]; ok {
-		return nil
-	}
-
-	handler, accept, err := container.NewContainerHandler(containerName, watchSource, m.containerEnvMetadataWhiteList, m.inHostNamespace)
-	if err != nil {
-		return err
-	}
-	if !accept {
-		// ignoring this container.
-		klog.V(4).Infof("ignoring container %q", containerName)
-		return nil
-	}
-	collectorManager, err := collector.NewCollectorManager()
-	if err != nil {
-		return err
-	}
-
-	logUsage := *logCadvisorUsage && containerName == m.cadvisorContainer
-	cont, err := newContainerData(containerName, m.memoryCache, handler, logUsage, collectorManager, m.maxHousekeepingInterval, m.allowDynamicHousekeeping, clock.RealClock{})
-	if err != nil {
-		return err
-	}
-
-	if !cgroups.IsCgroup2UnifiedMode() {
-		devicesCgroupPath, err := handler.GetCgroupPath("devices")
-		if err != nil {
-			klog.Warningf("Error getting devices cgroup path: %v", err)
-		} else {
-			cont.nvidiaCollector, err = m.nvidiaManager.GetCollector(devicesCgroupPath)
-			if err != nil {
-				klog.V(4).Infof("GPU metrics may be unavailable/incomplete for container %s: %s", cont.info.Name, err)
-			}
-		}
-	}
-	if m.includedMetrics.Has(container.PerfMetrics) { // cadvisormetrics.MetricSet
-		perfCgroupPath, err := handler.GetCgroupPath("perf_event")
-		if err != nil {
-			klog.Warningf("Error getting perf_event cgroup path: %q", err)
-		} else {
-			cont.perfCollector, err = m.perfManager.GetCollector(perfCgroupPath)
-			if err != nil {
-				klog.Errorf("Perf event metrics will not be available for container %q: %v", containerName, err)
-			}
-		}
-	}
-
-	if m.includedMetrics.Has(container.ResctrlMetrics) { // cadvisormetrics.MetricSet
-		cont.resctrlCollector, err = m.resctrlManager.GetCollector(containerName, func() ([]string, error) {
-			return cont.getContainerPids(m.inHostNamespace)
-		}, len(m.machineInfo.Topology))
-		if err != nil {
-			klog.V(4).Infof("resctrl metrics will not be available for container %s: %s", cont.info.Name, err)
-		}
-	}
-
-	// Add collectors
-	labels := handler.GetContainerLabels() // 处理器的标签
-	collectorConfigs := collector.GetCollectorConfigs(labels)
-	err = m.registerCollectors(collectorConfigs, cont)
-	if err != nil {
-		klog.Warningf("Failed to register collectors for %q: %v", containerName, err)
-	}
-
-	// Add the container name and all its aliases. The aliases must be within the namespace of the factory.
-	m.containers[namespacedName] = cont
-	for _, alias := range cont.info.Aliases {
-		m.containers[namespacedContainerName{
-			Namespace: cont.info.Namespace,
-			Name:      alias,
-		}] = cont
-	}
-
-	klog.V(3).Infof("Added container: %q (aliases: %v, namespace: %q)", containerName, cont.info.Aliases, cont.info.Namespace)
-
-	contSpec, err := cont.handler.GetSpec()
-	if err != nil {
-		return err
-	}
-
-	contRef, err := cont.handler.ContainerReference()
-	if err != nil {
-		return err
-	}
-
-	newEvent := &info.Event{
-		ContainerName: contRef.Name,
-		Timestamp:     contSpec.CreationTime,
-		EventType:     info.EventContainerCreation,
-	}
-	err = m.eventHandler.AddEvent(newEvent)
-	if err != nil {
-		return err
-	}
-	// Start the container's housekeeping.
-	return cont.Start()
-}
-
-func (m *manager) destroyContainer(containerName string) error {
-	m.containersLock.Lock()
-	defer m.containersLock.Unlock()
-
-	return m.destroyContainerLocked(containerName)
-}
-
-func (m *manager) destroyContainerLocked(containerName string) error {
-	namespacedName := namespacedContainerName{
-		Name: containerName,
-	}
-	cont, ok := m.containers[namespacedName]
-	if !ok {
-		// Already destroyed, done.
-		return nil
-	}
-
-	// Tell the container to stop.
-	err := cont.Stop()
-	if err != nil {
-		return err
-	}
-
-	// Remove the container from our records (and all its aliases).
-	delete(m.containers, namespacedName)
-	for _, alias := range cont.info.Aliases {
-		delete(m.containers, namespacedContainerName{
-			Namespace: cont.info.Namespace,
-			Name:      alias,
-		})
-	}
-	klog.V(3).Infof("Destroyed container: %q (aliases: %v, namespace: %q)", containerName, cont.info.Aliases, cont.info.Namespace)
-
-	contRef, err := cont.handler.ContainerReference()
-	if err != nil {
-		return err
-	}
-
-	newEvent := &info.Event{
-		ContainerName: contRef.Name,
-		Timestamp:     time.Now(),
-		EventType:     info.EventContainerDeletion,
-	}
-	err = m.eventHandler.AddEvent(newEvent)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Detect all containers that have been added or deleted from the specified container.
-func (m *manager) getContainersDiff(containerName string) (added []info.ContainerReference, removed []info.ContainerReference, err error) {
-	// Get all subcontainers recursively.
-	m.containersLock.RLock()
-	cont, ok := m.containers[namespacedContainerName{
-		Name: containerName,
-	}]
-	m.containersLock.RUnlock()
-	if !ok {
-		return nil, nil, fmt.Errorf("failed to find container %q while checking for new containers", containerName)
-	}
-	allContainers, err := cont.handler.ListContainers(container.ListRecursive)
-
-	if err != nil {
-		return nil, nil, err
-	}
-	allContainers = append(allContainers, info.ContainerReference{Name: containerName})
-
-	m.containersLock.RLock()
-	defer m.containersLock.RUnlock()
-
-	// Determine which were added and which were removed.
-	allContainersSet := make(map[string]*containerData)
-	for name, d := range m.containers {
-		// Only add the canonical name.
-		if d.info.Name == name.Name {
-			allContainersSet[name.Name] = d
-		}
-	}
-
-	// Added containers
-	for _, c := range allContainers {
-		delete(allContainersSet, c.Name)
-		_, ok := m.containers[namespacedContainerName{
-			Name: c.Name,
-		}]
-		if !ok {
-			added = append(added, c)
-		}
-	}
-
-	// Removed ones are no longer in the container listing.
-	for _, d := range allContainersSet {
-		removed = append(removed, d.info.ContainerReference)
-	}
-
-	return
-}
-
-// Detect the existing subcontainers and reflect the setup here.
-func (m *manager) detectSubcontainers(containerName string) error {
-	added, removed, err := m.getContainersDiff(containerName)
-	if err != nil {
-		return err
-	}
-
-	// Add the new containers.
-	for _, cont := range added {
-		err = m.createContainer(cont.Name, watcher.Raw)
-		if err != nil {
-			klog.Errorf("Failed to create existing container: %s: %s", cont.Name, err)
-		}
-	}
-
-	// Remove the old containers.
-	for _, cont := range removed {
-		err = m.destroyContainer(cont.Name)
-		if err != nil {
-			klog.Errorf("Failed to destroy existing container: %s: %s", cont.Name, err)
-		}
-	}
-
 	return nil
 }
 
@@ -1309,7 +1072,7 @@ func (m *manager) CloseEventChannel(watchID int) {
 // Parses the events StoragePolicy from the flags.
 func parseEventsStoragePolicy() events.StoragePolicy {
 	policy := events.DefaultStoragePolicy()
-
+	var _ = policy.DefaultMaxNumEvents
 	// Parse max age.
 	parts := strings.Split(*eventStorageAgeLimit, ",")
 	for _, part := range parts {
@@ -1403,6 +1166,252 @@ func (m *manager) getFsInfoByDeviceName(deviceName string) (v2.FsInfo, error) {
 		}
 	}
 	return v2.FsInfo{}, fmt.Errorf("cannot find filesystem info for device %q", deviceName)
+}
+
+// Create a container.
+func (m *manager) createContainer(containerName string, watchSource watcher.ContainerWatchSource) error { // ✅
+	m.containersLock.Lock()
+	defer m.containersLock.Unlock()
+
+	return m.createContainerLocked(containerName, watchSource) // ✅
+}
+
+func (m *manager) createContainerLocked(containerName string, watchSource watcher.ContainerWatchSource) error { // ✅
+	namespacedName := namespacedContainerName{
+		Name: containerName,
+	}
+
+	// Check that the container didn't already exist.
+	if _, ok := m.containers[namespacedName]; ok {
+		return nil
+	}
+
+	handler, accept, err := container.NewContainerHandler(containerName, watchSource, m.containerEnvMetadataWhiteList, m.inHostNamespace)
+	if err != nil {
+		return err
+	}
+	if !accept {
+		// ignoring this container.
+		klog.V(4).Infof("ignoring container %q", containerName)
+		return nil
+	}
+	collectorManager, err := collector.NewCollectorManager()
+	if err != nil {
+		return err
+	}
+
+	logUsage := *logCadvisorUsage && containerName == m.cadvisorContainer
+	cont, err := newContainerData(
+		containerName,
+		m.memoryCache,
+		handler,
+		logUsage,
+		collectorManager,
+		m.maxHousekeepingInterval,
+		m.allowDynamicHousekeeping,
+		clock.RealClock{},
+	)
+	if err != nil {
+		return err
+	}
+
+	if !cgroups.IsCgroup2UnifiedMode() {
+		devicesCgroupPath, err := handler.GetCgroupPath("devices")
+		if err != nil {
+			klog.Warningf("Error getting devices cgroup path: %v", err)
+		} else {
+			cont.nvidiaCollector, err = m.nvidiaManager.GetCollector(devicesCgroupPath)
+			if err != nil {
+				klog.V(4).Infof("GPU metrics may be unavailable/incomplete for container %s: %s", cont.info.Name, err)
+			}
+		}
+	}
+	if m.includedMetrics.Has(container.PerfMetrics) { // cadvisormetrics.MetricSet
+		perfCgroupPath, err := handler.GetCgroupPath("perf_event")
+		if err != nil {
+			klog.Warningf("Error getting perf_event cgroup path: %q", err)
+		} else {
+			cont.perfCollector, err = m.perfManager.GetCollector(perfCgroupPath)
+			if err != nil {
+				klog.Errorf("Perf event metrics will not be available for container %q: %v", containerName, err)
+			}
+		}
+	}
+
+	if m.includedMetrics.Has(container.ResctrlMetrics) { // cadvisormetrics.MetricSet
+		cont.resctrlCollector, err = m.resctrlManager.GetCollector(containerName, func() ([]string, error) {
+			return cont.getContainerPids(m.inHostNamespace)
+		}, len(m.machineInfo.Topology))
+		if err != nil {
+			klog.V(4).Infof("resctrl metrics will not be available for container %s: %s", cont.info.Name, err)
+		}
+	}
+
+	// Add collectors
+	labels := handler.GetContainerLabels() // 处理器的标签
+	collectorConfigs := collector.GetCollectorConfigs(labels)
+	err = m.registerCollectors(collectorConfigs, cont) // 注册指标收集器
+	if err != nil {
+		klog.Warningf("Failed to register collectors for %q: %v", containerName, err)
+	}
+
+	// Add the container name and all its aliases. The aliases must be within the namespace of the factory.
+	m.containers[namespacedName] = cont
+	for _, alias := range cont.info.Aliases {
+		m.containers[namespacedContainerName{
+			Namespace: cont.info.Namespace,
+			Name:      alias,
+		}] = cont
+	}
+
+	klog.V(3).Infof("Added container: %q (aliases: %v, namespace: %q)", containerName, cont.info.Aliases, cont.info.Namespace)
+
+	contSpec, err := cont.handler.GetSpec()
+	if err != nil {
+		return err
+	}
+
+	contRef, err := cont.handler.ContainerReference()
+	if err != nil {
+		return err
+	}
+
+	newEvent := &info.Event{
+		ContainerName: contRef.Name,
+		Timestamp:     contSpec.CreationTime,
+		EventType:     info.EventContainerCreation,
+	}
+	err = m.eventHandler.AddEvent(newEvent) // DefaultMaxNumEvents 该值默认是0，因此不会记录事件
+	if err != nil {
+		return err
+	}
+	// Start the container's housekeeping.
+	return cont.Start() // ✅
+}
+
+func (m *manager) destroyContainer(containerName string) error { // ✅
+	m.containersLock.Lock()
+	defer m.containersLock.Unlock()
+
+	return m.destroyContainerLocked(containerName) // ✅
+}
+
+func (m *manager) destroyContainerLocked(containerName string) error { // ✅
+	namespacedName := namespacedContainerName{
+		Name: containerName,
+	}
+	cont, ok := m.containers[namespacedName]
+	if !ok {
+		// Already destroyed, done.
+		return nil
+	}
+
+	// Tell the container to stop.
+	err := cont.Stop()
+	if err != nil {
+		return err
+	}
+
+	// Remove the container from our records (and all its aliases).
+	delete(m.containers, namespacedName)
+	for _, alias := range cont.info.Aliases {
+		delete(m.containers, namespacedContainerName{
+			Namespace: cont.info.Namespace,
+			Name:      alias,
+		})
+	}
+	klog.V(3).Infof("Destroyed container: %q (aliases: %v, namespace: %q)", containerName, cont.info.Aliases, cont.info.Namespace)
+
+	contRef, err := cont.handler.ContainerReference()
+	if err != nil {
+		return err
+	}
+
+	newEvent := &info.Event{
+		ContainerName: contRef.Name,
+		Timestamp:     time.Now(),
+		EventType:     info.EventContainerDeletion,
+	}
+	err = m.eventHandler.AddEvent(newEvent)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 检测在指定时间中添加或删除的所有容器
+func (m *manager) getContainersDiff(containerName string) (added []info.ContainerReference, removed []info.ContainerReference, err error) {
+	// Get all subcontainers recursively.
+	m.containersLock.RLock()
+	cont, ok := m.containers[namespacedContainerName{
+		Name: containerName,
+	}]
+	m.containersLock.RUnlock()
+	if !ok {
+		return nil, nil, fmt.Errorf("failed to find container %q while checking for new containers", containerName)
+	}
+	allContainers, err := cont.handler.ListContainers(container.ListRecursive) // 列表递归 cgroup 获取文件
+
+	if err != nil {
+		return nil, nil, err
+	}
+	allContainers = append(allContainers, info.ContainerReference{Name: containerName})
+
+	m.containersLock.RLock()
+	defer m.containersLock.RUnlock()
+
+	// 确定哪些被添加，哪些被删除。
+	allContainersSet := make(map[string]*containerData)
+	for name, d := range m.containers { // 一致维护最新的数据，包括还没有生效的容器
+		// 只添加规范名称。
+		if d.info.Name == name.Name {
+			allContainersSet[name.Name] = d
+		}
+	}
+
+	// 某个时间段内新增加的容器
+	for _, c := range allContainers {
+		delete(allContainersSet, c.Name)
+		_, ok := m.containers[namespacedContainerName{
+			Name: c.Name,
+		}]
+		if !ok {
+			added = append(added, c)
+		}
+	}
+
+	// 某个时间段内删除的容器
+	for _, d := range allContainersSet {
+		removed = append(removed, d.info.ContainerReference)
+	}
+
+	return
+}
+
+// 检测子容器，并在代码中反映这些子容器的设置
+func (m *manager) detectSubcontainers(containerName string) error {
+	added, removed, err := m.getContainersDiff(containerName) // 检测在指定时间中添加或删除的所有容器
+	if err != nil {
+		return err
+	}
+
+	// Add the new containers.
+	for _, cont := range added {
+		err = m.createContainer(cont.Name, watcher.Raw)
+		if err != nil {
+			klog.Errorf("Failed to create existing container: %s: %s", cont.Name, err)
+		}
+	}
+
+	// Remove the old containers.
+	for _, cont := range removed {
+		err = m.destroyContainer(cont.Name)
+		if err != nil {
+			klog.Errorf("Failed to destroy existing container: %s: %s", cont.Name, err)
+		}
+	}
+
+	return nil
 }
 
 func getVersionInfo() (*info.VersionInfo, error) {

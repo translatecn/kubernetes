@@ -63,7 +63,7 @@ const (
 	PerfMetrics                    MetricKind = "perf_event"
 	ReferencedMemoryMetrics        MetricKind = "referenced_memory"
 	CPUTopologyMetrics             MetricKind = "cpu_topology"
-	ResctrlMetrics                 MetricKind = "resctrl"
+	ResctrlMetrics                 MetricKind = "resctrl" // resctr是一种Linux内核功能，用于对进程和容器的资源使用进行限制和控制。
 	CPUSetMetrics                  MetricKind = "cpuset"
 	OOMMetrics                     MetricKind = "oom_event"
 )

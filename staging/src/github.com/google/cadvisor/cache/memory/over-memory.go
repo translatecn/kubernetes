@@ -68,9 +68,9 @@ func newContainerStore(ref info.ContainerReference, maxAge time.Duration) *conta
 
 type InMemoryCache struct {
 	lock              sync.RWMutex
-	containerCacheMap map[string]*containerCache
+	containerCacheMap map[string]*containerCache // 每个容器对应的缓存数据
 	maxAge            time.Duration
-	backend           []storage.StorageDriver
+	backend           []storage.StorageDriver // 没有后端存储
 }
 
 func (c *InMemoryCache) AddStats(cInfo *info.ContainerInfo, stats *info.ContainerStats) error {
@@ -81,12 +81,12 @@ func (c *InMemoryCache) AddStats(cInfo *info.ContainerInfo, stats *info.Containe
 		c.lock.Lock()
 		defer c.lock.Unlock()
 		if cstore, ok = c.containerCacheMap[cInfo.ContainerReference.Name]; !ok {
-			cstore = newContainerStore(cInfo.ContainerReference, c.maxAge)
+			cstore = newContainerStore(cInfo.ContainerReference, c.maxAge) // 2 * time.Minute 写死的
 			c.containerCacheMap[cInfo.ContainerReference.Name] = cstore
 		}
 	}()
 
-	for _, backend := range c.backend {
+	for _, backend := range c.backend { // 没有具体实现
 		// TODO(monnand): To deal with long delay write operations, we
 		// may want to start a pool of goroutines to do write
 		// operations.

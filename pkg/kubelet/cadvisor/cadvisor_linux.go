@@ -143,7 +143,7 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 }
 
 func (cc *cadvisorClient) Start() error {
-	return cc.Manager.Start()
+	return cc.Manager.Start() // ✅
 }
 
 func (cc *cadvisorClient) ContainerInfo(name string, req *cadvisorapi.ContainerInfoRequest) (*cadvisorapi.ContainerInfo, error) {

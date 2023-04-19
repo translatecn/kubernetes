@@ -352,6 +352,7 @@ func CgroupExists(cgroupPaths map[string]string) bool {
 
 func ListContainers(name string, cgroupPaths map[string]string, listType container.ListType) ([]info.ContainerReference, error) {
 	containers := make(map[string]struct{})
+	// 获取所有cgroup子系统下的文件
 	for _, cgroupPath := range cgroupPaths {
 		err := ListDirectories(cgroupPath, name, listType == container.ListRecursive, containers)
 		if err != nil {

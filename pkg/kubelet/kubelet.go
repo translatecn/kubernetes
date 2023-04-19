@@ -1168,10 +1168,8 @@ type Kubelet struct {
 	daemonEndpoints *v1.NodeDaemonEndpoints
 
 	// A queue used to trigger pod workers.
-	workQueue queue.WorkQueue
-
-	// oneTimeInitializer is used to initialize modules that are dependent on the runtime to be up.
-	oneTimeInitializer sync.Once
+	workQueue          queue.WorkQueue
+	oneTimeInitializer sync.Once // 刚运行时运行一次
 
 	// If set, use this IP address or addresses for the node
 	nodeIPs []net.IP
@@ -1455,7 +1453,7 @@ func (kl *Kubelet) initializeModules() error {
 // initializeRuntimeDependentModules will initialize internal modules that require the container runtime to be up.
 func (kl *Kubelet) initializeRuntimeDependentModules() {
 	// 1. 启动cadvisor
-	if err := kl.cadvisor.Start(); err != nil {
+	if err := kl.cadvisor.Start(); err != nil { // ✅
 		// Fail kubelet and rely on the babysitter to retry starting kubelet.
 		klog.ErrorS(err, "Failed to start cAdvisor")
 		os.Exit(1)

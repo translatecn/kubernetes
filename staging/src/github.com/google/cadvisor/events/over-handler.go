@@ -59,9 +59,8 @@ type Request struct {
 	StartTime time.Time
 	// events falling after EndTime do not satisfy the request. EndTime
 	// must be left blank in calls to WatchEvents
-	EndTime time.Time
-	// EventType is a map that specifies the type(s) of events wanted
-	EventType map[info.EventType]bool
+	EndTime   time.Time
+	EventType map[info.EventType]bool // 期望捕捉的事件，value 为true  "oom"  "oomKill" containerCreation containerDeletion
 	// allows the caller to put a limit on how many
 	// events to receive. If there are more events than MaxEventsReturned
 	// then the most chronologically recent events in the time period
@@ -102,6 +101,15 @@ type events struct {
 	storagePolicy StoragePolicy
 }
 
+// returns a pointer to an initialized Events object.
+func NewEventManager(storagePolicy StoragePolicy) EventManager {
+	return &events{
+		eventStore:    make(map[info.EventType]*utils.TimedStore),
+		watchers:      make(map[int]*watch),
+		storagePolicy: storagePolicy,
+	}
+}
+
 // initialized by a call to WatchEvents(), a watch struct will then be added
 // to the events slice of *watch objects. When AddEvent() finds an event that
 // satisfies the request parameter of a watch object in events.watchers,
@@ -109,9 +117,7 @@ type events struct {
 // called WatchEvents will receive the event over the channel provided to
 // WatchEvents
 type watch struct {
-	// request parameters passed in by the caller of WatchEvents()
-	request *Request
-	// a channel used to send event back to the caller.
+	request      *Request // 由WatchEvents()调用方传入的参数
 	eventChannel *EventChannel
 }
 
@@ -140,15 +146,6 @@ func DefaultStoragePolicy() StoragePolicy {
 		DefaultMaxNumEvents: 100000,
 		PerTypeMaxAge:       make(map[info.EventType]time.Duration),
 		PerTypeMaxNumEvents: make(map[info.EventType]int),
-	}
-}
-
-// returns a pointer to an initialized Events object.
-func NewEventManager(storagePolicy StoragePolicy) EventManager {
-	return &events{
-		eventStore:    make(map[info.EventType]*utils.TimedStore),
-		watchers:      make(map[int]*watch),
-		storagePolicy: storagePolicy,
 	}
 }
 
@@ -198,7 +195,7 @@ func isSubcontainer(request *Request, event *info.Event) bool {
 	return event.ContainerName == request.ContainerName
 }
 
-// determines if an event occurs within the time set in the request object and is the right type
+// 检查事件是否符合条件
 func checkIfEventSatisfiesRequest(request *Request, event *info.Event) bool {
 	startTime := request.StartTime
 	endTime := request.EndTime
@@ -291,7 +288,7 @@ func (e *events) updateEventStore(event *info.Event) {
 			maxAge = age
 		}
 
-		e.eventStore[event.EventType] = utils.NewTimedStore(maxAge, maxNumEvents)
+		e.eventStore[event.EventType] = utils.NewTimedStore(maxAge, maxNumEvents) // 创建存储槽
 	}
 	e.eventStore[event.EventType].Add(event.Timestamp, event)
 }

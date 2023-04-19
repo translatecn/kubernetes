@@ -48,6 +48,7 @@ type timedStoreData struct {
 
 // Returns a new thread-compatible TimedStore.
 // A maxItems value of -1 means no limit.
+// 创建每种事件的存储槽，包含 有效期，事件最大个数
 func NewTimedStore(age time.Duration, maxItems int) *TimedStore {
 	return &TimedStore{
 		buffer:   make(timedStoreDataSlice, 0),
