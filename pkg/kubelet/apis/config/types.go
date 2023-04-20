@@ -208,8 +208,8 @@ type KubeletConfiguration struct {
 	// all non-kernel processes that are not already in a container. Empty
 	// for no container. Rolling back the flag requires a reboot.
 	SystemCgroups string
-	CgroupRoot    string // CgroupRoot是用于pod的根cgroup如果启用了CgroupsPerQOS，则这是QoS cgroup层次结构的根。
-	CgroupsPerQOS bool   // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup，所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下。
+	CgroupRoot    string // CgroupRoot是用于pod的根cgroup如果启用了CgroupsPerQOS,则这是QoS cgroup层次结构的根.
+	CgroupsPerQOS bool   // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup,所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下.
 	// driver that the kubelet uses to manipulate cgroups on the host (cgroupfs or systemd)
 	CgroupDriver string
 	// CPUManagerPolicy is the name of the policy to use.
@@ -345,7 +345,7 @@ type KubeletConfiguration struct {
 	// For example: "`kernel.msg*,net.ipv4.route.min_pmtu`"
 	// +optional
 	AllowedUnsafeSysctls    []string
-	KernelMemcgNotification bool // 如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。
+	KernelMemcgNotification bool // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
 
 	/* the following fields are meant for Node Allocatable */
 
@@ -447,9 +447,9 @@ type KubeletConfiguration struct {
 	// +optional
 	Tracing *tracingapi.TracingConfiguration
 
-	// LocalStorageCapacityIsolation 启用本地临时存储隔离功能。默认设置为true。此功能允许用户为容器的临时存储设置request/limit，并以类似于CPU和内存的方式进行管理。它还允许为emptyDir卷设置sizeLimit，如果来自卷的磁盘使用超过限制，则会触发Pod驱逐。
+	// LocalStorageCapacityIsolation 启用本地临时存储隔离功能.默认设置为true.此功能允许用户为容器的临时存储设置request/limit,并以类似于CPU和内存的方式进行管理.它还允许为emptyDir卷设置sizeLimit,如果来自卷的磁盘使用超过限制,则会触发Pod驱逐.
 	//
-	// 此功能取决于检测正确的根文件系统磁盘使用情况的能力。对于某些系统，例如kind rootless，如果无法支持此功能，则应禁用LocalStorageCapacityIsolation。一旦禁用，用户不应为容器的临时存储设置请求/限制，或为emptyDir设置sizeLimit。
+	// 此功能取决于检测正确的根文件系统磁盘使用情况的能力.对于某些系统,例如kind rootless,如果无法支持此功能,则应禁用LocalStorageCapacityIsolation.一旦禁用,用户不应为容器的临时存储设置请求/限制,或为emptyDir设置sizeLimit.
 
 	// +optional
 	LocalStorageCapacityIsolation bool

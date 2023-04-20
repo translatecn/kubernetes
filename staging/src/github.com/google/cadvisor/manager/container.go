@@ -74,43 +74,31 @@ type containerInfo struct {
 	Spec                    info.ContainerSpec        //
 }
 
+// 某个容器的内存指标数据
 type containerData struct {
 	oomEvents                uint64
-	handler                  container.ContainerHandler
-	info                     containerInfo
-	memoryCache              *memory.InMemoryCache
-	lock                     sync.Mutex
-	loadReader               cpuload.CpuLoadReader
-	summaryReader            *summary.StatsSummary
-	loadAvg                  float64 // smoothed load average seen so far.
-	housekeepingInterval     time.Duration
-	maxHousekeepingInterval  time.Duration
-	allowDynamicHousekeeping bool
-	infoLastUpdatedTime      time.Time
-	statsLastUpdatedTime     time.Time
-	lastErrorTime            time.Time
-	//  used to track time
-	clock clock.Clock
-
-	loadDecay float64 // 用于平滑负载平均值的衰减值。使用10秒的间隔长度。
-
-	// Whether to log the usage of this container when it is updated.
-	logUsage bool
-
-	// Tells the container to stop.
-	stop chan struct{}
-
-	// Tells the container to immediately collect stats
-	onDemandChan     chan chan struct{}
-	collectorManager collector.CollectorManager // 自定义指标控制器
-	// nvidiaCollector updates stats for Nvidia GPUs attached to the container.
-	nvidiaCollector stats.Collector
-
-	// perfCollector updates stats for perf_event cgroup controller.
-	perfCollector stats.Collector
-
-	// resctrlCollector updates stats for resctrl controller.
-	resctrlCollector stats.Collector // resctr是一种Linux内核功能，用于对进程和容器的资源使用进行限制和控制。
+	handler                  container.ContainerHandler // 该容器handler，用于与底层 CRI 进行交互，获取容器详细信息
+	info                     containerInfo              // 该容器的基本信息，包括容器及其子容器的引用、和容器的 info.ContainerSpec 信息
+	memoryCache              *memory.InMemoryCache      // 用于缓存该容器的指标信息
+	lock                     sync.Mutex                 //
+	loadReader               cpuload.CpuLoadReader      // 用于获取容器 load 信息
+	summaryReader            *summary.StatsSummary      // 用于获取某个cgroups下面容器的某段时间的摘要信息，目前主要追踪的是cpu以及memory的信息。
+	loadAvg                  float64                    // 迄今为止的平滑负载平均值
+	housekeepingInterval     time.Duration              //
+	maxHousekeepingInterval  time.Duration              //
+	allowDynamicHousekeeping bool                       //
+	infoLastUpdatedTime      time.Time                  // 最后一次容器信息更新时间
+	statsLastUpdatedTime     time.Time                  // 最后一次容器指标更新时间
+	lastErrorTime            time.Time                  // 最后一次报错时间
+	clock                    clock.Clock                // 用于跟踪时间
+	loadDecay                float64                    // 用于负载平均平滑的衰减值。间隔长度为10秒。
+	logUsage                 bool                       // 更新此容器时是否记录其使用情况
+	stop                     chan struct{}              // 告知容器停止 housekeeping
+	onDemandChan             chan chan struct{}         // 告诉容器立即收集统计信息
+	collectorManager         collector.CollectorManager // 运行自定义指标收集器
+	nvidiaCollector          stats.Collector            // nvidiaCollector 更新连接到容器的Nvidia GPU的统计信息
+	perfCollector            stats.Collector            // 更新连接到容器的 perf 的统计信息
+	resctrlCollector         stats.Collector            // resctr是一种Linux内核功能，用于对进程和容器的资源使用进行限制和控制。
 }
 
 // jitter returns a time.Duration between duration and duration + maxFactor * duration,

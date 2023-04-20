@@ -28,10 +28,10 @@ import (
 	evictionapi "k8s.io/kubernetes/pkg/kubelet/eviction/api"
 )
 
-type fsStatsType string // 定义要收集的文件系统统计信息的类型。
+type fsStatsType string // 定义要收集的文件系统统计信息的类型.
 
 const (
-	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息。
+	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息.
 	fsStatsLogs              fsStatsType = "logs"              //   pod 日志的统计信息
 	fsStatsRoot              fsStatsType = "root"              //   pod 容器可写层的统计信息
 )
@@ -42,8 +42,8 @@ type Config struct {
 	PressureTransitionPeriod time.Duration
 	// Maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
 	MaxPodGracePeriodSeconds int64
-	Thresholds               []evictionapi.Threshold // 定义被监控的条件集,以触发驱逐。
-	KernelMemcgNotification  bool                    // 如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。
+	Thresholds               []evictionapi.Threshold // 定义被监控的条件集,以触发驱逐.
+	KernelMemcgNotification  bool                    // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
 	// PodCgroupRoot is the cgroup which contains all pods.
 	PodCgroupRoot string
 }
@@ -59,7 +59,7 @@ type Manager interface {
 
 // DiskInfoProvider is responsible for informing the manager how disk is configured.
 type DiskInfoProvider interface {
-	HasDedicatedImageFs(ctx context.Context) (bool, error) // 如果imagefs与rootfs在不同的设备上,则返回true。
+	HasDedicatedImageFs(ctx context.Context) (bool, error) // 如果imagefs与rootfs在不同的设备上,则返回true.
 }
 
 // ImageGC is responsible for performing garbage collection of unused images.
@@ -83,7 +83,7 @@ type ContainerGC interface {
 // gracePeriodOverride - the grace period override to use instead of what is on the pod spec
 type KillPodFunc func(pod *v1.Pod, isEvicted bool, gracePeriodOverride *int64, fn func(*v1.PodStatus)) error
 
-// MirrorPodFunc 返回给定静态pod的镜像pod及其是否已知于pod管理器。
+// MirrorPodFunc 返回给定静态pod的镜像pod及其是否已知于pod管理器.
 type MirrorPodFunc func(*v1.Pod) (*v1.Pod, bool)
 
 // ActivePodsFunc returns pods bound to the kubelet that are active (i.e. non-terminal state)

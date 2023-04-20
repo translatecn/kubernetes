@@ -20418,7 +20418,7 @@ func schema_k8sio_api_core_v1_NodeAffinity(ref common.ReferenceCallback) common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Node affinity is a group of node affinity scheduling rules.",
+				Description: "NodeAffinity affinity is a group of node affinity scheduling rules.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"requiredDuringSchedulingIgnoredDuringExecution": {
@@ -20747,7 +20747,7 @@ func schema_k8sio_api_core_v1_NodeSelectorRequirement(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+				Description: "NodeSelectorRequirement A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"key": {
@@ -22252,7 +22252,7 @@ func schema_k8sio_api_core_v1_PodAffinity(ref common.ReferenceCallback) common.O
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Pod affinity is a group of inter pod affinity scheduling rules.",
+				Description: "PodAffinity affinity is a group of inter pod affinity scheduling rules.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"requiredDuringSchedulingIgnoredDuringExecution": {
@@ -22295,7 +22295,7 @@ func schema_k8sio_api_core_v1_PodAffinityTerm(ref common.ReferenceCallback) comm
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key <topologyKey> matches that of any node on which a pod of the set of pods is running",
+				Description: "PodAffinityTerm Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key <topologyKey> matches that of any node on which a pod of the set of pods is running",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"labelSelector": {
@@ -22346,7 +22346,7 @@ func schema_k8sio_api_core_v1_PodAntiAffinity(ref common.ReferenceCallback) comm
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Pod anti affinity is a group of inter pod anti affinity scheduling rules.",
+				Description: "PodAntiAffinity anti affinity is a group of inter pod anti affinity scheduling rules.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"requiredDuringSchedulingIgnoredDuringExecution": {
@@ -23014,8 +23014,7 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 				Properties: map[string]spec.Schema{
 					"seLinuxOptions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The SELinux context to be applied to all containers. If unspecified, the container runtime will allocate a random SELinux context for each container.  May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.",
-							Ref:         ref("k8s.io/api/core/v1.SELinuxOptions"),
+							Ref: ref("k8s.io/api/core/v1.SELinuxOptions"),
 						},
 					},
 					"windowsOptions": {
@@ -23033,16 +23032,14 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 					},
 					"runAsGroup": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The GID to run the entrypoint of the container process. Uses runtime default if unset. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.",
-							Type:        []string{"integer"},
-							Format:      "int64",
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 					"runAsNonRoot": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Indicates that the container must run as a non-root user. If true, the Kubelet will validate the image at runtime to ensure that it does not run as UID 0 (root) and fail to start the container if it does. If unset or false, no such validation will be performed. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.",
-							Type:        []string{"boolean"},
-							Format:      "",
+							Type:   []string{"boolean"},
+							Format: "",
 						},
 					},
 					"supplementalGroups": {
@@ -25740,7 +25737,7 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodSecurityContext 是Kubernetes中用于定义安全属性和设置的对象。",
+				Description: "SecurityContext 是Kubernetes中用于定义安全属性和设置的对象。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"capabilities": {
@@ -25770,9 +25767,8 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 					},
 					"runAsUser": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in PodSecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is windows.",
-							Type:        []string{"integer"},
-							Format:      "int64",
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 					"runAsGroup": {
@@ -26714,7 +26710,7 @@ func schema_k8sio_api_core_v1_Toleration(ref common.ReferenceCallback) common.Op
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
+				Description: "Toleration The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"key": {
@@ -26747,7 +26743,7 @@ func schema_k8sio_api_core_v1_Toleration(ref common.ReferenceCallback) common.Op
 					},
 					"tolerationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system. 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
+							Description: "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -26762,7 +26758,7 @@ func schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref common.Refere
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A topology selector requirement is a selector that matches given label. This is an alpha feature and may change in the future.",
+				Description: "TopologySelectorLabelRequirement A topology selector requirement is a selector that matches given label. This is an alpha feature and may change in the future.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"key": {
@@ -26799,7 +26795,7 @@ func schema_k8sio_api_core_v1_TopologySelectorTerm(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "A topology selector term represents the result of label queries. A null or empty topology selector term matches no objects. The requirements of them are ANDed. It provides a subset of functionality as NodeSelectorTerm. This is an alpha feature and may change in the future.",
+				Description: "TopologySelectorTerm A topology selector term represents the result of label queries. A null or empty topology selector term matches no objects. The requirements of them are ANDed. It provides a subset of functionality as NodeSelectorTerm. This is an alpha feature and may change in the future.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"matchLabelExpressions": {
@@ -27583,7 +27579,7 @@ func schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref common.ReferenceCallba
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)",
+				Description: "WeightedPodAffinityTerm The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"weight": {
@@ -35366,7 +35362,7 @@ func schema_k8sio_api_flowcontrol_v1beta3_QueuingConfiguration(ref common.Refere
 					},
 					"queueLengthLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
+							Description: "queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量;超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",

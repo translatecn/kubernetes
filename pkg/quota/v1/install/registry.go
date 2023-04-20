@@ -26,7 +26,7 @@ import (
 	"k8s.io/kubernetes/pkg/quota/v1/evaluator/core"
 )
 
-// NewQuotaConfigurationForAdmission 返回准入控制的配额配置。
+// NewQuotaConfigurationForAdmission 返回准入控制的配额配置.
 func NewQuotaConfigurationForAdmission() quota.Configuration {
 	evaluators := core.NewEvaluators(nil)
 	return generic.NewConfiguration(evaluators, DefaultIgnoredResources())

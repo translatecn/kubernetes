@@ -35,16 +35,16 @@ type Interface interface {
 
 	VersionInfo() (*cadvisorapi.VersionInfo, error)
 
-	// Returns usage information about the filesystem holding container images.
+	// ImagesFsInfo 返回有关存储容器镜像的文件系统的使用情况信息.
 	ImagesFsInfo() (cadvisorapiv2.FsInfo, error)
 
-	// Returns usage information about the root filesystem.
+	// RootFsInfo 返回有关根文件系统的使用情况信息.
 	RootFsInfo() (cadvisorapiv2.FsInfo, error)
 
-	// Get events streamed through passedChannel that fit the request.
+	// WatchEvents 获取通过传递的通道传输的符合请求条件的事件流.
 	WatchEvents(request *events.Request) (*events.EventChannel, error)
 
-	// Get filesystem information for the filesystem that contains the given file.
+	// GetDirFsInfo 获取包含给定文件的文件系统的文件系统信息.
 	GetDirFsInfo(path string) (cadvisorapiv2.FsInfo, error)
 }
 

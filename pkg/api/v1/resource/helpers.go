@@ -143,7 +143,7 @@ func GetResourceRequestQuantity(pod *v1.Pod, resourceName v1.ResourceName) resou
 			}
 		}
 	}
-	// 如果资源总数不为零，则将运行pod的开销添加到总请求中
+	// 如果资源总数不为零,则将运行pod的开销添加到总请求中
 	if pod.Spec.Overhead != nil {
 		if podOverhead, ok := pod.Spec.Overhead[resourceName]; ok && !requestQuantity.IsZero() {
 			requestQuantity.Add(podOverhead)

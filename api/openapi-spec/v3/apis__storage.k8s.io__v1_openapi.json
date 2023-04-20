@@ -531,7 +531,7 @@
         "x-kubernetes-map-type": "atomic"
       },
       "io.k8s.api.core.v1.NodeSelectorRequirement": {
-        "description": "A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+        "description": "NodeSelectorRequirement A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
         "properties": {
           "key": {
             "default": "",
@@ -1093,7 +1093,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.TopologySelectorLabelRequirement": {
-        "description": "A topology selector requirement is a selector that matches given label. This is an alpha feature and may change in the future.",
+        "description": "TopologySelectorLabelRequirement A topology selector requirement is a selector that matches given label. This is an alpha feature and may change in the future.",
         "properties": {
           "key": {
             "default": "",
@@ -1116,7 +1116,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.TopologySelectorTerm": {
-        "description": "A topology selector term represents the result of label queries. A null or empty topology selector term matches no objects. The requirements of them are ANDed. It provides a subset of functionality as NodeSelectorTerm. This is an alpha feature and may change in the future.",
+        "description": "TopologySelectorTerm A topology selector term represents the result of label queries. A null or empty topology selector term matches no objects. The requirements of them are ANDed. It provides a subset of functionality as NodeSelectorTerm. This is an alpha feature and may change in the future.",
         "properties": {
           "matchLabelExpressions": {
             "description": "A list of topology selector requirements by labels.",

@@ -109,9 +109,10 @@ func (p *Provider) GetCgroupStats(cgroupName string, updateStats bool) (*statsap
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get cgroup stats for %q: %v", cgroupName, err)
 	}
-	// Rootfs and imagefs doesn't make sense for raw cgroup.
-	s := cadvisorInfoToContainerStats(cgroupName, info, nil, nil)
-	n := cadvisorInfoToNetworkStats(info)
+	// 使用原始cgroup而不是容器技术,那么使用Rootfs和Imagefs子系统就没有意义了.
+	// 原始cgroup只是一种限制和管理进程资源使用的机制,不涉及到文件系统隔离和管理.因此,在原始cgroup中使用Rootfs和Imagefs子系统是没有意义的.
+	s := cadvisorInfoToContainerStats(cgroupName, info, nil, nil) // ✅
+	n := cadvisorInfoToNetworkStats(info)                         // ✅
 	return s, n, nil
 }
 
@@ -196,7 +197,7 @@ func (p *Provider) GetRawContainerInfo(containerName string, req *cadvisorapiv1.
 	}, nil
 }
 
-// HasDedicatedImageFs   如果imagefs与rootfs在不同的设备上,则返回true。
+// HasDedicatedImageFs   如果imagefs与rootfs在不同的设备上,则返回true.
 func (p *Provider) HasDedicatedImageFs(ctx context.Context) (bool, error) {
 	device, err := p.containerStatsProvider.ImageFsDevice(ctx)
 	if err != nil {

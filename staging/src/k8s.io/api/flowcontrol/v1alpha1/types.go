@@ -513,7 +513,7 @@ type QueuingConfiguration struct {
 	// 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。
 	// +optional
 	HandSize int32 `json:"handSize" protobuf:"varint,2,opt,name=handSize"`
-	// queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。
+	// queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量;超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。
 
 	// +optional
 	QueueLengthLimit int32 `json:"queueLengthLimit" protobuf:"varint,3,opt,name=queueLengthLimit"`

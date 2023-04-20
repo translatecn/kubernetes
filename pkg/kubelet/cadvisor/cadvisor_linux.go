@@ -94,7 +94,7 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 		cadvisormetrics.OOMMetrics:          struct{}{},
 	}
 
-	// 仅在该功能处于非活动状态时添加加速器指标。
+	// 仅在该功能处于非活动状态时添加加速器指标.
 	if !utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DisableAcceleratorUsageMetrics) {
 		includedMetrics[cadvisormetrics.AcceleratorUsageMetrics] = struct{}{}
 	}
@@ -111,7 +111,7 @@ func New(imageFsInfoProvider ImageFsInfoProvider, rootPath string, cgroupRoots [
 
 	// Create the cAdvisor container manager.
 	m, err := manager.New(
-		memory.New(statsCacheDuration, nil), // 代表一个内存的缓存，maxAge为2分钟
+		memory.New(statsCacheDuration, nil), // 代表一个内存的缓存,maxAge为2分钟
 		sysFs,                               // 代表底层的节点realfs对象
 		housekeepingConfig,                  // 代表清理的配置
 		includedMetrics,                     // 代表指标采集的大类
@@ -184,7 +184,7 @@ func (cc *cadvisorClient) ImagesFsInfo() (cadvisorapiv2.FsInfo, error) {
 }
 
 func (cc *cadvisorClient) RootFsInfo() (cadvisorapiv2.FsInfo, error) {
-	return cc.GetDirFsInfo(cc.rootPath)
+	return cc.GetDirFsInfo(cc.rootPath) // /var/lib/kubelet
 }
 
 func (cc *cadvisorClient) getFsInfo(label string) (cadvisorapiv2.FsInfo, error) {

@@ -5,6 +5,9 @@ import "os"
 func Init(args []string) []string {
 	name, _ := os.Hostname()
 	if os.Getenv("DEBUG") != "" || name == "vm" {
+		if os.Getenv("SKIP") != "" {
+			return args
+		}
 	} else {
 		return args
 	}

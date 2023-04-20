@@ -686,7 +686,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			return err
 		}
 		var hardEvictionThresholds []evictionapi.Threshold
-		// If the user requested to ignore eviction thresholds, then do not set valid values for hardEvictionThresholds here.
+		// 如果用户没有设置 忽略驱逐阈值，就为hardEvictionThresholds设置有效值。
 		if !s.ExperimentalNodeAllocatableIgnoreEvictionThreshold {
 			hardEvictionThresholds, err = eviction.ParseThresholdConfig([]string{}, s.EvictionHard, nil, nil, nil)
 			if err != nil {
@@ -1168,7 +1168,7 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 		klog.ErrorS(err, "Failed to set rlimit on max file handles")
 	}
 
-	// 处理pod并退出。
+	// 处理pod并退出.
 	if runOnce {
 		if _, err := k.RunOnce(podCfg.Updates()); err != nil {
 			return fmt.Errorf("runonce failed: %w", err)
@@ -1192,7 +1192,7 @@ func startKubelet(k kubelet.Bootstrap, podCfg *config.PodConfig, kubeCfg *kubele
 	if kubeCfg.ReadOnlyPort > 0 {
 		go k.ListenAndServeReadOnly(netutils.ParseIPSloppy(kubeCfg.Address), uint(kubeCfg.ReadOnlyPort))
 	}
-	if utilfeature.DefaultFeatureGate.Enabled(features.KubeletPodResources) { // 启用kubelet的pod资源gRPC端点。
+	if utilfeature.DefaultFeatureGate.Enabled(features.KubeletPodResources) { // 启用kubelet的pod资源gRPC端点.
 		go k.ListenAndServePodResources()
 	}
 }

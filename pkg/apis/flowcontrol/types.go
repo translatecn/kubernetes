@@ -55,7 +55,7 @@ const (
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// FlowSchema 用于对每个入站请求进行分类，并与一个 PriorityLevelConfigurations相匹配。
+// FlowSchema 用于对每个入站请求进行分类,并与一个 PriorityLevelConfigurations相匹配.
 type FlowSchema struct {
 	metav1.TypeMeta
 	// `metadata` is the standard object's metadata.
@@ -91,9 +91,9 @@ type FlowSchemaSpec struct {
 	PriorityLevelConfiguration PriorityLevelConfigurationReference // 引用
 	// +optional
 	MatchingPrecedence  int32                    // 匹配优先值 [1,10000]
-	DistinguisherMethod *FlowDistinguisherMethod // distinguisherMethod定义如何计算与此模式匹配的请求的流区分器。
-	// rules描述哪些请求将匹配此流程模式。当且仅当规则的至少一个成员与请求匹配时，此FlowSchema才会匹配请求。
-	// 如果它是一个空切片，则不会有请求匹配FlowSchema。
+	DistinguisherMethod *FlowDistinguisherMethod // distinguisherMethod定义如何计算与此模式匹配的请求的流区分器.
+	// rules描述哪些请求将匹配此流程模式.当且仅当规则的至少一个成员与请求匹配时,此FlowSchema才会匹配请求.
+	// 如果它是一个空切片,则不会有请求匹配FlowSchema.
 
 	// +listType=set
 	// +optional
@@ -314,7 +314,7 @@ type FlowSchemaConditionType string
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// PriorityLevelConfiguration 定义隔离类型和可处理的并发预算量，还可以调整排队行为。
+// PriorityLevelConfiguration 定义隔离类型和可处理的并发预算量,还可以调整排队行为.
 type PriorityLevelConfiguration struct {
 	metav1.TypeMeta
 	// `metadata` is the standard object's metadata.
@@ -359,7 +359,7 @@ type PriorityLevelConfigurationSpec struct {
 	// +unionDiscriminator
 	Type PriorityLevelEnablement
 
-	// `limited`参数指定了如何处理一个  具有优先级 的请求。
+	// `limited`参数指定了如何处理一个  具有优先级 的请求.
 	// This field must be non-empty if and only if `type` is `"Limited"`.
 	// +optional
 	Limited *LimitedPriorityLevelConfiguration
@@ -377,7 +377,7 @@ const (
 	PriorityLevelEnablementLimited PriorityLevelEnablement = "Limited"
 )
 
-// LimitedPriorityLevelConfiguration 指定如何处理受限制的请求。
+// LimitedPriorityLevelConfiguration 指定如何处理受限制的请求.
 // It addresses two issues:
 //   - How are requests for this priority level limited?
 //   - What should be done with requests that exceed the limit?
@@ -446,7 +446,7 @@ type LimitResponse struct {
 	// +unionDiscriminator
 	Type LimitResponseType
 
-	// `queuing` 参数保存了队列 的配置参数。
+	// `queuing` 参数保存了队列 的配置参数.
 	// This field may be non-empty only if `type` is `"Queue"`.
 	// +optional
 	Queuing *QueuingConfiguration
@@ -466,17 +466,17 @@ const (
 
 // QueuingConfiguration holds the configuration parameters for queuing
 type QueuingConfiguration struct {
-	//`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。
+	//`queues` 是此优先级级别的队列数.这些队列在每个 apiserver 上都是独立存在的.该值必须为正数.将其设置为 1 实际上会防止随机分片,因此与关联流模式的区分方法无关.该字段的默认值为 64.
 
 	// +optional
 	Queues int32
-	// handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。
-	// 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。
-	// 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。
-	// 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。
+	// handSize 是一个小的正整数,用于将请求进行随机分片并分配到队列中.
+	// 在此优先级级别的请求入队时,请求的流标识符（一个字符串对）将被哈希,哈希值将用于洗牌队列列表并发出指定大小的手牌.
+	// 请求将被放置在该手牌中最短的一个队列中.handSize 的大小不能超过 queues,并且应该足够小（以便一些重负载的流不会占据大部分队列）.
+	// 有关设置此字段的更详细指导,请参阅面向用户的文档.该字段的默认值为 8.
 	// +optional
 	HandSize int32
-	// queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。
+	// queueLengthLimit 是此优先级级别的给定队列中允许等待的请求的最大数量;超过此数量的请求将被拒绝.该值必须为正数.如果未指定,则默认为 50.
 
 	// +optional
 	QueueLengthLimit int32

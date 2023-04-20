@@ -99,6 +99,7 @@ func getSpecInternal(cgroupPaths map[string]string, machineInfoFactory info.Mach
 	}
 
 	// Get machine info.
+	// func (m *manager) GetMachineInfo()
 	mi, err := machineInfoFactory.GetMachineInfo()
 	if err != nil {
 		return spec, err

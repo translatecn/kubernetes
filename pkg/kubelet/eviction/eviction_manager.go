@@ -63,7 +63,7 @@ type ManagerImpl struct {
 	config        Config
 	killPodFunc   KillPodFunc   // killpod的方法
 	mirrorPodFunc MirrorPodFunc // 获取静态pod的mirror pod 方法
-	imageGC       ImageGC       // 当node出现diskPressure condition时，imageGC进行unused images删除操作以回收disk space。
+	imageGC       ImageGC       // 当node出现diskPressure condition时,imageGC进行unused images删除操作以回收disk space.
 	containerGC   ContainerGC
 	sync.RWMutex
 	nodeConditions               []v1.NodeConditionType   //  当前节点存在的问题集合
@@ -72,10 +72,10 @@ type ManagerImpl struct {
 	nodeRef *v1.ObjectReference
 	// used to record events about the node
 	recorder                  record.EventRecorder
-	summaryProvider           stats.SummaryProvider                   // 提供node和node上所有pods的最新status数据汇总，即 NodeStats and []PodStats。
+	summaryProvider           stats.SummaryProvider                   // 提供node和node上所有pods的最新status数据汇总,即 NodeStats and []PodStats.
 	thresholdsFirstObservedAt thresholdsObservedAt                    // 记录第一次阈值的时间
-	thresholdsMet             []evictionapi.Threshold                 // 保存已经触发但还没解决的Thresholds，包括那些处于grace period等待阶段的Thresholds。
-	signalToRankFunc          map[evictionapi.Signal]rankFunc         // 定义各Resource进行evict挑选时的排名方法。
+	thresholdsMet             []evictionapi.Threshold                 // 保存已经触发但还没解决的Thresholds,包括那些处于grace period等待阶段的Thresholds.
+	signalToRankFunc          map[evictionapi.Signal]rankFunc         // 定义各Resource进行evict挑选时的排名方法.
 	signalToNodeReclaimFuncs  map[evictionapi.Signal]nodeReclaimFuncs // 定义各Resource进行回收时调用的方法
 	// last observations from synchronize
 	lastObservations              signalObservations
@@ -120,8 +120,8 @@ func NewManager(
 	return manager, manager
 }
 
-// Admit 评估一个pod是否可以被允许创建。
-// 用node的压力状态 做pod是否准入的依据，相当于影响调度的结果
+// Admit 评估一个pod是否可以被允许创建.
+// 用node的压力状态 做pod是否准入的依据,相当于影响调度的结果
 func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	m.RLock()
 	defer m.RUnlock()
@@ -135,7 +135,7 @@ func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	}
 
 	// Conditions other than memory pressure reject all pods
-	// 如果当前节点只有内存的压力，那么pod的qos类型为 非 BestEffort[最低] 则准入
+	// 如果当前节点只有内存的压力,那么pod的qos类型为 非 BestEffort[最低] 则准入
 	nodeOnlyHasMemoryPressureCondition := hasNodeCondition(m.nodeConditions, v1.NodeMemoryPressure) && len(m.nodeConditions) == 1
 	if nodeOnlyHasMemoryPressureCondition {
 		notBestEffort := v1.PodQOSBestEffort != v1qos.GetPodQOS(attrs.Pod)
@@ -154,7 +154,7 @@ func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	}
 
 	// reject pods when under memory pressure (if pod is best effort), or if under disk pressure.
-	klog.InfoS("无法将pod分配到节点上。", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
+	klog.InfoS("无法将pod分配到节点上.", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
 	return lifecycle.PodAdmitResult{
 		Admit:   false,
 		Reason:  Reason,
@@ -162,13 +162,13 @@ func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	}
 }
 
-// Start 启动控制循环以观察和响应计算资源不足的情况。
+// Start 启动控制循环以观察和响应计算资源不足的情况.
 func (m *ManagerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc, podCleanedUpFunc PodCleanedUpFunc, monitoringInterval time.Duration) {
 	thresholdHandler := func(message string) {
 		klog.InfoS(message)
 		m.synchronize(diskInfoProvider, podFunc)
 	}
-	if m.config.KernelMemcgNotification { // 如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。
+	if m.config.KernelMemcgNotification { // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
 		for _, threshold := range m.config.Thresholds {
 			if threshold.Signal == evictionapi.SignalMemoryAvailable || threshold.Signal == evictionapi.SignalAllocatableMemoryAvailable {
 				notifier, err := NewMemoryThresholdNotifier(threshold, m.config.PodCgroupRoot, &CgroupNotifierFactory{}, thresholdHandler)
@@ -181,7 +181,7 @@ func (m *ManagerImpl) Start(diskInfoProvider DiskInfoProvider, podFunc ActivePod
 			}
 		}
 	}
-	// 开始驱逐管理器的监控。
+	// 开始驱逐管理器的监控.
 	go func() {
 		for {
 			if evictedPods := m.synchronize(diskInfoProvider, podFunc); evictedPods != nil {
@@ -215,8 +215,8 @@ func (m *ManagerImpl) IsUnderPIDPressure() bool {
 	return hasNodeCondition(m.nodeConditions, v1.NodePIDPressure)
 }
 
-// synchronize 是执行驱逐阈值的主要控制循环。
-// 返回被杀死的pod,如果没有被杀死,则返回nil。
+// synchronize 是执行驱逐阈值的主要控制循环.
+// 返回被杀死的pod,如果没有被杀死,则返回nil.
 func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc ActivePodsFunc) []*v1.Pod {
 	ctx := context.Background()
 	// 如果我们没事做,就回去吧
@@ -227,15 +227,15 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 
 	klog.V(3).InfoS("Eviction manager: synchronize housekeeping")
 	if m.dedicatedImageFs == nil {
-		// 如果imagefs与rootfs在不同的设备上,则返回true。 是否有专用的 image fs
+		// 如果imagefs与rootfs在不同的设备上,则返回true. 是否有专用的 image fs
 		hasImageFs, ok := diskInfoProvider.HasDedicatedImageFs(ctx)
 		if ok != nil {
 			return nil
 		}
 		m.dedicatedImageFs = &hasImageFs //
-		// 注册各个eviction signal所对应的资源排序方法    // 将资源->排名函数。
+		// 注册各个eviction signal所对应的资源排序方法    // 将资源->排名函数.
 		m.signalToRankFunc = buildSignalToRankFunc(hasImageFs)
-		// 将资源->如何回收该资源的有序函数列表。
+		// 将资源->如何回收该资源的有序函数列表.
 		m.signalToNodeReclaimFuncs = buildSignalToNodeReclaimFuncs(m.imageGC, m.containerGC, hasImageFs)
 	}
 
@@ -336,7 +336,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	m.recorder.Eventf(m.nodeRef, v1.EventTypeWarning, "EvictionThresholdMet", "Attempting to reclaim %s", resourceToReclaim)
 
 	// check if there are node-level resources we can reclaim to reduce pressure before evicting end-user pods.
-	//按照优先级最高的threshold回收节点资源，意思是先判断能否回收节点资源
+	//按照优先级最高的threshold回收节点资源,意思是先判断能否回收节点资源
 	if m.reclaimNodeLevelResources(ctx, thresholdToReclaim.Signal, resourceToReclaim) {
 		klog.InfoS("Eviction manager: able to reduce resource pressure without evicting pods.", "resourceName", resourceToReclaim)
 		return nil

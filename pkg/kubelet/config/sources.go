@@ -26,12 +26,10 @@ import (
 // SourcesReadyFn is function that returns true if the specified sources have been seen.
 type SourcesReadyFn func(sourcesSeen sets.String) bool
 
-// SourcesReady tracks the set of configured sources seen by the kubelet.
+// SourcesReady 跟踪 kubelet 所管理的已配置源的集合
 type SourcesReady interface {
-	// AddSource adds the specified source to the set of sources managed.
-	AddSource(source string)
-	// AllReady returns true if the currently configured sources have all been seen.
-	AllReady() bool
+	AddSource(source string) // 将指定的源添加到所管理的源集合中
+	AllReady() bool          // 如果所有当前配置的源都已经被看到,则返回 true.
 }
 
 // NewSourcesReady returns a SourcesReady with the specified function.

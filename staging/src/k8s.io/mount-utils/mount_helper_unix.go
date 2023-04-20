@@ -33,10 +33,9 @@ import (
 )
 
 const (
-	// At least number of fields per line in /proc/<pid>/mountinfo.
-	expectedAtLeastNumFieldsPerMountInfo = 10
-	// How many times to retry for a consistent read of /proc/mounts.
-	maxListTries = 10
+	//每行的字段数可能会因为文件系统的类型、挂载选项等因素而有所不同，但是为了确保文件格式的一致性，可能需要规定每行至少应该包含的字段数。
+	expectedAtLeastNumFieldsPerMountInfo = 10 // /proc/<pid>/mountinfo 每行至少应该包含的字段数
+	maxListTries                         = 10 // 指定在读取 /proc/mounts 文件时重试的次数,以确保读取到一致的结果。(文件系统的挂载和卸载是动态的)
 )
 
 // IsCorruptedMnt return true if err is about corrupted mount point

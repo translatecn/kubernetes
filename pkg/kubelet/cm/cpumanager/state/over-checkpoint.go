@@ -36,7 +36,7 @@ var _ checkpointmanager.Checkpoint = &CPUManagerCheckpoint{}
 type CPUManagerCheckpoint struct {
 	PolicyName    string                       `json:"policyName"`
 	DefaultCPUSet string                       `json:"defaultCpuSet"`
-	Entries       map[string]map[string]string `json:"entries,omitempty"`
+	Entries       map[string]map[string]string `json:"entries,omitempty"` // 支持一个pod内有多个容器
 	Checksum      checksum.Checksum            `json:"checksum"`
 }
 

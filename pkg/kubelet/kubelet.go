@@ -233,34 +233,34 @@ type Bootstrap interface {
 // at runtime that are necessary for running the Kubelet. This is a temporary solution for grouping
 // these objects while we figure out a more comprehensive dependency injection story for the Kubelet.
 type Dependencies struct {
-	Options []Option
+	Options []Option // 注入的依赖项列表.
 
 	// Injected Dependencies
-	Auth                     server.AuthInterface
-	CAdvisorInterface        cadvisor.Interface
-	Cloud                    cloudprovider.Interface
-	ContainerManager         cm.ContainerManager
-	EventClient              v1core.EventsGetter
-	HeartbeatClient          clientset.Interface
-	OnHeartbeatFailure       func()
-	KubeClient               clientset.Interface
-	Mounter                  mount.Interface
-	HostUtil                 hostutil.HostUtils
-	OOMAdjuster              *oom.OOMAdjuster
-	OSInterface              kubecontainer.OSInterface
-	PodConfig                *config.PodConfig
-	ProbeManager             prober.Manager
-	Recorder                 record.EventRecorder
-	Subpather                subpath.Interface
-	TracerProvider           trace.TracerProvider
-	VolumePlugins            []volume.VolumePlugin
-	DynamicPluginProber      volume.DynamicPluginProber
-	TLSOptions               *server.TLSOptions
-	RemoteRuntimeService     internalapi.RuntimeService
-	RemoteImageService       internalapi.ImageManagerService
-	PodStartupLatencyTracker util.PodStartupLatencyTracker
+	Auth                     server.AuthInterface            // 用于进行身份验证的接口.
+	CAdvisorInterface        cadvisor.Interface              // 用于与cAdvisor交互的接口.
+	Cloud                    cloudprovider.Interface         // 用于与云提供商交互的接口.
+	ContainerManager         cm.ContainerManager             // 容器管理器的接口.
+	EventClient              v1core.EventsGetter             // 用于与Kubernetes事件系统交互的接口.
+	HeartbeatClient          clientset.Interface             // 用于与Kubernetes心跳系统交互的接口.
+	OnHeartbeatFailure       func()                          // 心跳失败时执行的回调函数.
+	KubeClient               clientset.Interface             // 与Kubernetes API Server交互的客户端接口.
+	Mounter                  mount.Interface                 // 用于挂载卷的接口.
+	HostUtil                 hostutil.HostUtils              // 主机工具的接口.
+	OOMAdjuster              *oom.OOMAdjuster                // OOM调整器的接口.
+	OSInterface              kubecontainer.OSInterface       // 操作系统接口.
+	PodConfig                *config.PodConfig               // Pod配置的接口.
+	ProbeManager             prober.Manager                  // 用于管理探针的接口.
+	Recorder                 record.EventRecorder            // 用于记录事件的接口.
+	Subpather                subpath.Interface               // 用于处理子路径的接口.
+	TracerProvider           trace.TracerProvider            // 用于提供跟踪器的接口.
+	VolumePlugins            []volume.VolumePlugin           // 卷插件的列表.
+	DynamicPluginProber      volume.DynamicPluginProber      // 动态插件探测器的接口.
+	TLSOptions               *server.TLSOptions              // 用于配置TLS的选项.
+	RemoteRuntimeService     internalapi.RuntimeService      // 远程运行时服务的接口.
+	RemoteImageService       internalapi.ImageManagerService // 远程镜像服务的接口.
+	PodStartupLatencyTracker util.PodStartupLatencyTracker   // 用于跟踪Pod启动延迟的接口.
 	// remove it after cadvisor.UsingLegacyCadvisorStats dropped.
-	useLegacyCadvisorStats bool
+	useLegacyCadvisorStats bool // 指示是否使用旧版本的cAdvisor统计信息.
 }
 
 // makePodSourceConfig creates a config.PodConfig from the given
@@ -384,24 +384,26 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	var nodeHasSynced cache.InformerSynced
 	var nodeLister corelisters.NodeLister
 
-	// If kubeClient == nil, we are running in standalone mode (i.e. no API servers)
-	// If not nil, we are running as part of a cluster and should sync w/API
-	if kubeDeps.KubeClient != nil {
-		kubeInformers := informers.NewSharedInformerFactoryWithOptions(kubeDeps.KubeClient, 0, informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.FieldSelector = fields.Set{metav1.ObjectNameField: string(nodeName)}.String()
-		}))
-		nodeLister = kubeInformers.Core().V1().Nodes().Lister()
-		nodeHasSynced = func() bool {
-			return kubeInformers.Core().V1().Nodes().Informer().HasSynced()
+	{
+		// If kubeClient == nil, we are running in standalone mode (i.e. no API servers)
+		// If not nil, we are running as part of a cluster and should sync w/API
+		if kubeDeps.KubeClient != nil {
+			kubeInformers := informers.NewSharedInformerFactoryWithOptions(kubeDeps.KubeClient, 0, informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+				options.FieldSelector = fields.Set{metav1.ObjectNameField: string(nodeName)}.String()
+			}))
+			nodeLister = kubeInformers.Core().V1().Nodes().Lister()
+			nodeHasSynced = func() bool {
+				return kubeInformers.Core().V1().Nodes().Informer().HasSynced()
+			}
+			kubeInformers.Start(wait.NeverStop)
+			klog.InfoS("Attempting to sync node with API server")
+		} else {
+			// we don't have a client to sync!
+			nodeIndexer := cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{})
+			nodeLister = corelisters.NewNodeLister(nodeIndexer)
+			nodeHasSynced = func() bool { return true }
+			klog.InfoS("Kubelet is running in standalone mode, will skip API server sync")
 		}
-		kubeInformers.Start(wait.NeverStop)
-		klog.InfoS("Attempting to sync node with API server")
-	} else {
-		// we don't have a client to sync!
-		nodeIndexer := cache.NewIndexer(cache.MetaNamespaceKeyFunc, cache.Indexers{})
-		nodeLister = corelisters.NewNodeLister(nodeIndexer)
-		nodeHasSynced = func() bool { return true }
-		klog.InfoS("Kubelet is running in standalone mode, will skip API server sync")
 	}
 
 	if kubeDeps.PodConfig == nil {
@@ -848,7 +850,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	//- evictionAdmitHandler用来kubelet创建Pod前进依据本机的资源压力进行准入检查
 	klet.evictionManager = evictionManager
 
-	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查，满足条件后才会继续创建Pod，通过Admit方法来检查
+	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查,满足条件后才会继续创建Pod,通过Admit方法来检查
 	var _ = new(eviction.ManagerImpl).Admit
 	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler)
 
@@ -936,17 +938,13 @@ type serviceLister interface {
 // Kubelet is the main kubelet implementation.
 type Kubelet struct {
 	kubeletConfiguration kubeletconfiginternal.KubeletConfiguration
-
-	// hostname is the hostname the kubelet detected or was given via flag/config
-	hostname string
-	// hostnameOverridden indicates the hostname was overridden via flag/config
-	hostnameOverridden bool
-
-	nodeName        types.NodeName
-	runtimeCache    kubecontainer.RuntimeCache
-	kubeClient      clientset.Interface
-	heartbeatClient clientset.Interface
-	rootDirectory   string
+	hostname             string
+	hostnameOverridden   bool
+	nodeName             types.NodeName
+	runtimeCache         kubecontainer.RuntimeCache
+	kubeClient           clientset.Interface
+	heartbeatClient      clientset.Interface
+	rootDirectory        string
 
 	lastObservedNodeAddressesMux sync.RWMutex
 	lastObservedNodeAddresses    []v1.NodeAddress
@@ -979,9 +977,8 @@ type Kubelet struct {
 	// Set to true to have the node register itself with the apiserver.
 	registerNode bool
 	// List of taints to add to a node object when the kubelet registers itself.
-	registerWithTaints []v1.Taint
-	// Set to true to have the node register itself as schedulable.
-	registerSchedulable bool
+	registerWithTaints  []v1.Taint
+	registerSchedulable bool // 将该变量设置为true,可以使节点自行注册为可调度节点.
 	// for internal book keeping; access only from within registerWithApiserver
 	registrationCompleted bool
 
@@ -1252,9 +1249,7 @@ type Kubelet struct {
 
 	// Handles RuntimeClass objects for the Kubelet.
 	runtimeClassManager *runtimeclass.Manager
-
-	// Handles node shutdown events for the Node.
-	shutdownManager nodeshutdown.Manager
+	shutdownManager     nodeshutdown.Manager
 
 	// Manage user namespaces
 	usernsManager *usernsManager
@@ -1450,7 +1445,7 @@ func (kl *Kubelet) initializeModules() error {
 	return nil
 }
 
-// initializeRuntimeDependentModules will initialize internal modules that require the container runtime to be up.
+// initializeRuntimeDependentModules 启动容器运行时之后需要初始化内部模块
 func (kl *Kubelet) initializeRuntimeDependentModules() {
 	// 1. 启动cadvisor
 	if err := kl.cadvisor.Start(); err != nil { // ✅
@@ -1458,10 +1453,10 @@ func (kl *Kubelet) initializeRuntimeDependentModules() {
 		klog.ErrorS(err, "Failed to start cAdvisor")
 		os.Exit(1)
 	}
+	//触发收集一次,以便我们有临时存储的容量信息.
+	//忽略任何错误,因为如果统计收集不成功,容器管理器将无法在下面启动。
 
-	// trigger on-demand stats collection once so that we have capacity information for ephemeral storage.
-	// ignore any errors, since if stats collection is not successful, the container manager will fail to start below.
-	kl.StatsProvider.GetCgroupStats("/", true)
+	kl.StatsProvider.GetCgroupStats("/", true) // ✅
 	// Start container manager.
 	node, err := kl.getNodeAnyWay()
 	if err != nil {
@@ -1860,7 +1855,7 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 }
 
 // syncTerminatingPod 应终止pod中的所有运行容器。
-// 一旦此方法在没有错误的情况下返回，就可以安全地清理pod的本地状态。如果传递了runningPod，则我们不执行状态更新。
+// 一旦此方法在没有错误的情况下返回,就可以安全地清理pod的本地状态。如果传递了runningPod，则我们不执行状态更新。
 func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, runningPod *kubecontainer.Pod, gracePeriod *int64, podStatusFn func(*v1.PodStatus)) error {
 	// TODO(#113606): connect this with the incoming context parameter, which comes from the pod worker.
 	// Currently, using that context causes test failures.
@@ -2615,6 +2610,7 @@ func (kl *Kubelet) ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.Pod
 	return kl.containerRuntime.ListPodSandboxMetrics(ctx)
 }
 
+// 支持本地存储容量隔离
 func (kl *Kubelet) supportLocalStorageCapacityIsolation() bool {
 	return kl.GetConfiguration().LocalStorageCapacityIsolation
 }

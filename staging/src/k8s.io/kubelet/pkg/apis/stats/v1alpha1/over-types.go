@@ -22,9 +22,7 @@ import (
 
 // Summary is a top-level container for holding NodeStats and PodStats.
 type Summary struct {
-	// Overall node stats.
-	Node NodeStats `json:"node"`
-	// Per-pod stats.
+	Node NodeStats  `json:"node"`
 	Pods []PodStats `json:"pods"`
 }
 
@@ -63,34 +61,23 @@ type NodeStats struct {
 
 // RlimitStats are stats rlimit of OS.
 type RlimitStats struct {
-	Time metav1.Time `json:"time"`
-
-	// The max number of extant process (threads, precisely on Linux) of OS. See RLIMIT_NPROC in getrlimit(2).
-	// The operating system ceiling on the number of process IDs that can be assigned.
-	// On Linux, tasks (either processes or threads) consume 1 PID each.
-	MaxPID *int64 `json:"maxpid,omitempty"`
-	// The number of running process (threads, precisely on Linux) in the OS.
-	NumOfRunningProcesses *int64 `json:"curproc,omitempty"`
+	Time                  metav1.Time `json:"time"`              // 这些统计信息的更新时间。
+	MaxPID                *int64      `json:"maxpid,omitempty"`  //操作系统中可用的最大进程数（在Linux上是线程数），参见getrlimit(2)中的RLIMIT_NPROC。操作系统的进程ID数量上限。
+	NumOfRunningProcesses *int64      `json:"curproc,omitempty"` // 操作系统中正在运行的进程数（在Linux上是线程数）。
 }
 
 // RuntimeStats are stats pertaining to the underlying container runtime.
 type RuntimeStats struct {
-	// Stats about the underlying filesystem where container images are stored.
-	// This filesystem could be the same as the primary (root) filesystem.
-	// Usage here refers to the total number of bytes occupied by images on the filesystem.
+	// 描述底层文件系统的统计信息，该文件系统用于存储容器镜像。这个文件系统可能与主（根）文件系统相同。这里的使用情况是指文件系统上镜像占用的总字节数。
 	// +optional
 	ImageFs *FsStats `json:"imageFs,omitempty"`
 }
 
 const (
-	// SystemContainerKubelet is the container name for the system container tracking Kubelet usage.
-	SystemContainerKubelet = "kubelet"
-	// SystemContainerRuntime is the container name for the system container tracking the runtime (e.g. docker) usage.
-	SystemContainerRuntime = "runtime"
-	// SystemContainerMisc is the container name for the system container tracking non-kubernetes processes.
-	SystemContainerMisc = "misc"
-	// SystemContainerPods is the container name for the system container tracking user pods.
-	SystemContainerPods = "pods"
+	SystemContainerKubelet = "kubelet" // 用于跟踪Kubelet使用情况的系统容器的名称。
+	SystemContainerRuntime = "runtime" // 用于跟踪运行时（例如docker）使用情况的系统容器的名称。
+	SystemContainerMisc    = "misc"    // 用于跟踪非Kubernetes进程使用情况的系统容器的名称。
+	SystemContainerPods    = "pods"    // 用于跟踪用户Pod使用情况的系统容器的名称。
 )
 
 // ProcessStats are stats pertaining to processes.
@@ -133,29 +120,20 @@ type PodStats struct {
 	ProcessStats *ProcessStats `json:"process_stats,omitempty"`
 }
 
-// ContainerStats holds container-level unprocessed sample stats.
+// ContainerStats 保存容器级未处理的样本状态。
 type ContainerStats struct {
-	// Reference to the measured container.
-	Name string `json:"name"`
-	// The time at which data collection for this container was (re)started.
-	StartTime metav1.Time `json:"startTime"`
-	// Stats pertaining to CPU resources.
+	Name      string      `json:"name"`      // 容器的名称。
+	StartTime metav1.Time `json:"startTime"` // 数据收集开始的时间。
 	// +optional
-	CPU *CPUStats `json:"cpu,omitempty"`
-	// Stats pertaining to memory (RAM) resources.
+	CPU *CPUStats `json:"cpu,omitempty"` // 关于CPU资源的统计信息，包括CPU使用率、CPU时间等等。
 	// +optional
-	Memory *MemoryStats `json:"memory,omitempty"`
-	// Metrics for Accelerators. Each Accelerator corresponds to one element in the array.
-	Accelerators []AcceleratorStats `json:"accelerators,omitempty"`
-	// Stats pertaining to container rootfs usage of filesystem resources.
-	// Rootfs.UsedBytes is the number of bytes used for the container write layer.
+	Memory       *MemoryStats       `json:"memory,omitempty"`       // 关于内存资源的统计信息，包括内存使用量、内存限制等等。
+	Accelerators []AcceleratorStats `json:"accelerators,omitempty"` // 加速器的度量指标，每个加速器对应一个AcceleratorStats结构体。
 	// +optional
-	Rootfs *FsStats `json:"rootfs,omitempty"`
-	// Stats pertaining to container logs usage of filesystem resources.
-	// Logs.UsedBytes is the number of bytes used for the container logs.
+	Rootfs *FsStats `json:"rootfs,omitempty"` // 关于容器根文件系统使用的统计信息，包括使用的字节数、限制等等。
 	// +optional
-	Logs *FsStats `json:"logs,omitempty"`
-	// User defined metrics that are exposed by containers in the pod. Typically, we expect only one container in the pod to be exposing user defined metrics. In the event of multiple containers exposing metrics, they will be combined here.
+	Logs *FsStats `json:"logs,omitempty"` // 关于容器日志使用的统计信息，包括使用的字节数、限制等等。
+	// 用户定义的度量指标，这些指标由容器中的应用程序暴露出来，通常只有一个容器会暴露这些指标，如果有多个容器暴露，它们将被合并在这里。
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	UserDefinedMetrics []UserDefinedMetric `json:"userDefinedMetrics,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
@@ -236,28 +214,13 @@ type MemoryStats struct {
 	MajorPageFaults *uint64 `json:"majorPageFaults,omitempty"`
 }
 
-// AcceleratorStats contains stats for accelerators attached to the container.
 type AcceleratorStats struct {
-	// Make of the accelerator (nvidia, amd, google etc.)
-	Make string `json:"make"`
-
-	// Model of the accelerator (tesla-p100, tesla-k80 etc.)
-	Model string `json:"model"`
-
-	// ID of the accelerator.
-	ID string `json:"id"`
-
-	// Total accelerator memory.
-	// unit: bytes
-	MemoryTotal uint64 `json:"memoryTotal"`
-
-	// Total accelerator memory allocated.
-	// unit: bytes
-	MemoryUsed uint64 `json:"memoryUsed"`
-
-	// Percent of time over the past sample period (10s) during which
-	// the accelerator was actively processing.
-	DutyCycle uint64 `json:"dutyCycle"`
+	Make        string `json:"make"`         // 加速器的制造商，例如nvidia、amd、google等。
+	Model       string `json:"model"`        // 加速器的型号，例如tesla-p100、tesla-k80等。
+	ID          string `json:"id"`           // 加速器的ID。
+	MemoryTotal uint64 `json:"memory_total"` // 加速器总内存大小，单位为字节。
+	MemoryUsed  uint64 `json:"memory_used"`  // 加速器已分配内存大小，单位为字节。
+	DutyCycle   uint64 `json:"duty_cycle"`   // 加速器在过去的采样时间内活跃处理的时间百分比。
 }
 
 // VolumeStats contains data about Volume filesystem usage.
@@ -280,7 +243,7 @@ type VolumeStats struct {
 type VolumeHealthStats struct {
 	// Normal volumes are available for use and operating optimally.
 	// An abnormal volume does not meet these criteria.
-	Abnormal bool `json:"abnormal"`
+	Abnormal bool `json:"abnormal"` // 不正常的
 }
 
 // PVCReference contains enough information to describe the referenced PVC.
@@ -291,28 +254,24 @@ type PVCReference struct {
 
 // FsStats contains data about filesystem usage.
 type FsStats struct {
-	// The time at which these stats were updated.
+	// 这些统计信息的更新时间。
 	Time metav1.Time `json:"time"`
-	// AvailableBytes represents the storage space available (bytes) for the filesystem.
+	// 文件系统可用的存储空间（以字节为单位）。
 	// +optional
 	AvailableBytes *uint64 `json:"availableBytes,omitempty"`
-	// CapacityBytes represents the total capacity (bytes) of the filesystems underlying storage.
+	// 文件系统底层存储的总容量（以字节为单位）。
 	// +optional
 	CapacityBytes *uint64 `json:"capacityBytes,omitempty"`
-	// UsedBytes represents the bytes used for a specific task on the filesystem.
-	// This may differ from the total bytes used on the filesystem and may not equal CapacityBytes - AvailableBytes.
-	// e.g. For ContainerStats.Rootfs this is the bytes used by the container rootfs on the filesystem.
+	// 文件系统上特定任务使用的字节数。这可能与文件系统上使用的总字节数不同，并且可能不等于 CapacityBytes - AvailableBytes。
 	// +optional
 	UsedBytes *uint64 `json:"usedBytes,omitempty"`
-	// InodesFree represents the free inodes in the filesystem.
+	// 文件系统中空闲的inode数。
 	// +optional
 	InodesFree *uint64 `json:"inodesFree,omitempty"`
-	// Inodes represents the total inodes in the filesystem.
+	// 文件系统中的总inode数。
 	// +optional
 	Inodes *uint64 `json:"inodes,omitempty"`
-	// InodesUsed represents the inodes used by the filesystem
-	// This may not equal Inodes - InodesFree because this filesystem may share inodes with other "filesystems"
-	// e.g. For ContainerStats.Rootfs, this is the inodes used only by that container, and does not count inodes used by other containers.
+	// 文件系统使用的inode数。这可能不等于Inodes - InodesFree，因为这个文件系统可能与其他“文件系统”共享inode。例如，对于ContainerStats.Rootfs，这是仅由该容器使用的inode，不计算其他容器使用的inode。
 	InodesUsed *uint64 `json:"inodesUsed,omitempty"`
 }
 
@@ -320,14 +279,9 @@ type FsStats struct {
 type UserDefinedMetricType string
 
 const (
-	// MetricGauge is an instantaneous value. May increase or decrease.
-	MetricGauge UserDefinedMetricType = "gauge"
-
-	// MetricCumulative is a counter-like value that is only expected to increase.
-	MetricCumulative UserDefinedMetricType = "cumulative"
-
-	// MetricDelta is a rate over a time period.
-	MetricDelta UserDefinedMetricType = "delta"
+	MetricGauge      UserDefinedMetricType = "gauge"      // 表示瞬时值，它可以增加或减少。
+	MetricCumulative UserDefinedMetricType = "cumulative" // 表示类似于计数器的值，只会增加，不会减少。
+	MetricDelta      UserDefinedMetricType = "delta"      // 表示一个时间段内的速率。
 )
 
 // UserDefinedMetricDescriptor contains metadata that describes a user defined metric.

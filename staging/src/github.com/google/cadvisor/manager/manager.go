@@ -74,15 +74,12 @@ type Manager interface {
 	// may produce undefined behavior.
 	Start() error
 
-	// Stops the manager.
 	Stop() error
 
-	//  information about a container.
+	// GetContainerInfo 获取容器信息
 	GetContainerInfo(containerName string, query *info.ContainerInfoRequest) (*info.ContainerInfo, error)
 
-	// Get V2 information about a container.
-	// Recursive (subcontainer) requests are best-effort, and may return a partial result alongside an
-	// error in the partial failure case.
+	// GetContainerInfoV2 获取容器的V2版本信息。递归(子容器)请求是尽最大努力的，在部分失败的情况下，可能会返回部分结果和错误。
 	GetContainerInfoV2(containerName string, options v2.RequestOptions) (map[string]v2.ContainerInfo, error)
 
 	// Get information about all subcontainers of the specified container (includes self).
@@ -117,7 +114,7 @@ type Manager interface {
 	// function will return the fs.ErrNoSuchDevice error.
 	GetFsInfoByFsUUID(uuid string) (v2.FsInfo, error)
 
-	// Get filesystem information for the filesystem that contains the given directory
+	// GetDirFsInfo 获取包含给定目录的文件系统的文件系统信息。
 	GetDirFsInfo(dir string) (v2.FsInfo, error)
 
 	// Get filesystem information for a given label.
@@ -260,8 +257,8 @@ type namespacedContainerName struct {
 }
 
 type manager struct {
-	containers                            map[namespacedContainerName]*containerData
-	containersLock                        sync.RWMutex
+	containers                            map[namespacedContainerName]*containerData // 当前受到监控的容器存在一个map中 containerData结构中包括了对容器的各种具体操作方式和相关信息
+	containersLock                        sync.RWMutex                               // 对map中数据存取时采用的Lock
 	memoryCache                           *memory.InMemoryCache
 	fsInfo                                fs.FsInfo
 	sysFs                                 sysfs.SysFs
@@ -336,7 +333,7 @@ func (m *manager) Start() error {
 	// Look for new containers in the main housekeeping thread.
 	quitGlobalHousekeeping := make(chan error)
 	m.quitChannels = append(m.quitChannels, quitGlobalHousekeeping)
-	go m.globalHousekeeping(quitGlobalHousekeeping)
+	go m.globalHousekeeping(quitGlobalHousekeeping) // 添加、删除容器
 
 	quitUpdateMachineInfo := make(chan error)
 	m.quitChannels = append(m.quitChannels, quitUpdateMachineInfo)
@@ -790,6 +787,7 @@ func (m *manager) GetFsInfoByFsUUID(uuid string) (v2.FsInfo, error) {
 	return m.getFsInfoByDeviceName(device.Device)
 }
 
+// GetFsInfo 获取文件系统挂载点的使用量
 func (m *manager) GetFsInfo(label string) ([]v2.FsInfo, error) {
 	var empty time.Time
 	// Get latest data from filesystems hanging off root container.

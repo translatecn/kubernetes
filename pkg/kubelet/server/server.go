@@ -184,14 +184,14 @@ func ListenAndServeKubeletServer(
 	}
 }
 
-// ListenAndServeKubeletReadOnlyServer 初始化服务器以响应Kubelet上的HTTP网络请求。
+// ListenAndServeKubeletReadOnlyServer 初始化服务器以响应Kubelet上的HTTP网络请求.
 func ListenAndServeKubeletReadOnlyServer(
 	host HostInterface,
 	resourceAnalyzer stats.ResourceAnalyzer,
 	address net.IP,
 	port uint) {
 	klog.InfoS("Starting to listen read-only", "address", address, "port", port)
-	// TODO: https://github.com/kubernetes/kubernetes/issues/109829 追踪器应该使用WithPublicEndpoint。
+	// TODO: https://github.com/kubernetes/kubernetes/issues/109829 追踪器应该使用WithPublicEndpoint.
 	s := NewServer(host, resourceAnalyzer, nil, oteltrace.NewNoopTracerProvider(), nil)
 
 	server := &http.Server{
@@ -254,7 +254,7 @@ type HostInterface interface {
 	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error)
 }
 
-// NewServer 初始化和配置kubelet.Server对象以处理HTTP请求。
+// NewServer 初始化和配置kubelet.Server对象以处理HTTP请求.
 func NewServer(
 	host HostInterface,
 	resourceAnalyzer stats.ResourceAnalyzer,
@@ -356,7 +356,7 @@ func (s *Server) getMetricMethodBucket(method string) string {
 	return "other"
 }
 
-// InstallDefaultHandlers 使用restful Container注册支持的HTTP请求模式的默认集合。
+// InstallDefaultHandlers 使用restful Container注册支持的HTTP请求模式的默认集合.
 func (s *Server) InstallDefaultHandlers() {
 	s.addMetricsBucketMatcher("healthz")
 	healthz.InstallHandler(s.restfulCont,

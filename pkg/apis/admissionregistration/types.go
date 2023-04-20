@@ -586,7 +586,7 @@ type MutatingWebhook struct {
 	Rules []RuleWithOperations
 
 	// +optional
-	FailurePolicy *FailurePolicyType // 当apiServer调用我们自定义的webhook服务异常时，采取的策略（Ignore：忽略异常继续处理，Fail：直接失败退出不继续处理） 默认Ignore
+	FailurePolicy *FailurePolicyType // 当apiServer调用我们自定义的webhook服务异常时,采取的策略（Ignore：忽略异常继续处理,Fail：直接失败退出不继续处理） 默认Ignore
 
 	// matchPolicy defines how the "rules" list is used to match incoming requests.
 	// Allowed values are "Exact" or "Equivalent".
@@ -705,8 +705,8 @@ type MutatingWebhook struct {
 	//
 	// Defaults to "Never".
 
-	// # reinvocationPolicy表示再调度策略，因为webhook本身没有顺序性，因此每个修改后可能又被其他webhook修改，所以提供
-	// # 一个策略表示是否需要被多次调用，Never 表示只会调度一次，IfNeeded 表示资源被修改后会再调度这个webhook
+	// # reinvocationPolicy表示再调度策略,因为webhook本身没有顺序性,因此每个修改后可能又被其他webhook修改,所以提供
+	// # 一个策略表示是否需要被多次调用,Never 表示只会调度一次,IfNeeded 表示资源被修改后会再调度这个webhook
 	// +optional
 	ReinvocationPolicy *ReinvocationPolicyType
 }

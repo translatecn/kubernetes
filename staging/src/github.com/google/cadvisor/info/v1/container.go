@@ -136,7 +136,7 @@ type ContainerInfo struct {
 	Stats []*ContainerStats `json:"stats,omitempty"`
 }
 
-// TODO(vmarmol): Refactor to not need this equality comparison.
+// Eq TODO(vmarmol): Refactor to not need this equality comparison.
 // ContainerInfo may be (un)marshaled by json or other en/decoder. In that
 // case, the Timestamp field in each stats/sample may not be precisely
 // en/decoded.  This will lead to small but acceptable differences between a
@@ -252,7 +252,7 @@ func (ci *ContainerInfo) StatsEndTime() time.Time {
 	return ret
 }
 
-// This mirrors kernel internal structure.
+// LoadStats This mirrors kernel internal structure.
 type LoadStats struct {
 	// Number of sleeping tasks.
 	NrSleeping uint64 `json:"nr_sleeping"`
@@ -270,7 +270,7 @@ type LoadStats struct {
 	NrIoWait uint64 `json:"nr_io_wait"`
 }
 
-// CPU usage time statistics.
+// CpuUsage CPU usage time statistics.
 type CpuUsage struct {
 	// Total CPU usage.
 	// Unit: nanoseconds.
@@ -289,7 +289,7 @@ type CpuUsage struct {
 	System uint64 `json:"system"`
 }
 
-// Cpu Completely Fair Scheduler statistics.
+// CpuCFS Cpu Completely Fair Scheduler statistics.
 type CpuCFS struct {
 	// Total number of elapsed enforcement intervals.
 	Periods uint64 `json:"periods"`
@@ -302,7 +302,7 @@ type CpuCFS struct {
 	ThrottledTime uint64 `json:"throttled_time"`
 }
 
-// Cpu Aggregated scheduler statistics
+// CpuSchedstat Cpu Aggregated scheduler statistics
 type CpuSchedstat struct {
 	// https://www.kernel.org/doc/Documentation/scheduler/sched-stats.txt
 
@@ -314,7 +314,7 @@ type CpuSchedstat struct {
 	RunPeriods uint64 `json:"run_periods"`
 }
 
-// All CPU usage metrics are cumulative from the creation of the container
+// CpuStats All CPU usage metrics are cumulative from the creation of the container
 type CpuStats struct {
 	Usage     CpuUsage     `json:"usage"`
 	CFS       CpuCFS       `json:"cfs"`
@@ -407,24 +407,15 @@ type MemoryStatsMemoryData struct {
 }
 
 type InterfaceStats struct {
-	// The name of the interface.
-	Name string `json:"name"`
-	// Cumulative count of bytes received.
-	RxBytes uint64 `json:"rx_bytes"`
-	// Cumulative count of packets received.
-	RxPackets uint64 `json:"rx_packets"`
-	// Cumulative count of receive errors encountered.
-	RxErrors uint64 `json:"rx_errors"`
-	// Cumulative count of packets dropped while receiving.
-	RxDropped uint64 `json:"rx_dropped"`
-	// Cumulative count of bytes transmitted.
-	TxBytes uint64 `json:"tx_bytes"`
-	// Cumulative count of packets transmitted.
-	TxPackets uint64 `json:"tx_packets"`
-	// Cumulative count of transmit errors encountered.
-	TxErrors uint64 `json:"tx_errors"`
-	// Cumulative count of packets dropped while transmitting.
-	TxDropped uint64 `json:"tx_dropped"`
+	Name      string `json:"name"`       // 网络接口的名称。
+	RxBytes   uint64 `json:"rx_bytes"`   // 接收到的字节数。
+	RxPackets uint64 `json:"rx_packets"` // 接收到的数据包数量。
+	RxErrors  uint64 `json:"rx_errors"`  // 接收过程中出现的错误数量。
+	RxDropped uint64 `json:"rx_dropped"` // 接收过程中被丢弃的数据包数量。
+	TxBytes   uint64 `json:"tx_bytes"`   // 发送的字节数。
+	TxPackets uint64 `json:"tx_packets"` // 发送的数据包数量。
+	TxErrors  uint64 `json:"tx_errors"`  // 发送过程中出现的错误数量。
+	TxDropped uint64 `json:"tx_dropped"` // 发送过程中被丢弃的数据包数量。
 }
 
 type NetworkStats struct {
@@ -805,26 +796,12 @@ type FsStats struct {
 }
 
 type AcceleratorStats struct {
-	// Make of the accelerator (nvidia, amd, google etc.)
-	Make string `json:"make"`
-
-	// Model of the accelerator (tesla-p100, tesla-k80 etc.)
-	Model string `json:"model"`
-
-	// ID of the accelerator.
-	ID string `json:"id"`
-
-	// Total accelerator memory.
-	// unit: bytes
-	MemoryTotal uint64 `json:"memory_total"`
-
-	// Total accelerator memory allocated.
-	// unit: bytes
-	MemoryUsed uint64 `json:"memory_used"`
-
-	// Percent of time over the past sample period during which
-	// the accelerator was actively processing.
-	DutyCycle uint64 `json:"duty_cycle"`
+	Make        string `json:"make"`         // 加速器的制造商，例如nvidia、amd、google等。
+	Model       string `json:"model"`        // 加速器的型号，例如tesla-p100、tesla-k80等。
+	ID          string `json:"id"`           // 加速器的ID。
+	MemoryTotal uint64 `json:"memory_total"` // 加速器总内存大小，单位为字节。
+	MemoryUsed  uint64 `json:"memory_used"`  // 加速器已分配内存大小，单位为字节。
+	DutyCycle   uint64 `json:"duty_cycle"`   // 加速器在过去的采样时间内活跃处理的时间百分比。
 }
 
 // PerfStat represents value of a single monitored perf event.

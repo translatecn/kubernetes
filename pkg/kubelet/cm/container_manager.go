@@ -45,11 +45,10 @@ import (
 
 type ActivePodsFunc func() []*v1.Pod
 
-// Manages the containers running on a machine.
 type ContainerManager interface {
-	// Runs the container manager's housekeeping.
-	// - Ensures that the Docker daemon is in a container.
-	// - Creates the system container where all non-containerized processes run.
+	// Start 运行容器管理器的 housekeeping.
+	// - 确保 Docker 守护进程在容器中运行.
+	// - 创建系统容器,其中运行所有非容器化进程.
 	Start(*v1.Node, ActivePodsFunc, config.SourcesReady, status.PodStatusProvider, internalapi.RuntimeService, bool) error
 
 	// SystemCgroupsLimit returns resources allocated to system cgroups in the machine.

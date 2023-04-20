@@ -81,12 +81,8 @@ type manager struct {
 	podStartupLatencyHelper PodStartupLatencyStateHelper
 }
 
-// PodStatusProvider knows how to provide status for a pod. It's intended to be used by other components
-// that need to introspect status.
 type PodStatusProvider interface {
-	// GetPodStatus returns the cached status for the provided pod UID, as well as whether it
-	// was a cache hit.
-	GetPodStatus(uid types.UID) (v1.PodStatus, bool)
+	GetPodStatus(uid types.UID) (v1.PodStatus, bool) // bool 代表是否命中缓存
 }
 
 // PodDeletionSafetyProvider provides guarantees that a pod can be safely deleted.
@@ -110,7 +106,7 @@ type Manager interface {
 	// Start the API server status sync loop.
 	Start()
 
-	SetPodStatus(pod *v1.Pod, status v1.PodStatus) // 缓存更新给定pod的缓存状态，并触发状态更新。
+	SetPodStatus(pod *v1.Pod, status v1.PodStatus) // 缓存更新给定pod的缓存状态,并触发状态更新.
 
 	// SetContainerReadiness updates the cached container status with the given readiness, and
 	// triggers a status update.
@@ -206,14 +202,14 @@ func (m *manager) GetPodStatus(uid types.UID) (v1.PodStatus, bool) {
 	return status.status, ok
 }
 
-// SetPodStatus 缓存更新给定pod的缓存状态，并触发状态更新。
+// SetPodStatus 缓存更新给定pod的缓存状态,并触发状态更新.
 func (m *manager) SetPodStatus(pod *v1.Pod, status v1.PodStatus) {
 	m.podStatusesLock.Lock()
 	defer m.podStatusesLock.Unlock()
 
 	status = *status.DeepCopy()
-	// 如果设置了删除时间戳，则强制进行状态更新。
-	// 这是必要的，因为如果pod处于非运行状态，则仍需要能够触发更新和/或删除的pod worker。
+	// 如果设置了删除时间戳,则强制进行状态更新.
+	// 这是必要的,因为如果pod处于非运行状态,则仍需要能够触发更新和/或删除的pod worker.
 	m.updateStatusInternal(pod, status, pod.DeletionTimestamp != nil)
 }
 

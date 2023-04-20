@@ -32,13 +32,8 @@ import (
 )
 
 const (
-
-	// PolicyStatic is the name of the static policy.
-	// Should options be given, these will be ignored and backward (up to 1.21 included)
-	// compatible behaviour will be enforced
-	PolicyStatic policyName = "static"
-	// ErrorSMTAlignment represents the type of an SMTAlignmentError
-	ErrorSMTAlignment = "SMTAlignmentError"
+	PolicyStatic      policyName = "static"            // 静态 CPU 分配策略的名称
+	ErrorSMTAlignment            = "SMTAlignmentError" // SMT 对齐错误的类型.
 )
 
 // SMTAlignmentError represents an error due to SMT alignment

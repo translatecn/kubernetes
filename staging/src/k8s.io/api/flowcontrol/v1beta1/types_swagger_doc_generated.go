@@ -209,7 +209,7 @@ var map_QueuingConfiguration = map[string]string{
 	"":                 "QueuingConfiguration holds the configuration parameters for queuing",
 	"queues":           "`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。",
 	"handSize":         "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
-	"queueLengthLimit": "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量；超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
+	"queueLengthLimit": "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量;超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
 }
 
 func (QueuingConfiguration) SwaggerDoc() map[string]string {

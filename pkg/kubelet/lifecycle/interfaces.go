@@ -38,7 +38,7 @@ type PodAdmitResult struct {
 }
 
 type PodAdmitHandler interface {
-	Admit(attrs *PodAdmitAttributes) PodAdmitResult // 评估一个pod是否可以被允许。
+	Admit(attrs *PodAdmitAttributes) PodAdmitResult // 评估一个pod是否可以被允许.
 }
 
 // PodAdmitTarget maintains a list of handlers to invoke.

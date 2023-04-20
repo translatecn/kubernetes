@@ -3,6 +3,10 @@ import shutil
 
 os.system("sudo rm -rf vendor _output")
 os.system("go mod vendor")
+os.system("pkill -9 etcd")
+os.system("pkill -9 apiserver")
+os.system("pkill -9 kube-apiserver")
+os.system("ps -ef |grep apiserver")
 
 
 def catch_dir(path, level: int):

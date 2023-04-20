@@ -39,8 +39,8 @@ type stateCheckpoint struct {
 	initialContainers containermap.ContainerMap
 }
 
-// NewCheckpointState creates new State for keeping track of cpu/pod assignment with checkpoint backend
-func NewCheckpointState(stateDir, checkpointName, policyName string, initialContainers containermap.ContainerMap) (State, error) {
+// NewCheckpointState ✅ creates new State for keeping track of cpu/pod assignment with checkpoint backend
+func NewCheckpointState(stateDir, checkpointName, policyName string, initialContainers containermap.ContainerMap) (State, error) { // ✅
 	checkpointManager, err := checkpointmanager.NewCheckpointManager(stateDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize checkpoint manager: %v", err)
@@ -86,7 +86,7 @@ func (sc *stateCheckpoint) migrateV1CheckpointToV2Checkpoint(src *CPUManagerChec
 	return nil
 }
 
-// restores state from a checkpoint and creates it if it doesn't exist
+// ✅ restores state from a checkpoint and creates it if it doesn't exist
 func (sc *stateCheckpoint) restoreState() error {
 	sc.mux.Lock()
 	defer sc.mux.Unlock()

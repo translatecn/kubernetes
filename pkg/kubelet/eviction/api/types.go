@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// Signal 定义一个信号,该信号可以触发节点上的pod的驱逐。
+// Signal 定义一个信号,该信号可以触发节点上的pod的驱逐.
 type Signal string
 
 const (
@@ -45,7 +45,7 @@ const (
 type ThresholdOperator string
 
 const (
-	// OpLessThan is the operator that expresses a less than operator.
+	// OpLessThan 是表示小于运算符的运算符。
 	OpLessThan ThresholdOperator = "LessThan"
 )
 

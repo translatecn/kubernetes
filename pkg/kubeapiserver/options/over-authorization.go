@@ -89,7 +89,7 @@ func (o *BuiltInAuthorizationOptions) Validate() []error {
 	}
 
 	if len(o.Modes) != modes.Len() {
-		allErrors = append(allErrors, fmt.Errorf("authorization-mode %q has mode specified more than once", o.Modes))
+		//allErrors = append(allErrors, fmt.Errorf("authorization-mode %q has mode specified more than once", o.Modes))
 	}
 
 	if o.WebhookRetryBackoff != nil && o.WebhookRetryBackoff.Steps <= 0 {

@@ -35,7 +35,7 @@ type Lease struct {
 
 // LeaseSpec is a specification of a Lease.
 type LeaseSpec struct {
-	// holderIdentity 包含当前租约持有者的标识。
+	// holderIdentity 包含当前租约持有者的标识.
 	// +optional
 	HolderIdentity *string
 	// leaseDurationSeconds is a duration that candidates for a lease need

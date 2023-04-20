@@ -155,7 +155,7 @@ func IsStaticPod(pod *v1.Pod) bool {
 	return err == nil && source != ApiserverSource
 }
 
-// IsCriticalPod 如果pod的优先级大于或等于SystemCriticalPriority，则返回true。
+// IsCriticalPod 如果pod的优先级大于或等于SystemCriticalPriority,则返回true.
 func IsCriticalPod(pod *v1.Pod) bool {
 	if IsStaticPod(pod) {
 		return true

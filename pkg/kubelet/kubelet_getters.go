@@ -226,7 +226,6 @@ func (kl *Kubelet) GetPodByCgroupfs(cgroupfs string) (*v1.Pod, bool) {
 	return nil, false
 }
 
-// GetHostname Returns the hostname as the kubelet sees it.
 func (kl *Kubelet) GetHostname() string {
 	return kl.hostname
 }
@@ -244,11 +243,7 @@ func (kl *Kubelet) GetNode() (*v1.Node, error) {
 	return kl.nodeLister.Get(string(kl.nodeName))
 }
 
-// getNodeAnyWay() must return a *v1.Node which is required by RunGeneralPredicates().
-// The *v1.Node is obtained as follows:
-// Return kubelet's nodeInfo for this node, except on error or if in standalone mode,
-// in which case return a manufactured nodeInfo representing a node with no pods,
-// zero capacity, and the default labels.
+// 返回主机信息,但是如果出现错误或者处于 standalone 模式,则返回一个自定义的nodeInfo信息，该信息表示一个没有Pod、容量为零、带有默认标签的节点。
 func (kl *Kubelet) getNodeAnyWay() (*v1.Node, error) {
 	if kl.kubeClient != nil {
 		if n, err := kl.nodeLister.Get(string(kl.nodeName)); err == nil {

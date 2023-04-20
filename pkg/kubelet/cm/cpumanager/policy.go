@@ -40,6 +40,5 @@ type Policy interface {
 	// and is consulted to achieve NUMA aware resource alignment per Pod
 	// among this and other resource controllers.
 	GetPodTopologyHints(s state.State, pod *v1.Pod) map[string][]topologymanager.TopologyHint
-	// GetAllocatableCPUs returns the total set of CPUs available for allocation.
-	GetAllocatableCPUs(m state.State) cpuset.CPUSet
+	GetAllocatableCPUs(m state.State) cpuset.CPUSet // 该函数返回可供分配的 CPU 总数的集合.
 }

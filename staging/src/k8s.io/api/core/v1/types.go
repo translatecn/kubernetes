@@ -2806,7 +2806,7 @@ type NodeSelectorTerm struct {
 	MatchFields []NodeSelectorRequirement `json:"matchFields,omitempty" protobuf:"bytes,2,rep,name=matchFields"`
 }
 
-// A node selector requirement is a selector that contains values, a key, and an operator
+// NodeSelectorRequirement A node selector requirement is a selector that contains values, a key, and an operator
 // that relates the key and values.
 type NodeSelectorRequirement struct {
 	// The label key that the selector applies to.
@@ -2823,7 +2823,7 @@ type NodeSelectorRequirement struct {
 	Values []string `json:"values,omitempty" protobuf:"bytes,3,rep,name=values"`
 }
 
-// A node selector operator is the set of operators that can be used in
+// NodeSelectorOperator A node selector operator is the set of operators that can be used in
 // a node selector requirement.
 // +enum
 type NodeSelectorOperator string
@@ -2837,7 +2837,7 @@ const (
 	NodeSelectorOpLt           NodeSelectorOperator = "Lt"
 )
 
-// A topology selector term represents the result of label queries.
+// TopologySelectorTerm A topology selector term represents the result of label queries.
 // A null or empty topology selector term matches no objects.
 // The requirements of them are ANDed.
 // It provides a subset of functionality as NodeSelectorTerm.
@@ -2851,7 +2851,7 @@ type TopologySelectorTerm struct {
 	MatchLabelExpressions []TopologySelectorLabelRequirement `json:"matchLabelExpressions,omitempty" protobuf:"bytes,1,rep,name=matchLabelExpressions"`
 }
 
-// A topology selector requirement is a selector that matches given label.
+// TopologySelectorLabelRequirement A topology selector requirement is a selector that matches given label.
 // This is an alpha feature and may change in the future.
 type TopologySelectorLabelRequirement struct {
 	// The label key that the selector applies to.
@@ -2874,7 +2874,7 @@ type Affinity struct {
 	PodAntiAffinity *PodAntiAffinity `json:"podAntiAffinity,omitempty" protobuf:"bytes,3,opt,name=podAntiAffinity"`
 }
 
-// Pod affinity is a group of inter pod affinity scheduling rules.
+// PodAffinity affinity is a group of inter pod affinity scheduling rules.
 type PodAffinity struct {
 	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
 	// If the affinity requirements specified by this field are not met at
@@ -2909,7 +2909,7 @@ type PodAffinity struct {
 	PreferredDuringSchedulingIgnoredDuringExecution []WeightedPodAffinityTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,2,rep,name=preferredDuringSchedulingIgnoredDuringExecution"`
 }
 
-// Pod anti affinity is a group of inter pod anti affinity scheduling rules.
+// PodAntiAffinity anti affinity is a group of inter pod anti affinity scheduling rules.
 type PodAntiAffinity struct {
 	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
 	// If the anti-affinity requirements specified by this field are not met at
@@ -2944,7 +2944,7 @@ type PodAntiAffinity struct {
 	PreferredDuringSchedulingIgnoredDuringExecution []WeightedPodAffinityTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,2,rep,name=preferredDuringSchedulingIgnoredDuringExecution"`
 }
 
-// The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)
+// WeightedPodAffinityTerm The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)
 type WeightedPodAffinityTerm struct {
 	// weight associated with matching the corresponding podAffinityTerm,
 	// in the range 1-100.
@@ -2953,7 +2953,7 @@ type WeightedPodAffinityTerm struct {
 	PodAffinityTerm PodAffinityTerm `json:"podAffinityTerm" protobuf:"bytes,2,opt,name=podAffinityTerm"`
 }
 
-// Defines a set of pods (namely those matching the labelSelector
+// PodAffinityTerm Defines a set of pods (namely those matching the labelSelector
 // relative to the given namespace(s)) that this pod should be
 // co-located (affinity) or not co-located (anti-affinity) with,
 // where co-located is defined as running on a node whose value of
@@ -2984,7 +2984,7 @@ type PodAffinityTerm struct {
 	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector,omitempty" protobuf:"bytes,4,opt,name=namespaceSelector"`
 }
 
-// Node affinity is a group of node affinity scheduling rules.
+// NodeAffinity affinity is a group of node affinity scheduling rules.
 type NodeAffinity struct {
 	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
 	// If the affinity requirements specified by this field are not met at
@@ -3042,6 +3042,7 @@ type Taint struct {
 	TimeAdded *metav1.Time `json:"timeAdded,omitempty" protobuf:"bytes,4,opt,name=timeAdded"`
 }
 
+// TaintEffect
 // +enum
 type TaintEffect string
 
@@ -3066,7 +3067,7 @@ const (
 	TaintEffectNoExecute TaintEffect = "NoExecute"
 )
 
-// The pod this Toleration is attached to tolerates any taint that matches
+// Toleration The pod this Toleration is attached to tolerates any taint that matches
 // the triple <key,value,effect> using the matching operator <operator>.
 type Toleration struct {
 	// 容忍的污点key,空代表所有污点keys.
@@ -3082,16 +3083,12 @@ type Toleration struct {
 	// [空 ,NoSchedule, PreferNoSchedul, NoExecute ]
 	// +optional
 	Effect TaintEffect `json:"effect,omitempty" protobuf:"bytes,4,opt,name=effect,casttype=TaintEffect"`
-	// TolerationSeconds represents the period of time the toleration (which must be
-	// of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
-	// it is not set, which means tolerate the taint forever (do not evict). Zero and
-	// negative values will be treated as 0 (evict immediately) by the system.
 	// 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。
 	// +optional
 	TolerationSeconds *int64 `json:"tolerationSeconds,omitempty" protobuf:"varint,5,opt,name=tolerationSeconds"`
 }
 
-// A toleration operator is the set of operators that can be used in a toleration.
+// TolerationOperator A toleration operator is the set of operators that can be used in a toleration.
 // +enum
 type TolerationOperator string
 
@@ -5358,7 +5355,7 @@ const (
 	ResourceCPU              ResourceName = "cpu"               // CPU 核心数  (500m = .5 cores)
 	ResourceMemory           ResourceName = "memory"            // 内存大小 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
 	ResourceStorage          ResourceName = "storage"           // 存储卷大小 bytes (e,g. 5Gi = 5GiB = 5 * 1024 * 1024 * 1024)
-	ResourceEphemeralStorage ResourceName = "ephemeral-storage" // 本地临时存储 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
+	ResourceEphemeralStorage ResourceName = "ephemeral-storage" // 本地临时存储 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)    /var/lib/kubelet 对应磁盘都算进这里
 )
 
 const (

@@ -42,10 +42,8 @@ import (
 const (
 	// Number of fields per line in /proc/mounts as per the fstab man page.
 	expectedNumFieldsPerLine = 6
-	// Location of the mount file to use
-	procMountsPath = "/proc/mounts"
-	// Location of the mountinfo file
-	procMountInfoPath = "/proc/self/mountinfo"
+	procMountsPath           = "/proc/mounts"         // 显示当前已挂载的文件系统    包括文件系统类型、挂载点、挂载选项
+	procMountInfoPath        = "/proc/self/mountinfo" // 显示当前进程已挂载的文件系统的详细信息
 	// 'fsck' found errors and corrected them
 	fsckErrorsCorrected = 1
 	// 'fsck' found errors but exited without correcting them

@@ -54,8 +54,8 @@ func (s *ContainerRuntimeOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&s.ContainerRuntime, "container-runtime", s.ContainerRuntime, "The container runtime to use. Possible value: 'remote'.")
 	fs.MarkDeprecated("container-runtime", "will be removed in 1.27 as the only valid value is 'remote'")
 	fs.StringVar(&s.RuntimeCgroups, "runtime-cgroups", s.RuntimeCgroups, "Optional absolute name of cgroups to create and run the runtime in.")
-	fs.StringVar(&s.PodSandboxImage, "pod-infra-container-image", s.PodSandboxImage, fmt.Sprintf("指定的镜像不会被image垃圾收集器清除。CRI实现具有自己的配置来设置此镜像。"))
-	fs.MarkDeprecated("pod-infra-container-image", "将在1.27中删除。image 垃圾收集器将从CRI获取沙盒镜像信息。")
+	fs.StringVar(&s.PodSandboxImage, "pod-infra-container-image", s.PodSandboxImage, fmt.Sprintf("指定的镜像不会被image垃圾收集器清除.CRI实现具有自己的配置来设置此镜像."))
+	fs.MarkDeprecated("pod-infra-container-image", "将在1.27中删除.image 垃圾收集器将从CRI获取沙盒镜像信息.")
 
 	// Image credential provider settings.
 	fs.StringVar(&s.ImageCredentialProviderConfigFile, "image-credential-provider-config", s.ImageCredentialProviderConfigFile, "The path to the credential provider plugin config file.")

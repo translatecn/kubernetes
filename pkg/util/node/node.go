@@ -42,7 +42,7 @@ const (
 	NodeUnreachablePodMessage = "Node %v which was running pod %v is unresponsive"
 )
 
-// GetHostname returns OS's hostname if 'hostnameOverride' is empty; otherwise, return 'hostnameOverride'.
+// GetHostname returns OS's hostname if 'hostnameOverride' is empty; otherwise, return 'hostnameOverride'. ✅
 func GetHostname(hostnameOverride string) (string, error) {
 	hostName := hostnameOverride
 	if len(hostName) == 0 {

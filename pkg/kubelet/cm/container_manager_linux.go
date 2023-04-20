@@ -70,20 +70,12 @@ import (
 	"k8s.io/kubernetes/pkg/util/oom"
 )
 
-// A non-user container tracked by the Kubelet.
+// 由 Kubelet 追踪的系统级容器
 type systemContainer struct {
-	// Absolute name of the container.
-	name string
-
-	// CPU limit in millicores.
-	cpuMillicores int64
-
-	// Function that ensures the state of the container.
-	// m is the cgroup manager for the specified container.
-	ensureStateFunc func(m cgroups.Manager) error
-
-	// Manager for the cgroups of the external container.
-	manager cgroups.Manager
+	name            string                        // 容器的绝对名称.
+	cpuMillicores   int64                         // 容器的 CPU 限制,以毫核为单位.
+	ensureStateFunc func(m cgroups.Manager) error // 确保容器状态的函数.m 是指定容器的 cgroup 管理器.
+	manager         cgroups.Manager               // 外部容器的 cgroups 管理器.
 }
 
 func newSystemCgroups(containerName string) (*systemContainer, error) {
@@ -98,41 +90,26 @@ func newSystemCgroups(containerName string) (*systemContainer, error) {
 }
 
 type containerManagerImpl struct {
-	sync.RWMutex
-	cadvisorInterface cadvisor.Interface
-	mountUtil         mount.Interface
-	NodeConfig
-	status Status
-	// External containers being managed.
-	systemContainers []*systemContainer
-	// Tasks that are run periodically
-	periodicTasks []func()
-	// Holds all the mounted cgroup subsystems
-	subsystems *CgroupSubsystems
-	nodeInfo   *v1.Node
-	// Interface for cgroup management
-	cgroupManager CgroupManager
-	// Capacity of this node.
-	capacity v1.ResourceList
-	// Capacity of this node, including internal resources.
-	internalCapacity v1.ResourceList
-	// Absolute cgroupfs path to a cgroup that Kubelet needs to place all pods under.
-	// This path include a top level container for enforcing Node Allocatable.
-	cgroupRoot CgroupName
-	// Event recorder interface.
-	recorder record.EventRecorder
-	// Interface for QoS cgroup management
-	qosContainerManager QOSContainerManager
-	// Interface for exporting and allocating devices reported by device plugins.
-	deviceManager devicemanager.Manager
-	// Interface for CPU affinity management.
-	cpuManager cpumanager.Manager
-	// Interface for memory affinity management.
-	memoryManager memorymanager.Manager
-	// Interface for Topology resource co-ordination
-	topologyManager topologymanager.Manager
-	// Interface for Dynamic Resource Allocation management.
-	draManager dra.Manager
+	sync.RWMutex                                //
+	cadvisorInterface   cadvisor.Interface      // 与 cAdvisor 进行交互的接口.
+	mountUtil           mount.Interface         // 与挂载系统进行交互的接口.
+	NodeConfig                                  // 节点的配置信息.
+	status              Status                  // 容器管理器的状态信息.
+	systemContainers    []*systemContainer      // 正在被管理的外部容器.
+	periodicTasks       []func()                // 定期执行的任务列表.
+	subsystems          *CgroupSubsystems       // 所有已挂载的 cgroup 子系统.
+	nodeInfo            *v1.Node                //
+	cgroupManager       CgroupManager           // 与 cgroup 进行管理的接口.
+	capacity            v1.ResourceList         // 节点的容量信息,包括内部资源.
+	internalCapacity    v1.ResourceList         // 节点的容量信息,包括内部资源.
+	cgroupRoot          CgroupName              // 绝对 cgroupfs 路径,Kubelet 需要将所有 pod 放在该路径下的顶级容器中,以实现节点可分配性.
+	recorder            record.EventRecorder    // 事件记录器接口.
+	qosContainerManager QOSContainerManager     // QoS cgroup 管理的接口.
+	deviceManager       devicemanager.Manager   // 设备插件 报告的设备的 导出和分配的接口.
+	cpuManager          cpumanager.Manager      // CPU 亲和性管理的接口.
+	memoryManager       memorymanager.Manager   // 内存亲和性管理的接口.
+	topologyManager     topologymanager.Manager // 拓扑资源协调的接口.
+	draManager          dra.Manager             // 动态资源分配管理的接口.
 }
 
 type features struct {
@@ -141,9 +118,9 @@ type features struct {
 
 var _ ContainerManager = &containerManagerImpl{}
 
-// checks if the required cgroups subsystems are mounted.
-// As of now, only 'cpu' and 'memory' are required.
-// cpu quota is a soft requirement.
+// cgroups 是 Linux 内核的一个功能，它允许将进程组织成一组，以便对它们进行资源限制和控制。
+// 在 Kubernetes 中，cgroups 用于限制容器的资源使用，例如 CPU、内存、磁盘等。
+// 该函数似乎是在检查 cgroups 是否已正确配置，以确保容器能够正常运行并受到正确的资源限制。
 func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 	const (
 		cgroupMountType = "cgroup"
@@ -153,6 +130,7 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 		cpuMountPoint string
 		f             features
 	)
+	var _ = new(mount.Mounter).List
 	mountPoints, err := mountUtil.List()
 	if err != nil {
 		return f, fmt.Errorf("%s - %v", localErr, err)
@@ -335,7 +313,7 @@ func NewContainerManager(
 		nodeConfig.CPUManagerReconcilePeriod,
 		machineInfo,
 		nodeConfig.NodeAllocatableConfig.ReservedSystemCPUs,
-		cm.GetNodeAllocatableReservation(),
+		cm.GetNodeAllocatableReservation(), // 资源预留
 		nodeConfig.KubeletRootDir,
 		cm.topologyManager,
 	)
@@ -577,7 +555,7 @@ func (cm *containerManagerImpl) Start(node *v1.Node,
 	ctx := context.Background()
 
 	// Initialize CPU manager
-	containerMap := buildContainerMapFromRuntime(ctx, runtimeService)
+	containerMap := buildContainerMapFromRuntime(ctx, runtimeService) // ✅
 	err := cm.cpuManager.Start(cpumanager.ActivePodsFunc(activePods), sourcesReady, podStatusProvider, runtimeService, containerMap)
 	if err != nil {
 		return fmt.Errorf("start cpu manager error: %v", err)
@@ -596,8 +574,8 @@ func (cm *containerManagerImpl) Start(node *v1.Node,
 	// allocatable of the node
 	cm.nodeInfo = node
 
-	if localStorageCapacityIsolation {
-		rootfs, err := cm.cadvisorInterface.RootFsInfo()
+	if localStorageCapacityIsolation { // 启用本地临时存储隔离功能
+		rootfs, err := cm.cadvisorInterface.RootFsInfo() //获取文件系统 挂载点对应磁盘的使用情况
 		if err != nil {
 			return fmt.Errorf("failed to get rootfs info: %v", err)
 		}
@@ -606,7 +584,7 @@ func (cm *containerManagerImpl) Start(node *v1.Node,
 		}
 	}
 
-	// Ensure that node allocatable configuration is valid.
+	// 确保节点可分配配置是有效的.
 	if err := cm.validateNodeAllocatable(); err != nil {
 		return err
 	}
@@ -751,6 +729,7 @@ func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceList {
 	}
 }
 
+// ✅
 func buildContainerMapFromRuntime(ctx context.Context, runtimeService internalapi.RuntimeService) containermap.ContainerMap {
 	podSandboxMap := make(map[string]string)
 	podSandboxList, _ := runtimeService.ListPodSandbox(ctx, nil)

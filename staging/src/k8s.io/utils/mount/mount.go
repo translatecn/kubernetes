@@ -76,14 +76,14 @@ type Interface interface {
 // the mount interface.
 var _ Interface = &Mounter{}
 
-// MountPoint represents a single line in /proc/mounts or /etc/fstab.
+// MountPoint 用于表示 /proc/mounts 或 /etc/fstab 文件中的单行记录
 type MountPoint struct { // nolint: golint
-	Device string
-	Path   string
-	Type   string
-	Opts   []string // Opts may contain sensitive mount options (like passwords) and MUST be treated as such (e.g. not logged).
-	Freq   int
-	Pass   int
+	Device string   // 表示设备的名称或标识符。
+	Path   string   // 表示设备挂载的路径。
+	Type   string   // 表示文件系统的类型。
+	Opts   []string // 表示用于挂载文件系统的选项，可能包含敏感信息，如密码。 Opts may contain sensitive mount options (like passwords) and MUST be treated as such (e.g. not logged).
+	Freq   int      // 表示用于 dump 命令的备份频率。
+	Pass   int      // 表示用于 fsck 命令的文件系统检查顺序。
 }
 
 type MountErrorType string // nolint: golint

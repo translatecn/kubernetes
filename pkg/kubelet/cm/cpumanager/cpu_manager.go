@@ -48,7 +48,7 @@ type runtimeService interface {
 
 type policyName string
 
-// cpuManagerStateFileName is the file name where cpu manager stores its state
+// cpuManagerStateFileName CPU 管理器存储其状态的文件名.
 const cpuManagerStateFileName = "cpu_manager_state"
 
 // Manager interface provides methods for Kubelet to manage pod cpus.
@@ -97,50 +97,20 @@ type Manager interface {
 
 type manager struct {
 	sync.Mutex
-	policy Policy
-
-	// reconcilePeriod is the duration between calls to reconcileState.
-	reconcilePeriod time.Duration
-
-	// state allows pluggable CPU assignment policies while sharing a common
-	// representation of state for the system to inspect and reconcile.
-	state state.State
-
-	// lastUpdatedstate holds state for each container from the last time it was updated.
-	lastUpdateState state.State
-
-	// containerRuntime is the container runtime service interface needed
-	// to make UpdateContainerResources() calls against the containers.
-	containerRuntime runtimeService
-
-	// activePods is a method for listing active pods on the node
-	// so all the containers can be updated in the reconciliation loop.
-	activePods ActivePodsFunc
-
-	// podStatusProvider provides a method for obtaining pod statuses
-	// and the containerID of their containers
-	podStatusProvider status.PodStatusProvider
-
-	// containerMap provides a mapping from (pod, container) -> containerID
-	// for all containers a pod
-	containerMap containermap.ContainerMap
-
-	topology *topology.CPUTopology
-
-	nodeAllocatableReservation v1.ResourceList
-
-	// sourcesReady provides the readiness of kubelet configuration sources such as apiserver update readiness.
-	// We use it to determine when we can purge inactive pods from checkpointed state.
-	sourcesReady config.SourcesReady
-
-	// stateFileDirectory holds the directory where the state file for checkpoints is held.
-	stateFileDirectory string
-
-	// allocatableCPUs is the set of online CPUs as reported by the system
-	allocatableCPUs cpuset.CPUSet
-
-	// pendingAdmissionPod contain the pod during the admission phase
-	pendingAdmissionPod *v1.Pod
+	policy                     Policy                    // CPU 分配策略.
+	reconcilePeriod            time.Duration             // 状态同步的时间间隔.
+	state                      state.State               // 管理 CPU 分配状态的接口,允许插入不同的 CPU 分配策略.
+	lastUpdateState            state.State               // 保存上一次更新状态的容器的状态.
+	containerRuntime           runtimeService            // 容器运行时服务的接口,用于管理容器.
+	activePods                 ActivePodsFunc            // 获取节点上的所有活跃的 pod 的方法.
+	podStatusProvider          status.PodStatusProvider  // 获取 pod 状态和容器 ID 的接口.
+	containerMap               containermap.ContainerMap // 提供从 (pod, container) 到容器 ID 的映射.
+	topology                   *topology.CPUTopology     // 管理 CPU 拓扑信息的接口.
+	nodeAllocatableReservation v1.ResourceList           // 记录节点可分配的资源.
+	sourcesReady               config.SourcesReady       // kubelet 配置源的就绪状态.
+	stateFileDirectory         string                    // 检查点状态文件的目录.
+	allocatableCPUs            cpuset.CPUSet             // 保存系统上在线的 CPU 集合.
+	pendingAdmissionPod        *v1.Pod                   // 保存在准入阶段 的pod
 }
 
 var _ Manager = &manager{}
@@ -219,7 +189,7 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 	m.containerRuntime = containerRuntime
 	m.containerMap = initialContainers
 
-	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap)
+	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap) // 保留 cpuset 默认值
 	if err != nil {
 		klog.ErrorS(err, "Could not initialize checkpoint manager, please drain node and remove policy state file")
 		return err
@@ -237,8 +207,8 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 	if m.policy.Name() == string(PolicyNone) {
 		return nil
 	}
-	// Periodically call m.reconcileState() to continue to keep the CPU sets of
-	// all pods in sync with and guaranteed CPUs handed out among them.
+	// 这句话的意思是继续保持所有 pod 的 CPU 集合与它们之间分配的 CPU 保持同步,并保证它们之间的 CPU 分配是正确的.
+	// 这可能是与 CPU 分配和拓扑有关的功能,它确保每个 pod 分配到的 CPU 是正确的,并且 pod 之间的 CPU 分配没有冲突.
 	go wait.Until(func() { m.reconcileState() }, m.reconcilePeriod, wait.NeverStop)
 	return nil
 }
@@ -401,6 +371,8 @@ func (m *manager) removeStaleState() {
 	})
 }
 
+// 这句话的意思是继续保持所有 pod 的 CPU 集合与它们之间分配的 CPU 保持同步,并保证它们之间的 CPU 分配是正确的.
+// 这可能是与 CPU 分配和拓扑有关的功能,它确保每个 pod 分配到的 CPU 是正确的,并且 pod 之间的 CPU 分配没有冲突.
 func (m *manager) reconcileState() (success []reconciledContainer, failure []reconciledContainer) {
 	ctx := context.Background()
 	success = []reconciledContainer{}

@@ -224,19 +224,19 @@ func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.Resource
 	return cm.getNodeAllocatableAbsoluteImpl(cm.internalCapacity)
 }
 
-// GetNodeAllocatableReservation returns amount of compute or storage resource that have to be reserved on this node from scheduling.
+// GetNodeAllocatableReservation // 返回一个资源列表，其中包含基于硬回收阈值的资源保留。
 func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList {
 	evictionReservation := hardEvictionReservation(cm.HardEvictionThresholds, cm.capacity)
 	result := make(v1.ResourceList)
 	for k := range cm.capacity {
 		value := resource.NewQuantity(0, resource.DecimalSI)
-		if cm.NodeConfig.SystemReserved != nil {
+		if cm.NodeConfig.SystemReserved != nil { // 系统预留
 			value.Add(cm.NodeConfig.SystemReserved[k])
 		}
 		if cm.NodeConfig.KubeReserved != nil {
 			value.Add(cm.NodeConfig.KubeReserved[k])
 		}
-		if evictionReservation != nil {
+		if evictionReservation != nil { // 驱逐预留
 			value.Add(evictionReservation[k])
 		}
 		if !value.IsZero() {
@@ -246,8 +246,8 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	return result
 }
 
-// validateNodeAllocatable ensures that the user specified Node Allocatable Configuration doesn't reserve more than the node capacity.
-// Returns error if the configuration is invalid, nil otherwise.
+// validateNodeAllocatable 验证和校验节点资源配置，确保它们与集群中的其他节点保持一致，并确保它们能够满足集群中的工作负载需求。
+// 如果节点可分配配置超过了节点容量，则可能会导致节点资源不足，从而导致集群中的工作负载无法正常运行。
 func (cm *containerManagerImpl) validateNodeAllocatable() error {
 	var errors []string
 	nar := cm.GetNodeAllocatableReservation()

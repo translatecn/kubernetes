@@ -29,7 +29,7 @@ import (
 
 // Loader loads configuration from a storage layer
 type Loader interface {
-	// Load 从存储层加载并返回KubeletConfiguration，如果无法加载配置，则返回错误。
+	// Load 从存储层加载并返回KubeletConfiguration,如果无法加载配置,则返回错误。
 	Load() (*kubeletconfig.KubeletConfiguration, error)
 }
 

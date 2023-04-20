@@ -87,48 +87,29 @@ type PodSandboxManager interface {
 // ContainerStatsManager contains methods for retrieving the container
 // statistics.
 type ContainerStatsManager interface {
-	// ContainerStats returns stats of the container. If the container does not
-	// exist, the call returns an error.
 	ContainerStats(ctx context.Context, containerID string) (*runtimeapi.ContainerStats, error)
-	// ListContainerStats returns stats of all running containers.
 	ListContainerStats(ctx context.Context, filter *runtimeapi.ContainerStatsFilter) ([]*runtimeapi.ContainerStats, error)
-	// PodSandboxStats returns stats of the pod. If the pod does not
-	// exist, the call returns an error.
+
 	PodSandboxStats(ctx context.Context, podSandboxID string) (*runtimeapi.PodSandboxStats, error)
-	// ListPodSandboxStats returns stats of all running pods.
 	ListPodSandboxStats(ctx context.Context, filter *runtimeapi.PodSandboxStatsFilter) ([]*runtimeapi.PodSandboxStats, error)
-	// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.
 	ListMetricDescriptors(ctx context.Context) ([]*runtimeapi.MetricDescriptor, error)
-	// ListPodSandboxMetrics returns metrics of all running pods.
 	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error)
 }
 
-// RuntimeService interface should be implemented by a container runtime.
-// The methods should be thread-safe.
 type RuntimeService interface {
 	RuntimeVersioner
 	ContainerManager
 	PodSandboxManager
 	ContainerStatsManager
 
-	// UpdateRuntimeConfig updates runtime configuration if specified
 	UpdateRuntimeConfig(ctx context.Context, runtimeConfig *runtimeapi.RuntimeConfig) error
-	// Status returns the status of the runtime.
 	Status(ctx context.Context, verbose bool) (*runtimeapi.StatusResponse, error)
 }
 
-// ImageManagerService interface should be implemented by a container image
-// manager.
-// The methods should be thread-safe.
 type ImageManagerService interface {
-	// ListImages lists the existing images.
 	ListImages(ctx context.Context, filter *runtimeapi.ImageFilter) ([]*runtimeapi.Image, error)
-	// ImageStatus returns the status of the image.
 	ImageStatus(ctx context.Context, image *runtimeapi.ImageSpec, verbose bool) (*runtimeapi.ImageStatusResponse, error)
-	// PullImage pulls an image with the authentication config.
 	PullImage(ctx context.Context, image *runtimeapi.ImageSpec, auth *runtimeapi.AuthConfig, podSandboxConfig *runtimeapi.PodSandboxConfig) (string, error)
-	// RemoveImage removes the image.
 	RemoveImage(ctx context.Context, image *runtimeapi.ImageSpec) error
-	// ImageFsInfo returns information of the filesystem that is used to store images.
 	ImageFsInfo(ctx context.Context) ([]*runtimeapi.FilesystemUsage, error)
 }

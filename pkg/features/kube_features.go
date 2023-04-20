@@ -66,12 +66,11 @@ const (
 	// Enable nodes to change CPUCFSQuotaPeriod
 	CPUCFSQuotaPeriod featuregate.Feature = "CustomCPUCFSQuotaPeriod"
 
-	// owner: @ConnorDoyle, @fromanirh (only for GA graduation)
+	// CPUManager owner: @ConnorDoyle, @fromanirh (only for GA graduation)
 	// alpha: v1.8
 	// beta: v1.10
 	// GA: v1.26
-	//
-	// Alternative container-level CPU affinity policies.
+	// CPU 亲和性策略
 	CPUManager featuregate.Feature = "CPUManager"
 
 	// owner: @fromanirh
@@ -573,10 +572,11 @@ const (
 	// Enables maxUnavailable for StatefulSet
 	MaxUnavailableStatefulSet featuregate.Feature = "MaxUnavailableStatefulSet"
 
-	// owner: @cynepco3hahue(alukiano) @cezaryzukowski @k-wiatrzyk
+	// MemoryManager owner: @cynepco3hahue(alukiano) @cezaryzukowski @k-wiatrzyk
 	// alpha: v1.21
 	// beta: v1.22
-	// Allows setting memory affinity for a container based on NUMA topology
+	// 允许基于 NUMA 拓扑为容器设置内存亲和性。NUMA 是一种计算机架构，它将内存和 CPU 分配到不同的节点上，以提高性能和可扩展性。
+	// 在这种情况下，该函数允许为容器分配特定的 NUMA 节点，以确保容器能够访问最佳的内存资源。
 	MemoryManager featuregate.Feature = "MemoryManager"
 
 	// owner: @xiaoxubeii

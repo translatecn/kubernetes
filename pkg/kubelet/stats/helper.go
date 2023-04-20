@@ -35,6 +35,7 @@ import (
 // is not reliable.
 const defaultNetworkInterfaceName = "eth0"
 
+// ✅
 func cadvisorInfoToCPUandMemoryStats(info *cadvisorapiv2.ContainerInfo) (*statsapi.CPUStats, *statsapi.MemoryStats) {
 	cstat, found := latestContainerStats(info)
 	if !found {
@@ -80,8 +81,7 @@ func cadvisorInfoToCPUandMemoryStats(info *cadvisorapiv2.ContainerInfo) (*statsa
 	return cpuStats, memoryStats
 }
 
-// cadvisorInfoToContainerStats returns the statsapi.ContainerStats converted
-// from the container and filesystem info.
+// ✅
 func cadvisorInfoToContainerStats(name string, info *cadvisorapiv2.ContainerInfo, rootFs, imageFs *cadvisorapiv2.FsInfo) *statsapi.ContainerStats {
 	result := &statsapi.ContainerStats{
 		StartTime: metav1.NewTime(info.Spec.CreationTime),
@@ -167,8 +167,7 @@ func cadvisorInfoToProcessStats(info *cadvisorapiv2.ContainerInfo) *statsapi.Pro
 	return &statsapi.ProcessStats{ProcessCount: uint64Ptr(num)}
 }
 
-// cadvisorInfoToNetworkStats returns the statsapi.NetworkStats converted from
-// the container info from cadvisor.
+// ✅
 func cadvisorInfoToNetworkStats(info *cadvisorapiv2.ContainerInfo) *statsapi.NetworkStats {
 	if !info.Spec.HasNetwork {
 		return nil
@@ -206,8 +205,6 @@ func cadvisorInfoToNetworkStats(info *cadvisorapiv2.ContainerInfo) *statsapi.Net
 	return &iStats
 }
 
-// cadvisorInfoToUserDefinedMetrics returns the statsapi.UserDefinedMetric
-// converted from the container info from cadvisor.
 func cadvisorInfoToUserDefinedMetrics(info *cadvisorapiv2.ContainerInfo) []statsapi.UserDefinedMetric {
 	type specVal struct {
 		ref     statsapi.UserDefinedMetricDescriptor
@@ -228,6 +225,7 @@ func cadvisorInfoToUserDefinedMetrics(info *cadvisorapiv2.ContainerInfo) []stats
 	}
 	for _, stat := range info.Stats {
 		for name, values := range stat.CustomMetrics {
+			// 记录最新的状态
 			specVal, ok := udmMap[name]
 			if !ok {
 				klog.InfoS("Spec for custom metric is missing from cAdvisor output", "metric", name, "spec", info.Spec, "metrics", stat.CustomMetrics)
@@ -287,6 +285,7 @@ func getCgroupInfo(cadvisor cadvisor.Interface, containerName string, updateStat
 		age := 0 * time.Second
 		maxAge = &age
 	}
+	//func (m *manager) GetContainerInfoV2
 	infoMap, err := cadvisor.ContainerInfoV2(containerName, cadvisorapiv2.RequestOptions{
 		IdType:    cadvisorapiv2.TypeName,
 		Count:     2, // 2 samples are needed to compute "instantaneous" CPU

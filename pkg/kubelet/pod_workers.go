@@ -83,7 +83,7 @@ type UpdatePodOptions struct {
 	KillPodOptions *KillPodOptions
 }
 
-// PodWorkType 将pod生命周期的三个阶段分类 - 设置（同步），容器的拆卸（终止），清理（已终止）。
+// PodWorkType 将pod生命周期的三个阶段分类 - 设置（同步）,容器的拆卸（终止）,清理（已终止）。
 type PodWorkType int
 
 const (
@@ -130,9 +130,9 @@ type podWork struct {
 // PodWorkers is an abstract interface for testability.
 type PodWorkers interface {
 
-	// UpdatePod 通知pod worker有关pod的更改，然后每个pod UID的goroutine将按FIFO顺序处理。
-	// pod的状态将传递给syncPod方法，直到pod被标记为已删除，达到终端阶段（已成功/已失败）或kubelet驱逐pod。
-	// 一旦发生这种情况，将调用syncTerminatingPod方法，直到成功退出，之后所有进一步的UpdatePod（）调用将被忽略，直到由于时间过去而被遗忘。已终止的pod将永远不会重新启动。
+	// UpdatePod 通知pod worker有关pod的更改,然后每个pod UID的goroutine将按FIFO顺序处理。
+	// pod的状态将传递给syncPod方法,直到pod被标记为已删除,达到终端阶段（已成功/已失败）或kubelet驱逐pod。
+	// 一旦发生这种情况,将调用syncTerminatingPod方法,直到成功退出,之后所有进一步的UpdatePod（）调用将被忽略,直到由于时间过去而被遗忘。已终止的pod将永远不会重新启动。
 	UpdatePod(options UpdatePodOptions)
 	// SyncKnownPods removes workers for pods that are not in the desiredPods set
 	// and have been terminated for a significant period of time. Once this method
@@ -262,7 +262,7 @@ type podSyncStatus struct {
 	// terminatedAt is set once the pod worker has completed a successful
 	// syncTerminatingPod call and means all running containers are stopped.
 	terminatedAt time.Time
-	finished     bool // 一旦pod worker完成pod的处理（syncTerminatedPod 无错误退出），finished为true，直到调用SyncKnownPods以删除pod。终端pod（已成功/已失败）将具有终止状态，直到删除pod。
+	finished     bool // 一旦pod worker完成pod的处理（syncTerminatedPod 无错误退出）,finished为true,直到调用SyncKnownPods以删除pod。终端pod（已成功/已失败）将具有终止状态,直到删除pod。
 	// restartRequested is true if the pod worker was informed the pod is
 	// expected to exist (update type of create, update, or sync) after
 	// it has been killed. When known pods are synced, any pod that is
@@ -370,7 +370,7 @@ type podWorkers struct {
 	// which means that all working pods have been started via UpdatePod().
 	podsSynced                bool
 	podUpdates                map[types.UID]chan podWork   // 跟踪所有正在运行的每个pod goroutine - 每个pod goroutine将通过其相应的通道处理接收到的更新。
-	lastUndeliveredWorkUpdate map[types.UID]podWork        // 跟踪此pod的最后一个未传递的工作项 - 如果工作程序正在工作，则工作项未传递。
+	lastUndeliveredWorkUpdate map[types.UID]podWork        // 跟踪此pod的最后一个未传递的工作项 - 如果工作程序正在工作,则工作项未传递。
 	podSyncStatuses           map[types.UID]*podSyncStatus // 通过UID跟踪pod的终止状态—同步、终止、终止和逐出。
 
 	// Tracks all uids for started static pods by full name

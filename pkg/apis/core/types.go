@@ -65,7 +65,7 @@ type VolumeSource struct {
 	// mount host directories as read/write.
 	// +optional
 	HostPath *HostPathVolumeSource
-	// emptyDir 表示一个临时目录，该目录与 pod 的生命周期共享。
+	// emptyDir 表示一个临时目录,该目录与 pod 的生命周期共享.
 	// +optional
 	EmptyDir *EmptyDirVolumeSource
 	// GCEPersistentDisk represents a GCE Disk resource that is attached to a
@@ -76,8 +76,8 @@ type VolumeSource struct {
 	// kubelet's host machine and then exposed to the pod.
 	// +optional
 	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource
-	// GitRepo 表示特定版本的 Git 存储库。
-	// 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。
+	// GitRepo 表示特定版本的 Git 存储库.
+	// 已废弃：GitRepo 已被弃用.要为容器提供 Git 存储库,请将一个 EmptyDir 挂载到一个 InitContainer 中,该 InitContainer 使用 Git 克隆存储库,然后将 EmptyDir 挂载到 Pod 的容器中.
 
 	// +optional
 	GitRepo *GitRepoVolumeSource
@@ -2838,7 +2838,7 @@ type Toleration struct {
 	// [空 ,NoSchedule, PreferNoSchedul, NoExecute ]
 	// +optional
 	Effect TaintEffect
-	// 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。
+	// 容忍污点的时间段.默认情况下,它没有设置,这意味着永远容忍污染(不清除).0和负值将被系统视为0(立即驱逐).
 	// +optional
 	TolerationSeconds *int64
 }
@@ -2910,7 +2910,7 @@ type PodSpec struct {
 	// requirements.
 	// +optional
 	NodeName string
-	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。
+	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象.
 	// +optional
 	SecurityContext *PodSecurityContext
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
@@ -2983,10 +2983,10 @@ type PodSpec struct {
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class
 	// +optional
 	RuntimeClassName *string
-	// Overhead 表示与运行给定RuntimeClass的pod相关的资源开销。
-	// 该字段将由RuntimeClass准入控制器在准入时自动填充。如果启用了RuntimeClass准入控制器，则在Pod创建请求中不能设置开销。
-	// RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求。
-	// 如果在PodSpec中配置并选择了RuntimeClass，则开销将被设置为相应的RuntimeClass中定义的值，否则它将保持未设置并视为零。
+	// Overhead 表示与运行给定RuntimeClass的pod相关的资源开销.
+	// 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销.
+	// RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求.
+	// 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零.
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead
 	// +optional
 	Overhead ResourceList
@@ -5493,7 +5493,7 @@ type ComponentStatusList struct {
 	Items []ComponentStatus
 }
 
-// PodSecurityContext 是Kubernetes中用于定义安全属性和设置的对象。
+// PodSecurityContext 是Kubernetes中用于定义安全属性和设置的对象.
 type SecurityContext struct {
 	// The capabilities to add/drop when running containers.
 	// Defaults to the default set of capabilities granted by the container runtime.
@@ -5558,7 +5558,7 @@ type SecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	ProcMount *ProcMountType
-	//此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数
+	//此容器要使用的seccomp选项.如果在pod和容器级别同时提供seccomp选项,则容器选项将覆盖pod选项.注意,当spec.os.name为windows时,该字段不能设置. seccomp是Linux的一种安全机制,主要功能是限制直接通过syscall去调用某些系统函数
 	//+optional
 	SeccompProfile *SeccompProfile
 }

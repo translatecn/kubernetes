@@ -25,7 +25,7 @@ import (
 	cadvisorfs "github.com/google/cadvisor/fs"
 )
 
-// imageFsInfoProvider 知道如何将配置的运行时转换为映像的文件系统标签。
+// imageFsInfoProvider 知道如何将配置的运行时转换为映像的文件系统标签.
 type imageFsInfoProvider struct {
 	runtimeEndpoint string
 }

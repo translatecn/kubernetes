@@ -36,7 +36,7 @@ import (
 
 const (
 	unsupportedEvictionSignal = "unsupported eviction signal %v"
-	Reason                    = "Evicted" // 是在Status中报告的原因。
+	Reason                    = "Evicted" // 是在Status中报告的原因.
 	// nodeLowMessageFmt is the message for evictions due to resource pressure.
 	nodeLowMessageFmt = "The node was low on resource: %v. "
 	// nodeConditionMessageFmt is the message for evictions due to resource pressure.
@@ -49,7 +49,7 @@ const (
 	podEphemeralStorageMessageFmt = "Pod ephemeral local storage usage exceeds the total limit of containers %s. "
 	// emptyDirMessageFmt provides additional information for empty-dir volumes which have exceeded their size limit
 	emptyDirMessageFmt                 = "Usage of EmptyDir volume %q exceeds the limit %q. "
-	resourceInodes     v1.ResourceName = "inodes" // inodes 是一个数字，用于在此模块内部计算本地磁盘的 inode 消耗。
+	resourceInodes     v1.ResourceName = "inodes" // inodes 是一个数字,用于在此模块内部计算本地磁盘的 inode 消耗.
 	// resourcePids, number. internal to this module, used to account for local pid consumption.
 	resourcePids v1.ResourceName = "pids"
 	// OffendingContainersKey is the key in eviction event annotations for the list of container names which exceeded their requests
@@ -350,7 +350,7 @@ func localVolumeNames(pod *v1.Pod) []string {
 	return result
 }
 
-// containerUsage 聚合指定统计信息的容器磁盘使用量和 inode 消耗。
+// containerUsage 聚合指定统计信息的容器磁盘使用量和 inode 消耗.
 func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1.ResourceList {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
@@ -370,7 +370,7 @@ func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1
 	}
 }
 
-// podDiskUsage 聚合指定统计信息的 pod 磁盘使用量和 inode 消耗。
+// podDiskUsage 聚合指定统计信息的 pod 磁盘使用量和 inode 消耗.
 func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsStatsType) (v1.ResourceList, error) {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
@@ -391,7 +391,7 @@ func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsSt
 	}, nil
 }
 
-// podLocalVolumeUsage 聚合要度量的指定统计数据的pod本地卷、磁盘使用情况和inode消耗。
+// podLocalVolumeUsage 聚合要度量的指定统计数据的pod本地卷、磁盘使用情况和inode消耗.
 func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.ResourceList {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
@@ -640,7 +640,7 @@ func rankPIDPressure(pods []*v1.Pod, stats statsFunc) {
 	orderedBy(priority, process(stats)).Sort(pods)
 }
 
-// rankDiskPressureFunc 返回一个 rankFunc，用于测量指定的文件系统统计信息。
+// rankDiskPressureFunc 返回一个 rankFunc,用于测量指定的文件系统统计信息.
 func rankDiskPressureFunc(
 	fsStatsToMeasure []fsStatsType, // 测量节点状态
 	diskResource v1.ResourceName,
@@ -666,7 +666,7 @@ func (a byEvictionPriority) Len() int      { return len(a) }
 func (a byEvictionPriority) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 // Less ranks memory before all other resources, and ranks thresholds with no resource to reclaim last
-// 对应的将内存排在前面，优先驱逐
+// 对应的将内存排在前面,优先驱逐
 func (a byEvictionPriority) Less(i, j int) bool {
 	_, jSignalHasResource := signalToResource[a[j].Signal]
 	return a[i].Signal == evictionapi.SignalMemoryAvailable || a[i].Signal == evictionapi.SignalAllocatableMemoryAvailable || !jSignalHasResource
@@ -677,7 +677,7 @@ func makeSignalObservations(summary *statsapi.Summary) (signalObservations, stat
 	// 构建针对pod统计信息的函数
 	statsFunc := cachedStatsFunc(summary.Pods)
 	// build an evaluation context for current eviction signals
-	// 跟据传入的节点summary，获取各个驱逐信号对应的singleObservations和Pod的StatsFunc
+	// 跟据传入的节点summary,获取各个驱逐信号对应的singleObservations和Pod的StatsFunc
 	result := signalObservations{}
 
 	if memory := summary.Node.Memory; memory != nil && memory.AvailableBytes != nil && memory.WorkingSetBytes != nil {
@@ -974,7 +974,7 @@ func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 	// todo ,这里为什么这么区分
 	// usage of an imagefs is optional
 	if withImageFs { // 使用了不用的磁盘         imagefs 使用了单独
-		// 统计数组里边的子项，
+		// 统计数组里边的子项,
 		signalToRankFunc[evictionapi.SignalNodeFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
 		signalToRankFunc[evictionapi.SignalNodeFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
 		// with an imagefs, imagefs pod rank func for eviction only includes rootfs
@@ -991,7 +991,7 @@ func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
 	return signalToRankFunc
 }
 
-// PodIsEvicted 如果报告的pod状态是由于驱逐而导致的,则返回true。
+// PodIsEvicted 如果报告的pod状态是由于驱逐而导致的,则返回true.
 func PodIsEvicted(podStatus v1.PodStatus) bool {
 	return podStatus.Phase == v1.PodFailed && podStatus.Reason == Reason
 }

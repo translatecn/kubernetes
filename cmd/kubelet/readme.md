@@ -143,8 +143,13 @@ task=python,pid=988370,uid=0
 ```
 
 
+## CRI
+- https://docs.openeuler.org/zh/docs/20.03_LTS/docs/Container/CRI%E6%8E%A5%E5%8F%A3.html
 
 
 
 # ToDo
 - registerCollectors
+- func NewManager(cpuPolicyName string,
+- reconcileState
+- syncNodeStatus

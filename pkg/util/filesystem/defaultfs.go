@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-// DefaultFs 使用“os”和“io”中同名函数实现文件系统。
+// DefaultFs 使用“os”和“io”中同名函数实现文件系统.
 type DefaultFs struct {
 	root string
 }

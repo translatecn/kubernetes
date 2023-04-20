@@ -16,28 +16,15 @@ limitations under the License.
 
 package types
 
-// NodeName is a type that holds a api.Node's Name identifier.
-// Being a type captures intent and helps make sure that the node name
-// is not confused with similar concepts (the hostname, the cloud provider id,
-// the cloud provider name etc)
+// NodeName 这段代码是一段注释，用于解释NodeName类型的含义和用途。NodeName类型用于保存api.Node的名称标识符，它是一个独立的类型，这有助于明确表示节点名称，避免与其他类似概念（主机名、云提供商ID、云提供商名称等）混淆。
 //
-// To clarify the various types:
+// 为了澄清不同类型之间的区别，注释提供了以下信息：
 //
-//   - Node.Name is the Name field of the Node in the API.  This should be stored in a NodeName.
-//     Unfortunately, because Name is part of ObjectMeta, we can't store it as a NodeName at the API level.
+// Node.Name是API中Node的Name字段。这应该存储在NodeName中。不幸的是，因为Name是ObjectMeta的一部分，我们无法在API级别将其存储为NodeName。
 //
-//   - Hostname is the hostname of the local machine (from uname -n).
-//     However, some components allow the user to pass in a --hostname-override flag,
-//     which will override this in most places. In the absence of anything more meaningful,
-//     kubelet will use Hostname as the Node.Name when it creates the Node.
+// Hostname是本地计算机的主机名（来自uname -n）。但是，一些组件允许用户传递--hostname-override标志，它将在大多数地方覆盖此主机名。在没有更有意义的内容的情况下，kubelet将使用Hostname作为创建Node时的Node.Name。
 //
-// * The cloudproviders have the own names: GCE has InstanceName, AWS has InstanceId.
+// 云提供商有他们自己的名称：GCE有InstanceName，AWS有InstanceId。对于GCE，InstanceName是GCE API中Instance对象的名称。在GCE上，Instance.Name变为Hostname，因此将其用作Node.Name也是有意义的。但这是GCE特定的，云提供商如何执行此映射取决于他们自己。
 //
-//	For GCE, InstanceName is the Name of an Instance object in the GCE API.  On GCE, Instance.Name becomes the
-//	Hostname, and thus it makes sense also to use it as the Node.Name.  But that is GCE specific, and it is up
-//	to the cloudprovider how to do this mapping.
-//
-//	For AWS, the InstanceID is not yet suitable for use as a Node.Name, so we actually use the
-//	PrivateDnsName for the Node.Name.  And this is _not_ always the same as the hostname: if
-//	we are using a custom DHCP domain it won't be.
+// 对于AWS，InstanceId尚不适合用作Node.Name，因此我们实际上使用PrivateDnsName作为Node.Name。这并不总是与主机名相同：如果我们使用自定义DHCP域，它将不同。
 type NodeName string

@@ -55,10 +55,7 @@ const defaultRootDir = "/var/lib/kubelet"
 type KubeletFlags struct {
 	KubeConfig          string
 	BootstrapKubeconfig string
-
-	// HostnameOverride is the hostname used to identify the kubelet instead
-	// of the actual hostname.
-	HostnameOverride string
+	HostnameOverride    string // 专门设置d额主机名
 	// NodeIP is IP address of the node.
 	// If set, kubelet will use this IP address for the node.
 	NodeIP string
@@ -91,7 +88,7 @@ type KubeletFlags struct {
 	ExperimentalMounterPath string
 	// This flag, if set, will avoid including `EvictionHard` limits while computing Node Allocatable.
 	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md) doc for more information.
-	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool
+	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool              // 实验性、忽略驱逐阈值
 	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签.
 	// lockFilePath is the path that kubelet will use to as a lock file.
 	// It uses this file as a lock to synchronize with other kubelet processes
@@ -482,8 +479,8 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.StringSliceVar(&c.AllowedUnsafeSysctls, "allowed-unsafe-sysctls", c.AllowedUnsafeSysctls, "Comma-separated whitelist of unsafe sysctls or unsafe sysctl patterns (ending in *). Use these at your own risk.")
 
 	fs.Int32Var(&c.NodeStatusMaxImages, "node-status-max-images", c.NodeStatusMaxImages, "The maximum number of images to report in Node.Status.Images. If -1 is specified, no cap will be applied.")
-	fs.BoolVar(&c.KernelMemcgNotification, "kernel-memcg-notification", c.KernelMemcgNotification, "如果为true，将与内核memcg通知集成，以确定是否超过内存阈值。")
-	fs.BoolVar(&c.LocalStorageCapacityIsolation, "local-storage-capacity-isolation", c.LocalStorageCapacityIsolation, "If true, local ephemeral storage isolation is enabled. Otherwise, local storage isolation feature will be disabled")
+	fs.BoolVar(&c.KernelMemcgNotification, "kernel-memcg-notification", c.KernelMemcgNotification, "如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.")
+	fs.BoolVar(&c.LocalStorageCapacityIsolation, "local-storage-capacity-isolation", c.LocalStorageCapacityIsolation, "如果为true,则启用本地临时存储隔离.否则,本地存储隔离特性将被禁用")
 
 	// Flags intended for testing, not recommended used in production environments.
 	fs.Int64Var(&c.MaxOpenFiles, "max-open-files", c.MaxOpenFiles, "Number of files that can be opened by Kubelet process.")

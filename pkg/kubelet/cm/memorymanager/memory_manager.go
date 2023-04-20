@@ -54,41 +54,25 @@ func (s *sourcesReadyStub) AllReady() bool          { return true }
 
 // Manager interface provides methods for Kubelet to manage pod memory.
 type Manager interface {
-	// Start is called during Kubelet initialization.
+	// Start 在 Kubelet 初始化期间调用,用于启动内存管理器.
 	Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error
-
-	// AddContainer adds the mapping between container ID to pod UID and the container name
-	// The mapping used to remove the memory allocation during the container removal
+	// AddContainer 添加容器 ID 到 pod UID 的映射以及容器名称,以便在容器删除时删除内存分配.
 	AddContainer(p *v1.Pod, c *v1.Container, containerID string)
-
-	// Allocate is called to pre-allocate memory resources during Pod admission.
-	// This must be called at some point prior to the AddContainer() call for a container, e.g. at pod admission time.
+	// Allocate 在 Pod 准入期间调用,用于预分配内存资源.
 	Allocate(pod *v1.Pod, container *v1.Container) error
-
-	// RemoveContainer is called after Kubelet decides to kill or delete a
-	// container. After this call, any memory allocated to the container is freed.
+	// RemoveContainer 在 Kubelet 决定杀死或删除容器后调用,用于释放分配给容器的内存.
 	RemoveContainer(containerID string) error
-
-	// State returns a read-only interface to the internal memory manager state.
+	// State 返回一个只读接口,用于访问内部内存管理器状态.
 	State() state.Reader
-
-	// GetTopologyHints implements the topologymanager.HintProvider Interface
-	// and is consulted to achieve NUMA aware resource alignment among this
-	// and other resource controllers.
+	// GetTopologyHints 实现 topologymanager.HintProvider 接口,用于实现 NUMA 感知的资源对齐.
 	GetTopologyHints(*v1.Pod, *v1.Container) map[string][]topologymanager.TopologyHint
-
-	// GetPodTopologyHints implements the topologymanager.HintProvider Interface
-	// and is consulted to achieve NUMA aware resource alignment among this
-	// and other resource controllers.
+	// GetPodTopologyHints 实现 topologymanager.HintProvider 接口,用于实现 NUMA 感知的资源对齐.
 	GetPodTopologyHints(*v1.Pod) map[string][]topologymanager.TopologyHint
-
-	// GetMemoryNUMANodes provides NUMA nodes that are used to allocate the container memory
+	// GetMemoryNUMANodes 提供用于分配容器内存的 NUMA 节点.
 	GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container) sets.Int
-
-	// GetAllocatableMemory returns the amount of allocatable memory for each NUMA node
+	// GetAllocatableMemory 返回每个 NUMA 节点可分配的内存量.
 	GetAllocatableMemory() []state.Block
-
-	// GetMemory returns the memory allocated by a container from NUMA nodes
+	// GetMemory 返回容器从 NUMA 节点分配的内存.
 	GetMemory(podUID, containerName string) []state.Block
 }
 
