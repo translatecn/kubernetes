@@ -110,7 +110,7 @@ var (
 	}
 )
 
-// ZoneState 给定区域的状态。
+// ZoneState 给定区域的状态.
 type ZoneState string
 
 const (
@@ -280,7 +280,7 @@ type Controller struct {
 	evictorLock          sync.Mutex
 	nodeEvictionMap      *nodeEvictionMap
 	zonePodEvictor       map[string]*scheduler.RateLimitedTimedQueue // 无响应节点中驱逐pod的队列
-	zoneNoExecuteTainter map[string]*scheduler.RateLimitedTimedQueue // 负责对节点进行标记的工作节点。
+	zoneNoExecuteTainter map[string]*scheduler.RateLimitedTimedQueue // 负责对节点进行标记的工作节点.
 
 	nodesToRetry sync.Map
 
@@ -516,7 +516,7 @@ func NewNodeLifecycleController(
 	return nc, nil
 }
 
-// Run 启动一个异步循环，用于监视集群节点的状态。
+// Run 启动一个异步循环,用于监视集群节点的状态.
 func (nc *Controller) Run(ctx context.Context) {
 	defer utilruntime.HandleCrash()
 
@@ -681,7 +681,7 @@ func (nc *Controller) doNoExecuteTaintingPass(ctx context.Context) {
 			// these zones also do not get removed, only added.
 			zoneNoExecuteTainterWorker = nc.zoneNoExecuteTainter[k]
 		}()
-		// 该函数应返回“false”和重新尝试的时间（在该时间之后），或者如果成功则返回“true”。
+		// 该函数应返回“false”和重新尝试的时间（在该时间之后）,或者如果成功则返回“true”.
 		zoneNoExecuteTainterWorker.Try(func(value scheduler.TimedValue) (bool, time.Duration) {
 			node, err := nc.nodeLister.Get(value.Value)
 			if apierrors.IsNotFound(err) {
@@ -693,7 +693,7 @@ func (nc *Controller) doNoExecuteTaintingPass(ctx context.Context) {
 				return false, 50 * time.Millisecond
 			}
 			_, condition := controllerutil.GetNodeCondition(&node.Status, v1.NodeReady)
-			// 因为我们想要模拟NodeStatus.Condition["Ready"]，所以我们使 "unreachable" and "not ready" 污点互斥
+			// 因为我们想要模拟NodeStatus.Condition["Ready"],所以我们使 "unreachable" and "not ready" 污点互斥
 			taintToAdd := v1.Taint{}
 			oppositeTaint := v1.Taint{}
 			switch condition.Status {

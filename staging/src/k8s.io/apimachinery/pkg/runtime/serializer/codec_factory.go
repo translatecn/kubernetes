@@ -276,7 +276,7 @@ func (f CodecFactory) UniversalDeserializer() runtime.Decoder {
 // unrecognized groups will be returned in the version they are encoded as (no conversion). This decoder performs
 // defaulting.
 //
-// TODO: 解码器最终将被移除，以便以版本形式处理对象。只接受组版本
+// TODO: 解码器最终将被移除,以便以版本形式处理对象.只接受组版本
 func (f CodecFactory) UniversalDecoder(versions ...schema.GroupVersion) runtime.Decoder {
 	var versioner runtime.GroupVersioner
 	if len(versions) == 0 {

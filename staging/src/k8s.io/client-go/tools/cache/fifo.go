@@ -339,8 +339,8 @@ func (f *FIFO) Replace(list []interface{}, resourceVersion string) error {
 	return nil
 }
 
-// Resync 将确保Store中的每个对象在队列中都有它的键。
-// 这应该是一个no-op，因为该属性由所有操作维护。
+// Resync 将确保Store中的每个对象在队列中都有它的键.
+// 这应该是一个no-op,因为该属性由所有操作维护.
 func (f *FIFO) Resync() error {
 	f.lock.Lock()
 	defer f.lock.Unlock()

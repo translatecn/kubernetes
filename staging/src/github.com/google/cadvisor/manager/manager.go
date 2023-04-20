@@ -53,10 +53,10 @@ import (
 )
 
 var globalHousekeepingInterval = flag.Duration("global_housekeeping_interval", 1*time.Minute, "Interval between global housekeepings")
-var updateMachineInfoInterval = flag.Duration("update_machine_info_interval", 5*time.Minute, "机器信息更新的间隔。")
+var updateMachineInfoInterval = flag.Duration("update_machine_info_interval", 5*time.Minute, "机器信息更新的间隔.")
 var logCadvisorUsage = flag.Bool("log_cadvisor_usage", false, "是否记录cAdvisor容器的使用日志")
-var eventStorageAgeLimit = flag.String("event_storage_age_limit", "default=24h", "存储事件的最大时间长度(每种类型)。Value是一个以逗号分隔的键值列表，其中键是事件类型(例如:creation, oom)或“default”，Value是持续时间。Default应用于所有非指定的事件类型")
-var eventStorageEventLimit = flag.String("event_storage_event_limit", "default=100000", "要存储的最大事件数(每种类型)。Value是一个以逗号分隔的键值列表，其中键是事件类型(例如:creation, oom)或“default”，Value是一个整数。Default应用于所有非指定的事件类型")
+var eventStorageAgeLimit = flag.String("event_storage_age_limit", "default=24h", "存储事件的最大时间长度(每种类型).Value是一个以逗号分隔的键值列表,其中键是事件类型(例如:creation, oom)或“default”,Value是持续时间.Default应用于所有非指定的事件类型")
+var eventStorageEventLimit = flag.String("event_storage_event_limit", "default=100000", "要存储的最大事件数(每种类型).Value是一个以逗号分隔的键值列表,其中键是事件类型(例如:creation, oom)或“default”,Value是一个整数.Default应用于所有非指定的事件类型")
 var applicationMetricsCountLimit = flag.Int("application_metrics_count_limit", 100, "要存储的最大应用程序度量数(每个容器)")
 
 // The namespace under which Docker aliases are unique.
@@ -79,7 +79,7 @@ type Manager interface {
 	// GetContainerInfo 获取容器信息
 	GetContainerInfo(containerName string, query *info.ContainerInfoRequest) (*info.ContainerInfo, error)
 
-	// GetContainerInfoV2 获取容器的V2版本信息。递归(子容器)请求是尽最大努力的，在部分失败的情况下，可能会返回部分结果和错误。
+	// GetContainerInfoV2 获取容器的V2版本信息.递归(子容器)请求是尽最大努力的,在部分失败的情况下,可能会返回部分结果和错误.
 	GetContainerInfoV2(containerName string, options v2.RequestOptions) (map[string]v2.ContainerInfo, error)
 
 	// Get information about all subcontainers of the specified container (includes self).
@@ -114,7 +114,7 @@ type Manager interface {
 	// function will return the fs.ErrNoSuchDevice error.
 	GetFsInfoByFsUUID(uuid string) (v2.FsInfo, error)
 
-	// GetDirFsInfo 获取包含给定目录的文件系统的文件系统信息。
+	// GetDirFsInfo 获取包含给定目录的文件系统的文件系统信息.
 	GetDirFsInfo(dir string) (v2.FsInfo, error)
 
 	// Get filesystem information for a given label.
@@ -158,15 +158,15 @@ func New(
 		return nil, fmt.Errorf("manager requires memory storage")
 	}
 
-	// 检测我们正在运行的容器。
+	// 检测我们正在运行的容器.
 	selfContainer := "/"
 	var err error
-	// 避免在cgroup v2上使用GetOwnCgroupPath，因为它不受libcontainer支持。
+	// 避免在cgroup v2上使用GetOwnCgroupPath,因为它不受libcontainer支持.
 	//
-	//cgroup是Linux内核中的一个特性，用于限制和隔离进程的资源使用。cgroup有两个版本，即cgroup v1和cgroup v2。在cgroup v1中，
-	//每个进程都有自己的cgroup路径，可以使用GetOwnCgroupPath函数来获取它的路径。但是，在cgroup v2中，每个进程的cgroup路径是动态生成的，无法使用GetOwnCgroupPath函数来获取它的路径。
+	//cgroup是Linux内核中的一个特性,用于限制和隔离进程的资源使用.cgroup有两个版本,即cgroup v1和cgroup v2.在cgroup v1中,
+	//每个进程都有自己的cgroup路径,可以使用GetOwnCgroupPath函数来获取它的路径.但是,在cgroup v2中,每个进程的cgroup路径是动态生成的,无法使用GetOwnCgroupPath函数来获取它的路径.
 	//
-	//因此，如果在cgroup v2上使用GetOwnCgroupPath函数，可能会导致错误或不可预测的结果。为了避免这种情况，建议在cgroup v2上使用其他函数或工具来获取进程的cgroup路径，或者使用cgroup v1来进行进程隔离。
+	//因此,如果在cgroup v2上使用GetOwnCgroupPath函数,可能会导致错误或不可预测的结果.为了避免这种情况,建议在cgroup v2上使用其他函数或工具来获取进程的cgroup路径,或者使用cgroup v1来进行进程隔离.
 	if !cgroups.IsCgroup2UnifiedMode() { // 不是 v2 unified 模式
 		selfContainer, err = cgroups.GetOwnCgroup("cpu")
 		if err != nil {
@@ -185,15 +185,15 @@ func New(
 		return nil, err
 	}
 
-	// 如果使用主机的rootfs启动了cAdvisor，则假定它在自己的命名空间中运行。
+	// 如果使用主机的rootfs启动了cAdvisor,则假定它在自己的命名空间中运行.
 	inHostNamespace := false
 	_, err = os.Stat("/rootfs/proc")
 	if os.IsNotExist(err) {
-		//rootfs是Linux系统中的一个特殊文件系统，它包含了系统启动时必需的文件和目录。在Docker等容器平台中，rootfs通常被用于构建容器镜像。如果在主机上挂载了rootfs，并使用它来启动cAdvisor，则可以假定cAdvisor在自己的命名空间中运行，这意味着它无法直接访问主机上的其他进程或资源。
+		//rootfs是Linux系统中的一个特殊文件系统,它包含了系统启动时必需的文件和目录.在Docker等容器平台中,rootfs通常被用于构建容器镜像.如果在主机上挂载了rootfs,并使用它来启动cAdvisor,则可以假定cAdvisor在自己的命名空间中运行,这意味着它无法直接访问主机上的其他进程或资源.
 		//
-		//在这种情况下，cAdvisor需要使用一些特殊的技巧来获取系统信息和指标。例如，它可以使用procfs文件系统来获取主机上的进程信息，或者使用cgroup文件系统来获取容器的资源使用情况。此外，cAdvisor还可以使用一些Linux内核特性，例如UTS命名空间和网络命名空间，来隔离自身并获取更多的系统信息。
+		//在这种情况下,cAdvisor需要使用一些特殊的技巧来获取系统信息和指标.例如,它可以使用procfs文件系统来获取主机上的进程信息,或者使用cgroup文件系统来获取容器的资源使用情况.此外,cAdvisor还可以使用一些Linux内核特性,例如UTS命名空间和网络命名空间,来隔离自身并获取更多的系统信息.
 		//
-		//需要注意的是，使用rootfs启动cAdvisor可能会带来一些安全风险和性能问题，因此建议在必要时才使用这种方式启动cAdvisor，并采取必要的安全措施和优化措施。
+		//需要注意的是,使用rootfs启动cAdvisor可能会带来一些安全风险和性能问题,因此建议在必要时才使用这种方式启动cAdvisor,并采取必要的安全措施和优化措施.
 		inHostNamespace = true
 	}
 
@@ -219,7 +219,7 @@ func New(
 		rawContainerCgroupPathPrefixWhiteList: rawContainerCgroupPathPrefixWhiteList,
 		containerEnvMetadataWhiteList:         containerEnvMetadataWhiteList,
 	}
-	// 获取machineInfo，包含节点的机器信息
+	// 获取machineInfo,包含节点的机器信息
 	machineInfo, err := machine.Info(sysfs, fsInfo, inHostNamespace)
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ type manager struct {
 	nvidiaManager                         stats.Manager
 	perfManager                           stats.Manager
 	resctrlManager                        resctrl.Manager
-	rawContainerCgroupPathPrefixWhiteList []string // 这是一个原始容器的 cgroup 路径前缀白名单列表。  为nil
+	rawContainerCgroupPathPrefixWhiteList []string // 这是一个原始容器的 cgroup 路径前缀白名单列表.  为nil
 	// List of container env prefix whitelist, the matched container envs would be collected into metrics as extra labels.
 	containerEnvMetadataWhiteList []string
 }
@@ -304,7 +304,7 @@ func (m *manager) Start() error {
 		klog.Warningf("Could not configure a source for OOM detection, disabling OOM events: %v", err)
 	}
 
-	// 如果没有容器工厂，则不要启动任何清理工作，并提供我们已有的信息。
+	// 如果没有容器工厂,则不要启动任何清理工作,并提供我们已有的信息.
 	if !container.HasFactories() {
 		return nil
 	}
@@ -323,7 +323,7 @@ func (m *manager) Start() error {
 
 	// Watch for new container.
 	quitWatcher := make(chan error)
-	// 启动对新容器的监听，添加相关的资源采集
+	// 启动对新容器的监听,添加相关的资源采集
 	err = m.watchForNewContainers(quitWatcher)
 	if err != nil {
 		return err
@@ -985,7 +985,7 @@ func (m *manager) watchForNewContainers(quit chan error) error {
 }
 
 func (m *manager) watchForNewOoms() error {
-	//- watchForNewOoms中首先新建kmsg log 解析器 ，解析/dev/kmsg中的内核日志
+	//- watchForNewOoms中首先新建kmsg log 解析器 ,解析/dev/kmsg中的内核日志
 	//- 同时新建outStream chan 用作生产者和消费者之间的交互
 	klog.V(2).Infof("Started watching for new ooms in manager")
 	outStream := make(chan *oomparser.OomInstance, 10)
@@ -993,7 +993,7 @@ func (m *manager) watchForNewOoms() error {
 	if err != nil {
 		return err
 	}
-	// 启动生成者，就是从内核日志解析容器oom的日志，
+	// 启动生成者,就是从内核日志解析容器oom的日志,
 	//
 	//- 过程就是判断有没有invoked oom-killer:字段
 	//- 然后再用containerRegexp正则判断是容器进程的oom
@@ -1279,7 +1279,7 @@ func (m *manager) createContainerLocked(containerName string, watchSource watche
 		Timestamp:     contSpec.CreationTime,
 		EventType:     info.EventContainerCreation,
 	}
-	err = m.eventHandler.AddEvent(newEvent) // DefaultMaxNumEvents 该值默认是0，因此不会记录事件
+	err = m.eventHandler.AddEvent(newEvent) // DefaultMaxNumEvents 该值默认是0,因此不会记录事件
 	if err != nil {
 		return err
 	}
@@ -1358,10 +1358,10 @@ func (m *manager) getContainersDiff(containerName string) (added []info.Containe
 	m.containersLock.RLock()
 	defer m.containersLock.RUnlock()
 
-	// 确定哪些被添加，哪些被删除。
+	// 确定哪些被添加,哪些被删除.
 	allContainersSet := make(map[string]*containerData)
-	for name, d := range m.containers { // 一致维护最新的数据，包括还没有生效的容器
-		// 只添加规范名称。
+	for name, d := range m.containers { // 一致维护最新的数据,包括还没有生效的容器
+		// 只添加规范名称.
 		if d.info.Name == name.Name {
 			allContainersSet[name.Name] = d
 		}
@@ -1386,7 +1386,7 @@ func (m *manager) getContainersDiff(containerName string) (added []info.Containe
 	return
 }
 
-// 检测子容器，并在代码中反映这些子容器的设置
+// 检测子容器,并在代码中反映这些子容器的设置
 func (m *manager) detectSubcontainers(containerName string) error {
 	added, removed, err := m.getContainersDiff(containerName) // 检测在指定时间中添加或删除的所有容器
 	if err != nil {

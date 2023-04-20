@@ -251,7 +251,7 @@ const (
 	// beta: v1.20
 	// ga: v1.25
 	//
-	// 禁用Kubelet收集的加速器指标。
+	// 禁用Kubelet收集的加速器指标.
 	DisableAcceleratorUsageMetrics featuregate.Feature = "DisableAcceleratorUsageMetrics"
 
 	// owner: @andrewsykim
@@ -508,7 +508,7 @@ const (
 	// alpha: v1.13
 	// beta: v1.15
 	//
-	// 启用kubelet的pod资源gRPC端点。
+	// 启用kubelet的pod资源gRPC端点.
 	KubeletPodResources featuregate.Feature = "KubeletPodResources"
 
 	// owner: @fromanirh
@@ -535,7 +535,7 @@ const (
 	// kep: http://kep.k8s.io/2800
 	// alpha: v1.25
 	//
-	// 启用基于密钥的服务帐户令牌使用跟踪。
+	// 启用基于密钥的服务帐户令牌使用跟踪.
 	LegacyServiceAccountTokenTracking featuregate.Feature = "LegacyServiceAccountTokenTracking"
 
 	// owner: @jinxu
@@ -575,8 +575,8 @@ const (
 	// MemoryManager owner: @cynepco3hahue(alukiano) @cezaryzukowski @k-wiatrzyk
 	// alpha: v1.21
 	// beta: v1.22
-	// 允许基于 NUMA 拓扑为容器设置内存亲和性。NUMA 是一种计算机架构，它将内存和 CPU 分配到不同的节点上，以提高性能和可扩展性。
-	// 在这种情况下，该函数允许为容器分配特定的 NUMA 节点，以确保容器能够访问最佳的内存资源。
+	// 允许基于 NUMA 拓扑为容器设置内存亲和性.NUMA 是一种计算机架构,它将内存和 CPU 分配到不同的节点上,以提高性能和可扩展性.
+	// 在这种情况下,该函数允许为容器分配特定的 NUMA 节点,以确保容器能够访问最佳的内存资源.
 	MemoryManager featuregate.Feature = "MemoryManager"
 
 	// owner: @xiaoxubeii

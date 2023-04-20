@@ -60,7 +60,7 @@ type Request struct {
 	// events falling after EndTime do not satisfy the request. EndTime
 	// must be left blank in calls to WatchEvents
 	EndTime   time.Time
-	EventType map[info.EventType]bool // 期望捕捉的事件，value 为true  "oom"  "oomKill" containerCreation containerDeletion
+	EventType map[info.EventType]bool // 期望捕捉的事件,value 为true  "oom"  "oomKill" containerCreation containerDeletion
 	// allows the caller to put a limit on how many
 	// events to receive. If there are more events than MaxEventsReturned
 	// then the most chronologically recent events in the time period
@@ -128,9 +128,9 @@ func NewEventChannel(watchID int) *EventChannel {
 	}
 }
 
-// StoragePolicy 指定存储多少事件的策略。
-// MaxAge是保留事件的最大持续时间。
-// MaxNumEvents是要保留的最大事件数(-1表示没有限制)。
+// StoragePolicy 指定存储多少事件的策略.
+// MaxAge是保留事件的最大持续时间.
+// MaxNumEvents是要保留的最大事件数(-1表示没有限制).
 type StoragePolicy struct {
 	// Defaults limites, used if a per-event limit is not set.
 	DefaultMaxAge       time.Duration

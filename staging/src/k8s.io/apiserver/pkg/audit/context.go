@@ -28,7 +28,7 @@ import (
 
 type key int
 
-// auditKey 是上下文键，用于存储正在捕获的audit上下文以及适用于给定请求的评估策略。
+// auditKey 是上下文键,用于存储正在捕获的audit上下文以及适用于给定请求的评估策略.
 const auditKey key = iota
 
 // AuditContext holds the information for constructing the audit events for the current request.

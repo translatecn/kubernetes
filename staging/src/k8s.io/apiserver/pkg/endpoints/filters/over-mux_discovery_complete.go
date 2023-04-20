@@ -28,19 +28,19 @@ const (
 	muxAndDiscoveryIncompleteKey muxAndDiscoveryIncompleteKeyType = iota
 )
 
-// NoMuxAndDiscoveryIncompleteKey 检查上下文是否包含muxAndDiscoveryIncompleteKey。当HTTP路径未安装时，该键表示已经发出请求。
+// NoMuxAndDiscoveryIncompleteKey 检查上下文是否包含muxAndDiscoveryIncompleteKey.当HTTP路径未安装时,该键表示已经发出请求.
 func NoMuxAndDiscoveryIncompleteKey(ctx context.Context) bool { // 没有Mux和发现不完整的键
 	muxAndDiscoveryCompleteProtectionKeyValue, _ := ctx.Value(muxAndDiscoveryIncompleteKey).(string)
 	return len(muxAndDiscoveryCompleteProtectionKeyValue) == 0
 }
 
-// WithMuxAndDiscoveryComplete 如果在muxAndDiscoveryCompleteSignal准备好之前进行了请求，则将muxAndDiscoveryIncompleteKey放入上下文中。
-// 放置 muxAndDiscoveryIncompleteKey 保护我们免受返回404响应而不是503的影响。
-// 对于像GC和NS这样的控制器尤其重要，因为它们会对404进行操作。
+// WithMuxAndDiscoveryComplete 如果在muxAndDiscoveryCompleteSignal准备好之前进行了请求,则将muxAndDiscoveryIncompleteKey放入上下文中.
+// 放置 muxAndDiscoveryIncompleteKey 保护我们免受返回404响应而不是503的影响.
+// 对于像GC和NS这样的控制器尤其重要,因为它们会对404进行操作.
 // 在NotFoundHandler（staging/src/k8s.io/apiserver/pkg/util/notfoundhandler/not_found_handler.go）中检查muxAndDiscoveryIncompleteKey的存在
-// 此过滤器存在的主要原因是保护免受客户端请求到达NotFoundHandler和服务器变为就绪之间的潜在竞争的影响。
-// 如果没有保护密钥，则请求仍可能在注册的信号在到达新处理程序之前略微更改其状态时收到404响应。
-// 在这种情况下，密钥的存在将使处理程序返回503而不是404。
+// 此过滤器存在的主要原因是保护免受客户端请求到达NotFoundHandler和服务器变为就绪之间的潜在竞争的影响.
+// 如果没有保护密钥,则请求仍可能在注册的信号在到达新处理程序之前略微更改其状态时收到404响应.
+// 在这种情况下,密钥的存在将使处理程序返回503而不是404.
 func WithMuxAndDiscoveryComplete(handler http.Handler, muxAndDiscoveryCompleteSignal <-chan struct{}) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if muxAndDiscoveryCompleteSignal != nil && !isClosed(muxAndDiscoveryCompleteSignal) {
@@ -50,7 +50,7 @@ func WithMuxAndDiscoveryComplete(handler http.Handler, muxAndDiscoveryCompleteSi
 	})
 }
 
-// isClosed 这是一个方便的函数，仅检查给定的通道是否已关闭。
+// isClosed 这是一个方便的函数,仅检查给定的通道是否已关闭.
 func isClosed(ch <-chan struct{}) bool {
 	select {
 	case <-ch:

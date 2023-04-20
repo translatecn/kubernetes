@@ -33,10 +33,10 @@ import (
 )
 
 const (
-	// 速率限制上重试间隔的常数。
+	// 速率限制上重试间隔的常数.
 	// TODO: maybe make this dynamic? or user-adjustable?
 	retryAfter = "1"
-	// 多久更新一次 flight 使用率指标。因为指标在一段时间内跟踪最大值，使其更长将增加指标值。
+	// 多久更新一次 flight 使用率指标.因为指标在一段时间内跟踪最大值,使其更长将增加指标值.
 	inflightUsageMetricUpdatePeriod = time.Second
 )
 
@@ -51,7 +51,7 @@ func handleError(w http.ResponseWriter, r *http.Request, err error) {
 	klog.Errorf(err.Error())
 }
 
-// requestWatermark 用于跟踪在处理特定阶段的最大请求数。
+// requestWatermark 用于跟踪在处理特定阶段的最大请求数.
 type requestWatermark struct {
 	phase               string
 	nonMutatingObserver fcmetrics.RatioedGauge
@@ -107,7 +107,7 @@ var initMaxInFlightOnce sync.Once
 
 func initMaxInFlight(nonMutatingLimit, mutatingLimit int) {
 	initMaxInFlightOnce.Do(func() {
-		// 获取这些计量器的延迟直到它们的基础指标已注册，以便它们附着于有效的实现。
+		// 获取这些计量器的延迟直到它们的基础指标已注册,以便它们附着于有效的实现.
 		watermark.nonMutatingObserver = fcmetrics.GetExecutingReadonlyConcurrency()
 		watermark.mutatingObserver = fcmetrics.GetExecutingMutatingConcurrency()
 		if nonMutatingLimit != 0 {
@@ -175,7 +175,7 @@ func WithMaxInFlightLimit(
 
 			select {
 			case c <- true:
-				// 我们注意到在请求正在被服务和请求完成被服务后的并发级别，因为这两个状态都对并发采样统计产生贡献。
+				// 我们注意到在请求正在被服务和请求完成被服务后的并发级别,因为这两个状态都对并发采样统计产生贡献.
 				if isMutatingRequest {
 					watermark.recordMutating(len(c))
 				} else {
@@ -196,8 +196,8 @@ func WithMaxInFlightLimit(
 				// that they should always get an answer.  It's a super-admin or a loopback connection.
 				if currUser, ok := apirequest.UserFrom(ctx); ok {
 					for _, group := range currUser.GetGroups() {
-						//default代表队列已满，但是如果请求的group中含有 system:masters，则放行 - 因为apiserver认为这个组是很重要的请求，不能被限流
-						if group == user.SystemPrivilegedGroup { // 特权组，不过滤
+						//default代表队列已满,但是如果请求的group中含有 system:masters,则放行 - 因为apiserver认为这个组是很重要的请求,不能被限流
+						if group == user.SystemPrivilegedGroup { // 特权组,不过滤
 							handler.ServeHTTP(w, r)
 							return
 						}

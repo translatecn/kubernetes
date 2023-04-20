@@ -28,7 +28,7 @@ type GoawayDecider interface {
 }
 
 var (
-	// randPool 用于获取rand.Rand并线程安全地生成随机数，从而提高使用rand.Rand与锁定器的性能。
+	// randPool 用于获取rand.Rand并线程安全地生成随机数,从而提高使用rand.Rand与锁定器的性能.
 	randPool = &sync.Pool{
 		New: func() interface{} {
 			return rand.New(rand.NewSource(rand.Int63()))

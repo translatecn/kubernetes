@@ -47,7 +47,7 @@ func main() {
 		Limit:                2,
 		Continue:             "",
 	}
-	obj, _ := clientset.CoreV1().RESTClient().Get(). // 其实就是RESTClient.Get(），返回的是*rest.Request对象
+	obj, _ := clientset.CoreV1().RESTClient().Get(). // 其实就是RESTClient.Get(）,返回的是*rest.Request对象
 								Namespace("").
 								Resource("pods").
 								VersionedParams(&options, metav1.ParameterCodec).

@@ -27,7 +27,7 @@ import (
 )
 
 type EgressSelectorOptions struct {
-	ConfigFile string // 具有api服务器出口选择器配置的文件路径。
+	ConfigFile string // 具有api服务器出口选择器配置的文件路径.
 }
 
 // NewEgressSelectorOptions 选项是指向用于出口/连接的配置文件.这决定了哪些类型的请求使用出口/连接以及如何使用它.如果为空,API服务器将尝试直接使用网络连接.

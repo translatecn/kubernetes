@@ -1225,7 +1225,7 @@ func schema_pkg_apis_meta_v1_ListOptions(ref common.ReferenceCallback) common.Op
 					},
 					"continue": {
 						SchemaProps: spec.SchemaProps{
-							Description: "limit是一个列表调用返回的最大响应数。",
+							Description: "limit是一个列表调用返回的最大响应数.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2402,7 +2402,7 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Unknown 允许传递未知类型的API对象。这可用于处理来自插件的API对象。未知对象仍然具有功能的TypeMeta特性—类型、版本等。 metadata and field mutatation.",
+				Description: "Unknown 允许传递未知类型的API对象.这可用于处理来自插件的API对象.未知对象仍然具有功能的TypeMeta特性—类型、版本等. metadata and field mutatation.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apiVersion": {
@@ -2419,14 +2419,14 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 					},
 					"Raw": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Raw 将保存无法与已注册类型匹配的完整序列化对象。除了让它通过系统之外，不应该对它做任何事情。",
+							Description: "Raw 将保存无法与已注册类型匹配的完整序列化对象.除了让它通过系统之外,不应该对它做任何事情.",
 							Type:        []string{"string"},
 							Format:      "byte",
 						},
 					},
 					"ContentEncoding": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ContentEncoding 是用于编码“原始”数据的编码。未指定表示没有编码。",
+							Description: "ContentEncoding 是用于编码“原始”数据的编码.未指定表示没有编码.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -2434,7 +2434,7 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 					},
 					"ContentType": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ContentType 是用于序列化'Raw'的序列化方法。Unspecified表示ContentTypeJSON。",
+							Description: "ContentType 是用于序列化'Raw'的序列化方法.Unspecified表示ContentTypeJSON.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",

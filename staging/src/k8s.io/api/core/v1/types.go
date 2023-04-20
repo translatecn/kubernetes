@@ -34,7 +34,7 @@ const (
 
 // Volume represents a named volume in a pod that may be accessed by any container in the pod.
 type Volume struct {
-	// 卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。
+	// 卷的名称.必须是 DNS_LABEL,并且在 pod 中必须是唯一的.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 	// volumeSource represents the location and type of the mounted volume.
@@ -56,7 +56,7 @@ type VolumeSource struct {
 	// mount host directories as read/write.
 	// +optional
 	HostPath *HostPathVolumeSource `json:"hostPath,omitempty" protobuf:"bytes,1,opt,name=hostPath"`
-	// emptyDir 表示一个临时目录，该目录与 pod 的生命周期共享。
+	// emptyDir 表示一个临时目录,该目录与 pod 的生命周期共享.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
 	// +optional
 	EmptyDir *EmptyDirVolumeSource `json:"emptyDir,omitempty" protobuf:"bytes,2,opt,name=emptyDir"`
@@ -71,8 +71,8 @@ type VolumeSource struct {
 	// +optional
 	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource `json:"awsElasticBlockStore,omitempty" protobuf:"bytes,4,opt,name=awsElasticBlockStore"`
 
-	// GitRepo 表示特定版本的 Git 存储库。
-	// 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。
+	// GitRepo 表示特定版本的 Git 存储库.
+	// 已废弃：GitRepo 已被弃用.要为容器提供 Git 存储库,请将一个 EmptyDir 挂载到一个 InitContainer 中,该 InitContainer 使用 Git 克隆存储库,然后将 EmptyDir 挂载到 Pod 的容器中.
 	// +optional
 	GitRepo *GitRepoVolumeSource `json:"gitRepo,omitempty" protobuf:"bytes,5,opt,name=gitRepo"`
 	// secret represents a secret that should populate this volume.
@@ -720,14 +720,14 @@ type HostPathVolumeSource struct {
 }
 
 type EmptyDirVolumeSource struct {
-	// 存储介质类型，empty string (default) or Memory.
+	// 存储介质类型,empty string (default) or Memory.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
 	// +optional
 	Medium StorageMedium `json:"medium,omitempty" protobuf:"bytes,1,opt,name=medium,casttype=StorageMedium"`
-	// sizeelimit是这个EmptyDir卷所需的本地存储总量。
-	// 大小限制也适用于内存介质。
-	// 内存介质EmptyDir的最大使用量将是这里指定的SizeLimit和pod中所有容器的内存限制之和之间的最小值。
-	// 默认为nil，这意味着限制是未定义的。
+	// sizeelimit是这个EmptyDir卷所需的本地存储总量.
+	// 大小限制也适用于内存介质.
+	// 内存介质EmptyDir的最大使用量将是这里指定的SizeLimit和pod中所有容器的内存限制之和之间的最小值.
+	// 默认为nil,这意味着限制是未定义的.
 	// More info: http://kubernetes.io/docs/user-guide/volumes#emptydir
 	// +optional
 	SizeLimit *resource.Quantity `json:"sizeLimit,omitempty" protobuf:"bytes,2,opt,name=sizeLimit"`
@@ -3077,13 +3077,13 @@ type Toleration struct {
 	// Operator k,v的关系[Exists,Equal],默认Equal.
 	// +optional
 	Operator TolerationOperator `json:"operator,omitempty" protobuf:"bytes,2,opt,name=operator,casttype=TolerationOperator"`
-	// Value 污点的值，如果operator是Exists,这应该是空.
+	// Value 污点的值,如果operator是Exists,这应该是空.
 	// +optional
 	Value string `json:"value,omitempty" protobuf:"bytes,3,opt,name=value"`
 	// [空 ,NoSchedule, PreferNoSchedul, NoExecute ]
 	// +optional
 	Effect TaintEffect `json:"effect,omitempty" protobuf:"bytes,4,opt,name=effect,casttype=TaintEffect"`
-	// 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。
+	// 容忍污点的时间段.默认情况下,它没有设置,这意味着永远容忍污染(不清除).0和负值将被系统视为0(立即驱逐).
 	// +optional
 	TolerationSeconds *int64 `json:"tolerationSeconds,omitempty" protobuf:"varint,5,opt,name=tolerationSeconds"`
 }
@@ -3220,7 +3220,7 @@ type PodSpec struct {
 	// +k8s:conversion-gen=false
 	// +optional
 	ShareProcessNamespace *bool `json:"shareProcessNamespace,omitempty" protobuf:"varint,27,opt,name=shareProcessNamespace"`
-	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象。
+	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象.
 	// +optional
 	SecurityContext *PodSecurityContext `json:"securityContext,omitempty" protobuf:"bytes,14,opt,name=securityContext"`
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
@@ -3262,7 +3262,7 @@ type PodSpec struct {
 	// default.
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty" protobuf:"bytes,24,opt,name=priorityClassName"`
-	// 当启用优先级准入控制器时，它会阻止用户设置此字段。准入控制器会从 PriorityClassName 中填充此字段。
+	// 当启用优先级准入控制器时,它会阻止用户设置此字段.准入控制器会从 PriorityClassName 中填充此字段.
 	// +optional
 	Priority *int32 `json:"priority,omitempty" protobuf:"bytes,25,opt,name=priority"`
 	// Specifies the DNS parameters of a pod.
@@ -3293,10 +3293,10 @@ type PodSpec struct {
 	// Defaults to PreemptLowerPriority if unset.
 	// +optional
 	PreemptionPolicy *PreemptionPolicy `json:"preemptionPolicy,omitempty" protobuf:"bytes,31,opt,name=preemptionPolicy"`
-	// Overhead 表示与运行给定RuntimeClass的pod相关的资源开销。
-	// 该字段将由RuntimeClass准入控制器在准入时自动填充。如果启用了RuntimeClass准入控制器，则在Pod创建请求中不能设置开销。
-	// RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求。
-	// 如果在PodSpec中配置并选择了RuntimeClass，则开销将被设置为相应的RuntimeClass中定义的值，否则它将保持未设置并视为零。
+	// Overhead 表示与运行给定RuntimeClass的pod相关的资源开销.
+	// 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销.
+	// RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求.
+	// 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零.
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md
 	// +optional
 	Overhead ResourceList `json:"overhead,omitempty" protobuf:"bytes,32,opt,name=overhead"`
@@ -6490,7 +6490,7 @@ type DownwardAPIProjection struct {
 	Items []DownwardAPIVolumeFile `json:"items,omitempty" protobuf:"bytes,1,rep,name=items"`
 }
 
-// SecurityContext 是Kubernetes中用于定义安全属性和设置的对象。
+// SecurityContext 是Kubernetes中用于定义安全属性和设置的对象.
 type SecurityContext struct {
 	// The capabilities to add/drop when running containers.
 	// Defaults to the default set of capabilities granted by the container runtime.
@@ -6554,7 +6554,7 @@ type SecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	ProcMount *ProcMountType `json:"procMount,omitempty" protobuf:"bytes,9,opt,name=procMount"`
-	//此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。 seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数
+	//此容器要使用的seccomp选项.如果在pod和容器级别同时提供seccomp选项,则容器选项将覆盖pod选项.注意,当spec.os.name为windows时,该字段不能设置. seccomp是Linux的一种安全机制,主要功能是限制直接通过syscall去调用某些系统函数
 	//+optional
 	SeccompProfile *SeccompProfile `json:"seccompProfile,omitempty" protobuf:"bytes,11,opt,name=seccompProfile"`
 }

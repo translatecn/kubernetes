@@ -87,11 +87,11 @@ type DeltaFIFO struct {
 	items map[string]Deltas // 针对同一ID的事件列表
 	queue []string          // 延迟队列里存储的对象ID
 
-	populated              bool // 是否已经填充：通过 Replace() 接口将第一批对象放入队列，或者第一次调用增、删、改接口时标记为true
+	populated              bool // 是否已经填充：通过 Replace() 接口将第一批对象放入队列,或者第一次调用增、删、改接口时标记为true
 	initialPopulationCount int  // 通过 Replace() 接口将第一批对象放入队列的数量
 
 	keyFunc      KeyFunc
-	knownObjects KeyListerGetter // 已知对象，其实就是 Indexer
+	knownObjects KeyListerGetter // 已知对象,其实就是 Indexer
 	closed       bool
 
 	// emitDeltaTypeReplaced is whether to emit the Replaced or Sync
@@ -107,8 +107,8 @@ const (
 	Added    DeltaType = "Added"
 	Updated  DeltaType = "Updated"
 	Deleted  DeltaType = "Deleted"
-	Replaced DeltaType = "Replaced" // 当我们遇到watch错误并必须relist时，会触发replace。我们不知道被替换的对象是否发生了变化。以前版本的是Sync
-	Sync     DeltaType = "Sync"     // 用于周期性重新同步期间的合成事件。
+	Replaced DeltaType = "Replaced" // 当我们遇到watch错误并必须relist时,会触发replace.我们不知道被替换的对象是否发生了变化.以前版本的是Sync
+	Sync     DeltaType = "Sync"     // 用于周期性重新同步期间的合成事件.
 )
 
 // Delta is a member of Deltas (a list of Delta objects) which
@@ -497,7 +497,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, _ string) error { // 将 relist 
 	}
 
 	if f.knownObjects == nil { // indexerStore
-		// 根据我们自己的列表进行删除检测。
+		// 根据我们自己的列表进行删除检测.
 		queuedDeletions := 0
 		for k, oldItem := range f.items {
 			if keys.Has(k) {
@@ -516,14 +516,14 @@ func (f *DeltaFIFO) Replace(list []interface{}, _ string) error { // 将 relist 
 
 		if !f.populated {
 			f.populated = true
-			// 虽然在队列的初始填充中不应该有任何队列删除，但最好还是安全起见。
+			// 虽然在队列的初始填充中不应该有任何队列删除,但最好还是安全起见.
 			f.initialPopulationCount = keys.Len() + queuedDeletions
 		}
 
 		return nil
 	}
 
-	// 检测队列中不存在的删除。
+	// 检测队列中不存在的删除.
 	knownKeys := f.knownObjects.ListKeys()
 	queuedDeletions := 0
 	for _, k := range knownKeys {
@@ -595,7 +595,7 @@ func (f *DeltaFIFO) syncKeyLocked(key string) error {
 	if len(f.items[id]) > 0 { // 本地有就跳过
 		return nil
 	}
-	// 本地没有，就同步
+	// 本地没有,就同步
 	if err := f.queueActionLocked(Sync, obj); err != nil { // Resync
 		return fmt.Errorf("couldn't queue object: %v", err)
 	}

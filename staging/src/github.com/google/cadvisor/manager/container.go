@@ -46,17 +46,17 @@ import (
 
 // Housekeeping interval.
 
-// 在Linux系统中，负载平均值（load average）表示系统中正在运行和等待运行的进程数。负载平均值通常是一个三元组，分别表示1分钟、5分钟和15分钟的平均值。负载平均值越高，表示系统的负荷越大，可能需要增加系统资源或优化应用程序。
+// 在Linux系统中,负载平均值（load average）表示系统中正在运行和等待运行的进程数.负载平均值通常是一个三元组,分别表示1分钟、5分钟和15分钟的平均值.负载平均值越高,表示系统的负荷越大,可能需要增加系统资源或优化应用程序.
 //
-//在cAdvisor中，可以使用负载平均值来监视系统的负载情况。为了平滑负载平均值，cAdvisor使用了一个衰减值（decay value）来计算加权平均值。衰减值表示前一次计算的负载平均值对当前负载平均值的影响程度，衰减值越大，前一次计算的负载平均值对当前负载平均值的影响就越小，从而使负载平均值更平滑。
+//在cAdvisor中,可以使用负载平均值来监视系统的负载情况.为了平滑负载平均值,cAdvisor使用了一个衰减值（decay value）来计算加权平均值.衰减值表示前一次计算的负载平均值对当前负载平均值的影响程度,衰减值越大,前一次计算的负载平均值对当前负载平均值的影响就越小,从而使负载平均值更平滑.
 //
-//在cAdvisor中，使用10秒的间隔长度来计算负载平均值，衰减值的默认值为0.5。这意味着前一次计算的负载平均值对当前负载平均值的影响为50%，当前负载平均值的影响为50%。如果需要调整衰减值，可以在cAdvisor的配置文件中设置load_average_decay参数。例如，将衰减值设置为0.8：
+//在cAdvisor中,使用10秒的间隔长度来计算负载平均值,衰减值的默认值为0.5.这意味着前一次计算的负载平均值对当前负载平均值的影响为50%,当前负载平均值的影响为50%.如果需要调整衰减值,可以在cAdvisor的配置文件中设置load_average_decay参数.例如,将衰减值设置为0.8：
 //
 //"load_average_decay": 0.8
 //
-//需要注意的是，衰减值的选择需要根据实际情况进行评估和测试，以确保负载平均值能够反映系统的负荷情况，并且不会受到噪声的影响。
+//需要注意的是,衰减值的选择需要根据实际情况进行评估和测试,以确保负载平均值能够反映系统的负荷情况,并且不会受到噪声的影响.
 
-var enableLoadReader = flag.Bool("enable_load_reader", false, "是否启用CPU负载读取器。")
+var enableLoadReader = flag.Bool("enable_load_reader", false, "是否启用CPU负载读取器.")
 var HousekeepingInterval = flag.Duration("housekeeping_interval", 1*time.Second, "容器清理的间隔")
 
 // TODO: replace regular expressions with something simpler, such as strings.Split().
@@ -77,12 +77,12 @@ type containerInfo struct {
 // 某个容器的内存指标数据
 type containerData struct {
 	oomEvents                uint64
-	handler                  container.ContainerHandler // 该容器handler，用于与底层 CRI 进行交互，获取容器详细信息
-	info                     containerInfo              // 该容器的基本信息，包括容器及其子容器的引用、和容器的 info.ContainerSpec 信息
+	handler                  container.ContainerHandler // 该容器handler,用于与底层 CRI 进行交互,获取容器详细信息
+	info                     containerInfo              // 该容器的基本信息,包括容器及其子容器的引用、和容器的 info.ContainerSpec 信息
 	memoryCache              *memory.InMemoryCache      // 用于缓存该容器的指标信息
 	lock                     sync.Mutex                 //
 	loadReader               cpuload.CpuLoadReader      // 用于获取容器 load 信息
-	summaryReader            *summary.StatsSummary      // 用于获取某个cgroups下面容器的某段时间的摘要信息，目前主要追踪的是cpu以及memory的信息。
+	summaryReader            *summary.StatsSummary      // 用于获取某个cgroups下面容器的某段时间的摘要信息,目前主要追踪的是cpu以及memory的信息.
 	loadAvg                  float64                    // 迄今为止的平滑负载平均值
 	housekeepingInterval     time.Duration              //
 	maxHousekeepingInterval  time.Duration              //
@@ -91,14 +91,14 @@ type containerData struct {
 	statsLastUpdatedTime     time.Time                  // 最后一次容器指标更新时间
 	lastErrorTime            time.Time                  // 最后一次报错时间
 	clock                    clock.Clock                // 用于跟踪时间
-	loadDecay                float64                    // 用于负载平均平滑的衰减值。间隔长度为10秒。
+	loadDecay                float64                    // 用于负载平均平滑的衰减值.间隔长度为10秒.
 	logUsage                 bool                       // 更新此容器时是否记录其使用情况
 	stop                     chan struct{}              // 告知容器停止 housekeeping
 	onDemandChan             chan chan struct{}         // 告诉容器立即收集统计信息
 	collectorManager         collector.CollectorManager // 运行自定义指标收集器
 	nvidiaCollector          stats.Collector            // nvidiaCollector 更新连接到容器的Nvidia GPU的统计信息
 	perfCollector            stats.Collector            // 更新连接到容器的 perf 的统计信息
-	resctrlCollector         stats.Collector            // resctr是一种Linux内核功能，用于对进程和容器的资源使用进行限制和控制。
+	resctrlCollector         stats.Collector            // resctr是一种Linux内核功能,用于对进程和容器的资源使用进行限制和控制.
 }
 
 // jitter returns a time.Duration between duration and duration + maxFactor * duration,
@@ -154,7 +154,7 @@ func (cd *containerData) OnDemandHousekeeping(maxAge time.Duration) {
 	}
 }
 
-// notifyOnDemand 通知所有对OnDemandHousekeeping的调用，清洁工作已经完成
+// notifyOnDemand 通知所有对OnDemandHousekeeping的调用,清洁工作已经完成
 func (cd *containerData) notifyOnDemand() {
 	for {
 		select {
@@ -509,9 +509,9 @@ func (cd *containerData) nextHousekeepingInterval() time.Duration {
 	return jitter(cd.housekeepingInterval, 1.0)
 }
 
-// TODO(vmarmol): 将统计数据收集实现为自定义收集器。
+// TODO(vmarmol): 将统计数据收集实现为自定义收集器.
 func (cd *containerData) housekeeping() {
-	// 启动任何后台goroutines -必须在cd.handler.Cleanup()中清理。
+	// 启动任何后台goroutines -必须在cd.handler.Cleanup()中清理.
 	cd.handler.Start()
 	defer cd.handler.Cleanup()
 

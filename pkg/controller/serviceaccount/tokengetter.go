@@ -32,8 +32,8 @@ type clientGetter struct {
 	podLister            v1listers.PodLister
 }
 
-// NewGetterFromClient 返回一个ServiceAccountTokenGetter，它使用指定的客户端来检索服务帐户和秘密。
-// 客户端不应该使用返回的getter将用于检索的服务帐户令牌进行身份验证，否则将导致递归。
+// NewGetterFromClient 返回一个ServiceAccountTokenGetter,它使用指定的客户端来检索服务帐户和秘密.
+// 客户端不应该使用返回的getter将用于检索的服务帐户令牌进行身份验证,否则将导致递归.
 func NewGetterFromClient(c clientset.Interface, secretLister v1listers.SecretLister, serviceAccountLister v1listers.ServiceAccountLister, podLister v1listers.PodLister) serviceaccount.ServiceAccountTokenGetter {
 	return clientGetter{c, secretLister, serviceAccountLister, podLister}
 }

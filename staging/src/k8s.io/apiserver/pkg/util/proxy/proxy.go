@@ -28,7 +28,7 @@ import (
 	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
-// findServicePort 通过名称或数字查找服务端口。
+// findServicePort 通过名称或数字查找服务端口.
 func findServicePort(svc *v1.Service, port int32) (*v1.ServicePort, error) {
 	for _, svcPort := range svc.Spec.Ports {
 		if svcPort.Port == port {

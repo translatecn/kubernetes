@@ -20,18 +20,18 @@ import (
 	"sync"
 )
 
-// Capabilities 定义系统中可用的功能集。目前这些是全局的。
+// Capabilities 定义系统中可用的功能集.目前这些是全局的.
 type Capabilities struct {
 	AllowPrivileged                        bool              // 允许特权
-	PrivilegedSources                      PrivilegedSources // Pod源，允许主机联网、共享主机IPC名称空间和共享主机PID名称空间等特权功能。
+	PrivilegedSources                      PrivilegedSources // Pod源,允许主机联网、共享主机IPC名称空间和共享主机PID名称空间等特权功能.
 	PerConnectionBandwidthLimitBytesPerSec int64             // 限制每个连接的吞吐量(目前仅用于proxy, exec, attach)
 }
 
-// PrivilegedSources 定义pod源，允许对某些类型的功能发出特权请求，如主机联网、共享主机IPC命名空间和共享主机PID命名空间。
+// PrivilegedSources 定义pod源,允许对某些类型的功能发出特权请求,如主机联网、共享主机IPC命名空间和共享主机PID命名空间.
 type PrivilegedSources struct {
-	HostNetworkSources []string // 允许使用主机网络的pod源列表。
-	HostPIDSources     []string // 允许使用主机pid命名空间的pod源列表。
-	HostIPCSources     []string // 允许使用主机ipc的pod源列表。
+	HostNetworkSources []string // 允许使用主机网络的pod源列表.
+	HostPIDSources     []string // 允许使用主机pid命名空间的pod源列表.
+	HostIPCSources     []string // 允许使用主机ipc的pod源列表.
 }
 
 var capInstance struct {
@@ -60,7 +60,7 @@ func SetForTests(c Capabilities) {
 	capInstance.capabilities = &c
 }
 
-// Get 返回系统功能的只读副本。
+// Get 返回系统功能的只读副本.
 func Get() Capabilities {
 	capInstance.lock.Lock()
 	defer capInstance.lock.Unlock()

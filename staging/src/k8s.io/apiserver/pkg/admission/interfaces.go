@@ -27,9 +27,9 @@ import (
 )
 
 type Attributes interface {
-	GetName() string                          // 返回请求中显示的对象名称。
+	GetName() string                          // 返回请求中显示的对象名称.
 	GetNamespace() string                     // 是否与请求关联的名称空间(如果有的话)
-	GetResource() schema.GroupVersionResource // 正在请求的资源的名称。这不是kind。例如:pods
+	GetResource() schema.GroupVersionResource // 正在请求的资源的名称.这不是kind.例如:pods
 	// GetSubresource is the name of the subresource being requested.  This is a different resource, scoped to the parent resource, but it may have a different kind.
 	// For instance, /pods has the resource "pods" and the kind "Pod", while /pods/foo/status has the resource "pods", the sub resource "status", and the kind "Pod"
 	// (because status operates on pods). The binding resource for a pod though may be /pods/foo/binding, which has resource "pods", subresource "binding", and kind "Binding".
@@ -139,7 +139,7 @@ const (
 	Connect Operation = "CONNECT"
 )
 
-// PluginInitializer 用于初始化许可插件之间的共享资源。初始化后，资源必须单独设置
+// PluginInitializer 用于初始化许可插件之间的共享资源.初始化后,资源必须单独设置
 type PluginInitializer interface {
 	Initialize(plugin Interface)
 }
@@ -150,7 +150,7 @@ type InitializationValidator interface {
 	ValidateInitialization() error
 }
 
-// ConfigProvider 提供一种方法，以根据其名称获取准入插件的配置
+// ConfigProvider 提供一种方法,以根据其名称获取准入插件的配置
 type ConfigProvider interface {
 	ConfigFor(pluginName string) (io.Reader, error)
 }

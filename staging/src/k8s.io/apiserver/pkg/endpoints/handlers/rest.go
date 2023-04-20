@@ -69,7 +69,7 @@ const (
 	longPrefix = "error converting YAML to JSON: yaml: unmarshal errors:\n"
 )
 
-// RequestScope 封装跨所有RESTful处理程序方法的公共字段。
+// RequestScope 封装跨所有RESTful处理程序方法的公共字段.
 type RequestScope struct {
 	Namer ScopeNamer
 

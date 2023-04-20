@@ -55,7 +55,7 @@ func _defaultDirPath(root, cgPath, cgParent, cgName string) (string, error) {
 		return filepath.Join(root, innerPath), nil
 	}
 
-	ownCgroup, err := parseCgroupFile("/proc/self/cgroup") // 确定当前进程所属的cgroup路径。
+	ownCgroup, err := parseCgroupFile("/proc/self/cgroup") // 确定当前进程所属的cgroup路径.
 	if err != nil {
 		return "", err
 	}

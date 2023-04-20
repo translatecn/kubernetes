@@ -61,23 +61,23 @@ type NodeStats struct {
 
 // RlimitStats are stats rlimit of OS.
 type RlimitStats struct {
-	Time                  metav1.Time `json:"time"`              // 这些统计信息的更新时间。
-	MaxPID                *int64      `json:"maxpid,omitempty"`  //操作系统中可用的最大进程数（在Linux上是线程数），参见getrlimit(2)中的RLIMIT_NPROC。操作系统的进程ID数量上限。
-	NumOfRunningProcesses *int64      `json:"curproc,omitempty"` // 操作系统中正在运行的进程数（在Linux上是线程数）。
+	Time                  metav1.Time `json:"time"`              // 这些统计信息的更新时间.
+	MaxPID                *int64      `json:"maxpid,omitempty"`  //操作系统中可用的最大进程数（在Linux上是线程数）,参见getrlimit(2)中的RLIMIT_NPROC.操作系统的进程ID数量上限.
+	NumOfRunningProcesses *int64      `json:"curproc,omitempty"` // 操作系统中正在运行的进程数（在Linux上是线程数）.
 }
 
 // RuntimeStats are stats pertaining to the underlying container runtime.
 type RuntimeStats struct {
-	// 描述底层文件系统的统计信息，该文件系统用于存储容器镜像。这个文件系统可能与主（根）文件系统相同。这里的使用情况是指文件系统上镜像占用的总字节数。
+	// 描述底层文件系统的统计信息,该文件系统用于存储容器镜像.这个文件系统可能与主（根）文件系统相同.这里的使用情况是指文件系统上镜像占用的总字节数.
 	// +optional
 	ImageFs *FsStats `json:"imageFs,omitempty"`
 }
 
 const (
-	SystemContainerKubelet = "kubelet" // 用于跟踪Kubelet使用情况的系统容器的名称。
-	SystemContainerRuntime = "runtime" // 用于跟踪运行时（例如docker）使用情况的系统容器的名称。
-	SystemContainerMisc    = "misc"    // 用于跟踪非Kubernetes进程使用情况的系统容器的名称。
-	SystemContainerPods    = "pods"    // 用于跟踪用户Pod使用情况的系统容器的名称。
+	SystemContainerKubelet = "kubelet" // 用于跟踪Kubelet使用情况的系统容器的名称.
+	SystemContainerRuntime = "runtime" // 用于跟踪运行时（例如docker）使用情况的系统容器的名称.
+	SystemContainerMisc    = "misc"    // 用于跟踪非Kubernetes进程使用情况的系统容器的名称.
+	SystemContainerPods    = "pods"    // 用于跟踪用户Pod使用情况的系统容器的名称.
 )
 
 // ProcessStats are stats pertaining to processes.
@@ -120,20 +120,20 @@ type PodStats struct {
 	ProcessStats *ProcessStats `json:"process_stats,omitempty"`
 }
 
-// ContainerStats 保存容器级未处理的样本状态。
+// ContainerStats 保存容器级未处理的样本状态.
 type ContainerStats struct {
-	Name      string      `json:"name"`      // 容器的名称。
-	StartTime metav1.Time `json:"startTime"` // 数据收集开始的时间。
+	Name      string      `json:"name"`      // 容器的名称.
+	StartTime metav1.Time `json:"startTime"` // 数据收集开始的时间.
 	// +optional
-	CPU *CPUStats `json:"cpu,omitempty"` // 关于CPU资源的统计信息，包括CPU使用率、CPU时间等等。
+	CPU *CPUStats `json:"cpu,omitempty"` // 关于CPU资源的统计信息,包括CPU使用率、CPU时间等等.
 	// +optional
-	Memory       *MemoryStats       `json:"memory,omitempty"`       // 关于内存资源的统计信息，包括内存使用量、内存限制等等。
-	Accelerators []AcceleratorStats `json:"accelerators,omitempty"` // 加速器的度量指标，每个加速器对应一个AcceleratorStats结构体。
+	Memory       *MemoryStats       `json:"memory,omitempty"`       // 关于内存资源的统计信息,包括内存使用量、内存限制等等.
+	Accelerators []AcceleratorStats `json:"accelerators,omitempty"` // 加速器的度量指标,每个加速器对应一个AcceleratorStats结构体.
 	// +optional
-	Rootfs *FsStats `json:"rootfs,omitempty"` // 关于容器根文件系统使用的统计信息，包括使用的字节数、限制等等。
+	Rootfs *FsStats `json:"rootfs,omitempty"` // 关于容器根文件系统使用的统计信息,包括使用的字节数、限制等等.
 	// +optional
-	Logs *FsStats `json:"logs,omitempty"` // 关于容器日志使用的统计信息，包括使用的字节数、限制等等。
-	// 用户定义的度量指标，这些指标由容器中的应用程序暴露出来，通常只有一个容器会暴露这些指标，如果有多个容器暴露，它们将被合并在这里。
+	Logs *FsStats `json:"logs,omitempty"` // 关于容器日志使用的统计信息,包括使用的字节数、限制等等.
+	// 用户定义的度量指标,这些指标由容器中的应用程序暴露出来,通常只有一个容器会暴露这些指标,如果有多个容器暴露,它们将被合并在这里.
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	UserDefinedMetrics []UserDefinedMetric `json:"userDefinedMetrics,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
@@ -199,7 +199,7 @@ type MemoryStats struct {
 	// Total memory in use. This includes all memory regardless of when it was accessed.
 	// +optional
 	UsageBytes *uint64 `json:"usageBytes,omitempty"`
-	// 工作集内存的数量。这包括最近访问的内存、脏内存和内核内存. WorkingSetBytes is <= UsageBytes[包括缓存]
+	// 工作集内存的数量.这包括最近访问的内存、脏内存和内核内存. WorkingSetBytes is <= UsageBytes[包括缓存]
 	// +optional
 	WorkingSetBytes *uint64 `json:"workingSetBytes,omitempty"`
 	// The amount of anonymous and swap cache memory (includes transparent
@@ -215,12 +215,12 @@ type MemoryStats struct {
 }
 
 type AcceleratorStats struct {
-	Make        string `json:"make"`         // 加速器的制造商，例如nvidia、amd、google等。
-	Model       string `json:"model"`        // 加速器的型号，例如tesla-p100、tesla-k80等。
-	ID          string `json:"id"`           // 加速器的ID。
-	MemoryTotal uint64 `json:"memory_total"` // 加速器总内存大小，单位为字节。
-	MemoryUsed  uint64 `json:"memory_used"`  // 加速器已分配内存大小，单位为字节。
-	DutyCycle   uint64 `json:"duty_cycle"`   // 加速器在过去的采样时间内活跃处理的时间百分比。
+	Make        string `json:"make"`         // 加速器的制造商,例如nvidia、amd、google等.
+	Model       string `json:"model"`        // 加速器的型号,例如tesla-p100、tesla-k80等.
+	ID          string `json:"id"`           // 加速器的ID.
+	MemoryTotal uint64 `json:"memory_total"` // 加速器总内存大小,单位为字节.
+	MemoryUsed  uint64 `json:"memory_used"`  // 加速器已分配内存大小,单位为字节.
+	DutyCycle   uint64 `json:"duty_cycle"`   // 加速器在过去的采样时间内活跃处理的时间百分比.
 }
 
 // VolumeStats contains data about Volume filesystem usage.
@@ -254,24 +254,24 @@ type PVCReference struct {
 
 // FsStats contains data about filesystem usage.
 type FsStats struct {
-	// 这些统计信息的更新时间。
+	// 这些统计信息的更新时间.
 	Time metav1.Time `json:"time"`
-	// 文件系统可用的存储空间（以字节为单位）。
+	// 文件系统可用的存储空间（以字节为单位）.
 	// +optional
 	AvailableBytes *uint64 `json:"availableBytes,omitempty"`
-	// 文件系统底层存储的总容量（以字节为单位）。
+	// 文件系统底层存储的总容量（以字节为单位）.
 	// +optional
 	CapacityBytes *uint64 `json:"capacityBytes,omitempty"`
-	// 文件系统上特定任务使用的字节数。这可能与文件系统上使用的总字节数不同，并且可能不等于 CapacityBytes - AvailableBytes。
+	// 文件系统上特定任务使用的字节数.这可能与文件系统上使用的总字节数不同,并且可能不等于 CapacityBytes - AvailableBytes.
 	// +optional
 	UsedBytes *uint64 `json:"usedBytes,omitempty"`
-	// 文件系统中空闲的inode数。
+	// 文件系统中空闲的inode数.
 	// +optional
 	InodesFree *uint64 `json:"inodesFree,omitempty"`
-	// 文件系统中的总inode数。
+	// 文件系统中的总inode数.
 	// +optional
 	Inodes *uint64 `json:"inodes,omitempty"`
-	// 文件系统使用的inode数。这可能不等于Inodes - InodesFree，因为这个文件系统可能与其他“文件系统”共享inode。例如，对于ContainerStats.Rootfs，这是仅由该容器使用的inode，不计算其他容器使用的inode。
+	// 文件系统使用的inode数.这可能不等于Inodes - InodesFree,因为这个文件系统可能与其他“文件系统”共享inode.例如,对于ContainerStats.Rootfs,这是仅由该容器使用的inode,不计算其他容器使用的inode.
 	InodesUsed *uint64 `json:"inodesUsed,omitempty"`
 }
 
@@ -279,9 +279,9 @@ type FsStats struct {
 type UserDefinedMetricType string
 
 const (
-	MetricGauge      UserDefinedMetricType = "gauge"      // 表示瞬时值，它可以增加或减少。
-	MetricCumulative UserDefinedMetricType = "cumulative" // 表示类似于计数器的值，只会增加，不会减少。
-	MetricDelta      UserDefinedMetricType = "delta"      // 表示一个时间段内的速率。
+	MetricGauge      UserDefinedMetricType = "gauge"      // 表示瞬时值,它可以增加或减少.
+	MetricCumulative UserDefinedMetricType = "cumulative" // 表示类似于计数器的值,只会增加,不会减少.
+	MetricDelta      UserDefinedMetricType = "delta"      // 表示一个时间段内的速率.
 )
 
 // UserDefinedMetricDescriptor contains metadata that describes a user defined metric.

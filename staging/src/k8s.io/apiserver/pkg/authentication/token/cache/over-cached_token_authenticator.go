@@ -88,7 +88,7 @@ type cache interface {
 	remove(key string)
 }
 
-// New 返回令牌验证器，该验证器缓存指定验证器的结果。ttl为0会绕过缓存。
+// New 返回令牌验证器,该验证器缓存指定验证器的结果.ttl为0会绕过缓存.
 func New(authenticator authenticator.Token, cacheErrs bool, successTTL, failureTTL time.Duration) authenticator.Token {
 	return newWithClock(authenticator, cacheErrs, successTTL, failureTTL, clock.RealClock{})
 }
@@ -104,12 +104,12 @@ func newWithClock(authenticator authenticator.Token, cacheErrs bool, successTTL,
 		cacheErrs:     cacheErrs,
 		successTTL:    successTTL,
 		failureTTL:    failureTTL,
-		//当正在操作的令牌数量超过缓存的大小时，缓存性能会显著降低。在下面的第二个维度中使缓存变大是很便宜的，只有在使用那么多令牌时才会消耗内存。
-		//目前我们宣称支持5k个节点和10k个名称空间;因此，32k的入口缓存是2倍的安全裕度。
+		//当正在操作的令牌数量超过缓存的大小时,缓存性能会显著降低.在下面的第二个维度中使缓存变大是很便宜的,只有在使用那么多令牌时才会消耗内存.
+		//目前我们宣称支持5k个节点和10k个名称空间;因此,32k的入口缓存是2倍的安全裕度.
 		cache: newStripedCache(32, fnvHashFunc, func() cache { return newSimpleCache(clock) }),
 		hashPool: &sync.Pool{
-			// hashPool 是每个验证者的散列池。哈希(避免在构建 Hash 时进行分配)
-			//使用SHA-256和随机密钥的HMAC，防止预计算和扩长攻击
+			// hashPool 是每个验证者的散列池.哈希(避免在构建 Hash 时进行分配)
+			//使用SHA-256和随机密钥的HMAC,防止预计算和扩长攻击
 			//它还通过碰撞来减轻哈希映射DOS攻击(输入由不受信任的用户提供)
 			New: func() interface{} {
 				return hmac.New(sha256.New, randomCacheKey)

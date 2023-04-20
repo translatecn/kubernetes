@@ -64,7 +64,7 @@ import (
 // Info about an API group.
 type APIGroupInfo struct {
 	PrioritizedVersions          []schema.GroupVersion              // 优先版本
-	VersionedResourcesStorageMap map[string]map[string]rest.Storage // 该组中的资源信息。{资源:{路由:存储}}
+	VersionedResourcesStorageMap map[string]map[string]rest.Storage // 该组中的资源信息.{资源:{路由:存储}}
 	// OptionsExternalVersion controls the APIVersion used for common objects in the
 	// schema like api.Status, api.DeleteOptions, and metav1.ListOptions. Other implementors may
 	// define a version "v1beta1" but want to use the Kubernetes "v1" internal objects.
@@ -147,8 +147,8 @@ type GenericAPIServer struct {
 	// AggregatedLegacyDiscoveryGroupManager serves /api in an aggregated form.
 	AggregatedLegacyDiscoveryGroupManager discoveryendpoint.ResourceManager
 
-	openAPIConfig   *openapicommon.Config // 如果这些配置非空，启用swagger和/或OpenAPI。
-	openAPIV3Config *openapicommon.Config // 如果这些配置非空，启用swagger和/或OpenAPI3。
+	openAPIConfig   *openapicommon.Config // 如果这些配置非空,启用swagger和/或OpenAPI.
+	openAPIV3Config *openapicommon.Config // 如果这些配置非空,启用swagger和/或OpenAPI3.
 
 	// SkipOpenAPIInstallation indicates not to install the OpenAPI handler
 	// during PrepareRun.
@@ -206,7 +206,7 @@ type GenericAPIServer struct {
 	// EquivalentResourceRegistry provides information about resources equivalent to a given resource,
 	// and the kind associated with a given resource. As resources are installed, they are registered here.
 	EquivalentResourceRegistry runtime.EquivalentResourceRegistry
-	delegationTarget           DelegationTarget // 是链中的下一个委托。这绝不是nil。
+	delegationTarget           DelegationTarget // 是链中的下一个委托.这绝不是nil.
 	// HandlerChainWaitGroup allows you to wait for all chain handlers finish after the server shutdown.
 	HandlerChainWaitGroup *utilwaitgroup.SafeWaitGroup
 
@@ -233,9 +233,9 @@ type GenericAPIServer struct {
 
 	// destroyFns contains a list of functions that should be called on shutdown to clean up resources.
 	destroyFns []func()
-	// muxAndDiscoveryCompleteSignals 保存所有已知HTTP路径已注册的信号。
-	//它的存在主要是为了避免在资源实际存在,但我们没有安装处理程序的路径时返回404响应。
-	//为了更容易地组合各个服务器，它被暴露出来。
+	// muxAndDiscoveryCompleteSignals 保存所有已知HTTP路径已注册的信号.
+	//它的存在主要是为了避免在资源实际存在,但我们没有安装处理程序的路径时返回404响应.
+	//为了更容易地组合各个服务器,它被暴露出来.
 	//这个字段的主要用户是WithMuxCompleteProtection过滤器和NotFoundHandler
 	muxAndDiscoveryCompleteSignals map[string]<-chan struct{}
 
@@ -259,7 +259,7 @@ type DelegationTarget interface {
 	PrepareRun() preparedGenericAPIServer
 	// MuxAndDiscoveryCompleteSignals exposes registered signals that indicate if all known HTTP paths have been installed.
 	MuxAndDiscoveryCompleteSignals() map[string]<-chan struct{}
-	Destroy() // Destroy在关闭时清理它的资源。必须以线程安全的方式实现，并为多次调用做好准备。
+	Destroy() // Destroy在关闭时清理它的资源.必须以线程安全的方式实现,并为多次调用做好准备.
 
 }
 
@@ -284,8 +284,8 @@ func (s *GenericAPIServer) NextDelegate() DelegationTarget {
 	return s.delegationTarget
 }
 
-// RegisterMuxAndDiscoveryCompleteSignal 登记给定的信号，该信号将用于确定是否全部已知
-// HTTP路径已注册。可以在实例化泛型服务器之后、运行之前调用此方法。
+// RegisterMuxAndDiscoveryCompleteSignal 登记给定的信号,该信号将用于确定是否全部已知
+// HTTP路径已注册.可以在实例化泛型服务器之后、运行之前调用此方法.
 func (s *GenericAPIServer) RegisterMuxAndDiscoveryCompleteSignal(signalName string, signal <-chan struct{}) error {
 	if _, exists := s.muxAndDiscoveryCompleteSignals[signalName]; exists {
 		return fmt.Errorf("%s already registered", signalName)
@@ -326,7 +326,7 @@ func NewEmptyDelegate() DelegationTarget {
 	return emptyDelegate{}
 }
 
-// NewEmptyDelegateWithCustomHandler 允许注册一个自定义处理程序，通常用于404请求的特殊处理
+// NewEmptyDelegateWithCustomHandler 允许注册一个自定义处理程序,通常用于404请求的特殊处理
 func NewEmptyDelegateWithCustomHandler(handler http.Handler) DelegationTarget {
 	return emptyDelegate{handler}
 }
@@ -363,7 +363,7 @@ type preparedGenericAPIServer struct {
 	*GenericAPIServer
 }
 
-// PrepareRun 执行API安装设置步骤。它递归调用委托的相同函数。
+// PrepareRun 执行API安装设置步骤.它递归调用委托的相同函数.
 func (s *GenericAPIServer) PrepareRun() preparedGenericAPIServer {
 	s.delegationTarget.PrepareRun() // ✅ kubeAPIServer.PrepareRun  apiExtensionsServer.PrepareRun
 
@@ -476,8 +476,8 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 	shutdownTimeout := s.ShutdownTimeout
 	if s.ShutdownSendRetryAfter {
 		// when this mode is enabled, we do the following:
-		// - 服务器将继续监听，直到所有正在运行的现有请求(不包括活动的长时间运行的请求)被耗尽。
-		// - 一旦耗尽，http服务器关闭被调用，超时时间为2s, net/http等待对等端响应一个GO_AWAY帧，所以我们应该等待至少2s
+		// - 服务器将继续监听,直到所有正在运行的现有请求(不包括活动的长时间运行的请求)被耗尽.
+		// - 一旦耗尽,http服务器关闭被调用,超时时间为2s, net/http等待对等端响应一个GO_AWAY帧,所以我们应该等待至少2s
 		shutdownTimeout = 2 * time.Second
 		klog.V(1).InfoS("[graceful-termination] using HTTP Server shutdown timeout", "ShutdownTimeout", shutdownTimeout)
 	}
@@ -505,7 +505,7 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 		}
 	}
 
-	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout) // 触发启动http server，启动后触发post start hooks的执行
+	stoppedCh, listenerStoppedCh, err := s.NonBlockingRun(stopHttpServerCh, shutdownTimeout) // 触发启动http server,启动后触发post start hooks的执行
 	if err != nil {
 		return err
 	}
@@ -689,7 +689,7 @@ func (s *GenericAPIServer) getOpenAPIModels(apiPrefix string, apiGroupInfos ...*
 		resourceNames = append(resourceNames, groupResources...)
 	}
 
-	// 为这些资源构建openapi定义，并将其转换为proto模型
+	// 为这些资源构建openapi定义,并将其转换为proto模型
 	openAPISpec, err := openapibuilder2.BuildOpenAPIDefinitionsForResources(s.openAPIConfig, resourceNames...)
 	if err != nil {
 		return nil, err
@@ -816,7 +816,7 @@ func (s *GenericAPIServer) InstallLegacyAPIGroup(apiPrefix string, apiGroupInfo 
 		return err
 	}
 
-	// 安装版本处理程序。
+	// 安装版本处理程序.
 	// Add a handler at /<apiPrefix> to enumerate the supported api versions.
 	legacyRootAPIHandler := discovery.NewLegacyRootAPIHandler(s.discoveryAddresses, s.Serializer, apiPrefix)
 	if utilfeature.DefaultFeatureGate.Enabled(features.AggregatedDiscoveryEndpoint) {
@@ -855,8 +855,8 @@ func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) erro
 		}
 
 		// setup discovery
-		// 安装版本处理程序。
-		// Add a handler at /apis/<groupName> 枚举该组支持的所有版本。
+		// 安装版本处理程序.
+		// Add a handler at /apis/<groupName> 枚举该组支持的所有版本.
 		apiVersionsForDiscovery := []metav1.GroupVersionForDiscovery{}
 		for _, groupVersion := range apiGroupInfo.PrioritizedVersions {
 			// Check the config to make sure that we elide versions that don't have any resources
@@ -903,7 +903,7 @@ func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) erro
 	return nil
 }
 
-// InstallAPIGroup 在api中暴露给定的api组。
+// InstallAPIGroup 在api中暴露给定的api组.
 func (s *GenericAPIServer) InstallAPIGroup(apiGroupInfo *APIGroupInfo) error {
 	return s.InstallAPIGroups(apiGroupInfo)
 }

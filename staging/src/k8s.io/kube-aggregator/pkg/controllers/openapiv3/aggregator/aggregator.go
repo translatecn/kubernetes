@@ -52,7 +52,7 @@ const (
 	openAPIV2Converter            = "openapiv2converter"
 )
 
-// IsLocalAPIService 对于来自委托的本地规范，返回true。
+// IsLocalAPIService 对于来自委托的本地规范,返回true.
 func IsLocalAPIService(apiServiceName string) bool {
 	return strings.HasPrefix(apiServiceName, localDelegateChainNamePrefix)
 }

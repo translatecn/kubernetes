@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	invalidTokenWithSpaceWarning = "提供的授权头在承载令牌之前包含额外的空间，并被忽略"
+	invalidTokenWithSpaceWarning = "提供的授权头在承载令牌之前包含额外的空间,并被忽略"
 )
 
 type Authenticator struct {

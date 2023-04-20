@@ -137,7 +137,7 @@ func JitterUntil(f func(), period time.Duration, jitterFactor float64, sliding b
 
 // BackoffUntil loops until stop channel is closed, run f every duration given by BackoffManager.
 //
-// //如果slide为真，则在f运行后计算周期。如果为false，则period包含f的运行时。
+// //如果slide为真,则在f运行后计算周期.如果为false,则period包含f的运行时.
 func BackoffUntil(f func(), backoff BackoffManager, sliding bool, stopCh <-chan struct{}) {
 	var t clock.Timer
 	for {

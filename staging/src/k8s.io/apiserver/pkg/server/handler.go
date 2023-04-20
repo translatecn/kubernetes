@@ -37,7 +37,7 @@ import (
 type APIServerHandler struct {
 	FullHandlerChain   http.Handler
 	GoRestfulContainer *restful.Container   // 使用InstallAPIGroups添加的路由
-	NonGoRestfulMux    *mux.PathRecorderMux // 是链中的最后一个HTTP处理程序。这是在所有过滤器和API处理之后，其他服务器可以将处理程序附加到链的各个部分。
+	NonGoRestfulMux    *mux.PathRecorderMux // 是链中的最后一个HTTP处理程序.这是在所有过滤器和API处理之后,其他服务器可以将处理程序附加到链的各个部分.
 
 	// Director is here so that we can properly handle fall through and proxy cases.
 	// This looks a bit bonkers, but here's what's happening.  We need to have /apis handling registered in gorestful in order to have

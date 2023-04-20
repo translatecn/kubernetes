@@ -32,8 +32,8 @@ import (
 type Fake struct {
 	sync.RWMutex
 	actions            []Action       //
-	ReactionChain      []Reactor      // 为每个请求按尝试顺序尝试的反应堆列表。
-	WatchReactionChain []WatchReactor // 是每个请求都将按尝试顺序尝试的监视反应堆的列表。
+	ReactionChain      []Reactor      // 为每个请求按尝试顺序尝试的反应堆列表.
+	WatchReactionChain []WatchReactor // 是每个请求都将按尝试顺序尝试的监视反应堆的列表.
 	// ProxyReactionChain is the list of proxy reactors that will be attempted
 	// for every request in the order they are tried.
 	ProxyReactionChain []ProxyReactor
@@ -46,7 +46,7 @@ type Reactor interface {
 	// Handles indicates whether or not this Reactor deals with a given
 	// action.
 	Handles(action Action) bool
-	React(action Action) (handled bool, ret runtime.Object, err error) // 处理操作并返回结果。它可以通过指定的handled=false来选择委托。
+	React(action Action) (handled bool, ret runtime.Object, err error) // 处理操作并返回结果.它可以通过指定的handled=false来选择委托.
 }
 
 // WatchReactor is an interface to allow the composition of watch functions.

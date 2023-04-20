@@ -46,7 +46,7 @@ func NewPlugins() *Plugins {
 
 // All registered admission options.
 var (
-	// PluginEnabledFn 检查插件是否已启用。默认情况下，如果你询问它，它是启用的。
+	// PluginEnabledFn 检查插件是否已启用.默认情况下,如果你询问它,它是启用的.
 	PluginEnabledFn = func(name string, config io.Reader) bool {
 		return true
 	}
@@ -84,7 +84,7 @@ func (ps *Plugins) Register(name string, plugin Factory) {
 	ps.registry[name] = plugin
 }
 
-// getPlugin  config参数指定 云提供程序配置文件的读取器处理程序，或nil表示没有配置。
+// getPlugin  config参数指定 云提供程序配置文件的读取器处理程序,或nil表示没有配置.
 func (ps *Plugins) getPlugin(name string, config io.Reader) (Interface, bool, error) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
@@ -119,7 +119,7 @@ func splitStream(config io.Reader) (io.Reader, io.Reader, error) {
 	return bytes.NewBuffer(configBytes), bytes.NewBuffer(configBytes), nil
 }
 
-// NewFromPlugins 该接口将强制所有给定插件的准入控制决策。
+// NewFromPlugins 该接口将强制所有给定插件的准入控制决策.
 func (ps *Plugins) NewFromPlugins(pluginNames []string, configProvider ConfigProvider, pluginInitializer PluginInitializer, decorator Decorator) (Interface, error) {
 	handlers := []Interface{}
 	mutationPlugins := []string{}

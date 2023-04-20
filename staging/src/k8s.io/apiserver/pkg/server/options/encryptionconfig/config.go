@@ -116,17 +116,17 @@ func (h *kmsv2PluginProbe) toHealthzCheck(idx int) healthz.HealthChecker {
 	})
 }
 
-// EncryptionConfiguration 表示apisserver的经过解析和规范化的加密配置。
+// EncryptionConfiguration 表示apisserver的经过解析和规范化的加密配置.
 type EncryptionConfiguration struct {
 	Transformers              map[schema.GroupResource]value.Transformer // 用于加密、解密数据
-	HealthChecks              []healthz.HealthChecker                    // 将用于检查加密提供程序的运行状况。
-	EncryptionFileContentHash string                                     // 加密配置文件的哈希值。
-	KMSCloseGracePeriod       time.Duration                              // 在关闭旧转化器之前所要等待的时间。通过使用比超时时间长的持续时间来等待任何飞行中的请求完成。
+	HealthChecks              []healthz.HealthChecker                    // 将用于检查加密提供程序的运行状况.
+	EncryptionFileContentHash string                                     // 加密配置文件的哈希值.
+	KMSCloseGracePeriod       time.Duration                              // 在关闭旧转化器之前所要等待的时间.通过使用比超时时间长的持续时间来等待任何飞行中的请求完成.
 }
 
-// LoadEncryptionConfig 解析并验证filepath指定的加密配置。
-// 可以启动多个go例程，其生命周期由stopCh控制。
-// 如果reload为true，或者使用KMS v2插件而不使用KMS v1插件，则返回的健康检查器切片的长度始终为1。
+// LoadEncryptionConfig 解析并验证filepath指定的加密配置.
+// 可以启动多个go例程,其生命周期由stopCh控制.
+// 如果reload为true,或者使用KMS v2插件而不使用KMS v1插件,则返回的健康检查器切片的长度始终为1.
 func LoadEncryptionConfig(filepath string, reload bool, stopCh <-chan struct{}) (*EncryptionConfiguration, error) {
 	config, contentHash, err := loadConfig(filepath, reload)
 	if err != nil {

@@ -99,7 +99,7 @@ func registerNodeFlags(flags *flag.FlagSet) {
 	flag.StringVar(&framework.TestContext.ClusterDNSDomain, "dns-domain", "", "The DNS Domain of the cluster.")
 	flag.Var(cliflag.NewMapStringString(&framework.TestContext.RuntimeConfig), "runtime-config", "The runtime configuration used on node e2e tests.")
 	flags.BoolVar(&framework.TestContext.RequireDevices, "require-devices", false, "If true, require device plugins to be installed in the running environment.")
-	flags.Var(cliflag.NewMapStringBool(&featureGates), "feature-gates", "一组键值对，用于描述alpha/experimental特性的开关 。")
+	flags.Var(cliflag.NewMapStringBool(&featureGates), "feature-gates", "一组键值对,用于描述alpha/experimental特性的开关 .")
 }
 
 func init() {

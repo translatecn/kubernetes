@@ -21,18 +21,12 @@ import (
 	"os"
 )
 
-// LinkTreatment is the base type for constants used by Exists that indicate
-// how symlinks are treated for existence checks.
+// LinkTreatment 是 Exists 使用的常量的基本类型，用于指示符号链接在存在性检查中的处理方式。
 type LinkTreatment int
 
 const (
-	// CheckFollowSymlink follows the symlink and verifies that the target of
-	// the symlink exists.
-	CheckFollowSymlink LinkTreatment = iota
-
-	// CheckSymlinkOnly does not follow the symlink and verifies only that they
-	// symlink itself exists.
-	CheckSymlinkOnly
+	CheckFollowSymlink LinkTreatment = iota // 遵循符号链接并验证符号链接的目标是否存在。
+	CheckSymlinkOnly                        // 不遵循符号链接，仅验证符号链接本身是否存在。
 )
 
 // ErrInvalidLinkTreatment indicates that the link treatment behavior requested
@@ -42,7 +36,7 @@ var ErrInvalidLinkTreatment = errors.New("unknown link behavior")
 // Exists checks if specified file, directory, or symlink exists. The behavior
 // of the test depends on the linkBehaviour argument. See LinkTreatment for
 // more details.
-func Exists(linkBehavior LinkTreatment, filename string) (bool, error) {
+func Exists(linkBehavior LinkTreatment, filename string) (bool, error) { // ✅
 	var err error
 
 	if linkBehavior == CheckFollowSymlink {

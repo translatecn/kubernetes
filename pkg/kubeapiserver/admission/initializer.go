@@ -25,12 +25,12 @@ import (
 
 // TODO add a `WantsToRun` which takes a stopCh.  Might make it generic.
 
-// WantsCloudConfig 定义了一个函数，该函数为需要CloudConfig的准入插件设置CloudConfig。
+// WantsCloudConfig 定义了一个函数,该函数为需要CloudConfig的准入插件设置CloudConfig.
 type WantsCloudConfig interface {
 	SetCloudConfig([]byte)
 }
 
-// PluginInitializer 用于初始化Kubernetes特定的准入插件。
+// PluginInitializer 用于初始化Kubernetes特定的准入插件.
 type PluginInitializer struct {
 	cloudConfig        []byte
 	restMapper         meta.RESTMapper

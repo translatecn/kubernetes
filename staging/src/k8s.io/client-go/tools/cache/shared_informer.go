@@ -134,7 +134,7 @@ import (
 type SharedInformer interface {
 	// AddEventHandler 可以添加自定义的 ResourceEventHandler
 	AddEventHandler(handler ResourceEventHandler) (ResourceEventHandlerRegistration, error)
-	// AddEventHandlerWithResyncPeriod 附带 resync 间隔配置，设置为 0 表示不关心 resync
+	// AddEventHandlerWithResyncPeriod 附带 resync 间隔配置,设置为 0 表示不关心 resync
 	AddEventHandlerWithResyncPeriod(handler ResourceEventHandler, resyncPeriod time.Duration) (ResourceEventHandlerRegistration, error)
 	// RemoveEventHandler removes a formerly added event handler given by
 	// its registration handle.
@@ -142,15 +142,15 @@ type SharedInformer interface {
 	RemoveEventHandler(handle ResourceEventHandlerRegistration) error
 	// GetStore 这里的 Store 指的是 Indexer
 	GetStore() Store
-	// GetController 过时了，没有用
+	// GetController 过时了,没有用
 	GetController() Controller
 	// Run 通过 Run 来启动
 	Run(stopCh <-chan struct{})
-	// HasSynced 这里和 resync 逻辑没有关系，表示 Indexer 至少更新过一次全量的对象
+	// HasSynced 这里和 resync 逻辑没有关系,表示 Indexer 至少更新过一次全量的对象
 	HasSynced() bool
 	// LastSyncResourceVersion 最后一次拿到的 RV
 	LastSyncResourceVersion() string
-	// SetWatchErrorHandler 用于每次 ListAndWatch 连接断开时回调，主要就是日志记录的作用
+	// SetWatchErrorHandler 用于每次 ListAndWatch 连接断开时回调,主要就是日志记录的作用
 	SetWatchErrorHandler(handler WatchErrorHandler) error
 
 	// The TransformFunc is called for each object which is about to be stored.
@@ -283,16 +283,16 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 type sharedIndexInformer struct {
 	indexerStore                    Indexer
 	controller                      Controller
-	processor                       *sharedProcessor // 处理函数，将是重点
-	cacheMutationDetector           MutationDetector // 检测 cache 是否有变化，一把用作调试，默认是关闭的
+	processor                       *sharedProcessor // 处理函数,将是重点
+	cacheMutationDetector           MutationDetector // 检测 cache 是否有变化,一把用作调试,默认是关闭的
 	listerWatcher                   ListerWatcher    // 构造 Reflector 需要
-	objectType                      runtime.Object   // 目标类型，给 Reflector 判断资源类型
+	objectType                      runtime.Object   // 目标类型,给 Reflector 判断资源类型
 	resyncCheckPeriod               time.Duration    // Reflector 进行重新同步周期 通知所有的 listener 执行 resync
-	defaultEventHandlerResyncPeriod time.Duration    // 如果使用者没有添加 Resync 时间，则使用这个默认的重新同步周期
+	defaultEventHandlerResyncPeriod time.Duration    // 如果使用者没有添加 Resync 时间,则使用这个默认的重新同步周期
 	clock                           clock.Clock      //
 	started, stopped                bool             // 两个 bool 表达了三个状态：controller 启动前、已启动、已停止
 	startedLock                     sync.Mutex
-	blockDeltas                     sync.Mutex // 当 Pop 正在消费队列，此时新增的 listener 需要加锁，防止消费混乱
+	blockDeltas                     sync.Mutex // 当 Pop 正在消费队列,此时新增的 listener 需要加锁,防止消费混乱
 
 	// Called whenever the ListAndWatch drops the connection with an error.
 	watchErrorHandler WatchErrorHandler
@@ -796,7 +796,7 @@ func newProcessListener(handler ResourceEventHandler, requestedResyncPeriod, res
 
 // ok
 func (p *processorListener) add(notification interface{}) {
-	// 将通知放到 addCh 中，所以下面 pop() 方法里先执行到的 case 是第二个
+	// 将通知放到 addCh 中,所以下面 pop() 方法里先执行到的 case 是第二个
 	p.addCh <- notification
 }
 
@@ -808,13 +808,13 @@ func (p *processorListener) pop() {
 	var notification interface{}
 	for {
 		select {
-		case nextCh <- notification: // 下面获取到的通知，添加到 nextCh 里，供 run() 方法中消费
+		case nextCh <- notification: // 下面获取到的通知,添加到 nextCh 里,供 run() 方法中消费
 			var ok bool
-			notification, ok = p.pendingNotifications.ReadOne() // 从 pendingNotifications 里消费通知，生产者在下面 case 里
+			notification, ok = p.pendingNotifications.ReadOne() // 从 pendingNotifications 里消费通知,生产者在下面 case 里
 			if !ok {                                            // Nothing to pop
 				nextCh = nil
 			}
-		case notificationToAdd, ok := <-p.addCh: // 逻辑从这里开始，从 addCh 里提取通知
+		case notificationToAdd, ok := <-p.addCh: // 逻辑从这里开始,从 addCh 里提取通知
 			if !ok {
 				return
 			}

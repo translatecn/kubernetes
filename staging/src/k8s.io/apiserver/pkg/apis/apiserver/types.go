@@ -23,7 +23,7 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AdmissionConfiguration 提供允许控制器的版本配置。
+// AdmissionConfiguration 提供允许控制器的版本配置.
 type AdmissionConfiguration struct {
 	metav1.TypeMeta
 	// Plugins 允许为每个准入控制插件指定一个配置
@@ -31,9 +31,9 @@ type AdmissionConfiguration struct {
 	Plugins []AdmissionPluginConfiguration
 }
 
-// AdmissionPluginConfiguration 提供单个插件的配置。
+// AdmissionPluginConfiguration 提供单个插件的配置.
 type AdmissionPluginConfiguration struct {
-	// Name 准入控制器的名称。它必须与注册的许可插件名称匹配。
+	// Name 准入控制器的名称.它必须与注册的许可插件名称匹配.
 	Name string
 
 	// Path 是包含插件配置的配置文件的路径
@@ -58,14 +58,14 @@ type EgressSelectorConfiguration struct {
 
 // EgressSelection provides the configuration for a single egress selection client.
 type EgressSelection struct {
-	Name       string     // 目前支持的值为controlplane、etcd和cluster。
+	Name       string     // 目前支持的值为controlplane、etcd和cluster.
 	Connection Connection // 用于配置Egress的确切信息
 }
 
 // Connection provides the configuration for a single egress selection client.
 type Connection struct {
-	ProxyProtocol ProtocolType // 协议是用于从客户端连接到连接服务器的协议。
-	Transport     *Transport   // 定义用于拨号到连接服务器的传输配置。如果ProxyProtocol是HTTPConnect或GRPC，这是必需的。
+	ProxyProtocol ProtocolType // 协议是用于从客户端连接到连接服务器的协议.
+	Transport     *Transport   // 定义用于拨号到连接服务器的传输配置.如果ProxyProtocol是HTTPConnect或GRPC,这是必需的.
 
 }
 

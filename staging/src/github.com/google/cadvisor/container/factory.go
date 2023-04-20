@@ -31,7 +31,7 @@ type ContainerHandlerFactory interface {
 	// Create a new ContainerHandler using this factory. CanHandleAndAccept() must have returned true.
 	NewContainerHandler(name string, metadataEnvAllowList []string, inHostNamespace bool) (c ContainerHandler, err error)
 
-	// CanHandleAndAccept 返回此工厂是否可以处理和接受指定的容器。
+	// CanHandleAndAccept 返回此工厂是否可以处理和接受指定的容器.
 	CanHandleAndAccept(name string) (handle bool, accept bool, err error)
 
 	String() string
@@ -40,7 +40,7 @@ type ContainerHandlerFactory interface {
 	DebugInfo() map[string][]string
 }
 
-// MetricKind 表示cAdvisor公开的度量类型。
+// MetricKind 表示cAdvisor公开的度量类型.
 type MetricKind string
 
 const (
@@ -63,7 +63,7 @@ const (
 	PerfMetrics                    MetricKind = "perf_event"
 	ReferencedMemoryMetrics        MetricKind = "referenced_memory"
 	CPUTopologyMetrics             MetricKind = "cpu_topology"
-	ResctrlMetrics                 MetricKind = "resctrl" // resctr是一种Linux内核功能，用于对进程和容器的资源使用进行限制和控制。
+	ResctrlMetrics                 MetricKind = "resctrl" // resctr是一种Linux内核功能,用于对进程和容器的资源使用进行限制和控制.
 	CPUSetMetrics                  MetricKind = "cpuset"
 	OOMMetrics                     MetricKind = "oom_event"
 )
@@ -159,10 +159,10 @@ var pluginsLock sync.Mutex
 var plugins = make(map[string]Plugin)
 
 type Plugin interface {
-	// InitializeFSContext 在填充fs时调用。上下文对象用于新管理器。
+	// InitializeFSContext 在填充fs时调用.上下文对象用于新管理器.
 	// A returned error here is fatal.
 	InitializeFSContext(context *fs.Context) error
-	// Register 调用寄存器。它可以选择返回一个容器监视器。 返回的错误被记录，但不是致命的。
+	// Register 调用寄存器.它可以选择返回一个容器监视器. 返回的错误被记录,但不是致命的.
 	Register(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics MetricSet) (watcher.ContainerWatcher, error)
 }
 
@@ -190,7 +190,7 @@ func InitializeFSContext(context *fs.Context) error {
 	return nil
 }
 
-// InitializePlugins 遍历 plugins map，调用Register获得watcher
+// InitializePlugins 遍历 plugins map,调用Register获得watcher
 func InitializePlugins(factory info.MachineInfoFactory, fsInfo fs.FsInfo, includedMetrics MetricSet) []watcher.ContainerWatcher {
 	pluginsLock.Lock()
 	defer pluginsLock.Unlock()

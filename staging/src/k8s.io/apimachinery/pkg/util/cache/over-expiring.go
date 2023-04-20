@@ -35,7 +35,7 @@ func NewExpiringWithClock(clock clock.Clock) *Expiring {
 	}
 }
 
-// Expiring 是一个，其条目在每个条目超时后过期。
+// Expiring 是一个,其条目在每个条目超时后过期.
 type Expiring struct {
 	clock      clock.Clock
 	mu         sync.RWMutex
@@ -81,7 +81,7 @@ func (c *Expiring) Set(key interface{}, val interface{}, ttl time.Duration) {
 		generation: c.generation,
 	}
 
-	// 在推送新条目之前内联运行GC。
+	// 在推送新条目之前内联运行GC.
 	c.gc(now)
 
 	heap.Push(&c.heap, &expiringHeapEntry{

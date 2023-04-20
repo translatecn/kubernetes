@@ -55,7 +55,7 @@ type QueueSetCompleter interface {
 // .  Some day we may have connections between priority levels, but
 // today is not that day.
 type QueueSet interface {
-	// BeginConfigChange 这段代码开始了更新配置的两步过程。在调用 Complete 方法之前，不会进行任何更改。
+	// BeginConfigChange 这段代码开始了更新配置的两步过程.在调用 Complete 方法之前,不会进行任何更改.
 	// If `C := X.BeginConstruction(q)` then `C.Complete(d)` returns the
 	// same value `X`.  If the QueuingConfig's DesiredNumQueues field
 	// is zero then the other queuing-specific config parameters are
@@ -111,7 +111,7 @@ type QueuingConfig struct {
 	DesiredNumQueues int           // 是此优先级级别的队列数
 	QueueLengthLimit int           // 是此优先级级别的给定队列中允许等待的请求的最大数量
 	HandSize         int           // 用于shuffle的参数
-	RequestWaitLimit time.Duration // 是请求在队列中等待的最长时间。如果在这段时间结束时请求还没有被调度，则请求将被拒绝。
+	RequestWaitLimit time.Duration // 是请求在队列中等待的最长时间.如果在这段时间结束时请求还没有被调度,则请求将被拒绝.
 }
 
 // DispatchingConfig defines the configuration of the dispatching aspect of a QueueSet.

@@ -89,7 +89,7 @@ func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.Mach
 		return nil, err
 	}
 
-	filesystems, err := fsInfo.GetGlobalFsInfo() // 获取指定路径所在的文件系统信息。
+	filesystems, err := fsInfo.GetGlobalFsInfo() // 获取指定路径所在的文件系统信息.
 	if err != nil {
 		klog.Errorf("Failed to get global filesystem information: %v", err)
 	}

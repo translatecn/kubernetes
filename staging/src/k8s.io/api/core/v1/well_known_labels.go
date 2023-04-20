@@ -39,9 +39,9 @@ const (
 	// It's in the format MajorVersion.MinorVersion.BuildNumber (for ex: 10.0.17763)
 	LabelWindowsBuild = "node.kubernetes.io/windows-build"
 
-	// LabelNamespaceSuffixKubelet 是kubelet可以自行设置的允许的标签命名空间后缀（[*.]kubelet.kubernetes.io/*）。
+	// LabelNamespaceSuffixKubelet 是kubelet可以自行设置的允许的标签命名空间后缀（[*.]kubelet.kubernetes.io/*）.
 	LabelNamespaceSuffixKubelet = "kubelet.kubernetes.io"
-	// LabelNamespaceSuffixNode 是kubelet可以自行设置的允许的标签命名空间后缀（[*.]node.kubernetes.io/*）。
+	// LabelNamespaceSuffixNode 是kubelet可以自行设置的允许的标签命名空间后缀（[*.]node.kubernetes.io/*）.
 	LabelNamespaceSuffixNode = "node.kubernetes.io"
 
 	// LabelNamespaceNodeRestriction is a forbidden label namespace that kubelets may not self-set when the NodeRestriction admission plugin is enabled

@@ -122,7 +122,7 @@ func (t *ObjectCountTracker) Get(groupResource string) (int64, error) {
 
 	if item, ok := t.counts[groupResource]; ok {
 		if item.lastUpdatedAt.Before(staleThreshold) {
-			// 对象计数过时表明出现了退化，因此我们应该在此处保守，并为此列表请求分配最大座位数。// 注意：如果删除了CRD，则其计数将首先变为过时状态，然后修剪器将最终从缓存中删除CRD。
+			// 对象计数过时表明出现了退化,因此我们应该在此处保守,并为此列表请求分配最大座位数.// 注意：如果删除了CRD,则其计数将首先变为过时状态,然后修剪器将最终从缓存中删除CRD.
 			return item.count, ObjectCountStaleErr
 		}
 		return item.count, nil

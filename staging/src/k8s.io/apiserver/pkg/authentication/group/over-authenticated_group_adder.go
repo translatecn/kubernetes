@@ -28,8 +28,8 @@ type AuthenticatedGroupAdder struct {
 	Authenticator authenticator.Request
 }
 
-// NewAuthenticatedGroupAdder 包装一个请求认证器，并在适当时添加system:authenticated组。
-// 认证必须成功，用户不能是system:anonymous，组system:authenticated或system:unauthenticated不能存在。
+// NewAuthenticatedGroupAdder 包装一个请求认证器,并在适当时添加system:authenticated组.
+// 认证必须成功,用户不能是system:anonymous,组system:authenticated或system:unauthenticated不能存在.
 func NewAuthenticatedGroupAdder(auth authenticator.Request) authenticator.Request {
 	return &AuthenticatedGroupAdder{auth}
 }

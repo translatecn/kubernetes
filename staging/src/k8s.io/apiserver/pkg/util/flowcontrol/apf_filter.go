@@ -40,7 +40,7 @@ import (
 // controller appears in an ObjectMeta ManagedFieldsEntry.Manager
 const ConfigConsumerAsFieldManager = "api-priority-and-fairness-config-consumer-v1"
 
-// Interface 定义API优先级和公平性过滤器如何与底层系统交互。
+// Interface 定义API优先级和公平性过滤器如何与底层系统交互.
 type Interface interface {
 	// Handle takes care of queuing and dispatching a request
 	// characterized by the given digest.  The given `noteFn` will be
@@ -105,19 +105,19 @@ func New(
 
 type TestableConfig struct {
 	Name                   string
-	Clock                  clock.PassiveClock                            // 用于计时故意延迟。
-	AsFieldManager         string                                        // 是在服务器端应用程序元数据中使用的字符串。通常为ConfigConsumerAsFieldManager。这是作为参数公开的，以便竞争控制器的测试可以提供不同的值。
-	FoundToDangling        func(bool) bool                               // FoundToDangling将布尔值映射到布尔值，指示FlowSchema引用的PLC是否存在，以及该FlowSchema的状态是否应指示悬空引用。
-	InformerFactory        kubeinformers.SharedInformerFactory           // 用于构建控制器的工具。
-	FlowcontrolClient      flowcontrolclient.FlowcontrolV1beta3Interface // 用于操作配置对象的工具。
+	Clock                  clock.PassiveClock                            // 用于计时故意延迟.
+	AsFieldManager         string                                        // 是在服务器端应用程序元数据中使用的字符串.通常为ConfigConsumerAsFieldManager.这是作为参数公开的,以便竞争控制器的测试可以提供不同的值.
+	FoundToDangling        func(bool) bool                               // FoundToDangling将布尔值映射到布尔值,指示FlowSchema引用的PLC是否存在,以及该FlowSchema的状态是否应指示悬空引用.
+	InformerFactory        kubeinformers.SharedInformerFactory           // 用于构建控制器的工具.
+	FlowcontrolClient      flowcontrolclient.FlowcontrolV1beta3Interface // 用于操作配置对象的工具.
 	ServerConcurrencyLimit int                                           //
 	RequestWaitLimit       time.Duration                                 // 服务器端配置的
-	ReqsGaugeVec           metrics.RatioedGaugeVec                       // 用于按阶段和优先级级别细分的请求度量。
-	ExecSeatsGaugeVec      metrics.RatioedGaugeVec                       // 用于关于执行所有阶段占用的座位的度量。
+	ReqsGaugeVec           metrics.RatioedGaugeVec                       // 用于按阶段和优先级级别细分的请求度量.
+	ExecSeatsGaugeVec      metrics.RatioedGaugeVec                       // 用于关于执行所有阶段占用的座位的度量.
 	QueueSetFactory        fq.QueueSetFactory                            // 队列的实现   // ✅ 两个按钮用于设置数据(只能一次),   在设置前阻塞读
 }
 
-// NewTestable 非常灵活，以便于测试。
+// NewTestable 非常灵活,以便于测试.
 func NewTestable(config TestableConfig) Interface {
 	return newTestableController(config)
 }

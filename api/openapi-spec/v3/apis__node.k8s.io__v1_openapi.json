@@ -17,12 +17,12 @@
             "type": "string"
           },
           "tolerationSeconds": {
-            "description": "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
+            "description": "容忍污点的时间段.默认情况下,它没有设置,这意味着永远容忍污染(不清除).0和负值将被系统视为0(立即驱逐).",
             "format": "int64",
             "type": "integer"
           },
           "value": {
-            "description": "Value 污点的值，如果operator是Exists,这应该是空.",
+            "description": "Value 污点的值,如果operator是Exists,这应该是空.",
             "type": "string"
           }
         },

@@ -58,7 +58,7 @@ type TokenReviewSpec struct {
 	// Token is the opaque bearer token.
 	// +optional
 	Token string `json:"token,omitempty" protobuf:"bytes,1,opt,name=token"`
-	// Audiences 是资源服务器使用令牌提供的标识符列表。支持受众的令牌身份验证器将验证该令牌是否是针对该列表中至少一个受众而设计的。如果未提供受众，则受众将默认为Kubernetes apiserver的受众。
+	// Audiences 是资源服务器使用令牌提供的标识符列表.支持受众的令牌身份验证器将验证该令牌是否是针对该列表中至少一个受众而设计的.如果未提供受众,则受众将默认为Kubernetes apiserver的受众.
 
 	// +optional
 	Audiences []string `json:"audiences,omitempty" protobuf:"bytes,2,rep,name=audiences"`
@@ -72,9 +72,9 @@ type TokenReviewStatus struct {
 	// User is the UserInfo associated with the provided token.
 	// +optional
 	User UserInfo `json:"user,omitempty" protobuf:"bytes,2,opt,name=user"`
-	// Audiences 是身份验证器选择的与TokenReview和令牌兼容的受众标识符。标识符是TokenReviewSpec受众和令牌受众的交集中的任何标识符。
-	//TokenReview API的客户端设置spec.audiences字段时，应验证返回的status.audiences字段中是否返回了兼容的受众标识符，以确保TokenReview服务器支持受众。
-	//如果TokenReview返回一个空的status.audience字段，其中status.authenticated为“true”，则该令牌对Kubernetes API服务器的受众有效。
+	// Audiences 是身份验证器选择的与TokenReview和令牌兼容的受众标识符.标识符是TokenReviewSpec受众和令牌受众的交集中的任何标识符.
+	//TokenReview API的客户端设置spec.audiences字段时,应验证返回的status.audiences字段中是否返回了兼容的受众标识符,以确保TokenReview服务器支持受众.
+	//如果TokenReview返回一个空的status.audience字段,其中status.authenticated为“true”,则该令牌对Kubernetes API服务器的受众有效.
 	// +optional
 	Audiences []string `json:"audiences,omitempty" protobuf:"bytes,4,rep,name=audiences"`
 	// Error indicates that the token couldn't be checked

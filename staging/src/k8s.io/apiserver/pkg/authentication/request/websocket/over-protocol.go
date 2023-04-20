@@ -34,7 +34,7 @@ var protocolHeader = textproto.CanonicalMIMEHeaderKey("Sec-WebSocket-Protocol")
 
 var errInvalidToken = errors.New("invalid bearer token")
 
-// ProtocolAuthenticator 允许WebSocket连接以格式为subprotocol的bearer令牌形式提供。  "base64url.bearer.authorization.<base64url-without-padding(bearer-token)>"
+// ProtocolAuthenticator 允许WebSocket连接以格式为subprotocol的bearer令牌形式提供.  "base64url.bearer.authorization.<base64url-without-padding(bearer-token)>"
 type ProtocolAuthenticator struct {
 	auth authenticator.Token
 }

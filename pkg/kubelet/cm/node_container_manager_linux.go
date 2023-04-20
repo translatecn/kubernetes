@@ -40,10 +40,10 @@ const (
 	defaultNodeAllocatableCgroupName = "kubepods"
 )
 
-// createNodeAllocatableCgroups creates Node Allocatable Cgroup when CgroupsPerQOS flag is specified as true
+// createNodeAllocatableCgroups 当指定 CgroupsPerQOS 标志为 true 时，将创建节点可分配 Cgroup。
 func (cm *containerManagerImpl) createNodeAllocatableCgroups() error {
 	nodeAllocatable := cm.internalCapacity
-	// Use Node Allocatable limits instead of capacity if the user requested enforcing node allocatable.
+	// 如果用户请求强制使用节点可分配资源，则使用节点可分配限制而不是容量。
 	nc := cm.NodeConfig.NodeAllocatableConfig
 	if cm.CgroupsPerQOS && nc.EnforceNodeAllocatable.Has(kubetypes.NodeAllocatableEnforcementKey) {
 		nodeAllocatable = cm.getNodeAllocatableInternalAbsolute()
@@ -191,9 +191,8 @@ func getCgroupConfig(rl v1.ResourceList) *ResourceConfig {
 	return &rc
 }
 
-// GetNodeAllocatableAbsolute returns the absolute value of Node Allocatable which is primarily useful for enforcement.
-// Note that not all resources that are available on the node are included in the returned list of resources.
-// Returns a ResourceList.
+// GetNodeAllocatableAbsolute 返回节点可分配资源的绝对值，主要用于强制执行。
+// 请注意，返回的资源列表中未包括节点上可用的所有资源。该函数返回 ResourceList 类型的结果。
 func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceList {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.capacity)
 }
@@ -217,14 +216,13 @@ func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.Resou
 	return result
 }
 
-// getNodeAllocatableInternalAbsolute is similar to getNodeAllocatableAbsolute except that
-// it also includes internal resources (currently process IDs).  It is intended for setting
-// up top level cgroups only.
+// getNodeAllocatableInternalAbsolute 类似于 getNodeAllocatableAbsolute，但它还包括内部资源（当前为进程 ID）。
+// 它旨在仅设置顶层 Cgroup。
 func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.ResourceList {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.internalCapacity)
 }
 
-// GetNodeAllocatableReservation // 返回一个资源列表，其中包含基于硬回收阈值的资源保留。
+// GetNodeAllocatableReservation // 返回一个资源列表,其中包含基于硬回收阈值的资源保留.
 func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList {
 	evictionReservation := hardEvictionReservation(cm.HardEvictionThresholds, cm.capacity)
 	result := make(v1.ResourceList)
@@ -246,8 +244,8 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	return result
 }
 
-// validateNodeAllocatable 验证和校验节点资源配置，确保它们与集群中的其他节点保持一致，并确保它们能够满足集群中的工作负载需求。
-// 如果节点可分配配置超过了节点容量，则可能会导致节点资源不足，从而导致集群中的工作负载无法正常运行。
+// validateNodeAllocatable 验证和校验节点资源配置,确保它们与集群中的其他节点保持一致,并确保它们能够满足集群中的工作负载需求.
+// 如果节点可分配配置超过了节点容量,则可能会导致节点资源不足,从而导致集群中的工作负载无法正常运行.
 func (cm *containerManagerImpl) validateNodeAllocatable() error {
 	var errors []string
 	nar := cm.GetNodeAllocatableReservation()

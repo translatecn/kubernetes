@@ -337,7 +337,7 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 		return true
 	}
 
-	// 2. 已取得的记录，核对身份及时间
+	// 2. 已取得的记录,核对身份及时间
 	if !bytes.Equal(le.observedRawRecord, oldLeaderElectionRawRecord) {
 		le.setObservedRecord(oldLeaderElectionRecord)
 
@@ -352,7 +352,7 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 		return false
 	}
 
-	// 3. 我们将尝试更新。这里的leaderElectionRecord设置为默认值。让我们在更新之前纠正它。
+	// 3. 我们将尝试更新.这里的leaderElectionRecord设置为默认值.让我们在更新之前纠正它.
 	if le.IsLeader() {
 		leaderElectionRecord.AcquireTime = oldLeaderElectionRecord.AcquireTime
 		leaderElectionRecord.LeaderTransitions = oldLeaderElectionRecord.LeaderTransitions

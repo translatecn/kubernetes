@@ -307,10 +307,7 @@ type KubeletConfiguration struct {
 	// manage attachment/detachment of volumes scheduled to this node, and
 	// disables kubelet from executing any attach/detach operations
 	EnableControllerAttachDetach bool
-	// protectKernelDefaults, if true, causes the Kubelet to error if kernel
-	// flags are not as it expects. Otherwise the Kubelet will attempt to modify
-	// kernel flags to match its expectation.
-	ProtectKernelDefaults bool
+	ProtectKernelDefaults        bool // 如果 protectKernelDefaults 为 true，则会导致 Kubelet 在内核标志不符合其预期时出错。否则，Kubelet 将尝试修改内核标志以匹配其预期。
 	// If true, Kubelet ensures a set of iptables rules are present on host.
 	// These rules will serve as utility for various components, e.g. kube-proxy.
 	// The rules will be created based on IPTablesMasqueradeBit and IPTablesDropBit.

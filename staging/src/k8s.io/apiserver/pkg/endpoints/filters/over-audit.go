@@ -112,8 +112,8 @@ func WithAudit(handler http.Handler, sink audit.Sink, policy audit.PolicyRuleEva
 	})
 }
 
-// evaluatePolicyAndCreateAuditEvent 负责评估适用于请求的审核策略配置，并创建一个新的审核事件，该事件将写入API审核日志。
-// -如果发生任何错误，则会出现错误。
+// evaluatePolicyAndCreateAuditEvent 负责评估适用于请求的审核策略配置,并创建一个新的审核事件,该事件将写入API审核日志.
+// -如果发生任何错误,则会出现错误.
 func evaluatePolicyAndCreateAuditEvent(req *http.Request, policy audit.PolicyRuleEvaluator) (*audit.AuditContext, error) {
 	ctx := req.Context()
 	ac := audit.AuditContextFrom(ctx)

@@ -272,8 +272,8 @@ var (
 		})
 )
 
-// 建议的FlowSchema对象。
-// 按匹配优先级排序，以便在阅读此源代码时更容易跟踪它们的交互。
+// 建议的FlowSchema对象.
+// 按匹配优先级排序,以便在阅读此源代码时更容易跟踪它们的交互.
 var (
 	// SuggestedFlowSchemaProbes 以下流程模式不用被探测
 	SuggestedFlowSchemaProbes = newFlowSchema(

@@ -39,7 +39,7 @@ func GetOpenAPIDefinitionsWithoutDisabledFeatures(GetOpenAPIDefinitions common.G
 	}
 }
 
-// restoreDefinitions 从定义映射中恢复被禁用特性的任何更改。
+// restoreDefinitions 从定义映射中恢复被禁用特性的任何更改.
 func restoreDefinitions(defs map[string]common.OpenAPIDefinition) {
 	// revert changes from OpenAPIEnums
 	if !utilfeature.DefaultFeatureGate.Enabled(genericfeatures.OpenAPIEnums) {

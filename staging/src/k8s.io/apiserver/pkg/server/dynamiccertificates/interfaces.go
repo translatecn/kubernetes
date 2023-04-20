@@ -36,9 +36,9 @@ type Notifier interface {
 // CAContentProvider  提供ca包字节内容
 type CAContentProvider interface {
 	Notifier
-	Name() string                              // 只是一个标识符。
+	Name() string                              // 只是一个标识符.
 	CurrentCABundleContent() []byte            // ca bundle字节内容
-	VerifyOptions() (x509.VerifyOptions, bool) // 为身份验证器提供VerifyOptions。
+	VerifyOptions() (x509.VerifyOptions, bool) // 为身份验证器提供VerifyOptions.
 }
 
 // CertKeyContentProvider provides a certificate and matching private key.

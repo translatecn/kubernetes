@@ -43,10 +43,10 @@ type Level string
 
 // Valid audit levels
 const (
-	LevelNone            Level = "None"            // 符合这条规则的日志将不会记录。
-	LevelMetadata        Level = "Metadata"        // 记录请求的元数据（请求的用户、时间戳、资源、动词等等）， 但是不记录请求或者响应的消息体。
-	LevelRequest         Level = "Request"         // 记录事件的元数据和请求的消息体，但是不记录响应的消息体。 这不适用于非资源类型的请求。
-	LevelRequestResponse Level = "RequestResponse" // 记录事件的元数据，请求和响应的消息体。这不适用于非资源类型的请求。
+	LevelNone            Level = "None"            // 符合这条规则的日志将不会记录.
+	LevelMetadata        Level = "Metadata"        // 记录请求的元数据（请求的用户、时间戳、资源、动词等等）, 但是不记录请求或者响应的消息体.
+	LevelRequest         Level = "Request"         // 记录事件的元数据和请求的消息体,但是不记录响应的消息体. 这不适用于非资源类型的请求.
+	LevelRequestResponse Level = "RequestResponse" // 记录事件的元数据,请求和响应的消息体.这不适用于非资源类型的请求.
 )
 
 // Stage defines the stages in request handling that audit events may be generated.
@@ -54,8 +54,8 @@ type Stage string
 
 // Valid audit stages.
 const (
-	StageRequestReceived  Stage = "RequestReceived"  // 在审计处理程序接收到请求后，在沿着处理程序链进行委托之前生成事件的阶段。
-	StageResponseStarted  Stage = "ResponseStarted"  // 在发送响应头之后，但在发送响应体之前。此阶段仅为长时间运行的请求(例如watch)生成。
+	StageRequestReceived  Stage = "RequestReceived"  // 在审计处理程序接收到请求后,在沿着处理程序链进行委托之前生成事件的阶段.
+	StageResponseStarted  Stage = "ResponseStarted"  // 在发送响应头之后,但在发送响应体之前.此阶段仅为长时间运行的请求(例如watch)生成.
 	StageResponseComplete Stage = "ResponseComplete" // 响应体完成后
 	StagePanic            Stage = "Panic"            // 当恐慌发生时产生
 )
@@ -146,13 +146,13 @@ type EventList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Policy 定义审计日志记录的配置，以及记录不同请求类别的规则。
+// Policy 定义审计日志记录的配置,以及记录不同请求类别的规则.
 type Policy struct {
 	metav1.TypeMeta
-	// ObjectMeta 用于与API基础设施的互操作性。
+	// ObjectMeta 用于与API基础设施的互操作性.
 	// +optional
 	metav1.ObjectMeta
-	// 规则指定了请求应记录在的审计级别。一个请求可以匹配多条规则，在这种情况下使用FIRST匹配规则。默认的审计级别是None，但是可以由列表末尾的catch-all规则覆盖。PolicyRules是严格有序的。
+	// 规则指定了请求应记录在的审计级别.一个请求可以匹配多条规则,在这种情况下使用FIRST匹配规则.默认的审计级别是None,但是可以由列表末尾的catch-all规则覆盖.PolicyRules是严格有序的.
 	Rules []PolicyRule
 
 	// OmitStages 每个规则都需要添加的
@@ -180,8 +180,8 @@ type PolicyList struct {
 	Items []Policy
 }
 
-// PolicyRule 将基于元数据的请求映射到审计级别。
-// 请求必须匹配每个字段的规则(规则的交集)。
+// PolicyRule 将基于元数据的请求映射到审计级别.
+// 请求必须匹配每个字段的规则(规则的交集).
 type PolicyRule struct {
 	Level Level // 日志等级
 

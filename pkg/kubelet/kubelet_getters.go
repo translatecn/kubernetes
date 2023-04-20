@@ -243,7 +243,7 @@ func (kl *Kubelet) GetNode() (*v1.Node, error) {
 	return kl.nodeLister.Get(string(kl.nodeName))
 }
 
-// 返回主机信息,但是如果出现错误或者处于 standalone 模式,则返回一个自定义的nodeInfo信息，该信息表示一个没有Pod、容量为零、带有默认标签的节点。
+// 返回主机信息,但是如果出现错误或者处于 standalone 模式,则返回一个自定义的nodeInfo信息,该信息表示一个没有Pod、容量为零、带有默认标签的节点.
 func (kl *Kubelet) getNodeAnyWay() (*v1.Node, error) {
 	if kl.kubeClient != nil {
 		if n, err := kl.nodeLister.Get(string(kl.nodeName)); err == nil {

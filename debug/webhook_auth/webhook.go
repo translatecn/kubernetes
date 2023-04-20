@@ -34,7 +34,7 @@ func (ctx *WebHookServer) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 判断token是否包含':'
-	// 如果不包含，则返回认证失败
+	// 如果不包含,则返回认证失败
 	if !(strings.Contains(req.Spec.Token, ":")) {
 		klog.Error(err, "token invalied.")
 		req.Status = authentication.TokenReviewStatus{Authenticated: false}

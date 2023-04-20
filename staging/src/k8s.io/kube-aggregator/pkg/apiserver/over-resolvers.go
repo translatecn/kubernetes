@@ -58,7 +58,7 @@ func (r *aggregatorClusterRouting) ResolveEndpoint(namespace, name string, port 
 }
 
 // NewLoopbackServiceResolver 返回路由的ServiceResolver
-// 使用端口443的kubernetes/default服务来环回。
+// 使用端口443的kubernetes/default服务来环回.
 func NewLoopbackServiceResolver(delegate ServiceResolver, host *url.URL) ServiceResolver {
 	return &loopbackResolver{
 		delegate: delegate,

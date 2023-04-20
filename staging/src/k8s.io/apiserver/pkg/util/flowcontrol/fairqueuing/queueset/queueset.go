@@ -49,8 +49,8 @@ type queueSetFactory struct {
 }
 
 // promiseFactory returns a WriteOnce
-// 具有 Set 方法的对象在 queueSet 被锁定时被调用，这意味着没有其他线程可以同时访问它。
-// 另一方面，该对象的 Get 方法在 queueSet 未被锁定时被调用，因此其他线程可能会同时访问它。
+// 具有 Set 方法的对象在 queueSet 被锁定时被调用,这意味着没有其他线程可以同时访问它.
+// 另一方面,该对象的 Get 方法在 queueSet 未被锁定时被调用,因此其他线程可能会同时访问它.
 // The parameters are the same as for `promise.NewWriteOnce`.
 type promiseFactory func(initial interface{}, doneCh <-chan struct{}, doneVal interface{}) promise.WriteOnce
 

@@ -21,7 +21,7 @@ import (
 	evictionapi "k8s.io/kubernetes/pkg/kubelet/eviction/api"
 )
 
-// hardEvictionReservation 返回一个资源列表，其中包含基于硬回收阈值的资源保留。
+// hardEvictionReservation 返回一个资源列表,其中包含基于硬回收阈值的资源保留.
 func hardEvictionReservation(thresholds []evictionapi.Threshold, capacity v1.ResourceList) v1.ResourceList {
 	if len(thresholds) == 0 {
 		return nil

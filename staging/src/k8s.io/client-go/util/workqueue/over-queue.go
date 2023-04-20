@@ -29,7 +29,7 @@ type Interface interface {
 	Get() (item interface{}, shutdown bool)
 	Done(item interface{})
 	ShutDown()
-	ShutDownWithDrain() // 关闭队列，但是等待队列中元素处理完
+	ShutDownWithDrain() // 关闭队列,但是等待队列中元素处理完
 	ShuttingDown() bool
 }
 
@@ -71,9 +71,9 @@ const defaultUnfinishedWorkUpdatePeriod = 500 * time.Millisecond
 // Type is a work queue (see the package comment).
 type Type struct {
 	queue      []t // 需要被处理的
-	dirty      set // 定义需要处理的所有项。
-	processing set // 当前正在处理的东西都在queue集中。这些东西可能同时在dirty集合中。
-	// 当我们处理完某样东西并将它从这个集合中移除时，我们会检查它是否在dirty集合中，如果是，就将它添加到队列中。
+	dirty      set // 定义需要处理的所有项.
+	processing set // 当前正在处理的东西都在queue集中.这些东西可能同时在dirty集合中.
+	// 当我们处理完某样东西并将它从这个集合中移除时,我们会检查它是否在dirty集合中,如果是,就将它添加到队列中.
 
 	cond                       *sync.Cond
 	shuttingDown               bool

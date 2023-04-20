@@ -109,7 +109,7 @@ type AuditLogOptions struct {
 	GroupVersionString string
 }
 
-// AuditWebhookOptions webhook的审计事件配置。
+// AuditWebhookOptions webhook的审计事件配置.
 type AuditWebhookOptions struct {
 	ConfigFile         string               //
 	InitialBackoff     time.Duration        //
@@ -242,7 +242,7 @@ func (o *AuditOptions) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringVar(&o.PolicyFile, "audit-policy-file", o.PolicyFile, "定义审计策略配置的文件的路径。")
+	fs.StringVar(&o.PolicyFile, "audit-policy-file", o.PolicyFile, "定义审计策略配置的文件的路径.")
 	o.LogOptions.AddFlags(fs)
 	o.LogOptions.BatchOptions.AddFlags(pluginlog.PluginName, fs)
 	o.LogOptions.TruncateOptions.AddFlags(pluginlog.PluginName, fs)
@@ -311,7 +311,7 @@ func (o *AuditOptions) ApplyTo(
 	// 4. Apply dynamic options.
 	var dynamicBackend audit.Backend
 	if webhookBackend != nil {
-		// 如果只启用webhook，则将其封装在截断选项中
+		// 如果只启用webhook,则将其封装在截断选项中
 		dynamicBackend = o.WebhookOptions.TruncateOptions.wrapBackend(webhookBackend, groupVersion)
 	}
 
@@ -340,13 +340,13 @@ func (o *AuditOptions) newPolicyRuleEvaluator() (audit.PolicyRuleEvaluator, erro
 }
 
 func (o *AuditBatchOptions) AddFlags(pluginName string, fs *pflag.FlagSet) {
-	fs.StringVar(&o.Mode, fmt.Sprintf("audit-%s-mode", pluginName), o.Mode, "发送审计事件的策略。阻塞表示发送事件应该阻塞服务器响应。批处理使后端异步缓冲和写入事件。已知模式： "+strings.Join(AllowedModes, ",")+".")
-	fs.IntVar(&o.BatchConfig.BufferSize, fmt.Sprintf("audit-%s-batch-buffer-size", pluginName), o.BatchConfig.BufferSize, "在批处理和写入之前用于存储事件的缓冲区的大小。仅用于批处理模式。")
-	fs.IntVar(&o.BatchConfig.MaxBatchSize, fmt.Sprintf("audit-%s-batch-max-size", pluginName), o.BatchConfig.MaxBatchSize, "批处理的最大大小。仅用于批处理模式。")
-	fs.DurationVar(&o.BatchConfig.MaxBatchWait, fmt.Sprintf("audit-%s-batch-max-wait", pluginName), o.BatchConfig.MaxBatchWait, "未达到最大大小的批处理之前强制写入的等待时间量。仅用于批处理模式。")
-	fs.BoolVar(&o.BatchConfig.ThrottleEnable, fmt.Sprintf("audit-%s-batch-throttle-enable", pluginName), o.BatchConfig.ThrottleEnable, "是否启用批量限流。仅用于批处理模式。")
-	fs.Float32Var(&o.BatchConfig.ThrottleQPS, fmt.Sprintf("audit-%s-batch-throttle-qps", pluginName), o.BatchConfig.ThrottleQPS, "每秒最大平均批次数。仅用于批处理模式。")
-	fs.IntVar(&o.BatchConfig.ThrottleBurst, fmt.Sprintf("audit-%s-batch-throttle-burst", pluginName), o.BatchConfig.ThrottleBurst, "如果之前没有使用ThrottleQPS，则同一时刻发送的最大请求数。仅用于批处理模式。")
+	fs.StringVar(&o.Mode, fmt.Sprintf("audit-%s-mode", pluginName), o.Mode, "发送审计事件的策略.阻塞表示发送事件应该阻塞服务器响应.批处理使后端异步缓冲和写入事件.已知模式： "+strings.Join(AllowedModes, ",")+".")
+	fs.IntVar(&o.BatchConfig.BufferSize, fmt.Sprintf("audit-%s-batch-buffer-size", pluginName), o.BatchConfig.BufferSize, "在批处理和写入之前用于存储事件的缓冲区的大小.仅用于批处理模式.")
+	fs.IntVar(&o.BatchConfig.MaxBatchSize, fmt.Sprintf("audit-%s-batch-max-size", pluginName), o.BatchConfig.MaxBatchSize, "批处理的最大大小.仅用于批处理模式.")
+	fs.DurationVar(&o.BatchConfig.MaxBatchWait, fmt.Sprintf("audit-%s-batch-max-wait", pluginName), o.BatchConfig.MaxBatchWait, "未达到最大大小的批处理之前强制写入的等待时间量.仅用于批处理模式.")
+	fs.BoolVar(&o.BatchConfig.ThrottleEnable, fmt.Sprintf("audit-%s-batch-throttle-enable", pluginName), o.BatchConfig.ThrottleEnable, "是否启用批量限流.仅用于批处理模式.")
+	fs.Float32Var(&o.BatchConfig.ThrottleQPS, fmt.Sprintf("audit-%s-batch-throttle-qps", pluginName), o.BatchConfig.ThrottleQPS, "每秒最大平均批次数.仅用于批处理模式.")
+	fs.IntVar(&o.BatchConfig.ThrottleBurst, fmt.Sprintf("audit-%s-batch-throttle-burst", pluginName), o.BatchConfig.ThrottleBurst, "如果之前没有使用ThrottleQPS,则同一时刻发送的最大请求数.仅用于批处理模式.")
 }
 
 type ignoreErrorsBackend struct {
@@ -385,9 +385,9 @@ func (o *AuditTruncateOptions) Validate(pluginName string) error {
 }
 
 func (o *AuditTruncateOptions) AddFlags(pluginName string, fs *pflag.FlagSet) {
-	fs.BoolVar(&o.Enabled, fmt.Sprintf("audit-%s-truncate-enabled", pluginName), o.Enabled, "是否启用事件和批量截断功能。")
-	fs.Int64Var(&o.TruncateConfig.MaxBatchSize, fmt.Sprintf("audit-%s-truncate-max-batch-size", pluginName), o.TruncateConfig.MaxBatchSize, "发送到底层后台的批次的最大尺寸。实际序列化的大小可以多出几百字节。如果一个批次超过了这个限制，它就会被分成几个尺寸较小的批次。")
-	fs.Int64Var(&o.TruncateConfig.MaxEventSize, fmt.Sprintf("audit-%s-truncate-max-event-size", pluginName), o.TruncateConfig.MaxEventSize, "发送给底层后端的审计事件的最大尺寸。如果一个事件的大小大于这个数字，第一个请求和响应就会被删除，如果这还不能减少足够的大小，事件就会被丢弃。")
+	fs.BoolVar(&o.Enabled, fmt.Sprintf("audit-%s-truncate-enabled", pluginName), o.Enabled, "是否启用事件和批量截断功能.")
+	fs.Int64Var(&o.TruncateConfig.MaxBatchSize, fmt.Sprintf("audit-%s-truncate-max-batch-size", pluginName), o.TruncateConfig.MaxBatchSize, "发送到底层后台的批次的最大尺寸.实际序列化的大小可以多出几百字节.如果一个批次超过了这个限制,它就会被分成几个尺寸较小的批次.")
+	fs.Int64Var(&o.TruncateConfig.MaxEventSize, fmt.Sprintf("audit-%s-truncate-max-event-size", pluginName), o.TruncateConfig.MaxEventSize, "发送给底层后端的审计事件的最大尺寸.如果一个事件的大小大于这个数字,第一个请求和响应就会被删除,如果这还不能减少足够的大小,事件就会被丢弃.")
 }
 
 func (o *AuditTruncateOptions) wrapBackend(delegate audit.Backend, gv schema.GroupVersion) audit.Backend {
@@ -492,11 +492,11 @@ func (o *AuditLogOptions) newBackend(w io.Writer) audit.Backend {
 }
 
 func (o *AuditWebhookOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&o.ConfigFile, "audit-webhook-config-file", o.ConfigFile, "定义审计webhook配置的kubeconfig格式文件的路径。")
-	fs.DurationVar(&o.InitialBackoff, "audit-webhook-initial-backoff", o.InitialBackoff, "在重试第一个失败的请求之前要等待的时间。")
-	fs.DurationVar(&o.InitialBackoff, "audit-webhook-batch-initial-backoff", o.InitialBackoff, "在重试第一个失败的请求之前要等待的时间。")
-	fs.MarkDeprecated("audit-webhook-batch-initial-backoff", "已废弃，请使用 --audit-webhook-initial-backoff 来代替。")
-	fs.StringVar(&o.GroupVersionString, "audit-webhook-version", o.GroupVersionString, "用于序列化写入webhook的审计事件的API组和版本。")
+	fs.StringVar(&o.ConfigFile, "audit-webhook-config-file", o.ConfigFile, "定义审计webhook配置的kubeconfig格式文件的路径.")
+	fs.DurationVar(&o.InitialBackoff, "audit-webhook-initial-backoff", o.InitialBackoff, "在重试第一个失败的请求之前要等待的时间.")
+	fs.DurationVar(&o.InitialBackoff, "audit-webhook-batch-initial-backoff", o.InitialBackoff, "在重试第一个失败的请求之前要等待的时间.")
+	fs.MarkDeprecated("audit-webhook-batch-initial-backoff", "已废弃,请使用 --audit-webhook-initial-backoff 来代替.")
+	fs.StringVar(&o.GroupVersionString, "audit-webhook-version", o.GroupVersionString, "用于序列化写入webhook的审计事件的API组和版本.")
 }
 
 func (o *AuditWebhookOptions) Validate() []error {

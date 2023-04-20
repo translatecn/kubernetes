@@ -55,7 +55,7 @@ type Indexer interface {
 	AddIndexers(newIndexers Indexers) error
 }
 
-// IndexFunc 知道如何计算对象的索引值。
+// IndexFunc 知道如何计算对象的索引值.
 type IndexFunc func(obj interface{}) ([]string, error)
 
 const (

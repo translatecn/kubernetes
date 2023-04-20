@@ -43,15 +43,15 @@ type Config struct {
 }
 
 type backend struct {
-	delegateBackend audit.Backend   // 实际上导出事件的委托后端。
+	delegateBackend audit.Backend   // 实际上导出事件的委托后端.
 	c               Config          // truncation配置
-	e               runtime.Encoder // 用于计算审计事件大小的编码器。
+	e               runtime.Encoder // 用于计算审计事件大小的编码器.
 
 }
 
 var _ audit.Backend = &backend{}
 
-// NewBackend 返回一个新的截断后端，使用传入参数的配置。截断后端自动运行并关闭委托后端。
+// NewBackend 返回一个新的截断后端,使用传入参数的配置.截断后端自动运行并关闭委托后端.
 func NewBackend(delegateBackend audit.Backend, config Config, groupVersion schema.GroupVersion) audit.Backend {
 	return &backend{
 		delegateBackend: delegateBackend,

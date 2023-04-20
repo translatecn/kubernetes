@@ -367,8 +367,8 @@ type ListOptions struct {
 	// This limits the duration of the call, regardless of any activity or inactivity.
 	// +optional
 	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty" protobuf:"varint,5,opt,name=timeoutSeconds"`
-	Limit          int64  `json:"limit,omitempty" protobuf:"varint,7,opt,name=limit"`      //  limit是一个列表调用返回的最大响应数。
-	Continue       string `json:"continue,omitempty" protobuf:"bytes,8,opt,name=continue"` // 分页请求时，下一次携带的起始点  , 一串字符串
+	Limit          int64  `json:"limit,omitempty" protobuf:"varint,7,opt,name=limit"`      //  limit是一个列表调用返回的最大响应数.
+	Continue       string `json:"continue,omitempty" protobuf:"bytes,8,opt,name=continue"` // 分页请求时,下一次携带的起始点  , 一串字符串
 }
 
 // resourceVersionMatch specifies how the resourceVersion parameter is applied. resourceVersionMatch
@@ -412,7 +412,7 @@ type DeletionPropagation string
 
 const (
 	DeletePropagationOrphan     DeletionPropagation = "Orphan"     // 不考虑依赖资源
-	DeletePropagationBackground DeletionPropagation = "Background" // 从键值存储中删除对象，垃圾回收器将执行删除后台的依赖项。
+	DeletePropagationBackground DeletionPropagation = "Background" // 从键值存储中删除对象,垃圾回收器将执行删除后台的依赖项.
 	DeletePropagationForeground DeletionPropagation = "Foreground" // 级联删除所有对象
 )
 

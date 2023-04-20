@@ -36,7 +36,7 @@ type RatioedGauge interface {
 	SetDenominator(float64)
 }
 
-// RatioedGaugeVec 创建由一系列标签值区分的相关观察者。
+// RatioedGaugeVec 创建由一系列标签值区分的相关观察者.
 type RatioedGaugeVec interface {
 	// NewForLabelValuesSafe makes a new vector member for the given tuple of label values,
 	// initialized with the given numerator and denominator.
@@ -58,6 +58,6 @@ type RatioedGaugeVec interface {
 // number of requests waiting in queue(s) and one for the number of
 // requests being executed.
 type RatioedGaugePair struct {
-	RequestsWaiting   RatioedGauge // 给出当前排队请求数量的观察结果。
-	RequestsExecuting RatioedGauge // 给出当前执行请求数量的观察结果。
+	RequestsWaiting   RatioedGauge // 给出当前排队请求数量的观察结果.
+	RequestsExecuting RatioedGauge // 给出当前执行请求数量的观察结果.
 }

@@ -18,7 +18,7 @@ package admission
 
 import "context"
 
-// newReinvocationHandler 创建一个处理程序来包装所提供的许可链，并在需要时根据webhook的重新调用策略重新调用它。
+// newReinvocationHandler 创建一个处理程序来包装所提供的许可链,并在需要时根据webhook的重新调用策略重新调用它.
 func newReinvocationHandler(admissionChain Interface) Interface {
 	return &reinvoker{admissionChain}
 }

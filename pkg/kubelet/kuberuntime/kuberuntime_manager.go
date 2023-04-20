@@ -948,7 +948,7 @@ func (m *kubeGenericRuntimeManager) KillPod(ctx context.Context, pod *v1.Pod, ru
 }
 
 // killPodWithSyncResult杀死runningPod并返回SyncResult.
-// 注意：kubelet重新启动时,传递的pod可能为* nil *。
+// 注意：kubelet重新启动时,传递的pod可能为* nil *.
 func (m *kubeGenericRuntimeManager) killPodWithSyncResult(ctx context.Context, pod *v1.Pod, runningPod kubecontainer.Pod, gracePeriodOverride *int64) (result kubecontainer.PodSyncResult) {
 	killContainerResults := m.killContainersWithSyncResult(ctx, pod, runningPod, gracePeriodOverride)
 	for _, containerResult := range killContainerResults {

@@ -222,8 +222,8 @@ func (j *jwtTokenGenerator) GenerateToken(claims *jwt.Claims, privateClaims inte
 }
 
 // JWTTokenAuthenticator 将authenticates tokens转换为为JWTTokenGenerator生成的JWT令牌
-// 使用每个给定的公钥验证令牌签名，直到其中一个有效(允许密钥旋转)
-// 如果查找为真，将检索作为令牌内声明引用的服务帐户和秘密，并使用提供的ServiceAccountTokenGetter进行验证
+// 使用每个给定的公钥验证令牌签名,直到其中一个有效(允许密钥旋转)
+// 如果查找为真,将检索作为令牌内声明引用的服务帐户和秘密,并使用提供的ServiceAccountTokenGetter进行验证
 func JWTTokenAuthenticator(issuers []string, keys []interface{}, implicitAuds authenticator.Audiences, validator Validator) authenticator.Token {
 	issuersMap := make(map[string]bool)
 	for _, issuer := range issuers {
@@ -239,16 +239,16 @@ func JWTTokenAuthenticator(issuers []string, keys []interface{}, implicitAuds au
 
 type JwtTokenAuthenticator struct {
 	issuers      map[string]bool         // 颁发者
-	keys         []interface{}           // 公钥，用于加密
+	keys         []interface{}           // 公钥,用于加密
 	validator    Validator               //
 	implicitAuds authenticator.Audiences // 内置的默认客户端ID,
 }
 
 type Validator interface {
-	// Validate 验证令牌并返回用户信息或错误。//当调用此函数时，验证器可以假定令牌的颁发者和签名已经得到验证。
+	// Validate 验证令牌并返回用户信息或错误.//当调用此函数时,验证器可以假定令牌的颁发者和签名已经得到验证.
 	Validate(ctx context.Context, tokenData string, public *jwt.Claims, private interface{}) (*apiserverserviceaccount.ServiceAccountInfo, error)
-	// NewPrivateClaims 返回一个结构体，身份验证器应将JWT有效负载反序列化为该结构体。然后，身份验证器可以将此结构体作为“private”参数传递回验证器，
-	// 作为Validate()调用的参数。此结构体应包含验证器需要验证JWT的任何私有声明的字段。
+	// NewPrivateClaims 返回一个结构体,身份验证器应将JWT有效负载反序列化为该结构体.然后,身份验证器可以将此结构体作为“private”参数传递回验证器,
+	// 作为Validate()调用的参数.此结构体应包含验证器需要验证JWT的任何私有声明的字段.
 	NewPrivateClaims() interface{}
 }
 
@@ -315,7 +315,7 @@ func (j *JwtTokenAuthenticator) AuthenticateToken(ctx context.Context, tokenData
 	}, true, nil
 }
 
-// hasCorrectIssuer 如果tokenData是紧凑序列化格式中的有效JWT，并且“iss”声明与此令牌身份验证器的iss字段匹配，则返回true，否则返回false。
+// hasCorrectIssuer 如果tokenData是紧凑序列化格式中的有效JWT,并且“iss”声明与此令牌身份验证器的iss字段匹配,则返回true,否则返回false.
 // Note: go-jose currently does not allow access to unverified JWS payloads.
 // See https://github.com/square/go-jose/issues/169
 func (j *JwtTokenAuthenticator) hasCorrectIssuer(tokenData string) bool {

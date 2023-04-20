@@ -29,7 +29,7 @@ import (
 	"k8s.io/apiserver/pkg/endpoints/handlers/responsewriters"
 )
 
-// WithFailedAuthenticationAudit 修饰了在 WithAuthentication 处理程序中使用的失败的http.Handler。//它仅用于记录身份验证失败的请求。
+// WithFailedAuthenticationAudit 修饰了在 WithAuthentication 处理程序中使用的失败的http.Handler.//它仅用于记录身份验证失败的请求.
 func WithFailedAuthenticationAudit(failedHandler http.Handler, sink audit.Sink, policy audit.PolicyRuleEvaluator) http.Handler {
 	if sink == nil || policy == nil {
 		return failedHandler

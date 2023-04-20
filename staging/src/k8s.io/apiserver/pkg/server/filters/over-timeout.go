@@ -34,7 +34,7 @@ import (
 	"k8s.io/apiserver/pkg/server/httplog"
 )
 
-// WithTimeoutForNonLongRunningRequests 在超时时间后，对非长时间运行的请求进行超时处理。
+// WithTimeoutForNonLongRunningRequests 在超时时间后,对非长时间运行的请求进行超时处理.
 func WithTimeoutForNonLongRunningRequests(handler http.Handler, longRunning apirequest.LongRunningRequestCheck) http.Handler {
 	if longRunning == nil {
 		return handler

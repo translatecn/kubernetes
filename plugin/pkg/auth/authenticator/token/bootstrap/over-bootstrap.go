@@ -62,7 +62,7 @@ func tokenErrorf(s *corev1.Secret, format string, i ...interface{}) {
 	klog.V(3).Infof(format, i...)
 }
 
-// AuthenticateToken 尝试将提供的令牌与给定命名空间中的引导令牌密钥进行匹配。如果找到，则使用“system:bootstrappers”组和“system:bootstrap:(token-id)”用户名对令牌进行身份验证。
+// AuthenticateToken 尝试将提供的令牌与给定命名空间中的引导令牌密钥进行匹配.如果找到,则使用“system:bootstrappers”组和“system:bootstrap:(token-id)”用户名对令牌进行身份验证.
 // All secrets must be of type "bootstrap.kubernetes.io/token". An example secret:
 //
 //	apiVersion: v1

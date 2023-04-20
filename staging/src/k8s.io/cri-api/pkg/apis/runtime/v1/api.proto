@@ -30,7 +30,7 @@ option (gogoproto.sizer_all) = true;
 option (gogoproto.unmarshaler_all) = true;
 option (gogoproto.goproto_unrecognized_all) = false;
 
-// 运行时服务定义了远程容器运行时的公共API。
+// 运行时服务定义了远程容器运行时的公共API.
 service RuntimeService {
     // Version returns the runtime name, runtime version, and runtime API version.
     rpc Version(VersionRequest) returns (VersionResponse) {}

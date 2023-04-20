@@ -165,8 +165,8 @@ func EachListItem(obj runtime.Object, fn func(runtime.Object) error) error {
 	return nil
 }
 
-// ExtractList 返回obj的Items元素作为runtime.Objects的数组。
-// //如果obj不是List类型(没有Items成员)则返回错误。
+// ExtractList 返回obj的Items元素作为runtime.Objects的数组.
+// //如果obj不是List类型(没有Items成员)则返回错误.
 func ExtractList(obj runtime.Object) ([]runtime.Object, error) {
 	itemsPtr, err := GetItemsPtr(obj)
 	if err != nil {

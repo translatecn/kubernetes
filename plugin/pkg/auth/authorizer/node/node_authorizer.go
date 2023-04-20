@@ -129,7 +129,7 @@ func (r *NodeAuthorizer) Authorize(ctx context.Context, attrs authorizer.Attribu
 
 	}
 
-	// 对其他资源的访问没有细分，因此只根据静态定义的节点规则进行计算
+	// 对其他资源的访问没有细分,因此只根据静态定义的节点规则进行计算
 	if rbac.RulesAllow(attrs, r.nodeRules...) {
 		return authorizer.DecisionAllow, "", nil
 	}

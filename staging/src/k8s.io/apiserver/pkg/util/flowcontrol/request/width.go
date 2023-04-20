@@ -61,7 +61,7 @@ type objectCountGetterFunc func(string) (int64, error)
 // number of watchers potentially interested in a given request.
 type watchCountGetterFunc func(*apirequest.RequestInfo) int
 
-// NewWorkEstimator 估算请求对应的工作量，如果没有匹配的，将按照1计算
+// NewWorkEstimator 估算请求对应的工作量,如果没有匹配的,将按照1计算
 func NewWorkEstimator(objectCountFn objectCountGetterFunc, watchCountFn watchCountGetterFunc, config *WorkEstimatorConfig) WorkEstimatorFunc {
 	estimator := &workEstimator{
 		minimumSeats:          config.MinimumSeats,

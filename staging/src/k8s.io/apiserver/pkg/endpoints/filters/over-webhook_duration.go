@@ -31,7 +31,7 @@ var (
 	watchVerbs = sets.NewString("watch")
 )
 
-// WithLatencyTrackers 将LatencyTrackers实例添加到与请求关联的上下文中，以便我们可以测量apiserver中各个组件中产生的延迟。
+// WithLatencyTrackers 将LatencyTrackers实例添加到与请求关联的上下文中,以便我们可以测量apiserver中各个组件中产生的延迟.
 func WithLatencyTrackers(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()

@@ -63,7 +63,7 @@ type Store interface {
 	// given list. Store takes ownership of the list, you should not reference
 	// it after calling this function.
 	Replace([]interface{}, string) error
-	Resync() error // 在这里出现的术语中，Resync是没有意义的，但在一些具有重要附加行为的实现(例如，DeltaFIFO)中有意义。
+	Resync() error // 在这里出现的术语中,Resync是没有意义的,但在一些具有重要附加行为的实现(例如,DeltaFIFO)中有意义.
 }
 
 // KeyFunc knows how to make a key from an object. Implementations should be deterministic.

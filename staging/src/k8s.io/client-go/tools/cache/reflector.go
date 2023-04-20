@@ -46,7 +46,7 @@ import (
 const defaultExpectedTypeName = "<unspecified>"
 
 type Reflector struct {
-	name string // 名称，默认是file:line
+	name string // 名称,默认是file:line
 	// 下面三个为了确认类型
 	expectedTypeName string                   // watch 类型的名称
 	expectedType     reflect.Type             // watch 类型
@@ -56,15 +56,15 @@ type Reflector struct {
 	listerWatcher  ListerWatcher // 用来从 api-server 拉取全量和增量资源
 	// 下面两个用来做失败重试
 	backoffManager         wait.BackoffManager // 管理回退ListWatch
-	initConnBackoffManager wait.BackoffManager // 管理回退与ListAndWatch的Watch调用的初始连接。
+	initConnBackoffManager wait.BackoffManager // 管理回退与ListAndWatch的Watch调用的初始连接.
 
-	MaxInternalErrorRetryDuration time.Duration // 收到错误以后 ，最大的retry时间
+	MaxInternalErrorRetryDuration time.Duration // 收到错误以后 ,最大的retry时间
 
 	resyncPeriod                         time.Duration // informer 使用者重新同步的周期
 	ShouldResync                         func() bool   // 是否应该同步 func (p *sharedProcessor) shouldResync() bool {
 	clock                                clock.Clock   // 允许测试操作时间
-	paginatedResult                      bool          // 定义list调用是否强制分页。它基于初始列表调用的结果进行设置。
-	lastSyncResourceVersion              string        // 最后同步的资源版本号，以此为依据，watch 只会监听大于此值的资源
+	paginatedResult                      bool          // 定义list调用是否强制分页.它基于初始列表调用的结果进行设置.
+	lastSyncResourceVersion              string        // 最后同步的资源版本号,以此为依据,watch 只会监听大于此值的资源
 	isLastSyncResourceVersionUnavailable bool          // 最后同步的资源版本号是否可用
 	// lastSyncResourceVersionMutex guards read/write access to lastSyncResourceVersion
 	lastSyncResourceVersionMutex sync.RWMutex
@@ -138,7 +138,7 @@ func NewNamedReflector(name string, lw ListerWatcher, expectedType interface{}, 
 		name:           name,
 		listerWatcher:  lw,
 		reflectorStore: store, // ✅
-		// 重试机制, 可以有效降低api server的负载，也就是重试间隔会越来越长
+		// 重试机制, 可以有效降低api server的负载,也就是重试间隔会越来越长
 		backoffManager:         wait.NewExponentialBackoffManager(800*time.Millisecond, 30*time.Second, 2*time.Minute, 2.0, 1.0, realClock), // 定时器
 		initConnBackoffManager: wait.NewExponentialBackoffManager(800*time.Millisecond, 30*time.Second, 2*time.Minute, 2.0, 1.0, realClock),
 		resyncPeriod:           resyncPeriod,
@@ -170,10 +170,10 @@ func (r *Reflector) setExpectedType(expectedType interface{}) {
 	}
 }
 
-// internalPackages 是创建默认反射器名称时忽略的包。这些包在NewReflector的公共调用链中，因此它们是反射器的低熵名称
+// internalPackages 是创建默认反射器名称时忽略的包.这些包在NewReflector的公共调用链中,因此它们是反射器的低熵名称
 var internalPackages = []string{"client-go/tools/cache/"}
 
-// Run 重复使用反射器的ListAndWatch来获取所有对象和后续增量。
+// Run 重复使用反射器的ListAndWatch来获取所有对象和后续增量.
 // Run will exit when stopCh is closed.
 func (r *Reflector) Run(stopCh <-chan struct{}) {
 	klog.V(3).Infof("Starting reflector %s (%s) from %s", r.expectedTypeName, r.resyncPeriod, r.name)
@@ -262,11 +262,11 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 		timeoutSeconds := int64(minWatchTimeout.Seconds() * (rand.Float64() + 1.0))
 		options := metav1.ListOptions{
 			ResourceVersion:     r.LastSyncResourceVersion(),
-			TimeoutSeconds:      &timeoutSeconds, // 如果超时没有接收到任何Event,需要停止监听，避免一直阻塞
-			AllowWatchBookmarks: true,            // 用于降低api server压力，bookmark类型响应的对象主要只有RV信息
+			TimeoutSeconds:      &timeoutSeconds, // 如果超时没有接收到任何Event,需要停止监听,避免一直阻塞
+			AllowWatchBookmarks: true,            // 用于降低api server压力,bookmark类型响应的对象主要只有RV信息
 		}
 
-		// 在发送请求之前启动时钟，因为有些代理直到发送第一个监视事件之后才刷新标头
+		// 在发送请求之前启动时钟,因为有些代理直到发送第一个监视事件之后才刷新标头
 		start := r.clock.Now()
 		// 开始监听
 		w, err := r.listerWatcher.Watch(options)
@@ -323,7 +323,7 @@ func (r *Reflector) list(stopCh <-chan struct{}) error {
 				panicCh <- r
 			}
 		}()
-		//开始尝试收集list的chunks，
+		//开始尝试收集list的chunks,
 		pager := pager.New(pager.SimplePageFunc(func(opts metav1.ListOptions) (runtime.Object, error) { // ✅
 			// 	indexerCache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", "", fields.Everything())
 			return r.listerWatcher.List(opts)
@@ -482,7 +482,7 @@ loop:
 					utilruntime.HandleError(fmt.Errorf("%s: unable to delete watch event object (%#v) from reflectorStore: %v", name, event.Object, err))
 				}
 			case watch.Bookmark:
-				// A `Bookmark` 意味着watch 已经在这里同步，只需更新resourceVersion
+				// A `Bookmark` 意味着watch 已经在这里同步,只需更新resourceVersion
 			default:
 				utilruntime.HandleError(fmt.Errorf("%s: unable to understand watch event %#v", name, event))
 			}
@@ -495,7 +495,7 @@ loop:
 	}
 
 	watchDuration := clock.Since(start)                   // 耗时
-	if watchDuration < 1*time.Second && eventCount == 0 { // 1秒就结束了，且没有收到事件、属于异常情况
+	if watchDuration < 1*time.Second && eventCount == 0 { // 1秒就结束了,且没有收到事件、属于异常情况
 		return fmt.Errorf("very short watch: %s: Unexpected watch close - watch lasted less than a second and no items received", name)
 	}
 	klog.V(4).Infof("%s: Watch close - %v total %v items received", name, expectedTypeName, eventCount)

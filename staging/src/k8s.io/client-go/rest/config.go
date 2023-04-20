@@ -90,8 +90,8 @@ type Config struct {
 
 	// TLSClientConfig contains settings to enable transport layer security
 	TLSClientConfig
-	UserAgent          string //  是一个可选的字段，用于指定该请求的调用者。
-	DisableCompression bool   // 绕过了对服务器的自动GZip压缩请求。
+	UserAgent          string //  是一个可选的字段,用于指定该请求的调用者.
+	DisableCompression bool   // 绕过了对服务器的自动GZip压缩请求.
 
 	// Transport may be used for custom HTTP behavior. This attribute may not
 	// be specified with the TLS client certificate options. Use WrapTransport
@@ -279,7 +279,7 @@ type ContentConfig struct {
 	// If not set, ContentType will be used to define the Accept header
 	AcceptContentTypes string
 
-	ContentType string // 用于与服务器通信格式。
+	ContentType string // 用于与服务器通信格式.
 	// GroupVersion is the API version to talk to. Must be provided when initializing
 	// a RESTClient directly. When initializing a Client, will be set with the default
 	// code version.

@@ -110,8 +110,8 @@ func (v *legacyValidator) Validate(ctx context.Context, tokenData string, public
 	}
 
 	if v.lookup {
-		// 验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。
-		// 确保令牌没有因为密钥被删除而失效。
+		// 验证etcd中存在的ServiceAccount令牌作为身份验证的一部分.
+		// 确保令牌没有因为密钥被删除而失效.
 		secret, err := v.getter.GetSecret(namespace, secretName)
 		if err != nil {
 			klog.V(4).Infof("Could not retrieve token %s/%s for service account %s/%s: %v", namespace, secretName, namespace, serviceAccountName, err)
@@ -142,10 +142,10 @@ func (v *legacyValidator) Validate(ctx context.Context, tokenData string, public
 		}
 
 		if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.LegacyServiceAccountTokenTracking) {
-			// serviceAccount.Secrets     是在相同命名空间中，使用此ServiceAccount的Pod被允许使用的Secret列表。
+			// serviceAccount.Secrets     是在相同命名空间中,使用此ServiceAccount的Pod被允许使用的Secret列表.
 			for _, ref := range serviceAccount.Secrets {
 				if ref.Name == secret.Name {
-					warning.AddWarning(ctx, "", "使用TokenRequest API生成的令牌或手动创建的基于密钥的令牌，而不是自动生成的基于密钥的令牌。")
+					warning.AddWarning(ctx, "", "使用TokenRequest API生成的令牌或手动创建的基于密钥的令牌,而不是自动生成的基于密钥的令牌.")
 					break
 				}
 			}

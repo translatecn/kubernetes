@@ -39,9 +39,9 @@ type Context interface {
 	AuthenticatedData() []byte
 }
 
-// Transformer 允许在从底层存储读取或写入之前对一个值进行转换。
+// Transformer 允许在从底层存储读取或写入之前对一个值进行转换.
 type Transformer interface {
-	// TransformFromStorage 如果磁盘上的对象是陈旧的，并且应该向etcd写入，即使该对象的内容没有改变，Stale为真。
+	// TransformFromStorage 如果磁盘上的对象是陈旧的,并且应该向etcd写入,即使该对象的内容没有改变,Stale为真.
 	TransformFromStorage(ctx context.Context, data []byte, dataCtx Context) (out []byte, stale bool, err error)
 	TransformToStorage(ctx context.Context, data []byte, dataCtx Context) (out []byte, err error)
 }

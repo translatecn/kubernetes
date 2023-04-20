@@ -113,14 +113,14 @@ type containerManagerImpl struct {
 }
 
 type features struct {
-	cpuHardcapping bool
+	cpuHardcapping bool // 对 CPU 使用时间的硬限制。
 }
 
 var _ ContainerManager = &containerManagerImpl{}
 
-// cgroups 是 Linux 内核的一个功能，它允许将进程组织成一组，以便对它们进行资源限制和控制。
-// 在 Kubernetes 中，cgroups 用于限制容器的资源使用，例如 CPU、内存、磁盘等。
-// 该函数似乎是在检查 cgroups 是否已正确配置，以确保容器能够正常运行并受到正确的资源限制。
+// cgroups 是 Linux 内核的一个功能,它允许将进程组织成一组,以便对它们进行资源限制和控制.
+// 在 Kubernetes 中,cgroups 用于限制容器的资源使用,例如 CPU、内存、磁盘等.
+// 该函数似乎是在检查 cgroups 是否已正确配置,以确保容器能够正常运行并受到正确的资源限制.
 func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 	const (
 		cgroupMountType = "cgroup"
@@ -136,7 +136,7 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 		return f, fmt.Errorf("%s - %v", localErr, err)
 	}
 
-	if cgroups.IsCgroup2UnifiedMode() {
+	if cgroups.IsCgroup2UnifiedMode() { // cgroup v2 统一模式
 		f.cpuHardcapping = true
 		return f, nil
 	}
@@ -156,18 +156,17 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 	}
 
 	if expectedCgroups.Len() > 0 {
-		return f, fmt.Errorf("%s - Following Cgroup subsystem not mounted: %v", localErr, expectedCgroups.List())
+		return f, fmt.Errorf("%s - 以下的 Cgroup 子系统没有挂载: %v", localErr, expectedCgroups.List())
 	}
 
-	// Check if cpu quota is available.
-	// CPU cgroup is required and so it expected to be mounted at this point.
-	periodExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_period_us"))
+	// 检查是否有可用的 CPU 配额。CPU cgroup 是必需的，因此预期此时已经挂载。
+	periodExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_period_us")) // 是用于硬限制的 CPU 周期，以微秒为单位。
 	if err != nil {
-		klog.ErrorS(err, "Failed to detect if CPU cgroup cpu.cfs_period_us is available")
+		klog.ErrorS(err, "无法检测到 CPU cgroup cpu.cfs_period_us 是否可用。")
 	}
-	quotaExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_quota_us"))
+	quotaExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_quota_us")) // CPU 使用时间的硬限制上限，以微秒为单位。
 	if err != nil {
-		klog.ErrorS(err, "Failed to detect if CPU cgroup cpu.cfs_quota_us is available")
+		klog.ErrorS(err, "无法检测到 CPU cgroup cpu.cfs_quota_us 是否可用。")
 	}
 	if quotaExists && periodExists {
 		f.cpuHardcapping = true
@@ -367,7 +366,7 @@ func (cm *containerManagerImpl) InternalContainerLifecycle() InternalContainerLi
 	return &internalContainerLifecycleImpl{cm.cpuManager, cm.memoryManager, cm.topologyManager}
 }
 
-// Create a cgroup container manager.
+// 创建一个 cgroup 容器管理器。
 func createManager(containerName string) (cgroups.Manager, error) {
 	cg := &configs.Cgroup{
 		Parent: "/",
@@ -384,13 +383,12 @@ func createManager(containerName string) (cgroups.Manager, error) {
 type KernelTunableBehavior string
 
 const (
-	KernelTunableWarn   KernelTunableBehavior = "warn"
-	KernelTunableError  KernelTunableBehavior = "error"
-	KernelTunableModify KernelTunableBehavior = "modify"
+	KernelTunableWarn   KernelTunableBehavior = "warn"   // 在控制台上发出警告，但不会修改内核可调整flag或返回错误。
+	KernelTunableError  KernelTunableBehavior = "error"  // 发生错误时返回错误
+	KernelTunableModify KernelTunableBehavior = "modify" // 修改内核可调整标志
 )
 
-// setupKernelTunables validates kernel tunable flags are set as expected
-// depending upon the specified option, it will either warn, error, or modify the kernel tunable flags
+// setupKernelTunables 验证内核可调整flags是否按预期设置，具体取决于指定的选项，它将警告、出错或修改内核可调整标志。
 func setupKernelTunables(option KernelTunableBehavior) error {
 	desiredState := map[string]int{
 		utilsysctl.VMOvercommitMemory: utilsysctl.VMOvercommitMemoryAlways,
@@ -423,12 +421,12 @@ func setupKernelTunables(option KernelTunableBehavior) error {
 			klog.V(2).InfoS("Updating kernel flag", "flag", flag, "expectedValue", expectedValue, "actualValue", val)
 			err = sysctl.SetSysctl(flag, expectedValue)
 			if err != nil {
-				if libcontaineruserns.RunningInUserNS() {
+				if libcontaineruserns.RunningInUserNS() { // 0,0,4294967295
 					if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.KubeletInUserNamespace) {
-						klog.V(2).InfoS("Updating kernel flag failed (running in UserNS, ignoring)", "flag", flag, "err", err)
+						klog.V(2).InfoS("更新内核标志失败（正在运行于用户命名空间中，忽略）。", "flag", flag, "err", err)
 						continue
 					}
-					klog.ErrorS(err, "Updating kernel flag failed (Hint: enable KubeletInUserNamespace feature flag to ignore the error)", "flag", flag)
+					klog.ErrorS(err, "更新内核标志失败（提示：启用 KubeletInUserNamespace 功能标志以忽略此错误）。", "flag", flag)
 				}
 				errList = append(errList, err)
 			}
@@ -438,7 +436,7 @@ func setupKernelTunables(option KernelTunableBehavior) error {
 }
 
 func (cm *containerManagerImpl) setupNode(activePods ActivePodsFunc) error {
-	f, err := validateSystemRequirements(cm.mountUtil)
+	f, err := validateSystemRequirements(cm.mountUtil) // 是否启用了cpu 硬限制
 	if err != nil {
 		return err
 	}

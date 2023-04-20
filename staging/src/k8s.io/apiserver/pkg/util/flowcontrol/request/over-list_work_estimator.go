@@ -64,7 +64,7 @@ func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLe
 	listOptions := metav1.ListOptions{}
 	if err := metav1.Convert_url_Values_To_v1_ListOptions(&query, &listOptions, nil); err != nil {
 		klog.ErrorS(err, "Failed to convert options while estimating work for the list request")
-		// 这个请求注定会在验证层失败，为了保持一致，返回maximumSeats。
+		// 这个请求注定会在验证层失败,为了保持一致,返回maximumSeats.
 		return WorkEstimate{InitialSeats: e.config.MaximumSeats}
 	}
 	isListFromCache := !shouldListFromStorage(query, &listOptions) // 要不要从etcd 加载数据
@@ -72,8 +72,8 @@ func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLe
 	numStored, err := e.countGetterFn(key(requestInfo))
 	switch {
 	case err == ObjectCountStaleErr:
-		// 对象计数过时表明出现了退化，因此我们应该在此处保守，并为此列表请求分配最大座位数。
-		// 注意：如果删除了CRD，则其计数将首先变为过时状态，然后修剪器将最终从缓存中删除CRD。
+		// 对象计数过时表明出现了退化,因此我们应该在此处保守,并为此列表请求分配最大座位数.
+		// 注意：如果删除了CRD,则其计数将首先变为过时状态,然后修剪器将最终从缓存中删除CRD.
 		return WorkEstimate{InitialSeats: e.config.MaximumSeats}
 	case err == ObjectCountNotFoundErr:
 		// there are multiple scenarios in which we can see this error:
@@ -114,7 +114,7 @@ func (e *listWorkEstimator) estimate(r *http.Request, flowSchemaName, priorityLe
 	default:
 		estimatedObjectsToBeProcessed = 2 * limit
 	}
-	// 目前，我们的粗略估计是为将由列表请求处理的每100个对象分配一个座位。我们将在未来的迭代中提出不同的转换函数公式和/或微调此数字。
+	// 目前,我们的粗略估计是为将由列表请求处理的每100个对象分配一个座位.我们将在未来的迭代中提出不同的转换函数公式和/或微调此数字.
 	seats := uint64(math.Ceil(float64(estimatedObjectsToBeProcessed) / e.config.ObjectsPerSeat))
 
 	// make sure we never return a seat of zero

@@ -43,7 +43,7 @@ type Config struct {
 	Process       ProcessFunc    // Pop 出来的 obj 处理函数
 	ObjectType    runtime.Object // 目标对象类型
 
-	FullResyncPeriod time.Duration    // 全量重新同步周期。
+	FullResyncPeriod time.Duration    // 全量重新同步周期.
 	ShouldResync     ShouldResyncFunc // 是否重新同步队列
 
 	// If true, when Process() returns an error, re-enqueue the object.
@@ -53,7 +53,7 @@ type Config struct {
 	//       now that this functionality appears at a higher level.
 	RetryOnError      bool
 	WatchErrorHandler WatchErrorHandler
-	WatchListPageSize int64 // 初始 list 列表和 relist 列表的请求块大小。
+	WatchListPageSize int64 // 初始 list 列表和 relist 列表的请求块大小.
 }
 
 // ShouldResyncFunc is a type of function that indicates if a reflector should perform a
@@ -74,8 +74,8 @@ type controller struct {
 // Controller is a low-level controller that is parameterized by a
 // Config and used in sharedIndexInformer.
 type Controller interface {
-	// Run 1) 构造Reflector利用ListerWatcher的能力将对象事件更新到DeltaFIFO。
-	// 2) 从DeltaFIFO中Pop对象后调用ProcessFunc来处理。
+	// Run 1) 构造Reflector利用ListerWatcher的能力将对象事件更新到DeltaFIFO.
+	// 2) 从DeltaFIFO中Pop对象后调用ProcessFunc来处理.
 	Run(stopCh <-chan struct{})
 	HasSynced() bool // 是否有委托队列
 	// LastSyncResourceVersion delegates to the Reflector when there
@@ -121,10 +121,10 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 
 	var wg wait.Group
 
-	wg.StartWithChannel(stopCh, r.Run) // 重复使用反射器的ListAndWatch来获取所有对象和后续增量。
+	wg.StartWithChannel(stopCh, r.Run) // 重复使用反射器的ListAndWatch来获取所有对象和后续增量.
 
 	_ = newInformer
-	wait.Until(c.processLoop, time.Second, stopCh) // 取出数据，回调 informer.Process   newInformer
+	wait.Until(c.processLoop, time.Second, stopCh) // 取出数据,回调 informer.Process   newInformer
 	wg.Wait()
 }
 
@@ -142,9 +142,9 @@ func (c *controller) LastSyncResourceVersion() string {
 	return c.reflector.LastSyncResourceVersion()
 }
 
-// processLoop 耗尽工作队列。
-// TODO:考虑并行处理。这将需要考虑一些问题，以确保我们不会并发地多次处理同一个对象。
-// TODO:通过这里的stopCh(和下到队列)，这样当控制器停止时，它可以实际退出。或者干脆放弃这一切。将整个包转换为使用Context也很有帮助。
+// processLoop 耗尽工作队列.
+// TODO:考虑并行处理.这将需要考虑一些问题,以确保我们不会并发地多次处理同一个对象.
+// TODO:通过这里的stopCh(和下到队列),这样当控制器停止时,它可以实际退出.或者干脆放弃这一切.将整个包转换为使用Context也很有帮助.
 func (c *controller) processLoop() { // 对应 3. Pop Obj from fifo
 	for {
 		_ = newInformer
@@ -418,7 +418,7 @@ func newInformer(
 	clientState Store,
 	transformer TransformFunc,
 ) Controller {
-	// 这将保存传入的更改。请注意我们是如何将clientState作为KeyLister传入的，这样resync操作将导致正确的更新/删除增量集。
+	// 这将保存传入的更改.请注意我们是如何将clientState作为KeyLister传入的,这样resync操作将导致正确的更新/删除增量集.
 	fifo := NewDeltaFIFOWithOptions(DeltaFIFOOptions{
 		KnownObjects:          clientState,
 		EmitDeltaTypeReplaced: true,

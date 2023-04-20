@@ -188,7 +188,7 @@ func (w *WebhookTokenAuthenticator) AuthenticateToken(ctx context.Context, token
 	}, true, nil
 }
 
-// tokenReviewInterfaceFromConfig 从指定的kube config文件构建客户端，
+// tokenReviewInterfaceFromConfig 从指定的kube config文件构建客户端,
 func tokenReviewInterfaceFromConfig(config *rest.Config, version string, retryBackoff wait.Backoff) (tokenReviewer, error) {
 	localScheme := runtime.NewScheme()
 	if err := scheme.AddToScheme(localScheme); err != nil {

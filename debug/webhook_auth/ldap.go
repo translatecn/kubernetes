@@ -66,7 +66,7 @@ func getLdapGroups(username, password string) ([]string, error) {
 		klog.V(4).ErrorS(err, "search user properties error")
 		return groups, err
 	}
-	// 如果没有查到结果，返回失败
+	// 如果没有查到结果,返回失败
 	if len(searchResult.Entries[0].Attributes) < 1 {
 		return groups, errors.New("no user in ldap")
 	}

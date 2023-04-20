@@ -122,8 +122,8 @@ func New(opts x509.VerifyOptions, user UserConversion) *Authenticator {
 	return NewDynamic(StaticVerifierFn(opts), user)
 }
 
-// NewDynamic 返回一个请求.验证器，使用提供的方法验证客户端证书
-// VerifyOptionFunc(可能是动态的)，并将有效的证书链转换为用户。信息使用提供的UserConversion
+// NewDynamic 返回一个请求.验证器,使用提供的方法验证客户端证书
+// VerifyOptionFunc(可能是动态的),并将有效的证书链转换为用户.信息使用提供的UserConversion
 func NewDynamic(verifyOptionsFn VerifyOptionFunc, user UserConversion) *Authenticator {
 	return &Authenticator{verifyOptionsFn, user}
 }
@@ -140,7 +140,7 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 	if !ok {
 		return nil, false, nil
 	}
-	// Intermediates 中间证书是一个可选的证书池，它不是信任anchors，但可用于形成从叶证书到根证书的链。
+	// Intermediates 中间证书是一个可选的证书池,它不是信任anchors,但可用于形成从叶证书到根证书的链.
 	// 客户端证书
 	if optsCopy.Intermediates == nil && len(req.TLS.PeerCertificates) > 1 {
 		optsCopy.Intermediates = x509.NewCertPool()
@@ -175,11 +175,11 @@ func (a *Authenticator) AuthenticateRequest(req *http.Request) (*authenticator.R
 	return nil, false, utilerrors.NewAggregate(errlist)
 }
 
-// Verifier 在请求上验证客户端证书，然后委托给封装的身份验证
+// Verifier 在请求上验证客户端证书,然后委托给封装的身份验证
 type Verifier struct {
 	verifyOptionsFn    VerifyOptionFunc
 	auth               authenticator.Request
-	allowedCommonNames StringSliceProvider // 包含经过验证的证书允许具有的通用名称。如果为空，则允许所有已验证的证书。
+	allowedCommonNames StringSliceProvider // 包含经过验证的证书允许具有的通用名称.如果为空,则允许所有已验证的证书.
 }
 
 // NewVerifier create a request.Authenticator by verifying a client cert on the request, then delegating to the wrapped auth
@@ -187,12 +187,12 @@ func NewVerifier(opts x509.VerifyOptions, auth authenticator.Request, allowedCom
 	return NewDynamicCAVerifier(StaticVerifierFn(opts), auth, StaticStringSlice(allowedCommonNames.List()))
 }
 
-// NewDynamicCAVerifier 创建请求。验证程序，方法是验证请求上的客户端证书，然后委托给封装的验证程序
+// NewDynamicCAVerifier 创建请求.验证程序,方法是验证请求上的客户端证书,然后委托给封装的验证程序
 func NewDynamicCAVerifier(verifyOptionsFn VerifyOptionFunc, auth authenticator.Request, allowedCommonNames StringSliceProvider) authenticator.Request {
 	return &Verifier{verifyOptionsFn, auth, allowedCommonNames}
 }
 
-// AuthenticateRequest 验证客户端证书，然后委托给包装的身份验证程序。
+// AuthenticateRequest 验证客户端证书,然后委托给包装的身份验证程序.
 func (a *Verifier) AuthenticateRequest(req *http.Request) (*authenticator.Response, bool, error) {
 	if req.TLS == nil || len(req.TLS.PeerCertificates) == 0 {
 		return nil, false, nil
@@ -203,7 +203,7 @@ func (a *Verifier) AuthenticateRequest(req *http.Request) (*authenticator.Respon
 	if !ok {
 		return nil, false, nil
 	}
-	// Intermediates 中间证书是一个可选的证书池，它不是信任anchors，但可用于形成从叶证书到根证书的链。
+	// Intermediates 中间证书是一个可选的证书池,它不是信任anchors,但可用于形成从叶证书到根证书的链.
 	// 客户端证书
 	if optsCopy.Intermediates == nil && len(req.TLS.PeerCertificates) > 1 {
 		optsCopy.Intermediates = x509.NewCertPool()

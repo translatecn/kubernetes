@@ -37,7 +37,7 @@ import (
 	"k8s.io/apiserver/pkg/server/httplog"
 )
 
-// WithImpersonation 是一个筛选器，它将检查和试图更改用户的请求
+// WithImpersonation 是一个筛选器,它将检查和试图更改用户的请求
 func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.NegotiatedSerializer) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		impersonationRequests, err := buildImpersonationRequests(req.Header)
@@ -57,11 +57,11 @@ func WithImpersonation(handler http.Handler, a authorizer.Authorizer, s runtime.
 			responsewriters.InternalError(w, req, errors.New("no user found for request"))
 			return
 		}
-		// 如果未指定组，则需要根据用户类型以不同的方式查找它们
-		// 如果指定了组，则它们是权限机构 (including the inclusion of system:authenticated/system:unauthenticated groups)
+		// 如果未指定组,则需要根据用户类型以不同的方式查找它们
+		// 如果指定了组,则它们是权限机构 (including the inclusion of system:authenticated/system:unauthenticated groups)
 		groupsSpecified := len(req.Header[authenticationv1.ImpersonateGroupHeader]) > 0
 
-		// 确保我们有权模拟我们请求的每个对象。在我们遍历时，开始构建用户名和组信息。
+		// 确保我们有权模拟我们请求的每个对象.在我们遍历时,开始构建用户名和组信息.
 		username := ""
 		groups := []string{}
 		userExtra := map[string][]string{}
@@ -189,9 +189,9 @@ func unescapeExtraKey(encodedKey string) string {
 	return key
 }
 
-// buildImpersonationRequests 返回一个对象引用列表，表示我们要模拟的不同对象。
+// buildImpersonationRequests 返回一个对象引用列表,表示我们要模拟的不同对象.
 // 还包括一个表示user.Info.Extra的map[string][]string
-// 在切换上下文之前，必须对每个请求进行当前用户的授权。
+// 在切换上下文之前,必须对每个请求进行当前用户的授权.
 func buildImpersonationRequests(headers http.Header) ([]v1.ObjectReference, error) {
 	impersonationRequests := []v1.ObjectReference{}
 

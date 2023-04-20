@@ -105,7 +105,7 @@ func NewFsInfo(context Context) (FsInfo, error) {
 		klog.Warningf("Failed to get disk UUID mapping, getting disk info by uuid will not work: %v", err)
 	}
 
-	// 避免使用devicemapper容器挂载，这些挂载由ThinPoolWatcher跟踪。
+	// 避免使用devicemapper容器挂载,这些挂载由ThinPoolWatcher跟踪.
 	excluded := []string{fmt.Sprintf("%s/devicemapper/mnt", context.Docker.Root)}
 	fsInfo := &RealFsInfo{
 		partitions:         processMounts(mounts, excluded),
@@ -118,7 +118,7 @@ func NewFsInfo(context Context) (FsInfo, error) {
 	for _, mnt := range mounts { // cat /proc/self/mountinfo
 		fsInfo.mounts[mnt.Mountpoint] = *mnt
 	}
-	//在打印分区之前需要调用此函数，因为此函数可能会向fsInfo.partitions添加一个“分区”以处理devicemapper。
+	//在打印分区之前需要调用此函数,因为此函数可能会向fsInfo.partitions添加一个“分区”以处理devicemapper.
 	fsInfo.addDockerImagesLabel(context, mounts)
 	fsInfo.addCrioImagesLabel(context, mounts)
 

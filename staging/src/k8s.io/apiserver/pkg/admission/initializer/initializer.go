@@ -34,8 +34,8 @@ type pluginInitializer struct {
 	stopCh            <-chan struct{}
 }
 
-// New 创建一个准入插件初始化器实例。
-// 这个构造函数是公共的，有一个很长的参数列表，这样当调用者更新一个级别时，就可以立即知道在编译过程中可能会有新的信息。
+// New 创建一个准入插件初始化器实例.
+// 这个构造函数是公共的,有一个很长的参数列表,这样当调用者更新一个级别时,就可以立即知道在编译过程中可能会有新的信息.
 func New(
 	extClientset kubernetes.Interface,
 	dynamicClient dynamic.Interface,

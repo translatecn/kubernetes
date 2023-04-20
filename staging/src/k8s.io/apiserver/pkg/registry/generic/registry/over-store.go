@@ -100,13 +100,13 @@ type Store struct {
 	KeyFunc                  func(ctx context.Context, name string) (string, error)                        // 返回某个对象、实例、集合的路径
 	ObjectNameFunc           func(obj runtime.Object) (string, error)                                      //
 	TTLFunc                  func(obj runtime.Object, existing uint64, update bool) (uint64, error)        // 对象持久化保存的过期时间
-	PredicateFunc            func(label labels.Selector, field fields.Selector) storage.SelectionPredicate // 返回一个对应于提供的标签和字段的匹配器。如果对象匹配给定的字段和标签选择器，返回的 SelectionPredicate应 该返回true。
-	EnableGarbageCollection  bool                                                                          // 影响Update和Delete请求的处理。启用垃圾收集允许终结器在存储区删除该对象之前完成该对象的终结工作。
-	DeleteCollectionWorkers  int                                                                           // 对集合中的项的删除请求并行数。
-	Decorator                func(runtime.Object)                                                          // 给用户返回时的，用于修改对象的钩子   返回的对象可以是单个对象（例如Pod）或列表类型（例如PodList）。
+	PredicateFunc            func(label labels.Selector, field fields.Selector) storage.SelectionPredicate // 返回一个对应于提供的标签和字段的匹配器.如果对象匹配给定的字段和标签选择器,返回的 SelectionPredicate应 该返回true.
+	EnableGarbageCollection  bool                                                                          // 影响Update和Delete请求的处理.启用垃圾收集允许终结器在存储区删除该对象之前完成该对象的终结工作.
+	DeleteCollectionWorkers  int                                                                           // 对集合中的项的删除请求并行数.
+	Decorator                func(runtime.Object)                                                          // 给用户返回时的,用于修改对象的钩子   返回的对象可以是单个对象（例如Pod）或列表类型（例如PodList）.
 
-	CreateStrategy rest.RESTCreateStrategy // BeginCreate和CreateStrategy是两个不同的概念，用于在不同的阶段执行不同的操作。CreateStrategy用于定义创建的资源。
-	BeginCreate    BeginCreateFunc         // BeginCreate用于在创建资源之前执行一些准备工作。
+	CreateStrategy rest.RESTCreateStrategy // BeginCreate和CreateStrategy是两个不同的概念,用于在不同的阶段执行不同的操作.CreateStrategy用于定义创建的资源.
+	BeginCreate    BeginCreateFunc         // BeginCreate用于在创建资源之前执行一些准备工作.
 	AfterCreate    AfterCreateFunc
 
 	UpdateStrategy rest.RESTUpdateStrategy
@@ -117,18 +117,18 @@ type Store struct {
 	AfterDelete    AfterDeleteFunc
 
 	ReturnDeletedObject bool // 是否返回删除的对象
-	// ShouldDeleteDuringUpdate是一个可选函数，用于确定从obj对象到现有对象的更新是否应该导致删除。
-	// 如果指定了，除了标准的终结器、deletionTimestamp和deletionGracePeriodSeconds检查外，还会检查这个。
+	// ShouldDeleteDuringUpdate是一个可选函数,用于确定从obj对象到现有对象的更新是否应该导致删除.
+	// 如果指定了,除了标准的终结器、deletionTimestamp和deletionGracePeriodSeconds检查外,还会检查这个.
 	ShouldDeleteDuringUpdate func(ctx context.Context, key string, obj, existing runtime.Object) bool
 
 	TableConvertor rest.TableConvertor // 输出格式转换
 
-	ResetFieldsStrategy rest.ResetFieldsStrategy // 提供被策略重置的字段，用户不应该修改这些字段。
+	ResetFieldsStrategy rest.ResetFieldsStrategy // 提供被策略重置的字段,用户不应该修改这些字段.
 	Storage             DryRunnableStorage       // 底层真实存储
 	StorageVersioner    runtime.GroupVersioner
 
-	// DestroyFunc 清除底层存储使用的客户端;可选的。
-	// 如果设置了，DestroyFunc必须以线程安全的方式实现，并为多次调用做好准备。
+	// DestroyFunc 清除底层存储使用的客户端;可选的.
+	// 如果设置了,DestroyFunc必须以线程安全的方式实现,并为多次调用做好准备.
 	DestroyFunc func()
 }
 
@@ -660,13 +660,13 @@ func (e *Store) Get(ctx context.Context, name string, options *metav1.GetOptions
 	return obj, nil
 }
 
-// qualifiedResourceFromContext 尝试从上下文的请求信息中检索GroupResource。
-// 如果上下文没有请求信息，则使用DefaultQualifiedResource。
+// qualifiedResourceFromContext 尝试从上下文的请求信息中检索GroupResource.
+// 如果上下文没有请求信息,则使用DefaultQualifiedResource.
 func (e *Store) qualifiedResourceFromContext(ctx context.Context) schema.GroupResource {
 	if info, ok := genericapirequest.RequestInfoFrom(ctx); ok {
 		return schema.GroupResource{Group: info.APIGroup, Resource: info.Resource}
 	}
-	// 一些实现直接访问存储，因此上下文没有RequestInfo
+	// 一些实现直接访问存储,因此上下文没有RequestInfo
 	return e.DefaultQualifiedResource
 }
 

@@ -105,10 +105,10 @@ func (g *ClientConfigGetter) IsDefaultConfig(config *restclient.Config) bool {
 	return false
 }
 
-// ClientConfigLoadingRules 是一个ExplicitPath和特定位置的字符串片，用于合并一个Config。
-// 调用者可以随心所欲地把链放在一起，但我们建议：
+// ClientConfigLoadingRules 是一个ExplicitPath和特定位置的字符串片,用于合并一个Config.
+// 调用者可以随心所欲地把链放在一起,但我们建议：
 // EnvVarPathFiles（如果设置了文件列表）或HomeDirectoryPath
-// ExplicitPath很特别，因为如果用户特别要求使用某个文件，如果这个文件不存在就会报告错误
+// ExplicitPath很特别,因为如果用户特别要求使用某个文件,如果这个文件不存在就会报告错误
 type ClientConfigLoadingRules struct {
 	ExplicitPath string // 显式路径
 	Precedence   []string

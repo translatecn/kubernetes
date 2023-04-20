@@ -45,7 +45,7 @@ type Handler struct {
 
 func (h *Handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if !h.isMuxAndDiscoveryCompleteFn(req.Context()) {
-		errMsg := "在安装所有已知的HTTP路径之前，请求已经被发出，请重试。"
+		errMsg := "在安装所有已知的HTTP路径之前,请求已经被发出,请重试."
 		err := apierrors.NewServiceUnavailable(errMsg)
 		if err.ErrStatus.Details == nil {
 			err.ErrStatus.Details = &metav1.StatusDetails{}

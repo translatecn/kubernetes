@@ -34,8 +34,8 @@ import (
 
 type recordMetrics func(context.Context, *authenticator.Response, bool, error, authenticator.Audiences, time.Time, time.Time)
 
-// WithAuthentication 创建一个http处理程序，尝试将给定的请求作为用户进行身份验证，然后将找到的任何此类用户存储在请求的提供的上下文中。
-// 如果身份验证失败或返回错误，则使用失败的处理程序。成功后，“Authorization”标头将从请求中删除，并调用处理程序来处理请求。
+// WithAuthentication 创建一个http处理程序,尝试将给定的请求作为用户进行身份验证,然后将找到的任何此类用户存储在请求的提供的上下文中.
+// 如果身份验证失败或返回错误,则使用失败的处理程序.成功后,“Authorization”标头将从请求中删除,并调用处理程序来处理请求.
 func WithAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences) http.Handler {
 	return withAuthentication(handler, auth, failed, apiAuds, recordAuthMetrics)
 }
@@ -43,12 +43,12 @@ func WithAuthentication(handler http.Handler, auth authenticator.Request, failed
 func withAuthentication(handler http.Handler, auth authenticator.Request, failed http.Handler, apiAuds authenticator.Audiences, metrics recordMetrics) http.Handler {
 	// func (config Config) New() (authenticator.Request,
 	if auth == nil {
-		klog.Warning("身份验证已禁用。")
+		klog.Warning("身份验证已禁用.")
 		return handler
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		authenticationStart := time.Now()
-		// apiAuds 是程序运行时，在命令行里配置的
+		// apiAuds 是程序运行时,在命令行里配置的
 		if len(apiAuds) > 0 {
 			req = req.WithContext(authenticator.WithAudiences(req.Context(), apiAuds))
 		}
@@ -60,7 +60,7 @@ func withAuthentication(handler http.Handler, auth authenticator.Request, failed
 		}()
 		if err != nil || !ok {
 			if err != nil {
-				klog.ErrorS(err, "无法对请求进行身份验证。")
+				klog.ErrorS(err, "无法对请求进行身份验证.")
 			}
 			failed.ServeHTTP(w, req)
 			return
@@ -72,7 +72,7 @@ func withAuthentication(handler http.Handler, auth authenticator.Request, failed
 			failed.ServeHTTP(w, req)
 			return
 		}
-		//如果认证成功，授权头不再需要。
+		//如果认证成功,授权头不再需要.
 		req.Header.Del("Authorization")
 
 		req = req.WithContext(genericapirequest.WithUser(req.Context(), resp.User))

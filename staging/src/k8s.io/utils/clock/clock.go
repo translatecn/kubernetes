@@ -26,7 +26,7 @@ type PassiveClock interface {
 	Since(time.Time) time.Duration
 }
 
-// Clock 允许将假时钟或真实时钟注入到需要基于时间做任意事情的代码中。
+// Clock 允许将假时钟或真实时钟注入到需要基于时间做任意事情的代码中.
 type Clock interface {
 	PassiveClock
 	// After returns the channel of a new Timer.

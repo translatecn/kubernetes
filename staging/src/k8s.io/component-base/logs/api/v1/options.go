@@ -188,8 +188,8 @@ func AddFlags(c *LoggingConfiguration, fs *pflag.FlagSet) {
 	fs.Var(VModuleConfigurationPflag(&c.VModule), "vmodule", "以逗号分隔的pattern=N设置列表,用于文件过滤日志记录(仅适用于文本日志格式)")
 
 	if _, err := logRegistry.get("json"); err == nil {
-		fs.BoolVar(&c.Options.JSON.SplitStream, "log-json-split-stream", false, "[Alpha] JSON格式，将错误消息写入stderr，将info消息写入stdout。默认情况下是将单个流写入标准输出。启用LoggingAlphaOptions特性开关来使用它。")
-		fs.Var(&c.Options.JSON.InfoBufferSize, "log-json-info-buffer-size", "[Alpha] 在带有分割输出流的JSON格式中，info消息可以被缓冲一段时间以提高性能。默认值为0字节禁用缓冲。大小可以指定为字节数(512)，1000的倍数(1K)， 1024的倍数(2Ki)，或这些的幂(3M, 4G, 5Mi, 6Gi)。启用LoggingAlphaOptions特性开关来使用它。")
+		fs.BoolVar(&c.Options.JSON.SplitStream, "log-json-split-stream", false, "[Alpha] JSON格式,将错误消息写入stderr,将info消息写入stdout.默认情况下是将单个流写入标准输出.启用LoggingAlphaOptions特性开关来使用它.")
+		fs.Var(&c.Options.JSON.InfoBufferSize, "log-json-info-buffer-size", "[Alpha] 在带有分割输出流的JSON格式中,info消息可以被缓冲一段时间以提高性能.默认值为0字节禁用缓冲.大小可以指定为字节数(512),1000的倍数(1K), 1024的倍数(2Ki),或这些的幂(3M, 4G, 5Mi, 6Gi).启用LoggingAlphaOptions特性开关来使用它.")
 	}
 }
 

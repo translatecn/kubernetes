@@ -127,25 +127,25 @@ func (s *SecureServingOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	fs.IPVar(&s.BindAddress, "bind-address", s.BindAddress, "对外监听的IP")
-	desc := "通过认证和授权提供HTTPS服务的端口。"
+	desc := "通过认证和授权提供HTTPS服务的端口."
 	if s.Required {
-		desc += "不能用0来关闭。"
+		desc += "不能用0来关闭."
 	} else {
-		desc += "如果是0，则完全不提供HTTPS服务。"
+		desc += "如果是0,则完全不提供HTTPS服务."
 	}
 	fs.IntVar(&s.BindPort, "secure-port", s.BindPort, desc)
-	fs.StringVar(&s.ServerCert.CertDirectory, "cert-dir", s.ServerCert.CertDirectory, "TLS证书所在的目录。如果提供了-tls-cert-file和-tls-private-key-file，这个标志将被忽略。")
-	fs.StringVar(&s.ServerCert.CertKey.CertFile, "tls-cert-file", s.ServerCert.CertKey.CertFile, "包含HTTPS默认x509证书的文件。(如果有CA证书，则在服务器证书之后串联)。如果启用了HTTPS服务，并且没有提供--tls-cert-file和--tls-private-key-file，将为public地址生成一个自签名的证书和密钥，并保存在由--cert-dir指定的目录中。")
-	fs.StringVar(&s.ServerCert.CertKey.KeyFile, "tls-private-key-file", s.ServerCert.CertKey.KeyFile, "包含默认x509私钥匹配的文件 --tls-cert-file。")
+	fs.StringVar(&s.ServerCert.CertDirectory, "cert-dir", s.ServerCert.CertDirectory, "TLS证书所在的目录.如果提供了-tls-cert-file和-tls-private-key-file,这个标志将被忽略.")
+	fs.StringVar(&s.ServerCert.CertKey.CertFile, "tls-cert-file", s.ServerCert.CertKey.CertFile, "包含HTTPS默认x509证书的文件.(如果有CA证书,则在服务器证书之后串联).如果启用了HTTPS服务,并且没有提供--tls-cert-file和--tls-private-key-file,将为public地址生成一个自签名的证书和密钥,并保存在由--cert-dir指定的目录中.")
+	fs.StringVar(&s.ServerCert.CertKey.KeyFile, "tls-private-key-file", s.ServerCert.CertKey.KeyFile, "包含默认x509私钥匹配的文件 --tls-cert-file.")
 	tlsCipherPreferredValues := cliflag.PreferredTLSCipherNames()
 	tlsCipherInsecureValues := cliflag.InsecureTLSCipherNames()
-	fs.StringSliceVar(&s.CipherSuites, "tls-cipher-suites", s.CipherSuites, "以逗号分隔的服务器密码套件列表。 如果省略，将使用默认的Go密码套件。"+"首选值: "+strings.Join(tlsCipherPreferredValues, ", ")+". \n"+"不安全的值: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
+	fs.StringSliceVar(&s.CipherSuites, "tls-cipher-suites", s.CipherSuites, "以逗号分隔的服务器密码套件列表. 如果省略,将使用默认的Go密码套件."+"首选值: "+strings.Join(tlsCipherPreferredValues, ", ")+". \n"+"不安全的值: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
 	tlsPossibleVersions := cliflag.TLSPossibleVersions()
-	fs.StringVar(&s.MinTLSVersion, "tls-min-version", s.MinTLSVersion, "支持的最小TLS版本。可能的值:"+strings.Join(tlsPossibleVersions, ", "))
+	fs.StringVar(&s.MinTLSVersion, "tls-min-version", s.MinTLSVersion, "支持的最小TLS版本.可能的值:"+strings.Join(tlsPossibleVersions, ", "))
 	fs.Var(cliflag.NewNamedCertKeyArray(&s.SNICertKeys), "tls-sni-cert-key", "一对x509证书和私钥文件路径")
-	fs.IntVar(&s.HTTP2MaxStreamsPerConnection, "http2-max-streams-per-connection", s.HTTP2MaxStreamsPerConnection, "服务器给客户的 HTTP/2连接中的最大流数量 的限制。0 意味着使用golang的默认值。")
-	fs.BoolVar(&s.PermitPortSharing, "permit-port-sharing", s.PermitPortSharing, "如果为真，则在绑定端口时将使用SO_REUSEPORT，这允许多个实例在相同的地址和端口上绑定。(default=false)")
-	fs.BoolVar(&s.PermitAddressSharing, "permit-address-sharing", s.PermitAddressSharing, "如果为true，绑定端口时将使用SO_REUSEADDR。这允许与通配符ip(如0.0.0.0)和特定ip并行绑定，并且避免等待内核在TIME_WAIT状态下释放套接字。(default=false)")
+	fs.IntVar(&s.HTTP2MaxStreamsPerConnection, "http2-max-streams-per-connection", s.HTTP2MaxStreamsPerConnection, "服务器给客户的 HTTP/2连接中的最大流数量 的限制.0 意味着使用golang的默认值.")
+	fs.BoolVar(&s.PermitPortSharing, "permit-port-sharing", s.PermitPortSharing, "如果为真,则在绑定端口时将使用SO_REUSEPORT,这允许多个实例在相同的地址和端口上绑定.(default=false)")
+	fs.BoolVar(&s.PermitAddressSharing, "permit-address-sharing", s.PermitAddressSharing, "如果为true,绑定端口时将使用SO_REUSEADDR.这允许与通配符ip(如0.0.0.0)和特定ip并行绑定,并且避免等待内核在TIME_WAIT状态下释放套接字.(default=false)")
 }
 
 // ApplyTo fills up serving information in the server configuration.
@@ -171,7 +171,7 @@ func (s *SecureServingOptions) ApplyTo(config **server.SecureServingInfo) error 
 			ctls = append(ctls, permitAddressReuse)
 		}
 		if len(ctls) > 0 {
-			c.Control = ctls.Control // 如果Control不是nil，则在创建网络连接后 但绑定到操作系统之前调用。
+			c.Control = ctls.Control // 如果Control不是nil,则在创建网络连接后 但绑定到操作系统之前调用.
 		}
 
 		s.Listener, s.BindPort, err = CreateListener(s.BindNetwork, addr, c)

@@ -37,9 +37,9 @@ type DynamicCertKeyPairContent struct {
 	name        string                          //
 	certFile    string                          // 证书文件
 	keyFile     string                          // 私钥文件
-	certKeyPair atomic.Value                    // 是一个certKeyContent，它包含密钥和证书的最后一次读取的非零长度内容
+	certKeyPair atomic.Value                    // 是一个certKeyContent,它包含密钥和证书的最后一次读取的非零长度内容
 	listeners   []Listener                      //
-	queue       workqueue.RateLimitingInterface // 只有一个项，但是它有很好的错误处理后退/重试语义
+	queue       workqueue.RateLimitingInterface // 只有一个项,但是它有很好的错误处理后退/重试语义
 
 }
 
@@ -66,12 +66,12 @@ func NewDynamicServingContentFromFiles(purpose, certFile, keyFile string) (*Dyna
 	return ret, nil
 }
 
-// AddListener 添加一个侦听器，以便在服务证书内容更改时得到通知。
+// AddListener 添加一个侦听器,以便在服务证书内容更改时得到通知.
 func (c *DynamicCertKeyPairContent) AddListener(listener Listener) {
 	c.listeners = append(c.listeners, listener)
 }
 
-// loadCertKeyPair 确定文件的下一组内容。
+// loadCertKeyPair 确定文件的下一组内容.
 func (c *DynamicCertKeyPairContent) loadCertKeyPair() error {
 	cert, err := ioutil.ReadFile(c.certFile)
 	if err != nil {

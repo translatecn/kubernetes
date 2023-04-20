@@ -53,17 +53,17 @@ type EgressSelector struct {
 	egressToDialer map[EgressType]utilnet.DialFunc
 }
 
-// EgressType 指示应使用哪个出口选择来发送流量。可以更加智能的决定流量的目标
+// EgressType 指示应使用哪个出口选择来发送流量.可以更加智能的决定流量的目标
 // See https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/1281-network-proxy/README.md#network-context
 type EgressType int
 
 const (
-	ControlPlane EgressType = iota // 进入控制平面的流量。
-	Etcd                           // 进入etcd的流量。
-	Cluster                        // 打算进入由Kubernetes管理的系统。
+	ControlPlane EgressType = iota // 进入控制平面的流量.
+	Etcd                           // 进入etcd的流量.
+	Cluster                        // 打算进入由Kubernetes管理的系统.
 )
 
-// NetworkContext 是Kubernetes API Server用来指示它打算将流量发送到哪里的结构。
+// NetworkContext 是Kubernetes API Server用来指示它打算将流量发送到哪里的结构.
 type NetworkContext struct {
 	EgressSelectionName EgressType
 }
@@ -386,7 +386,7 @@ func NewEgressSelectorWithMap(m map[EgressType]utilnet.DialFunc) *EgressSelector
 	}
 }
 
-// Lookup 获取网络上下文的dialer函数。
+// Lookup 获取网络上下文的dialer函数.
 // 这是Kubernetes API Server在启动时的配置
 func (cs *EgressSelector) Lookup(networkContext NetworkContext) (utilnet.DialFunc, error) {
 	if cs.egressToDialer == nil {

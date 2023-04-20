@@ -43,7 +43,7 @@ const (
 	syncNothing
 )
 
-// AggregationController 定期检查每个APIService处理的组版本列表，并定期更新发现页面。
+// AggregationController 定期检查每个APIService处理的组版本列表,并定期更新发现页面.
 type AggregationController struct {
 	openAPIAggregationManager aggregator.SpecProxier
 	queue                     workqueue.RateLimitingInterface
@@ -64,7 +64,7 @@ func NewAggregationController(openAPIAggregationManager aggregator.SpecProxier) 
 
 	c.syncHandler = c.sync
 
-	// 至少更新每个服务一次，包括那些不来自APIServices的本地服务。
+	// 至少更新每个服务一次,包括那些不来自APIServices的本地服务.
 	for _, name := range openAPIAggregationManager.GetAPIServiceNames() {
 		c.queue.AddAfter(name, time.Second)
 	}
@@ -90,7 +90,7 @@ func (c *AggregationController) runWorker() {
 	}
 }
 
-// processNextWorkItem 处理队列中的一个键。当该函数返回false时，表示该程序应该退出。
+// processNextWorkItem 处理队列中的一个键.当该函数返回false时,表示该程序应该退出.
 func (c *AggregationController) processNextWorkItem() bool {
 	key, quit := c.queue.Get()
 	defer c.queue.Done(key)
@@ -99,7 +99,7 @@ func (c *AggregationController) processNextWorkItem() bool {
 	}
 
 	if aggregator.IsLocalAPIService(key.(string)) {
-		// 对于每秒聚合一次的本地委托目标，记录更高级别的日志，以避免洪水般的日志。
+		// 对于每秒聚合一次的本地委托目标,记录更高级别的日志,以避免洪水般的日志.
 		klog.V(6).Infof("OpenAPI AggregationController: Processing item %s", key)
 	} else {
 		klog.V(4).Infof("OpenAPI AggregationController: Processing item %s", key)

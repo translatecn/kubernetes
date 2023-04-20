@@ -23,12 +23,12 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 )
 
-// Token 根据备份身份验证存储区检查字符串值，如果无法检查令牌，则返回Response或错误。
+// Token 根据备份身份验证存储区检查字符串值,如果无法检查令牌,则返回Response或错误.
 type Token interface {
 	AuthenticateToken(ctx context.Context, token string) (*Response, bool, error)
 }
 
-// Request 尝试从请求中提取身份验证信息，如果无法检查请求，则返回Response或错误。
+// Request 尝试从请求中提取身份验证信息,如果无法检查请求,则返回Response或错误.
 type Request interface {
 	AuthenticateRequest(req *http.Request) (*Response, bool, error)
 }
@@ -51,6 +51,6 @@ func (f RequestFunc) AuthenticateRequest(req *http.Request) (*Response, bool, er
 
 // Response 是身份验证器接口成功身份验证后返回的结构
 type Response struct {
-	Audiences Audiences // openid connect 中规定的标识符列表，用于明确使用方
+	Audiences Audiences // openid connect 中规定的标识符列表,用于明确使用方
 	User      user.Info
 }

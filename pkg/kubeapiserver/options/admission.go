@@ -51,7 +51,7 @@ func NewAdmissionOptions() *AdmissionOptions {
 // AddFlags adds flags related to admission for kube-apiserver to the specified FlagSet
 func (a *AdmissionOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&a.PluginNames, "admission-control", a.PluginNames, "准入分为两个阶段,1:变异,2校验.  插件列表："+strings.Join(a.GenericAdmission.Plugins.Registered(), ", ")+".")
-	fs.MarkDeprecated("admission-control", "Use --enable-admission-plugins or --disable-admission-plugins instead. 将在未来的版本中删除。")
+	fs.MarkDeprecated("admission-control", "Use --enable-admission-plugins or --disable-admission-plugins instead. 将在未来的版本中删除.")
 	fs.Lookup("admission-control").Hidden = false
 	a.GenericAdmission.AddFlags(fs)
 }
@@ -80,8 +80,8 @@ func (a *AdmissionOptions) Validate() []error {
 	return errs
 }
 
-// ApplyTo 将许可链添加到服务器配置中。
-// Kube-apiserver调用通用的AdmissionOptions.ApplyTo。
+// ApplyTo 将许可链添加到服务器配置中.
+// Kube-apiserver调用通用的AdmissionOptions.ApplyTo.
 func (a *AdmissionOptions) ApplyTo(
 	c *server.Config,
 	informers informers.SharedInformerFactory,

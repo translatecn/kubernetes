@@ -21,11 +21,11 @@ import (
 	"k8s.io/apiserver/pkg/authorization/authorizer"
 )
 
-// RequestAuditConfig 是适用于给定请求的评估审计配置。
-// PolicyRuleEvaluator 根据授权器属性评估审计策略，并返回适用于请求的RequestAuditConfig。
+// RequestAuditConfig 是适用于给定请求的评估审计配置.
+// PolicyRuleEvaluator 根据授权器属性评估审计策略,并返回适用于请求的RequestAuditConfig.
 type RequestAuditConfig struct {
-	OmitStages        []audit.Stage // 这些阶段需要从审计中省略。
-	OmitManagedFields bool          // 指示是否省略请求和响应正文的托管字段，以便不将其写入API审计日志中。
+	OmitStages        []audit.Stage // 这些阶段需要从审计中省略.
+	OmitManagedFields bool          // 指示是否省略请求和响应正文的托管字段,以便不将其写入API审计日志中.
 }
 
 type RequestAuditConfigWithLevel struct {
@@ -35,6 +35,6 @@ type RequestAuditConfigWithLevel struct {
 
 // PolicyRuleEvaluator exposes methods for evaluating the policy rules.
 type PolicyRuleEvaluator interface {
-	// EvaluatePolicyRule 评估apiserver的审计策略，根据给定的授权器属性返回适用于给定请求的审计配置。
+	// EvaluatePolicyRule 评估apiserver的审计策略,根据给定的授权器属性返回适用于给定请求的审计配置.
 	EvaluatePolicyRule(authorizer.Attributes) RequestAuditConfigWithLevel
 }

@@ -155,7 +155,7 @@ func verifyKeyData(data []byte) bool {
 	return err == nil
 }
 
-// ParsePrivateKeyPEM ✅从提供的数据中解析出一个PEM块中的私钥。
+// ParsePrivateKeyPEM ✅从提供的数据中解析出一个PEM块中的私钥.
 // Recognizes PEM blocks for "EC PRIVATE KEY", "RSA PRIVATE KEY", or "PRIVATE KEY"
 func ParsePrivateKeyPEM(keyData []byte) (interface{}, error) {
 	var privateKeyPemBlock *pem.Block

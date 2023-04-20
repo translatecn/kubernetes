@@ -65,7 +65,7 @@ func NewListWatchFromClient(c Getter, resource string, namespace string, fieldSe
 func NewFilteredListWatchFromClient(c Getter, resource string, namespace string, optionsModifier func(options *metav1.ListOptions)) *ListWatch {
 	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
 		optionsModifier(&options)
-		return c.Get(). // 其实就是RESTClient.Get(），返回的是*rest.Request对象
+		return c.Get(). // 其实就是RESTClient.Get(）,返回的是*rest.Request对象
 				Namespace(namespace).
 				Resource(resource).
 				VersionedParams(&options, metav1.ParameterCodec).
@@ -75,7 +75,7 @@ func NewFilteredListWatchFromClient(c Getter, resource string, namespace string,
 	watchFunc := func(options metav1.ListOptions) (watch.Interface, error) {
 		options.Watch = true
 		optionsModifier(&options)
-		return c.Get(). // 其实就是RESTClient.Get(），返回的是*rest.Request对象
+		return c.Get(). // 其实就是RESTClient.Get(）,返回的是*rest.Request对象
 				Namespace(namespace).
 				Resource(resource).
 				VersionedParams(&options, metav1.ParameterCodec).

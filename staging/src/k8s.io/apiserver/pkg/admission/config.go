@@ -50,11 +50,11 @@ func makeAbs(path, base string) (string, error) {
 }
 
 // ReadAdmissionConfiguration reads the admission configuration at the specified path.
-// 如果输入文件符合要求的语法，则返回加载的录取配置。
-// 如果与提供的语法不一致，则返回枚举的默认配置
-// 配置位置引用指定configFilePath的pluginNames的集合。
-// 当允许控制文件是不透明的时，这样做是为了保持向后兼容性。
-// 如果文件不存在，则返回错误。
+// 如果输入文件符合要求的语法,则返回加载的录取配置.
+// 如果与提供的语法不一致,则返回枚举的默认配置
+// 配置位置引用指定configFilePath的pluginNames的集合.
+// 当允许控制文件是不透明的时,这样做是为了保持向后兼容性.
+// 如果文件不存在,则返回错误.
 func ReadAdmissionConfiguration(pluginNames []string, configFilePath string, configScheme *runtime.Scheme) (ConfigProvider, error) {
 	if configFilePath == "" {
 		return configProvider{config: &apiserver.AdmissionConfiguration{}}, nil
@@ -151,10 +151,10 @@ func GetAdmissionPluginConfigurationFor(pluginCfg apiserver.AdmissionPluginConfi
 	return nil, nil
 }
 
-// ConfigFor 返回指定插件的读取器。
-// 如果没有指定的配置，则返回nil读取器。
+// ConfigFor 返回指定插件的读取器.
+// 如果没有指定的配置,则返回nil读取器.
 func (p configProvider) ConfigFor(pluginName string) (io.Reader, error) {
-	// 没有配置，所以没有潜在的配置
+	// 没有配置,所以没有潜在的配置
 	if p.config == nil {
 		return nil, nil
 	}
@@ -169,6 +169,6 @@ func (p configProvider) ConfigFor(pluginName string) (io.Reader, error) {
 		}
 		return pluginConfig, nil
 	}
-	// 没有与插件名称匹配的注册配置。
+	// 没有与插件名称匹配的注册配置.
 	return nil, nil
 }

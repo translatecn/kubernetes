@@ -37,12 +37,12 @@ import (
 // RESTCreateStrategy 定义了最小验证、可接受的输入和名称生成行为
 type RESTCreateStrategy interface {
 	runtime.ObjectTyper
-	names.NameGenerator                                                // 当设置标准GenerateName字段时使用名称生成器。NameGenerator将在验证之前被调用。
+	names.NameGenerator                                                // 当设置标准GenerateName字段时使用名称生成器.NameGenerator将在验证之前被调用.
 	NamespaceScoped() bool                                             // 该对象是不是属于名称空间
-	PrepareForCreate(ctx context.Context, obj runtime.Object)          // 在BeforeCreate函数里调用，以规范化对象。例如:删除不持久化的字段，排序不区分顺序的列表字段，等等。这不应该删除将被认为是验证错误的字段。
-	Validate(ctx context.Context, obj runtime.Object) field.ErrorList  // 返回一个带有验证错误或nil的ErrorList。在持久化对象之前填充对象中的默认字段之后调用Validate。这个方法不应该改变对象。
-	WarningsOnCreate(ctx context.Context, obj runtime.Object) []string // Validate调用之后运行的，返回一系列的错误信息
-	Canonicalize(obj runtime.Object)                                   // WarningsOnCreate 调用之后运行的，在验证后规范化对象。
+	PrepareForCreate(ctx context.Context, obj runtime.Object)          // 在BeforeCreate函数里调用,以规范化对象.例如:删除不持久化的字段,排序不区分顺序的列表字段,等等.这不应该删除将被认为是验证错误的字段.
+	Validate(ctx context.Context, obj runtime.Object) field.ErrorList  // 返回一个带有验证错误或nil的ErrorList.在持久化对象之前填充对象中的默认字段之后调用Validate.这个方法不应该改变对象.
+	WarningsOnCreate(ctx context.Context, obj runtime.Object) []string // Validate调用之后运行的,返回一系列的错误信息
+	Canonicalize(obj runtime.Object)                                   // WarningsOnCreate 调用之后运行的,在验证后规范化对象.
 }
 
 // BeforeCreate ensures that common operations for all resources are performed on creation. It only returns

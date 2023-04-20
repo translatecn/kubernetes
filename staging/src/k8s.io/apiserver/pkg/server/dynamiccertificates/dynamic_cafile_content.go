@@ -66,7 +66,7 @@ type caBundleAndVerifier struct {
 	verifyOptions x509.VerifyOptions
 }
 
-// NewDynamicCAContentFromFile 返回一个基于文件的CAContentProvider，自动重新加载内容。
+// NewDynamicCAContentFromFile 返回一个基于文件的CAContentProvider,自动重新加载内容.
 func NewDynamicCAContentFromFile(purpose, filename string) (*DynamicFileCAContent, error) {
 	//purpose 用途
 	if len(filename) == 0 {
@@ -91,7 +91,7 @@ func (c *DynamicFileCAContent) AddListener(listener Listener) {
 	c.listeners = append(c.listeners, listener)
 }
 
-// loadCABundle 确定文件的下一组内容。
+// loadCABundle 确定文件的下一组内容.
 func (c *DynamicFileCAContent) loadCABundle() error {
 	caBundle, err := ioutil.ReadFile(c.filename)
 	if err != nil {
@@ -101,7 +101,7 @@ func (c *DynamicFileCAContent) loadCABundle() error {
 		return fmt.Errorf("missing content for CA bundle %q", c.Name())
 	}
 
-	// 检查我们是否有变化。如果值是相同的，就什么也不做。
+	// 检查我们是否有变化.如果值是相同的,就什么也不做.
 	if !c.hasCAChanged(caBundle) {
 		return nil
 	}
@@ -120,14 +120,14 @@ func (c *DynamicFileCAContent) loadCABundle() error {
 	return nil
 }
 
-// hasCAChanged 如果caBundle与当前不同，则返回true。
+// hasCAChanged 如果caBundle与当前不同,则返回true.
 func (c *DynamicFileCAContent) hasCAChanged(caBundle []byte) bool {
 	uncastExisting := c.caBundle.Load()
 	if uncastExisting == nil {
 		return true
 	}
 
-	// 检查我们是否有变化。如果值是相同的，就什么也不做。
+	// 检查我们是否有变化.如果值是相同的,就什么也不做.
 	existing, ok := uncastExisting.(*caBundleAndVerifier)
 	if !ok {
 		return true

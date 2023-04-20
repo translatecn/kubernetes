@@ -407,15 +407,15 @@ type MemoryStatsMemoryData struct {
 }
 
 type InterfaceStats struct {
-	Name      string `json:"name"`       // 网络接口的名称。
-	RxBytes   uint64 `json:"rx_bytes"`   // 接收到的字节数。
-	RxPackets uint64 `json:"rx_packets"` // 接收到的数据包数量。
-	RxErrors  uint64 `json:"rx_errors"`  // 接收过程中出现的错误数量。
-	RxDropped uint64 `json:"rx_dropped"` // 接收过程中被丢弃的数据包数量。
-	TxBytes   uint64 `json:"tx_bytes"`   // 发送的字节数。
-	TxPackets uint64 `json:"tx_packets"` // 发送的数据包数量。
-	TxErrors  uint64 `json:"tx_errors"`  // 发送过程中出现的错误数量。
-	TxDropped uint64 `json:"tx_dropped"` // 发送过程中被丢弃的数据包数量。
+	Name      string `json:"name"`       // 网络接口的名称.
+	RxBytes   uint64 `json:"rx_bytes"`   // 接收到的字节数.
+	RxPackets uint64 `json:"rx_packets"` // 接收到的数据包数量.
+	RxErrors  uint64 `json:"rx_errors"`  // 接收过程中出现的错误数量.
+	RxDropped uint64 `json:"rx_dropped"` // 接收过程中被丢弃的数据包数量.
+	TxBytes   uint64 `json:"tx_bytes"`   // 发送的字节数.
+	TxPackets uint64 `json:"tx_packets"` // 发送的数据包数量.
+	TxErrors  uint64 `json:"tx_errors"`  // 发送过程中出现的错误数量.
+	TxDropped uint64 `json:"tx_dropped"` // 发送过程中被丢弃的数据包数量.
 }
 
 type NetworkStats struct {
@@ -796,12 +796,12 @@ type FsStats struct {
 }
 
 type AcceleratorStats struct {
-	Make        string `json:"make"`         // 加速器的制造商，例如nvidia、amd、google等。
-	Model       string `json:"model"`        // 加速器的型号，例如tesla-p100、tesla-k80等。
-	ID          string `json:"id"`           // 加速器的ID。
-	MemoryTotal uint64 `json:"memory_total"` // 加速器总内存大小，单位为字节。
-	MemoryUsed  uint64 `json:"memory_used"`  // 加速器已分配内存大小，单位为字节。
-	DutyCycle   uint64 `json:"duty_cycle"`   // 加速器在过去的采样时间内活跃处理的时间百分比。
+	Make        string `json:"make"`         // 加速器的制造商,例如nvidia、amd、google等.
+	Model       string `json:"model"`        // 加速器的型号,例如tesla-p100、tesla-k80等.
+	ID          string `json:"id"`           // 加速器的ID.
+	MemoryTotal uint64 `json:"memory_total"` // 加速器总内存大小,单位为字节.
+	MemoryUsed  uint64 `json:"memory_used"`  // 加速器已分配内存大小,单位为字节.
+	DutyCycle   uint64 `json:"duty_cycle"`   // 加速器在过去的采样时间内活跃处理的时间百分比.
 }
 
 // PerfStat represents value of a single monitored perf event.

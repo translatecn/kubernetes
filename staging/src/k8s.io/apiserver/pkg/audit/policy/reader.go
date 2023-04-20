@@ -79,10 +79,10 @@ func LoadPolicyFromBytes(policyDef []byte) (*auditinternal.Policy, error) {
 		if lenientErr != nil {
 			return nil, fmt.Errorf("failed lenient decoding: %w", lenientErr)
 		}
-		klog.Warningf("审计策略包含错误，退回到宽限解码: %v", err)
+		klog.Warningf("审计策略包含错误,退回到宽限解码: %v", err)
 	}
 
-	// 确保策略文件包含apiVersion和kind。
+	// 确保策略文件包含apiVersion和kind.
 	gv := schema.GroupVersion{Group: gvk.Group, Version: gvk.Version}
 	if !apiGroupVersionSet[gv] {
 		return nil, fmt.Errorf("unknown group version field %v in policy", gvk)

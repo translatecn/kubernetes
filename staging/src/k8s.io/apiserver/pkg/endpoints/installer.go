@@ -180,7 +180,7 @@ var toDiscoveryKubeVerb = map[string]string{
 	"WATCHLIST":        "watch",
 }
 
-// Install API资源的处理程序。 // ✅
+// Install API资源的处理程序. // ✅
 func (a *APIInstaller) Install() ([]metav1.APIResource, []*storageversion.ResourceInfo, *restful.WebService, []error) {
 	var apiResources []metav1.APIResource
 	var resourceInfos []*storageversion.ResourceInfo
@@ -347,7 +347,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		}
 		namespaceScoped = scoper.NamespaceScoped()
 	}
-	// 3、根据传入的storage对象实现的接口，确定支持的各种操作 (verbs)
+	// 3、根据传入的storage对象实现的接口,确定支持的各种操作 (verbs)
 	// what verbs are supported by the storage, used to know what verbs we support per path
 	creater, isCreater := storage.(rest.Creater)
 	namedCreater, isNamedCreater := storage.(rest.NamedCreater)
@@ -506,7 +506,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		// All listers must implement TableProvider
 		return nil, nil, fmt.Errorf("%q must implement TableConvertor", resource)
 	}
-	// 5、生成apiResource，备返回
+	// 5、生成apiResource,备返回
 	var apiResource metav1.APIResource
 	if utilfeature.DefaultFeatureGate.Enabled(features.StorageVersionHash) &&
 		isStorageVersionProvider &&
@@ -518,7 +518,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		}
 		apiResource.StorageVersionHash = discovery.StorageVersionHash(gvk.Group, gvk.Version, gvk.Kind)
 	}
-	// 6、制作actions list，每个resource的每个verb—条记录
+	// 6、制作actions list,每个resource的每个verb—条记录
 	// Get the list of actions for the given scope.
 	switch {
 	case !namespaceScoped:
@@ -632,7 +632,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		if a.group.ConvertabilityChecker != nil {
 			decodableVersions = a.group.ConvertabilityChecker.VersionsForGroupKind(fqKindToRegister.GroupKind())
 		}
-		// 8、生成Resourcelnfo，备返回
+		// 8、生成Resourcelnfo,备返回
 		resourceInfo = &storageversion.ResourceInfo{
 			GroupResource: schema.GroupResource{
 				Group:    a.group.GroupVersion.Group,
@@ -675,13 +675,13 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			return nil, nil, fmt.Errorf("all serializers in the group Serializer must have MediaTypeType and MediaTypeSubType set: %s", s.MediaType)
 		}
 	}
-	// 9、根据Serializer，得出支持的MediaTypes从而设置webservice的response中属性
+	// 9、根据Serializer,得出支持的MediaTypes从而设置webservice的response中属性
 	mediaTypes, streamMediaTypes := negotiation.MediaTypesForSerializer(a.group.Serializer)
 	allMediaTypes := append(mediaTypes, streamMediaTypes...)
 	ws.Produces(allMediaTypes...)
 
 	kubeVerbs := map[string]struct{}{}
-	// 10、把以上各个环节得到的信息，放入reqScope中
+	// 10、把以上各个环节得到的信息,放入reqScope中
 	reqScope := handlers.RequestScope{
 		Serializer:      a.group.Serializer,
 		ParameterCodec:  a.group.ParameterCodec,
@@ -729,7 +729,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			return nil, nil, fmt.Errorf("failed to create field manager: %v", err)
 		}
 	}
-	// 12、逐个处理Actions list中的action，基于reqScope等信息，为他们生成route并注册到webservice中去
+	// 12、逐个处理Actions list中的action,基于reqScope等信息,为他们生成route并注册到webservice中去
 	for _, action := range actions {
 		producedObject := storageMeta.ProducesObject(action.Verb)
 		if producedObject == nil {

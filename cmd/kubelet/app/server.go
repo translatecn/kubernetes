@@ -686,7 +686,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			return err
 		}
 		var hardEvictionThresholds []evictionapi.Threshold
-		// 如果用户没有设置 忽略驱逐阈值，就为hardEvictionThresholds设置有效值。
+		// 如果用户没有设置 忽略驱逐阈值,就为hardEvictionThresholds设置有效值.
 		if !s.ExperimentalNodeAllocatableIgnoreEvictionThreshold {
 			hardEvictionThresholds, err = eviction.ParseThresholdConfig([]string{}, s.EvictionHard, nil, nil, nil)
 			if err != nil {

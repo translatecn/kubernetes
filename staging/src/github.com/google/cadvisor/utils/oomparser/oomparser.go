@@ -114,7 +114,7 @@ func checkIfStartOfOomMessages(line string) bool {
 // StreamOoms writes to a provided a stream of OomInstance objects representing
 // OOM events that are found in the logs.
 // It will block and should be called from a goroutine.
-// 从内核日志解析容器oom的日志，
+// 从内核日志解析容器oom的日志,
 //
 // - 过程就是判断有没有invoked oom-killer:字段
 // - 然后再用containerRegexp正则判断是容器进程的oom

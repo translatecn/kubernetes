@@ -87,7 +87,7 @@ func (podStrategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
 	}
 
 	podutil.DropDisabledPodFields(pod, nil)      //
-	applySeccompVersionSkew(pod)                 // seccomp是Linux的一种安全机制，主要功能是限制直接通过syscall去调用某些系统函数
+	applySeccompVersionSkew(pod)                 // seccomp是Linux的一种安全机制,主要功能是限制直接通过syscall去调用某些系统函数
 	applyWaitingForSchedulingGatesCondition(pod) //
 }
 

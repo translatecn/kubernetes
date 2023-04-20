@@ -1028,7 +1028,7 @@ message DownwardAPIVolumeSource {
 // Represents an empty directory for a pod.
 // Empty directory volumes support ownership management and SELinux relabeling.
 message EmptyDirVolumeSource {
-  // 存储介质类型，empty string (default) or Memory.
+  // 存储介质类型,empty string (default) or Memory.
   // More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
   // +optional
   optional string medium = 1;
@@ -5475,7 +5475,7 @@ message Toleration {
   // +optional
   optional string effect = 4;
 
-  // 容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。
+  // 容忍污点的时间段.默认情况下,它没有设置,这意味着永远容忍污染(不清除).0和负值将被系统视为0(立即驱逐).
   // +optional
   optional int64 tolerationSeconds = 5;
 }
@@ -5760,7 +5760,7 @@ message VolumeSource {
   // +optional
   optional HostPathVolumeSource hostPath = 1;
 
-  // emptyDir 表示一个临时目录，该目录与 pod 的生命周期共享。
+  // emptyDir 表示一个临时目录,该目录与 pod 的生命周期共享.
   // More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
   // +optional
   optional EmptyDirVolumeSource emptyDir = 2;
@@ -5776,8 +5776,8 @@ message VolumeSource {
   // More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
   // +optional
   optional AWSElasticBlockStoreVolumeSource awsElasticBlockStore = 4;
-  // GitRepo 表示特定版本的 Git 存储库。
-  // 已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。
+  // GitRepo 表示特定版本的 Git 存储库.
+  // 已废弃：GitRepo 已被弃用.要为容器提供 Git 存储库,请将一个 EmptyDir 挂载到一个 InitContainer 中,该 InitContainer 使用 Git 克隆存储库,然后将 EmptyDir 挂载到 Pod 的容器中.
 
   // +optional
   optional GitRepoVolumeSource gitRepo = 5;

@@ -62,7 +62,7 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 	fs.StringVar(&o.ShowHiddenMetricsForVersion, "show-hidden-metrics-for-version", o.ShowHiddenMetricsForVersion, "显示隐藏指标的前一个版本号 '1.16'. ")
-	fs.StringSliceVar(&o.DisabledMetrics, "disabled-metrics", o.DisabledMetrics, "禁用哪些指标，免责声明:禁用指标优先级高于显示隐藏指标。")
+	fs.StringSliceVar(&o.DisabledMetrics, "disabled-metrics", o.DisabledMetrics, "禁用哪些指标,免责声明:禁用指标优先级高于显示隐藏指标.")
 	fs.StringToStringVar(&o.AllowListMapping, "allow-metric-labels", o.AllowListMapping, "要显示的指标 <MetricName>,<LabelName>=<allowed_value>,<allowed_value>...")
 }
 

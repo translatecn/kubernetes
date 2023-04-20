@@ -28,18 +28,18 @@ const (
 )
 
 type CpuSpec struct {
-	Limit    uint64 `json:"limit"`     // 请求的CPU共享比例。默认值为1024。
-	MaxLimit uint64 `json:"max_limit"` // 请求的CPU硬限制。默认值为无限制（0）。单位为毫秒CPU。
+	Limit    uint64 `json:"limit"`     // 请求的CPU共享比例.默认值为1024.
+	MaxLimit uint64 `json:"max_limit"` // 请求的CPU硬限制.默认值为无限制（0）.单位为毫秒CPU.
 	// TODO(rjnagal): Add a library to convert mask string to set of cpu bitmask.
-	Mask   string `json:"mask,omitempty"`   // CPU亲和性掩码。
-	Quota  uint64 `json:"quota,omitempty"`  // CPU配额。默认为禁用。
-	Period uint64 `json:"period,omitempty"` // CPU参考时间，单位为纳秒。例如，配额与此参考时间进行比较。
+	Mask   string `json:"mask,omitempty"`   // CPU亲和性掩码.
+	Quota  uint64 `json:"quota,omitempty"`  // CPU配额.默认为禁用.
+	Period uint64 `json:"period,omitempty"` // CPU参考时间,单位为纳秒.例如,配额与此参考时间进行比较.
 }
 
 type MemorySpec struct {
-	Limit       uint64 `json:"limit,omitempty"`       // 请求的内存限制。默认值为无限制（-1）。单位为字节。
-	Reservation uint64 `json:"reservation,omitempty"` // 保证的内存量。默认值为0。单位为字节。
-	SwapLimit   uint64 `json:"swap_limit,omitempty"`  // 请求的交换空间限制。默认值为无限制（-1）。单位为字节。
+	Limit       uint64 `json:"limit,omitempty"`       // 请求的内存限制.默认值为无限制（-1）.单位为字节.
+	Reservation uint64 `json:"reservation,omitempty"` // 保证的内存量.默认值为0.单位为字节.
+	SwapLimit   uint64 `json:"swap_limit,omitempty"`  // 请求的交换空间限制.默认值为无限制（-1）.单位为字节.
 }
 
 type ContainerInfo struct {
@@ -48,43 +48,43 @@ type ContainerInfo struct {
 }
 
 type ContainerSpec struct {
-	CreationTime     time.Time         `json:"creation_time,omitempty"`  // 容器创建的时间。
-	Aliases          []string          `json:"aliases,omitempty"`        // 容器在某个命名空间中的其他名称。
-	Namespace        string            `json:"namespace,omitempty"`      // 容器别名的命名空间。
-	Labels           map[string]string `json:"labels,omitempty"`         // 与容器关联的元数据标签。
-	Envs             map[string]string `json:"envs,omitempty"`           // 与容器关联的元数据环境变量。
-	HasCpu           bool              `json:"has_cpu"`                  // 是否有CPU限制。
-	Cpu              CpuSpec           `json:"cpu,omitempty"`            // CPU限制的规格信息。
-	HasMemory        bool              `json:"has_memory"`               // 是否有内存限制。
-	Memory           MemorySpec        `json:"memory,omitempty"`         // 内存限制的规格信息。
-	HasHugetlb       bool              `json:"has_hugetlb"`              // 是否使用了大页面。
-	HasCustomMetrics bool              `json:"has_custom_metrics"`       // 是否有自定义度量指标。
-	CustomMetrics    []v1.MetricSpec   `json:"custom_metrics,omitempty"` // 自定义度量指标的规格信息。
-	HasProcesses     bool              `json:"has_processes"`            // 是否有进程限制。
-	Processes        v1.ProcessSpec    `json:"processes,omitempty"`      // 进程限制的规格信息。
-	HasNetwork       bool              `json:"has_network"`              // 是否有网络隔离。
-	HasFilesystem    bool              `json:"has_filesystem"`           // 是否有文件系统隔离。
-	HasDiskIo        bool              `json:"has_diskio"`               // 是否有磁盘I/O限制。
-	Image            string            `json:"image,omitempty"`          // 用于此容器的镜像名称。
+	CreationTime     time.Time         `json:"creation_time,omitempty"`  // 容器创建的时间.
+	Aliases          []string          `json:"aliases,omitempty"`        // 容器在某个命名空间中的其他名称.
+	Namespace        string            `json:"namespace,omitempty"`      // 容器别名的命名空间.
+	Labels           map[string]string `json:"labels,omitempty"`         // 与容器关联的元数据标签.
+	Envs             map[string]string `json:"envs,omitempty"`           // 与容器关联的元数据环境变量.
+	HasCpu           bool              `json:"has_cpu"`                  // 是否有CPU限制.
+	Cpu              CpuSpec           `json:"cpu,omitempty"`            // CPU限制的规格信息.
+	HasMemory        bool              `json:"has_memory"`               // 是否有内存限制.
+	Memory           MemorySpec        `json:"memory,omitempty"`         // 内存限制的规格信息.
+	HasHugetlb       bool              `json:"has_hugetlb"`              // 是否使用了大页面.
+	HasCustomMetrics bool              `json:"has_custom_metrics"`       // 是否有自定义度量指标.
+	CustomMetrics    []v1.MetricSpec   `json:"custom_metrics,omitempty"` // 自定义度量指标的规格信息.
+	HasProcesses     bool              `json:"has_processes"`            // 是否有进程限制.
+	Processes        v1.ProcessSpec    `json:"processes,omitempty"`      // 进程限制的规格信息.
+	HasNetwork       bool              `json:"has_network"`              // 是否有网络隔离.
+	HasFilesystem    bool              `json:"has_filesystem"`           // 是否有文件系统隔离.
+	HasDiskIo        bool              `json:"has_diskio"`               // 是否有磁盘I/O限制.
+	Image            string            `json:"image,omitempty"`          // 用于此容器的镜像名称.
 }
 
 type ContainerStats struct {
-	Timestamp        time.Time                   `json:"timestamp"`                   // 统计信息的时间戳。
-	Cpu              *v1.CpuStats                `json:"cpu,omitempty"`               // 关于CPU资源的统计信息，包括CPU使用时间、CPU周期等等。
-	CpuInst          *CpuInstStats               `json:"cpu_inst,omitempty"`          // 瞬时CPU使用率的统计信息，单位为纳秒/秒。
-	DiskIo           *v1.DiskIoStats             `json:"diskio,omitempty"`            // 关于磁盘I/O的统计信息，包括读写速率、读写次数等等。
-	Memory           *v1.MemoryStats             `json:"memory,omitempty"`            // 关于内存资源的统计信息，包括内存使用量、内存限制等等。
-	Hugetlb          *map[string]v1.HugetlbStats `json:"hugetlb,omitempty"`           // 关于大页面的统计信息。
-	Network          *NetworkStats               `json:"network,omitempty"`           // 关于网络流量的统计信息，包括接收和发送的数据量、数据包数量等等。
-	Processes        *v1.ProcessStats            `json:"processes,omitempty"`         // 关于进程的统计信息，包括进程数量、进程状态等等。
-	Filesystem       *FilesystemStats            `json:"filesystem,omitempty"`        // 关于文件系统的统计信息，包括使用的字节数、限制等等。
-	Load             *v1.LoadStats               `json:"load_stats,omitempty"`        // 关于任务负载的统计信息。
-	Accelerators     []v1.AcceleratorStats       `json:"accelerators,omitempty"`      // 加速器的度量指标，每个加速器对应一个AcceleratorStats结构体。
-	CustomMetrics    map[string][]v1.MetricVal   `json:"custom_metrics,omitempty"`    // 自定义度量指标的统计信息，以键值对的形式存储。
-	PerfStats        []v1.PerfStat               `json:"perf_stats,omitempty"`        // 性能事件计数器的统计信息。
-	PerfUncoreStats  []v1.PerfUncoreStat         `json:"perf_uncore_stats,omitempty"` // 来自性能非核心事件的统计信息。仅适用于根容器。
-	ReferencedMemory uint64                      `json:"referenced_memory,omitempty"` // 引用内存的统计信息。
-	Resctrl          v1.ResctrlStats             `json:"resctrl,omitempty"`           // 资源控制（resctrl）的统计信息。
+	Timestamp        time.Time                   `json:"timestamp"`                   // 统计信息的时间戳.
+	Cpu              *v1.CpuStats                `json:"cpu,omitempty"`               // 关于CPU资源的统计信息,包括CPU使用时间、CPU周期等等.
+	CpuInst          *CpuInstStats               `json:"cpu_inst,omitempty"`          // 瞬时CPU使用率的统计信息,单位为纳秒/秒.
+	DiskIo           *v1.DiskIoStats             `json:"diskio,omitempty"`            // 关于磁盘I/O的统计信息,包括读写速率、读写次数等等.
+	Memory           *v1.MemoryStats             `json:"memory,omitempty"`            // 关于内存资源的统计信息,包括内存使用量、内存限制等等.
+	Hugetlb          *map[string]v1.HugetlbStats `json:"hugetlb,omitempty"`           // 关于大页面的统计信息.
+	Network          *NetworkStats               `json:"network,omitempty"`           // 关于网络流量的统计信息,包括接收和发送的数据量、数据包数量等等.
+	Processes        *v1.ProcessStats            `json:"processes,omitempty"`         // 关于进程的统计信息,包括进程数量、进程状态等等.
+	Filesystem       *FilesystemStats            `json:"filesystem,omitempty"`        // 关于文件系统的统计信息,包括使用的字节数、限制等等.
+	Load             *v1.LoadStats               `json:"load_stats,omitempty"`        // 关于任务负载的统计信息.
+	Accelerators     []v1.AcceleratorStats       `json:"accelerators,omitempty"`      // 加速器的度量指标,每个加速器对应一个AcceleratorStats结构体.
+	CustomMetrics    map[string][]v1.MetricVal   `json:"custom_metrics,omitempty"`    // 自定义度量指标的统计信息,以键值对的形式存储.
+	PerfStats        []v1.PerfStat               `json:"perf_stats,omitempty"`        // 性能事件计数器的统计信息.
+	PerfUncoreStats  []v1.PerfUncoreStat         `json:"perf_uncore_stats,omitempty"` // 来自性能非核心事件的统计信息.仅适用于根容器.
+	ReferencedMemory uint64                      `json:"referenced_memory,omitempty"` // 引用内存的统计信息.
+	Resctrl          v1.ResctrlStats             `json:"resctrl,omitempty"`           // 资源控制（resctrl）的统计信息.
 }
 
 type Percentiles struct {
@@ -170,7 +170,7 @@ type RequestOptions struct {
 	// Number of stats to return, -1 means no limit.
 	Count     int            `json:"count"`
 	Recursive bool           `json:"recursive"` // 是否包含子容器的统计信息
-	MaxAge    *time.Duration `json:"max_age"`   // 更新大于MaxAge的统计信息 nil表示不更新，0总是触发更新。
+	MaxAge    *time.Duration `json:"max_age"`   // 更新大于MaxAge的统计信息 nil表示不更新,0总是触发更新.
 }
 
 type ProcessInfo struct {
@@ -205,12 +205,12 @@ type TcpStat struct {
 }
 
 type NetworkStats struct {
-	Interfaces  []v1.InterfaceStats `json:"interfaces,omitempty"` // 按接口分组的网络统计信息，每个接口对应一个InterfaceStats结构体。
-	Tcp         TcpStat             `json:"tcp"`                  // TCP连接的统计信息，包括已建立、监听等等。
-	Tcp6        TcpStat             `json:"tcp6"`                 // IPv6 TCP连接的统计信息，包括已建立、监听等等。
-	Udp         v1.UdpStat          `json:"udp"`                  // UDP连接的统计信息。
-	Udp6        v1.UdpStat          `json:"udp6"`                 // IPv6 UDP连接的统计信息。
-	TcpAdvanced v1.TcpAdvancedStat  `json:"tcp_advanced"`         // TCP高级统计信息。
+	Interfaces  []v1.InterfaceStats `json:"interfaces,omitempty"` // 按接口分组的网络统计信息,每个接口对应一个InterfaceStats结构体.
+	Tcp         TcpStat             `json:"tcp"`                  // TCP连接的统计信息,包括已建立、监听等等.
+	Tcp6        TcpStat             `json:"tcp6"`                 // IPv6 TCP连接的统计信息,包括已建立、监听等等.
+	Udp         v1.UdpStat          `json:"udp"`                  // UDP连接的统计信息.
+	Udp6        v1.UdpStat          `json:"udp6"`                 // IPv6 UDP连接的统计信息.
+	TcpAdvanced v1.TcpAdvancedStat  `json:"tcp_advanced"`         // TCP高级统计信息.
 }
 
 // Instantaneous CPU stats

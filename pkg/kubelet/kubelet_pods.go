@@ -852,7 +852,7 @@ func containerResourceRuntimeValue(fs *v1.ResourceFieldSelector, pod *v1.Pod, co
 	return resource.ExtractResourceValueByContainerName(fs, pod, containerName)
 }
 
-// killPod 指示容器运行时杀死pod。此方法要求pod状态包含最后一次syncPod的结果,否则可能无法终止新创建的容器和沙箱。
+// killPod 指示容器运行时杀死pod.此方法要求pod状态包含最后一次syncPod的结果,否则可能无法终止新创建的容器和沙箱.
 func (kl *Kubelet) killPod(ctx context.Context, pod *v1.Pod, p kubecontainer.Pod, gracePeriodOverride *int64) error {
 	// Call the container runtime KillPod method which stops all known running containers of the pod
 	if err := kl.containerRuntime.KillPod(ctx, pod, p, gracePeriodOverride); err != nil { // 调用CRI
@@ -1453,7 +1453,7 @@ func getPhase(spec *v1.PodSpec, info []v1.ContainerStatus) v1.PodPhase {
 	}
 }
 
-// generateAPIPodStatus 根据内部pod状态创建pod的最终API pod状态。此方法只应从sync*Pod方法中调用。
+// generateAPIPodStatus 根据内部pod状态创建pod的最终API pod状态.此方法只应从sync*Pod方法中调用.
 func (kl *Kubelet) generateAPIPodStatus(pod *v1.Pod, podStatus *kubecontainer.PodStatus) v1.PodStatus {
 	klog.V(3).InfoS("Generating pod status", "pod", klog.KObj(pod))
 	// use the previous pod status, or the api status, as the basis for this pod

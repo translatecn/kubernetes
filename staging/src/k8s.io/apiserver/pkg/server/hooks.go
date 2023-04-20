@@ -69,7 +69,7 @@ type postStartHookEntry struct {
 
 type PostStartHookConfigEntry struct {
 	hook             PostStartHookFunc
-	originatingStack string // 保存注册postStartHooks的堆栈。这允许我们显示一个更有用的消息重复注册。
+	originatingStack string // 保存注册postStartHooks的堆栈.这允许我们显示一个更有用的消息重复注册.
 }
 
 type preShutdownHookEntry struct {

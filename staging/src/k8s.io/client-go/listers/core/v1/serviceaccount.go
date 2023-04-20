@@ -31,7 +31,7 @@ type ServiceAccountLister interface {
 	// List lists all ServiceAccounts in the indexer.
 	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.ServiceAccount, err error)
-	ServiceAccounts(namespace string) ServiceAccountNamespaceLister // 返回一个可以列出和获取ServiceAccounts的对象。
+	ServiceAccounts(namespace string) ServiceAccountNamespaceLister // 返回一个可以列出和获取ServiceAccounts的对象.
 	ServiceAccountListerExpansion
 }
 

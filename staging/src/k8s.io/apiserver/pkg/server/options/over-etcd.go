@@ -57,7 +57,7 @@ type EtcdOptions struct {
 	EncryptionProviderConfigFilepath        string // 加密提供者配置文件路径
 	EncryptionProviderConfigAutomaticReload bool   // 是否启用,默认不开启
 
-	complete               bool // 在使用Apply方法之前，保护必须通过Complete初始化的字段。
+	complete               bool // 在使用Apply方法之前,保护必须通过Complete初始化的字段.
 	resourceTransformers   encryptionconfig.ResourceTransformers
 	kmsPluginHealthzChecks []healthz.HealthChecker
 	SkipHealthEndpoints    bool
@@ -149,8 +149,8 @@ func (s *EtcdOptions) AddFlags(fs *pflag.FlagSet) {
 
 }
 
-// Complete 在使用Apply方法之前，必须精确地调用一次。它负责设置必须创建一次并在多个调用(如存储转换器)之间重用的对象。
-// 这个方法会改变接收者(EtcdOptions)。它绝不能改变输入。
+// Complete 在使用Apply方法之前,必须精确地调用一次.它负责设置必须创建一次并在多个调用(如存储转换器)之间重用的对象.
+// 这个方法会改变接收者(EtcdOptions).它绝不能改变输入.
 func (s *EtcdOptions) Complete(
 	storageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker,
 	stopCh <-chan struct{},
@@ -166,7 +166,7 @@ func (s *EtcdOptions) Complete(
 
 	if len(s.EncryptionProviderConfigFilepath) != 0 {
 		ctxTransformers, closeTransformers := wait.ContextForChannel(stopCh)
-		ctxServer, _ := wait.ContextForChannel(stopCh) // 这里显式地忽略cancel，因为我们不拥有服务器的生命周期
+		ctxServer, _ := wait.ContextForChannel(stopCh) // 这里显式地忽略cancel,因为我们不拥有服务器的生命周期
 
 		encryptionConfiguration, err := encryptionconfig.LoadEncryptionConfig(s.EncryptionProviderConfigFilepath, s.EncryptionProviderConfigAutomaticReload, ctxTransformers.Done())
 		if err != nil {

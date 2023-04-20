@@ -92,8 +92,8 @@ type StorageFactoryConfig struct {
 	EtcdServersOverrides      []string
 }
 
-// Complete 完成StorageFactoryConfig，提供etcdOptions返回completedStorageFactoryConfig。
-// 该方法改变接收者(StorageFactoryConfig)。它绝不能改变输入。
+// Complete 完成StorageFactoryConfig,提供etcdOptions返回completedStorageFactoryConfig.
+// 该方法改变接收者(StorageFactoryConfig).它绝不能改变输入.
 func (c *StorageFactoryConfig) Complete(etcdOptions *serveroptions.EtcdOptions) *completedStorageFactoryConfig {
 	c.StorageConfig = etcdOptions.StorageConfig
 	c.DefaultStorageMediaType = etcdOptions.DefaultStorageMediaType

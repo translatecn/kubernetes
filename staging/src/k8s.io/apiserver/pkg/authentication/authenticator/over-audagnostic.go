@@ -24,7 +24,7 @@ import (
 
 func authenticate(ctx context.Context, implicitAuds Audiences, authenticate func() (*Response, bool, error)) (*Response, bool, error) {
 	targetAuds, ok := AudiencesFrom(ctx)
-	//一旦api audience不为空，我们就可以删除它。在TokenRequest是GA之后，可能会有N个发布。
+	//一旦api audience不为空,我们就可以删除它.在TokenRequest是GA之后,可能会有N个发布.
 	if !ok {
 		return authenticate()
 	}
@@ -57,7 +57,7 @@ func (a *audAgnosticRequestAuthenticator) AuthenticateRequest(req *http.Request)
 	})
 }
 
-// WrapAudienceAgnosticRequest 将面向受众不可知的请求认证器包装起来，以将其接受的受众限制为一组隐式受众。
+// WrapAudienceAgnosticRequest 将面向受众不可知的请求认证器包装起来,以将其接受的受众限制为一组隐式受众.
 func WrapAudienceAgnosticRequest(implicit Audiences, delegate Request) Request {
 	return &audAgnosticRequestAuthenticator{
 		implicit: implicit,

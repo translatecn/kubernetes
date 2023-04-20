@@ -101,12 +101,12 @@ func (o *BuiltInAuthorizationOptions) Validate() []error {
 
 // AddFlags returns flags of authorization for a API Server
 func (o *BuiltInAuthorizationOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, "在安全端口上进行授权的有序插件列表。逗号分隔列表: "+strings.Join(authzmodes.AuthorizationModeChoices, ",")+".")
-	fs.StringVar(&o.PolicyFile, "authorization-policy-file", o.PolicyFile, "在安全端口上使用json逐行格式的授权策略文件，与--authorization-mode=ABAC一起使用。")
-	fs.StringVar(&o.WebhookConfigFile, "authorization-webhook-config-file", o.WebhookConfigFile, "kubecconfig格式的webhook配置文件，使用--authorization-mode=webhook。API服务器将查询远程服务，以确定对API服务器的安全端口的访问。")
-	fs.StringVar(&o.WebhookVersion, "authorization-webhook-version", o.WebhookVersion, "authorization.k8s的API版本。io.SubjectAccessReview发送到webhook和期望从webhook收到。")
-	fs.DurationVar(&o.WebhookCacheAuthorizedTTL, "authorization-webhook-cache-authorized-ttl", o.WebhookCacheAuthorizedTTL, "缓存webhook授权者的“授权”响应的持续时间。")
-	fs.DurationVar(&o.WebhookCacheUnauthorizedTTL, "authorization-webhook-cache-unauthorized-ttl", o.WebhookCacheUnauthorizedTTL, "缓存来自webhook授权者的“未授权”响应的持续时间。")
+	fs.StringSliceVar(&o.Modes, "authorization-mode", o.Modes, "在安全端口上进行授权的有序插件列表.逗号分隔列表: "+strings.Join(authzmodes.AuthorizationModeChoices, ",")+".")
+	fs.StringVar(&o.PolicyFile, "authorization-policy-file", o.PolicyFile, "在安全端口上使用json逐行格式的授权策略文件,与--authorization-mode=ABAC一起使用.")
+	fs.StringVar(&o.WebhookConfigFile, "authorization-webhook-config-file", o.WebhookConfigFile, "kubecconfig格式的webhook配置文件,使用--authorization-mode=webhook.API服务器将查询远程服务,以确定对API服务器的安全端口的访问.")
+	fs.StringVar(&o.WebhookVersion, "authorization-webhook-version", o.WebhookVersion, "authorization.k8s的API版本.io.SubjectAccessReview发送到webhook和期望从webhook收到.")
+	fs.DurationVar(&o.WebhookCacheAuthorizedTTL, "authorization-webhook-cache-authorized-ttl", o.WebhookCacheAuthorizedTTL, "缓存webhook授权者的“授权”响应的持续时间.")
+	fs.DurationVar(&o.WebhookCacheUnauthorizedTTL, "authorization-webhook-cache-unauthorized-ttl", o.WebhookCacheUnauthorizedTTL, "缓存来自webhook授权者的“未授权”响应的持续时间.")
 }
 
 // ToAuthorizationConfig convert BuiltInAuthorizationOptions to authorizer.Config

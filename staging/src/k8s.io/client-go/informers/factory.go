@@ -98,7 +98,7 @@ func WithNamespace(namespace string) SharedInformerOption {
 	}
 }
 
-// NewSharedInformerFactory  为所有命名空间构造一个sharedInformerFactory的新实例。
+// NewSharedInformerFactory  为所有命名空间构造一个sharedInformerFactory的新实例.
 func NewSharedInformerFactory(client kubernetes.Interface, defaultResync time.Duration) SharedInformerFactory {
 	return NewSharedInformerFactoryWithOptions(client, defaultResync)
 }
@@ -111,7 +111,7 @@ func NewFilteredSharedInformerFactory(client kubernetes.Interface, defaultResync
 	return NewSharedInformerFactoryWithOptions(client, defaultResync, WithNamespace(namespace), WithTweakListOptions(tweakListOptions))
 }
 
-// NewSharedInformerFactoryWithOptions  构建一个带有额外选项的SharedInformerFactory的新实例。
+// NewSharedInformerFactoryWithOptions  构建一个带有额外选项的SharedInformerFactory的新实例.
 func NewSharedInformerFactoryWithOptions(client kubernetes.Interface, defaultResync time.Duration, options ...SharedInformerOption) SharedInformerFactory {
 	factory := &sharedInformerFactory{
 		client:           client,

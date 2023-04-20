@@ -104,7 +104,7 @@ func addClusterRoleBindingLabel(rolebindings []rbacv1.ClusterRoleBinding) {
 	return
 }
 
-// NodeRules 返回节点策略规则，它是rbacv1.PolicyRule的切片。
+// NodeRules 返回节点策略规则,它是rbacv1.PolicyRule的切片.
 func NodeRules() []rbacv1.PolicyRule {
 	nodePolicyRules := []rbacv1.PolicyRule{
 		// Needed to check API access.  These creates are non-mutating

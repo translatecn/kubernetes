@@ -122,8 +122,8 @@ func (m *defaultQueueMetrics) done(item t) {
 
 // 上报未完成的指标
 func (m *defaultQueueMetrics) updateUnfinishedWork() {
-	//请注意，对于这一点，汇总度量可能更好，但是prometheus
-	//似乎没有非hack的方法来重置汇总指标。
+	//请注意,对于这一点,汇总度量可能更好,但是prometheus
+	//似乎没有非hack的方法来重置汇总指标.
 
 	var total float64
 	var oldest float64

@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	// 在关闭延迟时间过去后，健康检查和度量抓取请求永远不会被拒绝，我们将继续为这些请求提供服务。
+	// 在关闭延迟时间过去后,健康检查和度量抓取请求永远不会被拒绝,我们将继续为这些请求提供服务.
 	pathPrefixesExemptFromRetryAfter = []string{
 		"/readyz",
 		"/livez",
@@ -103,8 +103,8 @@ func withRetryAfter(handler http.Handler, isRequestExemptFn isRequestExemptFunc,
 	})
 }
 
-// isRequestExemptFromRetryAfter 如果给定的请求应该被豁免 不受'Retry-After'响应的拒绝，则返回true。
-// 注意：'WithRetryAfter'和'WithWaitGroup'过滤器都应该使用此函数来豁免请求集不受拒绝或跟踪。
+// isRequestExemptFromRetryAfter 如果给定的请求应该被豁免 不受'Retry-After'响应的拒绝,则返回true.
+// 注意：'WithRetryAfter'和'WithWaitGroup'过滤器都应该使用此函数来豁免请求集不受拒绝或跟踪.
 func isRequestExemptFromRetryAfter(r *http.Request) bool {
 	return isKubeApiserverUserAgent(r) || hasExemptPathPrefix(r)
 }

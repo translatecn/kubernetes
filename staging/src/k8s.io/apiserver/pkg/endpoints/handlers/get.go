@@ -81,7 +81,7 @@ func getResourceHandler(scope *RequestScope, getter getterFunc) http.HandlerFunc
 	}
 }
 
-// GetResource 返回一个函数，该函数处理从rest中检索单个资源。存储对象。
+// GetResource 返回一个函数,该函数处理从rest中检索单个资源.存储对象.
 func GetResource(r rest.Getter, scope *RequestScope) http.HandlerFunc {
 	return getResourceHandler(scope,
 		func(ctx context.Context, name string, req *http.Request) (runtime.Object, error) {

@@ -78,14 +78,14 @@ type Config struct {
 
 	RequestHeaderConfig *authenticatorfactory.RequestHeaderConfig
 
-	// TODO, 这是整个配置中唯一不可序列化的部分。将其分解到客户配置中
+	// TODO, 这是整个配置中唯一不可序列化的部分.将其分解到客户配置中
 	ServiceAccountTokenGetter   serviceaccount.ServiceAccountTokenGetter
 	SecretsWriter               typedv1core.SecretsGetter
 	BootstrapTokenAuthenticator authenticator.Token                   // 缓存读取
-	ClientCAContentProvider     dynamiccertificates.CAContentProvider // 用于验证客户证书，如果这个值为零，那么相互TLS被禁用。
+	ClientCAContentProvider     dynamiccertificates.CAContentProvider // 用于验证客户证书,如果这个值为零,那么相互TLS被禁用.
 
 	WebhookTokenAuthnConfigFile string           // egressDialer相关的配置信息
-	CustomDial                  utilnet.DialFunc // 可选字段，用于连接webhook自定义拨号功能   egressDialer
+	CustomDial                  utilnet.DialFunc // 可选字段,用于连接webhook自定义拨号功能   egressDialer
 }
 
 // New 返回一个验证器请求、支持标准Kubernetes身份验证机制
@@ -97,7 +97,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	securityDefinitions := spec.SecurityDefinitions{}
 
 	// front-proxy, BasicAuth methods, local first, then remote
-	// 如果需要，添加前端代理身份验证器
+	// 如果需要,添加前端代理身份验证器
 	if config.RequestHeaderConfig != nil {
 		requestHeaderAuthenticator := headerrequest.NewDynamicVerifyOptionsSecure( // 动态认证
 			config.RequestHeaderConfig.CAContentProvider.VerifyOptions,
@@ -158,7 +158,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 			}
 		}
 		if len(config.OIDCIssuerURL) > 0 && len(config.OIDCClientID) > 0 {
-			// TODO(enj): 当OIDC支持CA重载时，清除Notifier和ControllerRunner bit位
+			// TODO(enj): 当OIDC支持CA重载时,清除Notifier和ControllerRunner bit位
 			var oidcCAContent oidc.CAContentProvider
 			if len(config.OIDCCAFile) != 0 {
 				var oidcCAErr error
@@ -188,7 +188,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 				authenticator.WrapAudienceAgnosticToken(config.APIAudiences, oidcAuth),
 			)
 		}
-		if len(config.WebhookTokenAuthnConfigFile) > 0 { // kube config格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。
+		if len(config.WebhookTokenAuthnConfigFile) > 0 { // kube config格式的token认证webhook配置文件.API服务器将查询远程服务以确定承载令牌的身份验证.
 			webhookTokenAuth, err := newWebhookTokenAuthenticator(config)
 			if err != nil {
 				return nil, nil, err
@@ -239,7 +239,7 @@ func (config Config) New() (authenticator.Request, *spec.SecurityDefinitions, er
 	authenticator = group.NewAuthenticatedGroupAdder(authenticator)
 
 	if config.Anonymous {
-		// 如果认证器链返回错误，则返回错误（不将错误的令牌或无效的用户名/密码组合视为匿名）。
+		// 如果认证器链返回错误,则返回错误（不将错误的令牌或无效的用户名/密码组合视为匿名）.
 		var _ = new(union.UnionAuthRequestHandler).AuthenticateRequest // ✅
 		authenticator = union.NewFailOnError(authenticator, anonymous.NewAuthenticator())
 	}

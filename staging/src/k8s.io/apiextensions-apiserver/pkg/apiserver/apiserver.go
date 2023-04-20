@@ -100,7 +100,7 @@ type completedConfig struct {
 }
 
 type CompletedConfig struct {
-	// 嵌入一个不能在包外部实例化的私有指针。
+	// 嵌入一个不能在包外部实例化的私有指针.
 	*completedConfig
 }
 
@@ -110,7 +110,7 @@ type CustomResourceDefinitions struct {
 	Informers externalinformers.SharedInformerFactory
 }
 
-// Complete 填充任何未设置的、必须具有有效数据的字段。
+// Complete 填充任何未设置的、必须具有有效数据的字段.
 func (cfg *Config) Complete() CompletedConfig {
 	c := completedConfig{
 		cfg.GenericConfig.Complete(),
@@ -128,7 +128,7 @@ func (cfg *Config) Complete() CompletedConfig {
 	return CompletedConfig{&c}
 }
 
-// New 从给定的配置返回CustomResourceDefinitions的一个新实例。
+// New 从给定的配置返回CustomResourceDefinitions的一个新实例.
 // createAPIExtensionsServer
 func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget) (*CustomResourceDefinitions, error) {
 	genericServer, err := c.GenericConfig.New("apiextensions-apiserver", delegationTarget)
@@ -136,7 +136,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		return nil, err
 	}
 
-	// hasCRDInformerSyncedSignal 当服务器使用的CRD通知器完全同步时关闭。当服务器没有安装所有已知的HTTP路径时，它确保对潜在的自定义资源端点的请求得到503错误而不是404
+	// hasCRDInformerSyncedSignal 当服务器使用的CRD通知器完全同步时关闭.当服务器没有安装所有已知的HTTP路径时,它确保对潜在的自定义资源端点的请求得到503错误而不是404
 	hasCRDInformerSyncedSignal := make(chan struct{})
 	if err := genericServer.RegisterMuxAndDiscoveryCompleteSignal("CRDInformerHasNotSynced", hasCRDInformerSyncedSignal); err != nil {
 		return nil, err

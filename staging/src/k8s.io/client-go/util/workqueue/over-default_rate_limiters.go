@@ -26,13 +26,13 @@ import (
 
 type RateLimiter interface {
 	When(item interface{}) time.Duration // 获取一个项目并决定该项目应该等待多长时间
-	Forget(item interface{})             // 指示项已完成重试。不管是成功还是失败，我们都会停止追踪
+	Forget(item interface{})             // 指示项已完成重试.不管是成功还是失败,我们都会停止追踪
 	NumRequeues(item interface{}) int    // 返回项目失败的次数
 }
 
 // ---------------------------------------------默认----------------------------------------------
 
-// DefaultControllerRateLimiter 是工作队列的默认速率限制器的无参数构造函数。它有整体和每件物品的速度限制。整体是一个令牌桶，每一项是指数级的
+// DefaultControllerRateLimiter 是工作队列的默认速率限制器的无参数构造函数.它有整体和每件物品的速度限制.整体是一个令牌桶,每一项是指数级的
 func DefaultControllerRateLimiter() RateLimiter {
 	return NewMaxOfRateLimiter(
 		NewItemExponentialFailureRateLimiter(5*time.Millisecond, 1000*time.Second),
@@ -43,7 +43,7 @@ func NewMaxOfRateLimiter(limiters ...RateLimiter) RateLimiter {
 	return &MaxOfRateLimiter{limiters: limiters}
 }
 
-// MaxOfRateLimiter 当与令牌桶限制器一起使用时，在特定项单独延迟较长时间的情况下，爆发可能会明显超过。
+// MaxOfRateLimiter 当与令牌桶限制器一起使用时,在特定项单独延迟较长时间的情况下,爆发可能会明显超过.
 type MaxOfRateLimiter struct {
 	limiters []RateLimiter
 }
@@ -106,7 +106,7 @@ func (r *ItemExponentialFailureRateLimiter) When(item interface{}) time.Duration
 	exp := r.failures[item]
 	r.failures[item] = r.failures[item] + 1
 
-	// 每调用一次，exp也就加1，对应到这里时2^n指数爆炸
+	// 每调用一次,exp也就加1,对应到这里时2^n指数爆炸
 	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp))
 	if backoff > math.MaxInt64 {
 		return r.maxDelay
@@ -157,7 +157,7 @@ func (r *BucketRateLimiter) Forget(item interface{}) {
 
 // ---------------------------------------------ok----------------------------------------------
 
-// ItemFastSlowRateLimiter 是否快速重试一定数量的尝试，然后缓慢重试之后
+// ItemFastSlowRateLimiter 是否快速重试一定数量的尝试,然后缓慢重试之后
 type ItemFastSlowRateLimiter struct {
 	failuresLock    sync.Mutex
 	failures        map[interface{}]int
@@ -182,7 +182,7 @@ func (r *ItemFastSlowRateLimiter) When(item interface{}) time.Duration {
 	defer r.failuresLock.Unlock()
 
 	r.failures[item] = r.failures[item] + 1
-	// 如果快重试次数没有用完，返回fastDelay
+	// 如果快重试次数没有用完,返回fastDelay
 	if r.failures[item] <= r.maxFastAttempts {
 		return r.fastDelay
 	}

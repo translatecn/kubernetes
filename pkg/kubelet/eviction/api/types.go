@@ -45,7 +45,7 @@ const (
 type ThresholdOperator string
 
 const (
-	// OpLessThan 是表示小于运算符的运算符。
+	// OpLessThan 是表示小于运算符的运算符.
 	OpLessThan ThresholdOperator = "LessThan"
 )
 

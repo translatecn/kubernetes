@@ -36,7 +36,7 @@ const (
 	UserKind           = "User"
 
 	// AutoUpdateAnnotationKey is the name of an annotation which prevents reconciliation if set to "false"
-	AutoUpdateAnnotationKey = "rbac.authorization.kubernetes.io/autoupdate" // 如果设置为“false”，则防止更改注释的名称。
+	AutoUpdateAnnotationKey = "rbac.authorization.kubernetes.io/autoupdate" // 如果设置为“false”,则防止更改注释的名称.
 )
 
 // Authorization is calculated against

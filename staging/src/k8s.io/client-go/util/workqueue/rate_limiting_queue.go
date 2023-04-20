@@ -16,7 +16,7 @@ limitations under the License.
 
 package workqueue
 
-// RateLimitingInterface 是一个接口，它对添加到队列中的项进行速率限制。
+// RateLimitingInterface 是一个接口,它对添加到队列中的项进行速率限制.
 type RateLimitingInterface interface {
 	DelayingInterface
 	AddRateLimited(item interface{})  // AddRateLimited 限速方式往队列中加入一个元素
@@ -52,7 +52,7 @@ type rateLimitingType struct {
 
 // AddRateLimited AddAfter's the item based on the time when the rate limiter says it's ok
 func (q *rateLimitingType) AddRateLimited(item interface{}) {
-	// 内部存储了一个延时队列，通过限速器计算出一个等待时间，然后传给延时队列
+	// 内部存储了一个延时队列,通过限速器计算出一个等待时间,然后传给延时队列
 	q.DelayingInterface.AddAfter(item, q.rateLimiter.When(item))
 }
 

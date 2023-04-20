@@ -39,7 +39,7 @@ const (
 	// alpha: v1.26
 	//
 	//启用单个HTTP  endpoint /discovery/<version>  ;支持原生HTTP
-	//缓存包含apisserver已知的所有APIResources的ETags。
+	//缓存包含apisserver已知的所有APIResources的ETags.
 	AggregatedDiscoveryEndpoint featuregate.Feature = "AggregatedDiscoveryEndpoint"
 
 	// owner: @smarterclayton
@@ -54,9 +54,9 @@ const (
 	// alpha: v1.18
 	// beta: v1.20
 	//
-	//允许在每个服务器上使用优先级和公平性管理请求并发。
+	//允许在每个服务器上使用优先级和公平性管理请求并发.
 	// featugate是在1.15版本中引入的
-	//在1.18之前没有真正实现。
+	//在1.18之前没有真正实现.
 	APIPriorityAndFairness featuregate.Feature = "APIPriorityAndFairness"
 
 	// APIResponseCompression owner: @ilackams
@@ -128,7 +128,7 @@ const (
 	// OpenAPIEnums kep: https://kep.k8s.io/2887
 	// alpha: v1.23
 	// beta: v1.24
-	// 允许在kube-apiserver返回的规范中填充OpenAPI模式的“enum”字段。
+	// 允许在kube-apiserver返回的规范中填充OpenAPI模式的“enum”字段.
 	OpenAPIEnums featuregate.Feature = "OpenAPIEnums"
 
 	// owner: @jefftree

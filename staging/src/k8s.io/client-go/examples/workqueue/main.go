@@ -94,8 +94,8 @@ func (c *Controller) syncToStdout(key string) error {
 // handleErr checks if an error happened and makes sure we will retry later.
 func (c *Controller) handleErr(err error, key interface{}) {
 	if err == nil {
-		// 忘记每次成功同步时key的#AddRateLimited历史记录。
-		// 这确保了该键的更新 和 以后的处理不会因为过时的错误历史而延迟。
+		// 忘记每次成功同步时key的#AddRateLimited历史记录.
+		// 这确保了该键的更新 和 以后的处理不会因为过时的错误历史而延迟.
 		c.queue.Forget(key)
 		return
 	}
@@ -126,7 +126,7 @@ func (c *Controller) Run(workers int, stopCh chan struct{}) {
 	// cache.sharedIndexInformer
 	go c.informer.Run(stopCh) // ✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️✈️ 重要
 
-	// 等待所有相关的缓存同步完成，然后才开始处理队列中的项
+	// 等待所有相关的缓存同步完成,然后才开始处理队列中的项
 	_ = new(cache.DeltaFIFO).HasSynced
 	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) { // ✅
 		runtime.HandleError(fmt.Errorf("timed out waiting for caches to sync"))

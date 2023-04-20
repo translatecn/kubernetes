@@ -49,7 +49,7 @@ func (s *SecureServingOptionsWithLoopback) ApplyTo(secureServingInfo **server.Se
 		return nil
 	}
 
-	// 使用假服务器创建自签名的cert+key。
+	// 使用假服务器创建自签名的cert+key.
 	certPem, keyPem, err := certutil.GenerateSelfSignedCertKey(server.LoopbackClientServerNameOverride, nil, nil)
 	if err != nil {
 		return fmt.Errorf("生成用于loopback链接的自签名证书失败: %v", err)
@@ -59,7 +59,7 @@ func (s *SecureServingOptionsWithLoopback) ApplyTo(secureServingInfo **server.Se
 		return fmt.Errorf("failed to generate self-signed certificate for loopback connection: %v", err)
 	}
 
-	// 写在SNICerts的前面，这样就可以覆盖所有同名的其他certs
+	// 写在SNICerts的前面,这样就可以覆盖所有同名的其他certs
 	(*secureServingInfo).SNICerts = append([]dynamiccertificates.SNICertKeyContentProvider{certProvider}, (*secureServingInfo).SNICerts...)
 
 	secureLoopbackClientConfig, err := (*secureServingInfo).NewLoopbackClientConfig(uuid.New().String(), certPem)

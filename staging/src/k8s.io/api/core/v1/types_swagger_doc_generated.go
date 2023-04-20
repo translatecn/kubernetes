@@ -492,7 +492,7 @@ func (DownwardAPIVolumeSource) SwaggerDoc() map[string]string {
 
 var map_EmptyDirVolumeSource = map[string]string{
 	"":          "Represents an empty directory for a pod. Empty directory volumes support ownership management and SELinux relabeling.",
-	"medium":    "存储介质类型，empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
+	"medium":    "存储介质类型,empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
 	"sizeLimit": "sizeLimit is the total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir",
 }
 
@@ -2212,7 +2212,7 @@ var map_SecurityContext = map[string]string{
 	"readOnlyRootFilesystem":   "Whether this container has a read-only root filesystem. Default is false. Note that this field cannot be set when spec.os.name is windows.",
 	"allowPrivilegeEscalation": "AllowPrivilegeEscalation controls whether a process can gain more privileges than its parent process. This bool directly controls if the no_new_privs flag will be set on the container process. AllowPrivilegeEscalation is true always when the container is: 1) run as Privileged 2) has CAP_SYS_ADMIN Note that this field cannot be set when spec.os.name is windows.",
 	"procMount":                "procMount denotes the type of proc mount to use for the containers. The default is DefaultProcMount which uses the container runtime defaults for readonly paths and masked paths. This requires the ProcMountType feature flag to be enabled. Note that this field cannot be set when spec.os.name is windows.",
-	"seccompProfile":           "此容器要使用的seccomp选项。如果在pod和容器级别同时提供seccomp选项，则容器选项将覆盖pod选项。注意，当spec.os.name为windows时，该字段不能设置。",
+	"seccompProfile":           "此容器要使用的seccomp选项.如果在pod和容器级别同时提供seccomp选项,则容器选项将覆盖pod选项.注意,当spec.os.name为windows时,该字段不能设置.",
 }
 
 func (SecurityContext) SwaggerDoc() map[string]string {
@@ -2242,7 +2242,7 @@ func (Service) SwaggerDoc() map[string]string {
 var map_ServiceAccount = map[string]string{
 	"":                             "ServiceAccount binds together: * a name, understood by users, and perhaps by peripheral systems, for an identity * a principal that can be authenticated and authorized * a set of secrets",
 	"metadata":                     "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
-	"secrets":                      "Secrets是在相同命名空间中，使用此ServiceAccount的Pod被允许使用的Secret列表。只有当此ServiceAccount具有“kubernetes.io/enforce-mountable-secrets=true”的注释时，Pod才受此列表的限制。不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥。相反，可以直接使用TokenRequest API请求令牌，或手动创建ServiceAccount令牌密钥。更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
+	"secrets":                      "Secrets是在相同命名空间中,使用此ServiceAccount的Pod被允许使用的Secret列表.只有当此ServiceAccount具有“kubernetes.io/enforce-mountable-secrets=true”的注释时,Pod才受此列表的限制.不应使用此字段查找用于在Pod之外使用的自动生成的ServiceAccount令牌密钥.相反,可以直接使用TokenRequest API请求令牌,或手动创建ServiceAccount令牌密钥.更多信息：https://kubernetes.io/docs/concepts/configuration/secret",
 	"imagePullSecrets":             "ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images in pods that reference this ServiceAccount. ImagePullSecrets are distinct from Secrets because Secrets can be mounted in the pod, but ImagePullSecrets are only accessed by the kubelet. More info: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod",
 	"automountServiceAccountToken": "AutomountServiceAccountToken indicates whether pods running as this service account should have an API token automatically mounted. Can be overridden at the pod level.",
 }
@@ -2415,7 +2415,7 @@ var map_Toleration = map[string]string{
 	"operator":          "Operator k,v的关系[Exists,Equal],默认Equal. ",
 	"value":             "Value 污点的值. 如果operator是Exists,这应该是空.",
 	"effect":            "Effect [空 ,NoSchedule, PreferNoSchedul, NoExecute ]",
-	"tolerationSeconds": "容忍污点的时间段。默认情况下，它没有设置，这意味着永远容忍污染(不清除)。0和负值将被系统视为0(立即驱逐)。",
+	"tolerationSeconds": "容忍污点的时间段.默认情况下,它没有设置,这意味着永远容忍污染(不清除).0和负值将被系统视为0(立即驱逐).",
 }
 
 func (Toleration) SwaggerDoc() map[string]string {
@@ -2481,7 +2481,7 @@ func (TypedObjectReference) SwaggerDoc() map[string]string {
 
 var map_Volume = map[string]string{
 	"":     "Volume represents a named volume in a pod that may be accessed by any container in the pod.",
-	"name": "卷的名称。必须是 DNS_LABEL，并且在 pod 中必须是唯一的。. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+	"name": "卷的名称.必须是 DNS_LABEL,并且在 pod 中必须是唯一的.. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
 }
 
 func (Volume) SwaggerDoc() map[string]string {
@@ -2539,7 +2539,7 @@ var map_VolumeSource = map[string]string{
 	"emptyDir":              "emptyDir represents a temporary directory that shares a pod's lifetime. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir",
 	"gcePersistentDisk":     "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 	"awsElasticBlockStore":  "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
-	"gitRepo":               "GitRepo 表示特定版本的 Git 存储库。已废弃：GitRepo 已被弃用。要为容器提供 Git 存储库，请将一个 EmptyDir 挂载到一个 InitContainer 中，该 InitContainer 使用 Git 克隆存储库，然后将 EmptyDir 挂载到 Pod 的容器中。",
+	"gitRepo":               "GitRepo 表示特定版本的 Git 存储库.已废弃：GitRepo 已被弃用.要为容器提供 Git 存储库,请将一个 EmptyDir 挂载到一个 InitContainer 中,该 InitContainer 使用 Git 克隆存储库,然后将 EmptyDir 挂载到 Pod 的容器中.",
 	"secret":                "secret represents a secret that should populate this volume. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret",
 	"nfs":                   "nfs represents an NFS mount on the host that shares a pod's lifetime More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs",
 	"iscsi":                 "iscsi represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://examples.k8s.io/volumes/iscsi/README.md",

@@ -103,7 +103,7 @@ func (GroupSubject) SwaggerDoc() map[string]string {
 var map_LimitResponse = map[string]string{
 	"":        "LimitResponse defines how to handle requests that can not be executed right now.",
 	"type":    "`type` is \"Queue\" or \"Reject\". \"Queue\" means that requests that can not be executed upon arrival are held in a queue until they can be executed or a queuing limit is reached. \"Reject\" means that requests that can not be executed upon arrival are rejected. Required.",
-	"queuing": "`queuing` 参数保存了队列 的配置参数。 This field may be non-empty only if `type` is `\"Queue\"`.",
+	"queuing": "`queuing` 参数保存了队列 的配置参数. This field may be non-empty only if `type` is `\"Queue\"`.",
 }
 
 func (LimitResponse) SwaggerDoc() map[string]string {
@@ -111,7 +111,7 @@ func (LimitResponse) SwaggerDoc() map[string]string {
 }
 
 var map_LimitedPriorityLevelConfiguration = map[string]string{
-	"":                         "LimitedPriorityLevelConfiguration 指定如何处理受限制的请求。 It addresses two issues:\n  - How are requests for this priority level limited?\n  - What should be done with requests that exceed the limit?",
+	"":                         "LimitedPriorityLevelConfiguration 指定如何处理受限制的请求. It addresses two issues:\n  - How are requests for this priority level limited?\n  - What should be done with requests that exceed the limit?",
 	"nominalConcurrencyShares": "`nominalConcurrencyShares` (NCS) contributes to the computation of the NominalConcurrencyLimit (NominalCL) of this level. This is the number of execution seats available at this priority level. This is used both for requests dispatched from this priority level as well as requests dispatched from other priority levels borrowing seats from this level. The server's concurrency limit (ServerCL) is divided among the Limited priority levels in proportion to their NCS values:\n\nNominalCL(i)  = ceil( ServerCL * NCS(i) / sum_ncs ) sum_ncs = sum[limited priority level k] NCS(k)\n\nBigger numbers mean a larger nominal concurrency limit, at the expense of every other Limited priority level. This field has a default value of 30.",
 	"limitResponse":            "`limitResponse` indicates what to do with requests that can not be executed right now",
 	"lendablePercent":          "`lendablePercent` prescribes the fraction of the level's NominalCL that can be borrowed by other priority levels. The value of this field must be between 0 and 100, inclusive, and it defaults to 0. The number of seats that other levels can borrow from this level, known as this level's LendableConcurrencyLimit (LendableCL), is defined as follows.\n\nLendableCL(i) = round( NominalCL(i) * lendablePercent(i)/100.0 )",
@@ -144,7 +144,7 @@ func (PolicyRulesWithSubjects) SwaggerDoc() map[string]string {
 }
 
 var map_PriorityLevelConfiguration = map[string]string{
-	"":         "PriorityLevelConfiguration 表示优先级级别的配置。",
+	"":         "PriorityLevelConfiguration 表示优先级级别的配置.",
 	"metadata": "`metadata` is the standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata",
 	"spec":     "`spec` is the specification of the desired behavior of a \"request-priority\". More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
 	"status":   "`status` is the current status of a \"request-priority\". More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
@@ -189,7 +189,7 @@ func (PriorityLevelConfigurationReference) SwaggerDoc() map[string]string {
 var map_PriorityLevelConfigurationSpec = map[string]string{
 	"":        "PriorityLevelConfigurationSpec specifies the configuration of a priority level.",
 	"type":    "`type` indicates whether this priority level is subject to limitation on request execution.  A value of `\"Exempt\"` means that requests of this priority level are not subject to a limit (and thus are never queued) and do not detract from the capacity made available to other priority levels.  A value of `\"Limited\"` means that (a) requests of this priority level _are_ subject to limits and (b) some of the server's limited capacity is made available exclusively to this priority level. Required.",
-	"limited": "`limited`参数指定了如何处理一个  具有优先级 的请求。 This field must be non-empty if and only if `type` is `\"Limited\"`.",
+	"limited": "`limited`参数指定了如何处理一个  具有优先级 的请求. This field must be non-empty if and only if `type` is `\"Limited\"`.",
 }
 
 func (PriorityLevelConfigurationSpec) SwaggerDoc() map[string]string {
@@ -207,9 +207,9 @@ func (PriorityLevelConfigurationStatus) SwaggerDoc() map[string]string {
 
 var map_QueuingConfiguration = map[string]string{
 	"":                 "QueuingConfiguration holds the configuration parameters for queuing",
-	"queues":           "`queues` 是此优先级级别的队列数。这些队列在每个 apiserver 上都是独立存在的。该值必须为正数。将其设置为 1 实际上会防止随机分片，因此与关联流模式的区分方法无关。该字段的默认值为 64。",
-	"handSize":         "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
-	"queueLengthLimit": "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量;超过此数量的请求将被拒绝。该值必须为正数。如果未指定，则默认为 50。",
+	"queues":           "`queues` 是此优先级级别的队列数.这些队列在每个 apiserver 上都是独立存在的.该值必须为正数.将其设置为 1 实际上会防止随机分片,因此与关联流模式的区分方法无关.该字段的默认值为 64.",
+	"handSize":         "handSize 是一个小的正整数,用于将请求进行随机分片并分配到队列中.在此优先级级别的请求入队时,请求的流标识符（一个字符串对）将被哈希,哈希值将用于洗牌队列列表并发出指定大小的手牌.请求将被放置在该手牌中最短的一个队列中.handSize 的大小不能超过 queues,并且应该足够小（以便一些重负载的流不会占据大部分队列）.有关设置此字段的更详细指导,请参阅面向用户的文档.该字段的默认值为 8.",
+	"queueLengthLimit": "`queueLengthLimit` 是此优先级级别的给定队列中允许等待的请求的最大数量;超过此数量的请求将被拒绝.该值必须为正数.如果未指定,则默认为 50.",
 }
 
 func (QueuingConfiguration) SwaggerDoc() map[string]string {

@@ -220,8 +220,8 @@ func TrackSerializeResponseObjectLatency(ctx context.Context, f func()) {
 	f()
 }
 
-// TrackResponseWriteLatency 用于跟踪写入与请求相关联的http ResponseWriter对象（通过Write方法）的序列化原始字节所产生的延迟。
-// 当多次调用时，提供的延迟将被累加。
+// TrackResponseWriteLatency 用于跟踪写入与请求相关联的http ResponseWriter对象（通过Write方法）的序列化原始字节所产生的延迟.
+// 当多次调用时,提供的延迟将被累加.
 func TrackResponseWriteLatency(ctx context.Context, d time.Duration) {
 	if tracker, ok := LatencyTrackersFrom(ctx); ok {
 		tracker.ResponseWriteTracker.TrackDuration(d)

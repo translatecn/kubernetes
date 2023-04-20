@@ -18,7 +18,7 @@ package authenticator
 
 import "context"
 
-// Audiences 是一个标记的Audiences的容器。
+// Audiences 是一个标记的Audiences的容器.
 type Audiences []string
 
 type key int
@@ -28,7 +28,7 @@ const (
 	audiencesKey key = iota
 )
 
-// WithAudiences 返回存储请求预期受众的上下文。
+// WithAudiences 返回存储请求预期受众的上下文.
 func WithAudiences(ctx context.Context, auds Audiences) context.Context {
 	return context.WithValue(ctx, audiencesKey, auds)
 }

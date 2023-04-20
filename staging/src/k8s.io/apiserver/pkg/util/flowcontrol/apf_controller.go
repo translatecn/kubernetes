@@ -102,7 +102,7 @@ const (
 // `afterExecution` must be called exactly once.
 type StartFunction func(ctx context.Context, hashValue uint64) (execute bool, afterExecution func())
 
-// RequestDigest 保存请求的必要信息以进行流量控制。
+// RequestDigest 保存请求的必要信息以进行流量控制.
 type RequestDigest struct {
 	RequestInfo *request.RequestInfo
 	User        user.Info
@@ -171,7 +171,7 @@ type configController struct {
 	// numerical (decreasing logical) matching precedence.  Every
 	// FlowSchema in this slice is immutable.
 	flowSchemas apihelpers.FlowSchemaSequence
-	// priorityLevelStates 将 PriorityLevelConfiguration 对象名称映射到该级别的状态。flowSchemas的成员引用的每个名称都在此处具有条目。
+	// priorityLevelStates 将 PriorityLevelConfiguration 对象名称映射到该级别的状态.flowSchemas的成员引用的每个名称都在此处具有条目.
 	priorityLevelStates map[string]*priorityLevelState
 
 	// nominalCLSum is the sum of the nominalCL fields in the priorityLevelState records.
@@ -186,7 +186,7 @@ type updateAttempt struct {
 	updatedItems sets.String // FlowSchema names
 }
 
-// priorityLevelState 保存特定于优先级级别的状态。
+// priorityLevelState 保存特定于优先级级别的状态.
 type priorityLevelState struct {
 	// the API object or prototype prescribing this level.  Nothing
 	// reached through this pointer is mutable.
@@ -194,15 +194,15 @@ type priorityLevelState struct {
 
 	// qsCompleter holds the QueueSetCompleter derived from `config` and `queues` if config is not exempt, nil otherwise.
 	qsCompleter fq.QueueSetCompleter
-	queues      fq.QueueSet // 如果优先级级别被豁免，则此优先级级别的 QueueSet 为 nil，否则它将是一个有效的 QueueSet。
-	quiescing   bool        // quiescing==true表示在其队列全部排空时应删除此优先级级别。仅当队列为非nil时才可能为true。
+	queues      fq.QueueSet // 如果优先级级别被豁免,则此优先级级别的 QueueSet 为 nil,否则它将是一个有效的 QueueSet.
+	quiescing   bool        // quiescing==true表示在其队列全部排空时应删除此优先级级别.仅当队列为非nil时才可能为true.
 
 	// number of goroutines between Controller::Match and calling the returned StartFunction
 	numPending int
 
 	reqsGaugePair        metrics.RatioedGaugePair // 追踪请求的等待数、正在执行数
 	execSeatsObs         metrics.RatioedGauge     // 观察整个执行过程中被占用的座位数量
-	seatDemandIntegrator fq.Integrator            // 席位的需求，每隔一段时间 就会重置
+	seatDemandIntegrator fq.Integrator            // 席位的需求,每隔一段时间 就会重置
 
 	// Gauge of seat demand / nominalCL
 	seatDemandRatioedGauge metrics.RatioedGauge // 席位的需求/
@@ -237,7 +237,7 @@ func (stats *seatDemandStats) update(obs fq.IntegratorResults) {
 	stats.smoothed = math.Max(envelope, seatDemandSmoothingCoefficient*stats.smoothed+(1-seatDemandSmoothingCoefficient)*envelope)
 }
 
-// NewTestableController 非常灵活，以便于测试。
+// NewTestableController 非常灵活,以便于测试.
 func newTestableController(config TestableConfig) *configController {
 	cfgCtlr := &configController{
 		name:                   config.Name,
@@ -254,9 +254,9 @@ func newTestableController(config TestableConfig) *configController {
 		WatchTracker:           NewWatchTracker(),
 	}
 	klog.V(2).Infof("NewTestableController %q with serverConcurrencyLimit=%d, requestWaitLimit=%s, name=%s, asFieldManager=%q", cfgCtlr.name, cfgCtlr.serverConcurrencyLimit, cfgCtlr.requestWaitLimit, cfgCtlr.name, cfgCtlr.asFieldManager)
-	// 从较长的延迟开始，因为冲突将在不同的进程之间发生，因此需要一些时间来消失。
+	// 从较长的延迟开始,因为冲突将在不同的进程之间发生,因此需要一些时间来消失.
 	cfgCtlr.configQueue = workqueue.NewNamedRateLimitingQueue(workqueue.NewItemExponentialFailureRateLimiter(200*time.Millisecond, 8*time.Hour), "priority_and_fairness_config_queue")
-	// 确保数据结构反映了强制配置。
+	// 确保数据结构反映了强制配置.
 	cfgCtlr.lockAndDigestConfigObjects(nil, nil)
 	fci := config.InformerFactory.Flowcontrol().V1beta3()
 	pli := fci.PriorityLevelConfigurations()
@@ -339,10 +339,10 @@ func (cfgCtlr *configController) Run(stopCh <-chan struct{}) error {
 		return fmt.Errorf("Never achieved initial sync")
 	}
 
-	klog.Info("正在运行API优先级和公平性配置工作程序。")
+	klog.Info("正在运行API优先级和公平性配置工作程序.")
 	go wait.Until(cfgCtlr.runWorker, time.Second, stopCh)
 
-	klog.Info("正在运行API优先级和公平性定期重新平衡进程。")
+	klog.Info("正在运行API优先级和公平性定期重新平衡进程.")
 	go wait.Until(cfgCtlr.updateBorrowing, borrowingAdjustmentPeriod, stopCh) // 10s
 
 	<-stopCh
@@ -454,7 +454,7 @@ func (cfgCtlr *configController) processNextWorkItem() bool {
 	return true
 }
 
-// syncOne 执行一次完整的同步。它读取配置API优先级和公平性的所有API对象，并相应地更新本地configController。
+// syncOne 执行一次完整的同步.它读取配置API优先级和公平性的所有API对象,并相应地更新本地configController.
 func (cfgCtlr *configController) syncOne() (specificDelay time.Duration, err error) { // ✅
 	klog.V(5).Infof("%s syncOne at %s", cfgCtlr.name, cfgCtlr.clock.Now().Format(timeFmt))
 	all := labels.Everything()
@@ -492,7 +492,7 @@ type fsStatusUpdate struct {
 	oldValue   flowcontrol.FlowSchemaCondition
 }
 
-// digestConfigObjects 获得所有配置cfgCtlr的API对象，并编写其随后的新configState
+// digestConfigObjects 获得所有配置cfgCtlr的API对象,并编写其随后的新configState
 func (cfgCtlr *configController) digestConfigObjects( // ✅
 	newPLs []*flowcontrol.PriorityLevelConfiguration,
 	newFSs []*flowcontrol.FlowSchema,
@@ -522,7 +522,7 @@ func (cfgCtlr *configController) digestConfigObjects( // ✅
 
 		if err := apply(cfgCtlr.flowcontrolClient.FlowSchemas(), fsu, cfgCtlr.asFieldManager); err != nil {
 			if apierrors.IsNotFound(err) {
-				// 此对象已被删除。通知即将到来，这里不需要做更多的事情。
+				// 此对象已被删除.通知即将到来,这里不需要做更多的事情.
 				klog.V(5).Infof("%s at %s: attempted update of concurrently deleted FlowSchema %s; nothing more needs to be done", cfgCtlr.name, cfgCtlr.clock.Now().Format(timeFmt), fsu.flowSchema.Name)
 			} else {
 				errs = append(errs, fmt.Errorf("failed to set a status.condition for FlowSchema %s: %w", fsu.flowSchema.Name, err))
@@ -632,7 +632,7 @@ func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfi
 			state = &priorityLevelState{
 				reqsGaugePair:          metrics.RatioedGaugeVecPhasedElementPair(meal.cfgCtlr.reqsGaugeVec, 1, 1, labelValues),
 				execSeatsObs:           meal.cfgCtlr.execSeatsGaugeVec.NewForLabelValuesSafe(0, 1, labelValues),
-				seatDemandIntegrator:   fq.NewNamedIntegrator(meal.cfgCtlr.clock, pl.Name), // 席位的需求，每隔一段时间 就会重置
+				seatDemandIntegrator:   fq.NewNamedIntegrator(meal.cfgCtlr.clock, pl.Name), // 席位的需求,每隔一段时间 就会重置
 				seatDemandRatioedGauge: metrics.ApiserverSeatDemands.NewForLabelValuesSafe(0, 1, []string{pl.Name}),
 			}
 		}
@@ -646,7 +646,7 @@ func (meal *cfgMeal) digestNewPLsLocked(newPLs []*flowcontrol.PriorityLevelConfi
 			metrics.NewUnionGauge(state.seatDemandIntegrator, state.seatDemandRatioedGauge),
 		)
 		if err != nil {
-			klog.Warningf("忽略PriorityLevelConfiguration对象%s，因为其规范（%s）已损坏：%s", pl.Name, fcfmt.Fmt(pl.Spec), err)
+			klog.Warningf("忽略PriorityLevelConfiguration对象%s,因为其规范（%s）已损坏：%s", pl.Name, fcfmt.Fmt(pl.Spec), err)
 			continue
 		}
 		meal.newPLStates[pl.Name] = state
@@ -824,8 +824,8 @@ func (meal *cfgMeal) finishQueueSetReconfigsLocked() {
 	meal.cfgCtlr.updateBorrowingLocked(false, meal.newPLStates)
 }
 
-// queueSetCompleterForPL 函数返回一个适当的 QueueSetCompleter，用于给定的优先级级别配置。
-// 如果该配置不需要限制，则返回 nil。
+// queueSetCompleterForPL 函数返回一个适当的 QueueSetCompleter,用于给定的优先级级别配置.
+// 如果该配置不需要限制,则返回 nil.
 func queueSetCompleterForPL(qsf fq.QueueSetFactory, queues fq.QueueSet, pl *flowcontrol.PriorityLevelConfiguration, requestWaitLimit time.Duration, reqsIntPair metrics.RatioedGaugePair, execSeatsObs metrics.RatioedGauge, seatDemandGauge metrics.Gauge) (fq.QueueSetCompleter, error) {
 	if (pl.Spec.Type == flowcontrol.PriorityLevelEnablementExempt) != (pl.Spec.Limited == nil) {
 		return nil, errors.New("broken union structure at the top")

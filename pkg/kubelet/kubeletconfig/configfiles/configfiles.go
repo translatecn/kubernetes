@@ -29,7 +29,7 @@ import (
 
 // Loader loads configuration from a storage layer
 type Loader interface {
-	// Load 从存储层加载并返回KubeletConfiguration,如果无法加载配置,则返回错误。
+	// Load 从存储层加载并返回KubeletConfiguration,如果无法加载配置,则返回错误.
 	Load() (*kubeletconfig.KubeletConfiguration, error)
 }
 
@@ -73,12 +73,12 @@ func (loader *fsLoader) Load() (*kubeletconfig.KubeletConfiguration, error) {
 		return nil, err
 	}
 
-	// 将所有路径都转换为绝对路径。
+	// 将所有路径都转换为绝对路径.
 	resolveRelativePaths(kubeletconfig.KubeletConfigurationPathRefs(kc), filepath.Dir(loader.kubeletFile))
 	return kc, nil
 }
 
-// resolveRelativePaths 通过将相对路径与“root”解析来将相对路径转换为绝对路径。
+// resolveRelativePaths 通过将相对路径与“root”解析来将相对路径转换为绝对路径.
 func resolveRelativePaths(paths []*string, root string) {
 	for _, path := range paths {
 		// leave empty paths alone, "no path" is a valid input

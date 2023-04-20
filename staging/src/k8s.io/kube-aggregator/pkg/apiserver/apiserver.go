@@ -118,28 +118,28 @@ type preparedAPIAggregator struct {
 	runnable runnable
 }
 
-// APIAggregator 包含Kubernetes集群的主控节点/ API服务器的状态。
+// APIAggregator 包含Kubernetes集群的主控节点/ API服务器的状态.
 type APIAggregator struct {
 	GenericAPIServer         *genericapiserver.GenericAPIServer
-	APIRegistrationInformers informers.SharedInformerFactory // 提供更容易嵌入的功能。
+	APIRegistrationInformers informers.SharedInformerFactory // 提供更容易嵌入的功能.
 	delegateHandler          http.Handler
 
-	proxyCurrentCertKeyContent certKeyFunc // 保存用于识别此代理的客户端证书。支持的APIServices使用此证书来确认代理的身份。
+	proxyCurrentCertKeyContent certKeyFunc // 保存用于识别此代理的客户端证书.支持的APIServices使用此证书来确认代理的身份.
 	proxyTransport             *http.Transport
 
-	proxyHandlers   map[string]*proxyHandler // 当前已注册的代理处理程序，按apiservice.name为键。
-	handledGroups   sets.String              // 已经具有路由的组。
-	lister          listers.APIServiceLister // 基于控制器状态，用于为/apis/聚合器查找添加组处理。
-	serviceResolver ServiceResolver          // 确定聚合器路由所需的信息。
+	proxyHandlers   map[string]*proxyHandler // 当前已注册的代理处理程序,按apiservice.name为键.
+	handledGroups   sets.String              // 已经具有路由的组.
+	lister          listers.APIServiceLister // 基于控制器状态,用于为/apis/聚合器查找添加组处理.
+	serviceResolver ServiceResolver          // 确定聚合器路由所需的信息.
 
 	openAPIConfig                  *openapicommon.Config
 	openAPIV3Config                *openapicommon.Config
 	openAPIAggregationController   *openapicontroller.AggregationController
 	openAPIV3AggregationController *openapiv3controller.AggregationController
 
-	discoveryAggregationController DiscoveryAggregationController // 从所有聚合的API服务中下载和缓存发现文档，以便在请求带有资源的发现时从/apis端点获取。
-	egressSelector                 *egressselector.EgressSelector // 选择适当的出口拨号器与自定义API服务器通信，如果不为nil，则覆盖proxyTransport拨号器。
-	rejectForwardingRedirects      bool                           // 是否允许转发重定向响应。
+	discoveryAggregationController DiscoveryAggregationController // 从所有聚合的API服务中下载和缓存发现文档,以便在请求带有资源的发现时从/apis端点获取.
+	egressSelector                 *egressselector.EgressSelector // 选择适当的出口拨号器与自定义API服务器通信,如果不为nil,则覆盖proxyTransport拨号器.
+	rejectForwardingRedirects      bool                           // 是否允许转发重定向响应.
 }
 
 // Complete fills in any fields not set that are required to have valid data. It's mutating the receiver.
@@ -172,7 +172,7 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 	}
 	informerFactory := informers.NewSharedInformerFactory(
 		apiregistrationClient,
-		5*time.Minute, // 现在这可以有效地用作刷新间隔。也许以后该做点更好的事。
+		5*time.Minute, // 现在这可以有效地用作刷新间隔.也许以后该做点更好的事.
 	)
 
 	// apiServiceRegistrationControllerInitiated is closed when APIServiceRegistrationController has finished "installing" all known APIServices.
@@ -354,7 +354,7 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 
 // PrepareRun 注册openapi 相关的controller到post start hook中
 func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
-	// 在通用PrepareRun之前添加启动后钩子，以便在/healthz安装之前。
+	// 在通用PrepareRun之前添加启动后钩子,以便在/healthz安装之前.
 	if s.openAPIConfig != nil {
 		s.GenericAPIServer.AddPostStartHookOrDie("apiservice-openapi-controller", func(context genericapiserver.PostStartHookContext) error {
 			go s.openAPIAggregationController.Run(context.StopCh)
@@ -385,7 +385,7 @@ func (s *APIAggregator) PrepareRun() (preparedAPIAggregator, error) {
 
 	prepared := s.GenericAPIServer.PrepareRun() // ✅   kube-aggregator.PrepareRun
 
-	// 延迟OpenAPI的设置，直到委托有机会设置他们的OpenAPI处理程序
+	// 延迟OpenAPI的设置,直到委托有机会设置他们的OpenAPI处理程序
 	if s.openAPIConfig != nil {
 		specDownloader := openapiaggregator.NewDownloader()
 		openAPIAggregator, err := openapiaggregator.BuildAndRegisterAggregator(

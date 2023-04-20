@@ -16,9 +16,9 @@ limitations under the License.
 
 package node
 
-// intSet 维护一个id到引用计数的映射表。
+// intSet 维护一个id到引用计数的映射表.
 type intSet struct {
-	// members 维护一个id到引用计数的映射表。
+	// members 维护一个id到引用计数的映射表.
 	members map[int]int
 }
 

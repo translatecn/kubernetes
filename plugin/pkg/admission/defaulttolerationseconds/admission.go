@@ -33,10 +33,10 @@ const PluginName = "DefaultTolerationSeconds"
 
 var (
 	defaultNotReadyTolerationSeconds = flag.Int64("default-not-ready-toleration-seconds", 300,
-		"表示对notReady:NoExecute污点的容忍的时间，它被默认添加到每一个还没有这种容忍度的pod中。")
+		"表示对notReady:NoExecute污点的容忍的时间,它被默认添加到每一个还没有这种容忍度的pod中.")
 
 	defaultUnreachableTolerationSeconds = flag.Int64("default-unreachable-toleration-seconds", 300,
-		"表示对unreachable:NoExecute污点的容忍的时间，它被默认添加到每个还没有这种容忍度的pod中。")
+		"表示对unreachable:NoExecute污点的容忍的时间,它被默认添加到每个还没有这种容忍度的pod中.")
 
 	notReadyToleration = api.Toleration{
 		Key:               v1.TaintNodeNotReady,

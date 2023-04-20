@@ -23,7 +23,7 @@ import (
 	"net/http"
 )
 
-// WithTracing 如果传入请求被采样，则为请求添加跟踪。   传播span
+// WithTracing 如果传入请求被采样,则为请求添加跟踪.   传播span
 func WithTracing(handler http.Handler, tp trace.TracerProvider) http.Handler {
 	opts := []otelhttp.Option{
 		otelhttp.WithPropagators(tracing.Propagators()),

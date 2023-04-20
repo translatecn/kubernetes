@@ -25,12 +25,12 @@ import (
 	"os"
 )
 
-// ArgContainerHints 在cAdvisor中，容器提示文件（container hints file）是一个文本文件，用于指定容器的元数据，例如容器的名称、标签、环境变量等等。
-// 容器提示文件通常位于cAdvisor的配置目录中，可以由用户自定义。cAdvisor在启动时会读取容器提示文件，并根据其中的信息来识别和管理容器。
-// 容器提示文件的位置取决于cAdvisor的配置，可以通过命令行参数或配置文件来指定。以下是一些常见的位置：
-// /etc/cadvisor/container_hints.yaml：在Linux系统中，容器提示文件通常位于/etc/cadvisor目录中，文件名为container_hints.yaml。
-// /usr/local/etc/cadvisor/container_hints.yaml：在FreeBSD等系统中，容器提示文件通常位于/usr/local/etc/cadvisor目录中。
-// 自定义位置：用户也可以通过命令行参数或配置文件来指定容器提示文件的位置，例如--container_hints=/path/to/container_hints.yaml。
+// ArgContainerHints 在cAdvisor中,容器提示文件（container hints file）是一个文本文件,用于指定容器的元数据,例如容器的名称、标签、环境变量等等.
+// 容器提示文件通常位于cAdvisor的配置目录中,可以由用户自定义.cAdvisor在启动时会读取容器提示文件,并根据其中的信息来识别和管理容器.
+// 容器提示文件的位置取决于cAdvisor的配置,可以通过命令行参数或配置文件来指定.以下是一些常见的位置：
+// /etc/cadvisor/container_hints.yaml：在Linux系统中,容器提示文件通常位于/etc/cadvisor目录中,文件名为container_hints.yaml.
+// /usr/local/etc/cadvisor/container_hints.yaml：在FreeBSD等系统中,容器提示文件通常位于/usr/local/etc/cadvisor目录中.
+// 自定义位置：用户也可以通过命令行参数或配置文件来指定容器提示文件的位置,例如--container_hints=/path/to/container_hints.yaml.
 var ArgContainerHints = flag.String("container_hints", "/etc/cadvisor/container_hints.json", "容器提示文件的位置")
 
 type ContainerHints struct {

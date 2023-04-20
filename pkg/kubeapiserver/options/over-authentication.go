@@ -84,7 +84,7 @@ type OIDCAuthenticationOptions struct {
 // ServiceAccountAuthenticationOptions 包含API服务器的服务账户认证选项
 type ServiceAccountAuthenticationOptions struct {
 	KeyFiles         []string // --service-account-key-file
-	Lookup           bool     // 如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。
+	Lookup           bool     // 如果为真,则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分.
 	Issuers          []string // 其全称为 “Issuer Identifier”,中文意思就是：颁发者身份标识,表示 Token 颁发者的唯一标识,一般是一个 http(s) url,如 https://www.baidu.com
 	JWKSURI          string
 	MaxExpiration    time.Duration
@@ -238,15 +238,15 @@ func (o *BuiltInAuthenticationOptions) Validate() []error {
 // AddFlags returns flags of authentication for a API Server
 func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&o.APIAudiences, "api-audiences", o.APIAudiences,
-		"客户，即使用者。值为OAuth2.0协议中客户端注册的client_id.如果配置了 --service-account-issuer 标志而没有配置该标志,则该字段默认为包含发行者URL的单个元素列表.",
+		"客户,即使用者.值为OAuth2.0协议中客户端注册的client_id.如果配置了 --service-account-issuer 标志而没有配置该标志,则该字段默认为包含发行者URL的单个元素列表.",
 	)
 
 	if o.Anonymous != nil {
-		fs.BoolVar(&o.Anonymous.Allow, "anonymous-auth", o.Anonymous.Allow, "启用匿名请求到API服务器的安全端口。未被其他身份验证方法拒绝的请求被视为匿名请求。匿名请求的用户名为system: Anonymous，组名为system:unauthenticated。")
+		fs.BoolVar(&o.Anonymous.Allow, "anonymous-auth", o.Anonymous.Allow, "启用匿名请求到API服务器的安全端口.未被其他身份验证方法拒绝的请求被视为匿名请求.匿名请求的用户名为system: Anonymous,组名为system:unauthenticated.")
 	}
 
 	if o.BootstrapToken != nil {
-		fs.BoolVar(&o.BootstrapToken.Enable, "enable-bootstrap-token-auth", o.BootstrapToken.Enable, "启用允许'bootstrap.kubernetes类型的secret io/token'在'kube-system'命名空间中用于TLS引导身份验证。")
+		fs.BoolVar(&o.BootstrapToken.Enable, "enable-bootstrap-token-auth", o.BootstrapToken.Enable, "启用允许'bootstrap.kubernetes类型的secret io/token'在'kube-system'命名空间中用于TLS引导身份验证.")
 	}
 
 	if o.ClientCert != nil {
@@ -254,17 +254,17 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	if o.OIDC != nil {
-		// 如果设置了，OpenID服务器的证书将由oidc- CA文件中的一个权威机构进行验证，否则将使用主机的根CA集。
+		// 如果设置了,OpenID服务器的证书将由oidc- CA文件中的一个权威机构进行验证,否则将使用主机的根CA集.
 		// https://www.jianshu.com/p/cb50363a47be
-		fs.StringVar(&o.OIDC.IssuerURL, "oidc-issuer-url", o.OIDC.IssuerURL, "OpenID颁发者的URL，只接受HTTPS方案。如果设置了，它将用于验证OIDC JSON Web令牌(JWT)。")
-		fs.StringVar(&o.OIDC.ClientID, "oidc-client-id", o.OIDC.ClientID, "如果设置了oidc-issuer-url，则必须设置OpenID Connect客户端的客户端ID。")
-		fs.StringVar(&o.OIDC.CAFile, "oidc-ca-file", o.OIDC.CAFile, "如果设置了，OpenID服务器的证书将由 oidc-ca-file 中的一个权威机构进行验证，否则将使用主机的根CA集。")
-		fs.StringVar(&o.OIDC.UsernameClaim, "oidc-username-claim", "sub", "OpenID声明用作用户名。注意，除了默认值('sub')之外的声明并不保证是唯一的和不可变的。")
-		fs.StringVar(&o.OIDC.UsernamePrefix, "oidc-username-prefix", "", "如果提供，所有用户名都将以该值作为前缀。")
-		fs.StringVar(&o.OIDC.GroupsClaim, "oidc-groups-claim", "", "如果提供，则指定用户组的自定义OpenID Connect声明的名称。")
-		fs.StringVar(&o.OIDC.GroupsPrefix, "oidc-groups-prefix", "", "如果提供，所有组都将以该值作为前缀，以防止与其他身份验证策略冲突。")
-		fs.StringSliceVar(&o.OIDC.SigningAlgs, "oidc-signing-algs", []string{"RS256"}, "允许的JOSE非对称签名算法的逗号分隔列表。")
-		fs.Var(cliflag.NewMapStringStringNoSplit(&o.OIDC.RequiredClaims), "oidc-required-claim", "在ID令牌中描述必需声明的键=值对。如果设置了，则验证该声明是否存在于具有匹配值的ID令牌中。可指定多个声明。")
+		fs.StringVar(&o.OIDC.IssuerURL, "oidc-issuer-url", o.OIDC.IssuerURL, "OpenID颁发者的URL,只接受HTTPS方案.如果设置了,它将用于验证OIDC JSON Web令牌(JWT).")
+		fs.StringVar(&o.OIDC.ClientID, "oidc-client-id", o.OIDC.ClientID, "如果设置了oidc-issuer-url,则必须设置OpenID Connect客户端的客户端ID.")
+		fs.StringVar(&o.OIDC.CAFile, "oidc-ca-file", o.OIDC.CAFile, "如果设置了,OpenID服务器的证书将由 oidc-ca-file 中的一个权威机构进行验证,否则将使用主机的根CA集.")
+		fs.StringVar(&o.OIDC.UsernameClaim, "oidc-username-claim", "sub", "OpenID声明用作用户名.注意,除了默认值('sub')之外的声明并不保证是唯一的和不可变的.")
+		fs.StringVar(&o.OIDC.UsernamePrefix, "oidc-username-prefix", "", "如果提供,所有用户名都将以该值作为前缀.")
+		fs.StringVar(&o.OIDC.GroupsClaim, "oidc-groups-claim", "", "如果提供,则指定用户组的自定义OpenID Connect声明的名称.")
+		fs.StringVar(&o.OIDC.GroupsPrefix, "oidc-groups-prefix", "", "如果提供,所有组都将以该值作为前缀,以防止与其他身份验证策略冲突.")
+		fs.StringSliceVar(&o.OIDC.SigningAlgs, "oidc-signing-algs", []string{"RS256"}, "允许的JOSE非对称签名算法的逗号分隔列表.")
+		fs.Var(cliflag.NewMapStringStringNoSplit(&o.OIDC.RequiredClaims), "oidc-required-claim", "在ID令牌中描述必需声明的键=值对.如果设置了,则验证该声明是否存在于具有匹配值的ID令牌中.可指定多个声明.")
 	}
 
 	if o.RequestHeader != nil {
@@ -273,16 +273,16 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 
 	if o.ServiceAccounts != nil {
 		fs.StringArrayVar(&o.ServiceAccounts.KeyFiles, "service-account-key-file", o.ServiceAccounts.KeyFiles,
-			"包含pem编码的x509 RSA或ECDSA私钥或公钥的文件，用于验证ServiceAccount令牌。"+
-				"指定的文件可以包含多个键，并且该标志可以在不同的文件中指定多次。如果未指定，则使用--tls-private-key-file。提供--service-account-signing-key-file时必须指定")
+			"包含pem编码的x509 RSA或ECDSA私钥或公钥的文件,用于验证ServiceAccount令牌."+
+				"指定的文件可以包含多个键,并且该标志可以在不同的文件中指定多次.如果未指定,则使用--tls-private-key-file.提供--service-account-signing-key-file时必须指定")
 
-		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup, "如果为真，则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分。")
+		fs.BoolVar(&o.ServiceAccounts.Lookup, "service-account-lookup", o.ServiceAccounts.Lookup, "如果为真,则验证etcd中存在的ServiceAccount令牌作为身份验证的一部分.")
 
 		fs.StringArrayVar(&o.ServiceAccounts.Issuers, "service-account-issuer", o.ServiceAccounts.Issuers, "服务帐户令牌发行者的标识符.发行者将在已发行令牌的\"iss\"声明中声明此标识符.")
 
 		fs.StringVar(&o.ServiceAccounts.JWKSURI, "service-account-jwks-uri", o.ServiceAccounts.JWKSURI,
-			"覆盖在/.famous/openid-configuration swagger文档中JSON Web Key Set的URI。"+
-				"如果发现文档和密钥集是从API服务器的外部URL(自动检测或用外部主机名覆盖)以外的URL提供给依赖方，则此标志很有用。")
+			"覆盖在/.famous/openid-configuration swagger文档中JSON Web Key Set的URI."+
+				"如果发现文档和密钥集是从API服务器的外部URL(自动检测或用外部主机名覆盖)以外的URL提供给依赖方,则此标志很有用.")
 
 		fs.DurationVar(&o.ServiceAccounts.MaxExpiration, "service-account-max-token-expiration", o.ServiceAccounts.MaxExpiration,
 			"由服务帐户令牌颁发者创建的令牌的最大有效期.如果请求的TokenRequest有效时间大于此值,则将发出具有此值有效时间的令牌")
@@ -293,13 +293,13 @@ func (o *BuiltInAuthenticationOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	if o.TokenFile != nil {
-		fs.StringVar(&o.TokenFile.TokenFile, "token-auth-file", o.TokenFile.TokenFile, "如果设置了，将用于通过令牌身份验证保护API服务器安全端口的文件。")
+		fs.StringVar(&o.TokenFile.TokenFile, "token-auth-file", o.TokenFile.TokenFile, "如果设置了,将用于通过令牌身份验证保护API服务器安全端口的文件.")
 	}
 
 	if o.WebHook != nil {
-		fs.StringVar(&o.WebHook.ConfigFile, "authentication-token-webhook-config-file", o.WebHook.ConfigFile, "kube config格式的token认证webhook配置文件。API服务器将查询远程服务以确定承载令牌的身份验证。")
-		fs.StringVar(&o.WebHook.Version, "authentication-token-webhook-version", o.WebHook.Version, "authentication.k8s的API版本。io TokenReview发送到webhook和期望收到的。")
-		fs.DurationVar(&o.WebHook.CacheTTL, "authentication-token-webhook-cache-ttl", o.WebHook.CacheTTL, "缓存webhook令牌验证器响应的持续时间。")
+		fs.StringVar(&o.WebHook.ConfigFile, "authentication-token-webhook-config-file", o.WebHook.ConfigFile, "kube config格式的token认证webhook配置文件.API服务器将查询远程服务以确定承载令牌的身份验证.")
+		fs.StringVar(&o.WebHook.Version, "authentication-token-webhook-version", o.WebHook.Version, "authentication.k8s的API版本.io TokenReview发送到webhook和期望收到的.")
+		fs.DurationVar(&o.WebHook.CacheTTL, "authentication-token-webhook-cache-ttl", o.WebHook.CacheTTL, "缓存webhook令牌验证器响应的持续时间.")
 	}
 }
 
@@ -368,10 +368,10 @@ func (o *BuiltInAuthenticationOptions) ToAuthenticationConfig() (kubeauthenticat
 
 		if len(o.WebHook.ConfigFile) > 0 && o.WebHook.CacheTTL > 0 {
 			if o.TokenSuccessCacheTTL > 0 && o.WebHook.CacheTTL < o.TokenSuccessCacheTTL {
-				klog.Warningf("对于尝试验证成功的令牌身份，webhook缓存的TTL %s比缓存的总TTL %s短。", o.WebHook.CacheTTL, o.TokenSuccessCacheTTL)
+				klog.Warningf("对于尝试验证成功的令牌身份,webhook缓存的TTL %s比缓存的总TTL %s短.", o.WebHook.CacheTTL, o.TokenSuccessCacheTTL)
 			}
 			if o.TokenFailureCacheTTL > 0 && o.WebHook.CacheTTL < o.TokenFailureCacheTTL {
-				klog.Warningf("对于尝试验证失败的令牌身份，webhook缓存的TTL %s比缓存的总TTL %s短。", o.WebHook.CacheTTL, o.TokenFailureCacheTTL)
+				klog.Warningf("对于尝试验证失败的令牌身份,webhook缓存的TTL %s比缓存的总TTL %s短.", o.WebHook.CacheTTL, o.TokenFailureCacheTTL)
 			}
 		}
 	}
@@ -457,7 +457,7 @@ func (o *BuiltInAuthenticationOptions) ApplyAuthorization(authorization *BuiltIn
 	// authorization ModeAlwaysAllow cannot be combined with AnonymousAuth.
 	// in such a case the AnonymousAuth is stomped to false and you get a message
 	if o.Anonymous.Allow && sets.NewString(authorization.Modes...).Has(authzmodes.ModeAlwaysAllow) {
-		klog.Warningf("AlwaysAllow授权器不允许使用AnonymousAuth。将AnonymousAuth重置为false。您应该使用不同的授权程序")
+		klog.Warningf("AlwaysAllow授权器不允许使用AnonymousAuth.将AnonymousAuth重置为false.您应该使用不同的授权程序")
 		o.Anonymous.Allow = false
 	}
 }

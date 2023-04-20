@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// TestFakeClient 演示如何在测试中使用SharedInformerFactory的伪客户端。
+// TestFakeClient 演示如何在测试中使用SharedInformerFactory的伪客户端.
 func TestFakeClient(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -39,7 +39,7 @@ func TestFakeClient(t *testing.T) {
 	watcherStarted := make(chan struct{})
 	// Create the fake client.
 	client := fake.NewSimpleClientset()
-	// 一个全面监视反应堆，允许我们注入watcherStarted通道。
+	// 一个全面监视反应堆,允许我们注入watcherStarted通道.
 	client.PrependWatchReactor("*", func(action clienttesting.Action) (handled bool, ret watch.Interface, err error) {
 		gvr := action.GetResource()
 		ns := action.GetNamespace()

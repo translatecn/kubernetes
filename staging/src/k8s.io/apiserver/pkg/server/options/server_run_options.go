@@ -44,7 +44,7 @@ type ServerRunOptions struct {
 	LivezGracePeriod            time.Duration //
 	MinRequestTimeout           int           //
 	ShutdownDelayDuration       time.Duration //
-	JSONPatchMaxCopyBytes       int64         // 我们故意没有为这个选项添加flag。
+	JSONPatchMaxCopyBytes       int64         // 我们故意没有为这个选项添加flag.
 	MaxRequestBodyBytes         int64         //
 	EnablePriorityAndFairness   bool          // 优先级和公平性管理
 	ShutdownSendRetryAfter      bool          //
@@ -186,8 +186,8 @@ func (s *ServerRunOptions) AddUniversalFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&s.EnablePriorityAndFairness, "enable-priority-and-fairness", s.EnablePriorityAndFairness, "如果为true并且APIPriorityAndFairness特性已启用,则将max-in-flight处理程序替换为具有优先级和公平性的队列和调度增强处理程序")
 	fs.IntVar(&s.MaxRequestsInFlight, "max-requests-inflight", s.MaxRequestsInFlight, "如果--enable-priority-and-fairness为真,--max-requests-inflight 和 --max-mutating-requests-inflight 相加以确定服务器的总并发限制(必须为正).否则,该标志将限制运行中的非突变请求的最大数量,如果值为零则完全禁用该限制.")
 	fs.IntVar(&s.MaxMutatingRequestsInFlight, "max-mutating-requests-inflight", s.MaxMutatingRequestsInFlight, "突发流量上限")
-	fs.DurationVar(&s.ShutdownDelayDuration, "shutdown-delay-duration", s.ShutdownDelayDuration, "延迟终止时间。在此期间，服务器继续正常地为请求提供服务。 /healthz和/livez  返回成功，但是/readyz立即返回失败。")
-	fs.BoolVar(&s.ShutdownSendRetryAfter, "shutdown-send-retry-after", s.ShutdownSendRetryAfter, "如果为true, HTTP服务器将继续监听，直到所有非长时间运行的请求被耗尽，在此窗口期间，所有传入的请求将被拒绝，状态码为429，响应头为'Retry-After'，此外还设置了'Connection: close'响应头，以便在空闲时断开TCP连接。")
+	fs.DurationVar(&s.ShutdownDelayDuration, "shutdown-delay-duration", s.ShutdownDelayDuration, "延迟终止时间.在此期间,服务器继续正常地为请求提供服务. /healthz和/livez  返回成功,但是/readyz立即返回失败.")
+	fs.BoolVar(&s.ShutdownSendRetryAfter, "shutdown-send-retry-after", s.ShutdownSendRetryAfter, "如果为true, HTTP服务器将继续监听,直到所有非长时间运行的请求被耗尽,在此窗口期间,所有传入的请求将被拒绝,状态码为429,响应头为'Retry-After',此外还设置了'Connection: close'响应头,以便在空闲时断开TCP连接.")
 
 	utilfeature.DefaultMutableFeatureGate.AddFlag(fs)
 }

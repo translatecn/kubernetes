@@ -229,7 +229,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.flowcontrol.v1beta2.QueuingConfiguration"
               }
             ],
-            "description": "`queuing` 参数保存了队列 的配置参数。 This field may be non-empty only if `type` is `\"Queue\"`."
+            "description": "`queuing` 参数保存了队列 的配置参数. This field may be non-empty only if `type` is `\"Queue\"`."
           },
           "type": {
             "default": "",
@@ -251,7 +251,7 @@
         ]
       },
       "io.k8s.api.flowcontrol.v1beta2.LimitedPriorityLevelConfiguration": {
-        "description": "LimitedPriorityLevelConfiguration 指定如何处理受限制的请求。 It addresses two issues:\n  - How are requests for this priority level limited?\n  - What should be done with requests that exceed the limit?",
+        "description": "LimitedPriorityLevelConfiguration 指定如何处理受限制的请求. It addresses two issues:\n  - How are requests for this priority level limited?\n  - What should be done with requests that exceed the limit?",
         "properties": {
           "assuredConcurrencyShares": {
             "default": 0,
@@ -358,7 +358,7 @@
         "type": "object"
       },
       "io.k8s.api.flowcontrol.v1beta2.PriorityLevelConfiguration": {
-        "description": "PriorityLevelConfiguration 表示优先级级别的配置。",
+        "description": "PriorityLevelConfiguration 表示优先级级别的配置.",
         "properties": {
           "apiVersion": {
             "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -504,7 +504,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.flowcontrol.v1beta2.LimitedPriorityLevelConfiguration"
               }
             ],
-            "description": "`limited`参数指定了如何处理一个  具有优先级 的请求。 This field must be non-empty if and only if `type` is `\"Limited\"`."
+            "description": "`limited`参数指定了如何处理一个  具有优先级 的请求. This field must be non-empty if and only if `type` is `\"Limited\"`."
           },
           "type": {
             "default": "",
@@ -552,7 +552,7 @@
         "properties": {
           "handSize": {
             "default": 0,
-            "description": "handSize 是一个小的正整数，用于将请求进行随机分片并分配到队列中。 在此优先级级别的请求入队时，请求的流标识符（一个字符串对）将被哈希，哈希值将用于洗牌队列列表并发出指定大小的手牌。 请求将被放置在该手牌中最短的一个队列中。handSize 的大小不能超过 queues，并且应该足够小（以便一些重负载的流不会占据大部分队列）。 有关设置此字段的更详细指导，请参阅面向用户的文档。该字段的默认值为 8。",
+            "description": "handSize 是一个小的正整数,用于将请求进行随机分片并分配到队列中. 在此优先级级别的请求入队时,请求的流标识符（一个字符串对）将被哈希,哈希值将用于洗牌队列列表并发出指定大小的手牌. 请求将被放置在该手牌中最短的一个队列中.handSize 的大小不能超过 queues,并且应该足够小（以便一些重负载的流不会占据大部分队列）. 有关设置此字段的更详细指导,请参阅面向用户的文档.该字段的默认值为 8.",
             "format": "int32",
             "type": "integer"
           },

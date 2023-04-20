@@ -74,7 +74,7 @@ type delayingType struct {
 	stopOnce sync.Once
 
 	// heartbeat ensures we wait no more than maxWait before firing
-	heartbeat       clock.Ticker  // 镻认10秒的心跳，后面用在一个大循环里，避免没有新元素时一直阻塞
+	heartbeat       clock.Ticker  // 镻认10秒的心跳,后面用在一个大循环里,避免没有新元素时一直阻塞
 	waitingForAddCh chan *waitFor // 1000
 	metrics         retryMetrics
 }
@@ -152,7 +152,7 @@ func (q *delayingType) AddAfter(item interface{}, duration time.Duration) {
 
 	q.metrics.retry()
 
-	if duration <= 0 { // 时间到了，直接添加
+	if duration <= 0 { // 时间到了,直接添加
 		q.Add(item)
 		return
 	}
@@ -176,7 +176,7 @@ func (q *delayingType) waitingLoop() {
 	// 队列里没有元素时实现等待
 	never := make(<-chan time.Time)
 
-	// 设置一个计时器，当队列最前面的物品准备好时，计时器就会过期
+	// 设置一个计时器,当队列最前面的物品准备好时,计时器就会过期
 	var nextReadyAtTimer clock.Timer
 	// 优先级队列
 	waitingForQueue := &waitForPriorityQueue{}
@@ -224,7 +224,7 @@ func (q *delayingType) waitingLoop() {
 		case <-nextReadyAt: // 第一个元素的等待时间到了
 
 		case waitEntry := <-q.waitingForAddCh:
-			// 如果时间没到，就加到优先级队列里;如果时间到了，就加入到延时队列里
+			// 如果时间没到,就加到优先级队列里;如果时间到了,就加入到延时队列里
 			if waitEntry.readyAt.After(q.clock.Now()) {
 				insert(waitingForQueue, waitingEntryByData, waitEntry)
 			} else {
@@ -250,7 +250,7 @@ func (q *delayingType) waitingLoop() {
 
 // insert adds the entry to the priority queue, or updates the readyAt if it already exists in the queue
 func insert(q *waitForPriorityQueue, knownEntries map[t]*waitFor, entry *waitFor) {
-	// 看一个元素是够存在，如果存在，且新的到达时间早，就更新时间
+	// 看一个元素是够存在,如果存在,且新的到达时间早,就更新时间
 	existing, exists := knownEntries[entry.data]
 	if exists {
 		if existing.readyAt.After(entry.readyAt) {

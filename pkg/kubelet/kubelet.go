@@ -1454,7 +1454,7 @@ func (kl *Kubelet) initializeRuntimeDependentModules() {
 		os.Exit(1)
 	}
 	//触发收集一次,以便我们有临时存储的容量信息.
-	//忽略任何错误,因为如果统计收集不成功,容器管理器将无法在下面启动。
+	//忽略任何错误,因为如果统计收集不成功,容器管理器将无法在下面启动.
 
 	kl.StatsProvider.GetCgroupStats("/", true) // ✅
 	// Start container manager.
@@ -1854,8 +1854,8 @@ func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, 
 	return false, nil
 }
 
-// syncTerminatingPod 应终止pod中的所有运行容器。
-// 一旦此方法在没有错误的情况下返回,就可以安全地清理pod的本地状态。如果传递了runningPod，则我们不执行状态更新。
+// syncTerminatingPod 应终止pod中的所有运行容器.
+// 一旦此方法在没有错误的情况下返回,就可以安全地清理pod的本地状态.如果传递了runningPod,则我们不执行状态更新.
 func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, runningPod *kubecontainer.Pod, gracePeriod *int64, podStatusFn func(*v1.PodStatus)) error {
 	// TODO(#113606): connect this with the incoming context parameter, which comes from the pod worker.
 	// Currently, using that context causes test failures.
@@ -1863,7 +1863,7 @@ func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus 
 	klog.V(4).InfoS("syncTerminatingPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer klog.V(4).InfoS("syncTerminatingPod exit", "pod", klog.KObj(pod), "podUID", pod.UID)
 
-	// 当我们收到仅运行时的pod（runningPod！= nil）时，我们不需要更新状态管理器或刷新缓存的状态，因为成功的killPod将确保我们不会再次被调用。
+	// 当我们收到仅运行时的pod（runningPod！= nil）时,我们不需要更新状态管理器或刷新缓存的状态,因为成功的killPod将确保我们不会再次被调用.
 	if runningPod != nil {
 		// we kill the pod with the specified grace period since this is a termination
 		if gracePeriod != nil {
@@ -1969,7 +1969,7 @@ func (kl *Kubelet) syncTerminatedPod(ctx context.Context, pod *v1.Pod, podStatus
 	defer klog.V(4).InfoS("syncTerminatedPod exit", "pod", klog.KObj(pod), "podUID", pod.UID)
 
 	// 生成pod的最终状态
-	// TODO：我们应该将其合并到TerminatePod中吗？这将提供单个pod更新。
+	// TODO：我们应该将其合并到TerminatePod中吗？这将提供单个pod更新.
 	apiPodStatus := kl.generateAPIPodStatus(pod, podStatus)
 
 	kl.statusManager.SetPodStatus(pod, apiPodStatus)
@@ -2516,7 +2516,7 @@ func (kl *Kubelet) ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfigur
 	server.ListenAndServeKubeletServer(kl, kl.resourceAnalyzer, kubeCfg, tlsOptions, auth, tp)
 }
 
-// ListenAndServeReadOnly 以只读模式运行kubelet HTTP服务器。
+// ListenAndServeReadOnly 以只读模式运行kubelet HTTP服务器.
 func (kl *Kubelet) ListenAndServeReadOnly(address net.IP, port uint) {
 	server.ListenAndServeKubeletReadOnlyServer(kl, kl.resourceAnalyzer, address, port)
 }
