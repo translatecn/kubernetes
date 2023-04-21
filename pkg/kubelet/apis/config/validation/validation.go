@@ -39,7 +39,7 @@ var (
 	defaultCFSQuota = metav1.Duration{Duration: 100 * time.Millisecond}
 )
 
-// ValidateKubeletConfiguration validates `kc` and returns an error if it is invalid
+// ValidateKubeletConfiguration 校验 KubeletConfiguration配置，校验各个字段是否合法
 func ValidateKubeletConfiguration(kc *kubeletconfig.KubeletConfiguration, featureGate featuregate.FeatureGate) error {
 	allErrors := []error{}
 
@@ -77,6 +77,7 @@ func ValidateKubeletConfiguration(kc *kubeletconfig.KubeletConfiguration, featur
 	if utilvalidation.IsInRange(int(kc.ImageGCHighThresholdPercent), 0, 100) != nil {
 		allErrors = append(allErrors, fmt.Errorf("invalid configuration: imageGCHighThresholdPercent (--image-gc-high-threshold) %v must be between 0 and 100, inclusive", kc.ImageGCHighThresholdPercent))
 	}
+	// ImageGCLowGc阈值需要在0-100之间
 	if utilvalidation.IsInRange(int(kc.ImageGCLowThresholdPercent), 0, 100) != nil {
 		allErrors = append(allErrors, fmt.Errorf("invalid configuration: imageGCLowThresholdPercent (--image-gc-low-threshold) %v must be between 0 and 100, inclusive", kc.ImageGCLowThresholdPercent))
 	}

@@ -53,75 +53,38 @@ const defaultRootDir = "/var/lib/kubelet"
 // In general, please try to avoid adding flags or configuration fields,
 // we already have a confusingly large amount of them.
 type KubeletFlags struct {
-	KubeConfig          string
-	BootstrapKubeconfig string
-	HostnameOverride    string // 专门设置d额主机名
-	// NodeIP is IP address of the node.
-	// If set, kubelet will use this IP address for the node.
-	NodeIP string
-
-	// Container-runtime-specific options.
-	config.ContainerRuntimeOptions
-
-	// certDirectory is the directory where the TLS certs are located.
-	// If tlsCertFile and tlsPrivateKeyFile are provided, this flag will be ignored.
-	CertDirectory   string
-	CloudProvider   string // +optional
-	CloudConfigFile string // +optional
-	RootDirectory   string // 是放置kubelet文件（卷挂载等）的目录路径.
-
-	// The Kubelet will load its initial configuration from this file.
-	// The path may be absolute or relative; relative paths are under the Kubelet's current working directory.
-	// Omit this flag to use the combination of built-in default configuration values and flags.
-	KubeletConfigFile string
-
-	WindowsService bool // 如果kubelet在Windows上作为服务运行,则应将其设置为true.其对应的标志仅在Windows构建中注册.
+	KubeConfig                     string //
+	BootstrapKubeconfig            string //
+	HostnameOverride               string // 专门设置的主机名
+	NodeIP                         string // NodeIP为节点的IP地址。如果设置了，kubelet将为节点使用该IP地址。
+	config.ContainerRuntimeOptions        //
+	CertDirectory                  string // certDirectory为TLS证书所在目录。如果提供了tlsCertFile和tlprivatekeyfile，该标志将被忽略。
+	CloudProvider                  string // +optional
+	CloudConfigFile                string // +optional
+	RootDirectory                  string // 是放置kubelet文件（卷挂载等）的目录路径.
+	KubeletConfigFile              string // Kubelet将从这个文件加载它的初始配置。
+	WindowsService                 bool   // 如果kubelet在Windows上作为服务运行,则应将其设置为true.其对应的标志仅在Windows构建中注册.
 
 	// WindowsPriorityClass设置与Kubelet进程关联的优先级类别
 	// 其对应的标志仅在Windows构建中注册
 	// Windows中任何进程的默认优先级类别为NORMAL_PRIORITY_CLASS.保持不变以保持向后兼容性.
 	// Source: https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
-	WindowsPriorityClass  string // kubelet 进程优先级
-	RemoteRuntimeEndpoint string // 远程CRI端点
-	RemoteImageEndpoint   string // 远程镜像服务端点
-	// experimentalMounterPath is the path of mounter binary. Leave empty to use the default mount path
-	ExperimentalMounterPath string
-	// This flag, if set, will avoid including `EvictionHard` limits while computing Node Allocatable.
-	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md) doc for more information.
+	WindowsPriorityClass string // kubelet 进程优先级
+
+	RemoteRuntimeEndpoint                              string            // 远程CRI端点
+	RemoteImageEndpoint                                string            // 远程镜像服务端点
+	ExperimentalMounterPath                            string            // mount二进制文件的路径。留空以使用默认挂载路径
 	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool              // 实验性、忽略驱逐阈值
 	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签.
-	// lockFilePath is the path that kubelet will use to as a lock file.
-	// It uses this file as a lock to synchronize with other kubelet processes
-	// that may be running.
-	LockFilePath string
-	// ExitOnLockContention is a flag that signifies to the kubelet that it is running
-	// in "bootstrap" mode. This requires that 'LockFilePath' has been set.
-	// This will cause the kubelet to listen to inotify events on the lock file,
-	// releasing it and exiting when another process tries to open that file.
-	ExitOnLockContention bool
-	// DEPRECATED FLAGS
-	// minimumGCAge is the minimum age for a finished container before it is
-	// garbage collected.
-	MinimumGCAge metav1.Duration
-	// maxPerPodContainerCount is the maximum number of old instances to
-	// retain per container. Each container takes up some disk space.
-	MaxPerPodContainerCount int32
-	// maxContainerCount is the maximum number of old instances of containers
-	// to retain globally. Each container takes up some disk space.
-	MaxContainerCount int32
-	// masterServiceNamespace is The namespace from which the kubernetes
-	// master services should be injected into pods.
-	MasterServiceNamespace string
-	// registerSchedulable tells the kubelet to register the node as
-	// schedulable. Won't have any effect if register-node is false.
-	// DEPRECATED: use registerWithTaints instead
-	RegisterSchedulable bool
-	// This flag, if set, instructs the kubelet to keep volumes from terminated pods mounted to the node.
-	// This can be useful for debugging volume related issues.
-	KeepTerminatedPodVolumes bool
-	// SeccompDefault enables the use of `RuntimeDefault` as the default seccomp profile for all workloads on the node.
-	// To use this flag, the corresponding SeccompDefault feature gate must be enabled.
-	SeccompDefault bool
+	LockFilePath                                       string            // lockFilePath是kubelet用来作为锁文件的路径。它使用该文件作为锁，与可能正在运行的其他kubelet进程同步。
+	ExitOnLockContention                               bool              // 另一个进程试图打开该文件时释放锁并退出。
+	MinimumGCAge                                       metav1.Duration   // 一个容器在被垃圾收集之前的最小年龄。已弃用
+	MaxPerPodContainerCount                            int32             // 每个容器保留的旧实例的最大数量。
+	MaxContainerCount                                  int32             // 容器最大数量
+	MasterServiceNamespace                             string            // 主服务会放到这个名称空间里
+	RegisterSchedulable                                bool              // 告诉kubelet将节点注册为可调度的。如果register-node为false，则不起任何作用。 //已弃用:使用registerWithTaints代替
+	KeepTerminatedPodVolumes                           bool              // kubelet是否在pod终止时保留挂载到节点的卷。
+	SeccompDefault                                     bool              // 允许使用' RuntimeDefault '作为节点上所有工作负载的默认seccompp配置文件。
 }
 
 // NewKubeletFlags will create a new KubeletFlags with default values
@@ -143,6 +106,7 @@ func NewKubeletFlags() *KubeletFlags {
 func ValidateKubeletFlags(f *KubeletFlags) error {
 	unknownLabels := sets.NewString()
 	invalidLabelErrs := make(map[string][]string)
+	// --node-labels可以给node 添加标签，但是不允许标签key中出现kubernetes.io或者 k8s.io
 	for k, v := range f.NodeLabels {
 		if isKubernetesLabel(k) && !kubeletapis.IsKubeletLabel(k) {
 			unknownLabels.Insert(k)
@@ -437,7 +401,7 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.StringVar(&c.VolumePluginDir, "volume-plugin-dir", c.VolumePluginDir, "The full path of the directory in which to search for additional third party volume plugins")
 	fs.StringSliceVar(&c.ClusterDNS, "cluster-dns", c.ClusterDNS, "Comma-separated list of DNS server IP address.  This value is used for containers DNS server in case of Pods with \"dnsPolicy=ClusterFirst\". Note: all DNS servers appearing in the list MUST serve the same set of records otherwise name resolution within the cluster may not work correctly. There is no guarantee as to which DNS server may be contacted for name resolution.")
 	fs.DurationVar(&c.StreamingConnectionIdleTimeout.Duration, "streaming-connection-idle-timeout", c.StreamingConnectionIdleTimeout.Duration, "Maximum time a streaming connection can be idle before the connection is automatically closed. 0 indicates no timeout. Example: '5m'. Note: All connections to the kubelet server have a maximum duration of 4 hours.")
-	fs.DurationVar(&c.NodeStatusUpdateFrequency.Duration, "node-status-update-frequency", c.NodeStatusUpdateFrequency.Duration, "Specifies how often kubelet posts node status to master. Note: be cautious when changing the constant, it must work with nodeMonitorGracePeriod in nodecontroller.")
+	fs.DurationVar(&c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率。", c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率。注意:修改该常数时要谨慎，必须与 nodecontroller 中的nodeMonitorGracePeriod配合使用。")
 	fs.DurationVar(&c.ImageMinimumGCAge.Duration, "minimum-image-ttl-duration", c.ImageMinimumGCAge.Duration, "Minimum age for an unused image before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'.")
 	fs.Int32Var(&c.ImageGCHighThresholdPercent, "image-gc-high-threshold", c.ImageGCHighThresholdPercent, "The percent of disk usage after which image garbage collection is always run. Values must be within the range [0, 100], To disable image garbage collection, set to 100. ")
 	fs.Int32Var(&c.ImageGCLowThresholdPercent, "image-gc-low-threshold", c.ImageGCLowThresholdPercent, "The percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to. Values must be within the range [0, 100] and should not be larger than that of --image-gc-high-threshold.")
@@ -515,5 +479,5 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 
 	fs.BoolVar(&c.RegisterNode, "register-node", c.RegisterNode, "Register the node with the apiserver. If --kubeconfig is not provided, this flag is irrelevant, as the Kubelet won't have an apiserver to register with.")
 
-	fs.Var(&utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "Register the node with the given list of taints (comma separated \"<key>=<value>:<effect>\"). No-op if register-node is false.")
+	fs.Var(&utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "用给定的污点列表注册节点(逗号分隔的\"<key>=<value>:<effect>\")。如果register-node为false，则不执行操作。")
 }

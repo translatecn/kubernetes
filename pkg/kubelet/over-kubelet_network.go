@@ -25,8 +25,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// providerRequiresNetworkingConfiguration returns whether the cloud provider
-// requires special networking configuration.
+// 该函数返回云提供商是否需要特殊的网络配置。
 func (kl *Kubelet) providerRequiresNetworkingConfiguration() bool {
 	// TODO: We should have a mechanism to say whether native cloud provider
 	// is used or whether we are using overlay networking. We should return

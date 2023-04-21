@@ -27,7 +27,7 @@ import (
 
 type runtimeState struct {
 	sync.RWMutex
-	lastBaseRuntimeSync      time.Time
+	lastBaseRuntimeSync      time.Time // 正常运行时间
 	baseRuntimeSyncThreshold time.Duration
 	networkError             error
 	runtimeError             error

@@ -102,7 +102,7 @@ func (c *hollowNodeConfig) addFlags(fs *pflag.FlagSet) {
 	fs.DurationVar(&c.ProxierMinSyncPeriod, "proxier-min-sync-period", 0, "Minimum period that proxy rules are refreshed in hollow-proxy.")
 	bindableNodeLabels := cliflag.ConfigurationMap(c.NodeLabels)
 	fs.Var(&bindableNodeLabels, "node-labels", "Additional node labels")
-	fs.Var(utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "Register the node with the given list of taints (comma separated \"<key>=<value>:<effect>\"). No-op if register-node is false.")
+	fs.Var(utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "用给定的污点列表注册节点(逗号分隔的\"<key>=<value>:<effect>\")。如果register-node为false，则不执行操作。")
 	fs.IntVar(&c.MaxPods, "max-pods", maxPods, "Number of pods that can run on this Kubelet.")
 	bindableExtendedResources := cliflag.ConfigurationMap(c.ExtendedResources)
 	fs.Var(&bindableExtendedResources, "extended-resources", "Register the node with extended resources (comma separated \"<name>=<quantity>\")")

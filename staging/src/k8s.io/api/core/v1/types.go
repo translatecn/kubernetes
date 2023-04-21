@@ -2719,23 +2719,18 @@ const (
 
 // PodCondition contains details for the current condition of this pod.
 type PodCondition struct {
-	// Type is the type of the condition.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
-	Type PodConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=PodConditionType"`
-	// Status is the status of the condition.
-	// Can be True, False, Unknown.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
-	Status ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=ConditionStatus"`
-	// Last time we probed the condition.
+	Type   PodConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=PodConditionType"`    //
+	Status ConditionStatus  `json:"status" protobuf:"bytes,2,opt,name=status,casttype=ConditionStatus"` // 是不是处于这种状态下
+	// 上次我们探测的时间
 	// +optional
 	LastProbeTime metav1.Time `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
-	// Last time the condition transitioned from one status to another.
+	// 条件从一个状态转换到另一个状态的最后时间。
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,4,opt,name=lastTransitionTime"`
-	// Unique, one-word, CamelCase reason for the condition's last transition.
+	// 唯一、单词、驼峰式 状态发生变换的原因
 	// +optional
 	Reason string `json:"reason,omitempty" protobuf:"bytes,5,opt,name=reason"`
-	// Human-readable message indicating details about last transition.
+	// 人类可读的消息，指示有关上次转换的详细信息。
 	// +optional
 	Message string `json:"message,omitempty" protobuf:"bytes,6,opt,name=message"`
 }

@@ -1009,9 +1009,7 @@ func (m *ManagerImpl) GetDevices(podUID, containerName string) ResourceDeviceIns
 	return m.podDevices.getContainerDevices(podUID, containerName)
 }
 
-// ShouldResetExtendedResourceCapacity returns whether the extended resources should be zeroed or not,
-// depending on whether the node has been recreated. Absence of the checkpoint file strongly indicates the node
-// has been recreated.
+// ShouldResetExtendedResourceCapacity 根据检查点文件的可用性返回扩展资源是否应该重置。检查点文件的缺失强烈表明节点已被重新创建。
 func (m *ManagerImpl) ShouldResetExtendedResourceCapacity() bool {
 	checkpoints, err := m.checkpointManager.ListCheckpoints()
 	if err != nil {

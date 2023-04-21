@@ -328,8 +328,7 @@ func (m *kubeGenericRuntimeManager) APIVersion() (kubecontainer.Version, error) 
 	return newRuntimeVersion(typedVersion.RuntimeApiVersion)
 }
 
-// Status returns the status of the runtime. An error is returned if the Status
-// function itself fails, nil otherwise.
+// 返回运行时的状态。
 func (m *kubeGenericRuntimeManager) Status(ctx context.Context) (*kubecontainer.RuntimeStatus, error) {
 	resp, err := m.runtimeService.Status(ctx, false)
 	if err != nil {

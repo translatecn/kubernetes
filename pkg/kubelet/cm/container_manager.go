@@ -107,9 +107,7 @@ type ContainerManager interface {
 	// registration.
 	GetPluginRegistrationHandler() cache.PluginHandler
 
-	// ShouldResetExtendedResourceCapacity returns whether or not the extended resources should be zeroed,
-	// due to node recreation.
-	ShouldResetExtendedResourceCapacity() bool
+	ShouldResetExtendedResourceCapacity() bool // 检查设备管理器，看看是否重新创建了节点，在这种情况下，应该将扩展资源归零，直到它们可用为止
 
 	// GetAllocateResourcesPodAdmitHandler returns an instance of a PodAdmitHandler responsible for allocating pod resources.
 	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler

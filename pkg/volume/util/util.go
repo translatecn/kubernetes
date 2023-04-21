@@ -55,9 +55,7 @@ import (
 const (
 	readyFileName = "ready"
 
-	// ControllerManagedAttachAnnotation is the key of the annotation on Node
-	// objects that indicates attach/detach operations for the node should be
-	// managed by the attach/detach controller
+	// ControllerManagedAttachAnnotation 指示节点的attach/detach操作应由attach/detach控制器管理
 	ControllerManagedAttachAnnotation string = "volumes.kubernetes.io/controller-managed-attach-detach"
 
 	// KeepTerminatedPodVolumesAnnotation is the key of the annotation on Node

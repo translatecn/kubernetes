@@ -153,6 +153,7 @@ task=python,pid=988370,uid=0
 - func NewManager(cpuPolicyName string,
 - reconcileState
 - syncNodeStatus
+- initializeRuntimeDependentModules
 
 ```
 /proc/self/uid_map 文件的内容表示当前进程在用户命名空间中的 UID 映射关系。文件中每一行表示一个映射关系，格式为：

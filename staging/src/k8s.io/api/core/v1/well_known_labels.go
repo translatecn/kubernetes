@@ -16,6 +16,7 @@ limitations under the License.
 
 package v1
 
+// Topology 拓扑
 const (
 	LabelHostname = "kubernetes.io/hostname"
 

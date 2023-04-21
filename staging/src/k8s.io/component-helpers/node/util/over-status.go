@@ -29,9 +29,8 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-// PatchNodeStatus patches node status.
-func PatchNodeStatus(c v1core.CoreV1Interface, nodeName types.NodeName, oldNode *v1.Node, newNode *v1.Node) (*v1.Node, []byte, error) {
-	patchBytes, err := preparePatchBytesforNodeStatus(nodeName, oldNode, newNode)
+func PatchNodeStatus(c v1core.CoreV1Interface, nodeName types.NodeName, oldNode *v1.Node, newNode *v1.Node) (*v1.Node, []byte, error) { // ✅
+	patchBytes, err := preparePatchBytesforNodeStatus(nodeName, oldNode, newNode) // 比较两个对象，获取patch
 	if err != nil {
 		return nil, nil, err
 	}
@@ -43,7 +42,7 @@ func PatchNodeStatus(c v1core.CoreV1Interface, nodeName types.NodeName, oldNode 
 	return updatedNode, patchBytes, nil
 }
 
-func preparePatchBytesforNodeStatus(nodeName types.NodeName, oldNode *v1.Node, newNode *v1.Node) ([]byte, error) {
+func preparePatchBytesforNodeStatus(nodeName types.NodeName, oldNode *v1.Node, newNode *v1.Node) ([]byte, error) { // ✅
 	oldData, err := json.Marshal(oldNode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to Marshal oldData for node %q: %v", nodeName, err)
@@ -68,7 +67,7 @@ func preparePatchBytesforNodeStatus(nodeName types.NodeName, oldNode *v1.Node, n
 		return nil, fmt.Errorf("failed to Marshal newData for node %q: %v", nodeName, err)
 	}
 
-	patchBytes, err := strategicpatch.CreateTwoWayMergePatch(oldData, newData, v1.Node{})
+	patchBytes, err := strategicpatch.CreateTwoWayMergePatch(oldData, newData, v1.Node{}) // 对比
 	if err != nil {
 		return nil, fmt.Errorf("failed to CreateTwoWayMergePatch for node %q: %v", nodeName, err)
 	}

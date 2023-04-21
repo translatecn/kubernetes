@@ -45,10 +45,8 @@ import (
 	volutil "k8s.io/kubernetes/pkg/volume/util"
 )
 
-// registerWithAPIServer registers the node with the cluster master. It is safe
-// to call multiple times, but not concurrently (kl.registrationCompleted is
-// not locked).
-func (kl *Kubelet) registerWithAPIServer() {
+// ✅
+func (kl *Kubelet) registerWithAPIServer() { // ✅
 	if kl.registrationCompleted {
 		return
 	}
@@ -77,11 +75,7 @@ func (kl *Kubelet) registerWithAPIServer() {
 	}
 }
 
-// tryRegisterWithAPIServer makes an attempt to register the given node with
-// the API server, returning a boolean indicating whether the attempt was
-// successful.  If a node with the same name already exists, it reconciles the
-// value of the annotation for controller-managed attach-detach of attachable
-// persistent volumes for the node.
+// ✅
 func (kl *Kubelet) tryRegisterWithAPIServer(node *v1.Node) bool {
 	_, err := kl.kubeClient.CoreV1().Nodes().Create(context.TODO(), node, metav1.CreateOptions{})
 	if err == nil {
@@ -110,12 +104,17 @@ func (kl *Kubelet) tryRegisterWithAPIServer(node *v1.Node) bool {
 	// Edge case: the node was previously registered; reconcile
 	// the value of the controller-managed attach-detach
 	// annotation.
-	requiresUpdate := kl.reconcileCMADAnnotationWithExistingNode(node, existingNode)
-	requiresUpdate = kl.updateDefaultLabels(node, existingNode) || requiresUpdate
-	requiresUpdate = kl.reconcileExtendedResource(node, existingNode) || requiresUpdate
-	requiresUpdate = kl.reconcileHugePageResource(node, existingNode) || requiresUpdate
+	requiresUpdate := kl.reconcileCMADAnnotationWithExistingNode(node, existingNode)    // ✅
+	requiresUpdate = kl.updateDefaultLabels(node, existingNode) || requiresUpdate       // ✅
+	requiresUpdate = kl.reconcileExtendedResource(node, existingNode) || requiresUpdate // ✅
+	requiresUpdate = kl.reconcileHugePageResource(node, existingNode) || requiresUpdate // ✅
 	if requiresUpdate {
-		if _, _, err := nodeutil.PatchNodeStatus(kl.kubeClient.CoreV1(), types.NodeName(kl.nodeName), originalNode, existingNode); err != nil {
+		if _, _, err := nodeutil.PatchNodeStatus( // ✅
+			kl.kubeClient.CoreV1(),
+			types.NodeName(kl.nodeName),
+			originalNode,
+			existingNode,
+		); err != nil {
 			klog.ErrorS(err, "Unable to reconcile node with API server,error updating node", "node", klog.KObj(node))
 			return false
 		}
@@ -124,8 +123,7 @@ func (kl *Kubelet) tryRegisterWithAPIServer(node *v1.Node) bool {
 	return true
 }
 
-// reconcileHugePageResource will update huge page capacity for each page size and remove huge page sizes no longer supported
-func (kl *Kubelet) reconcileHugePageResource(initialNode, existingNode *v1.Node) bool {
+func (kl *Kubelet) reconcileHugePageResource(initialNode, existingNode *v1.Node) bool { // ✅
 	requiresUpdate := updateDefaultResources(initialNode, existingNode)
 	supportedHugePageResources := sets.String{}
 
@@ -164,21 +162,20 @@ func (kl *Kubelet) reconcileHugePageResource(initialNode, existingNode *v1.Node)
 		if !supportedHugePageResources.Has(string(resourceName)) {
 			delete(existingNode.Status.Capacity, resourceName)
 			delete(existingNode.Status.Allocatable, resourceName)
-			klog.InfoS("Removing huge page resource which is no longer supported", "resourceName", resourceName)
+			klog.InfoS("移除不再支持的大页资源", "resourceName", resourceName)
 			requiresUpdate = true
 		}
 	}
 	return requiresUpdate
 }
 
-// Zeros out extended resource capacity during reconciliation.
-func (kl *Kubelet) reconcileExtendedResource(initialNode, node *v1.Node) bool {
+func (kl *Kubelet) reconcileExtendedResource(initialNode, node *v1.Node) bool { // ✅
 	requiresUpdate := updateDefaultResources(initialNode, node)
 	// Check with the device manager to see if node has been recreated, in which case extended resources should be zeroed until they are available
 	if kl.containerManager.ShouldResetExtendedResourceCapacity() {
 		for k := range node.Status.Capacity {
 			if v1helper.IsExtendedResourceName(k) {
-				klog.InfoS("Zero out resource capacity in existing node", "resourceName", k, "node", klog.KObj(node))
+				klog.InfoS("将现有节点中的资源容量归零", "resourceName", k, "node", klog.KObj(node))
 				node.Status.Capacity[k] = *resource.NewQuantity(int64(0), resource.DecimalSI)
 				node.Status.Allocatable[k] = *resource.NewQuantity(int64(0), resource.DecimalSI)
 				requiresUpdate = true
@@ -188,8 +185,7 @@ func (kl *Kubelet) reconcileExtendedResource(initialNode, node *v1.Node) bool {
 	return requiresUpdate
 }
 
-// updateDefaultResources will set the default resources on the existing node according to the initial node
-func updateDefaultResources(initialNode, existingNode *v1.Node) bool {
+func updateDefaultResources(initialNode, existingNode *v1.Node) bool { // ✅
 	requiresUpdate := false
 	if existingNode.Status.Capacity == nil {
 		if initialNode.Status.Capacity != nil {
@@ -211,7 +207,7 @@ func updateDefaultResources(initialNode, existingNode *v1.Node) bool {
 	return requiresUpdate
 }
 
-// updateDefaultLabels will set the default labels on the node
+// ✅
 func (kl *Kubelet) updateDefaultLabels(initialNode, existingNode *v1.Node) bool {
 	defaultLabels := []string{
 		v1.LabelHostname,
@@ -251,9 +247,7 @@ func (kl *Kubelet) updateDefaultLabels(initialNode, existingNode *v1.Node) bool 
 	return needsUpdate
 }
 
-// reconcileCMADAnnotationWithExistingNode reconciles the controller-managed
-// attach-detach annotation on a new node and the existing node, returning
-// whether the existing node must be updated.
+// 指示节点的attach/detach操作 是不是应由attach/detach控制器管理
 func (kl *Kubelet) reconcileCMADAnnotationWithExistingNode(node, existingNode *v1.Node) bool {
 	var (
 		existingCMAAnnotation    = existingNode.Annotations[volutil.ControllerManagedAttachAnnotation]
@@ -429,12 +423,10 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 	return node, nil
 }
 
-// fastNodeStatusUpdate is a "lightweight" version of syncNodeStatus which doesn't hit the
-// apiserver except for the final run, to be called by fastStatusUpdateOnce in each loop.
-// It holds the same lock as syncNodeStatus and is thread-safe when called concurrently with
-// syncNodeStatus. Its return value indicates whether the loop running it should exit
-// (final run), and it also sets kl.containerRuntimeReadyExpected.
+// 除了最后一次运行外，它不会击中apisserver，在每个循环中由fastStatusUpdateOnce调用。
+// 它持有与syncNodeStatus相同的锁，并且在与syncNodeStatus并发调用时是线程安全的。它的返回值指示运行它的循环是否应该退出(最终运行)，并且它还设置了kl.containerRuntimeReadyExpected。
 func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (completed bool) {
+	var _ = kl.syncNodeStatus // 的“轻量级”版本
 	kl.syncNodeStatusMux.Lock()
 	defer func() {
 		kl.syncNodeStatusMux.Unlock()
@@ -449,7 +441,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 	}()
 
 	if timeout {
-		klog.ErrorS(nil, "Node not becoming ready in time after startup")
+		klog.ErrorS(nil, "如果节点在启动后没有及时准备就绪")
 		return true
 	}
 
@@ -469,9 +461,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 		return true
 	}
 
-	// This is in addition to the regular syncNodeStatus logic so we can get the container runtime status earlier.
-	// This function itself has a mutex and it doesn't recursively call fastNodeStatusUpdate or syncNodeStatus.
-	kl.updateRuntimeUp()
+	kl.updateRuntimeUp() //运行初调用一次  ✅
 
 	node, changed := kl.updateNode(ctx, originalNode)
 
@@ -490,7 +480,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 		return false
 	}
 
-	klog.InfoS("Fast updating node status as it just became ready")
+	klog.InfoS("快速更新节点状态，因为它刚刚准备好")
 	if _, err := kl.patchNodeStatus(originalNode, node); err != nil {
 		// The originalNode is probably stale, but we know that the current state of kubelet would turn
 		// the node to be ready. Retry using syncNodeStatus() which fetches from the apiserver.
@@ -498,7 +488,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 
 		// The reversed kl.syncNodeStatusMux.Unlock/Lock() below to allow kl.syncNodeStatus() execution.
 		kl.syncNodeStatusMux.Unlock()
-		kl.syncNodeStatus()
+		kl.syncNodeStatus() // ✅
 		// This lock action is unnecessary if we add a flag to check in the defer before unlocking it,
 		// but having it here makes the logic a bit easier to read.
 		kl.syncNodeStatusMux.Lock()
@@ -511,7 +501,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 // syncNodeStatus should be called periodically from a goroutine.
 // It synchronizes node status to master if there is any change or enough time
 // passed from the last sync, registering the kubelet first if necessary.
-func (kl *Kubelet) syncNodeStatus() {
+func (kl *Kubelet) syncNodeStatus() { // ✅
 	kl.syncNodeStatusMux.Lock()
 	defer kl.syncNodeStatusMux.Unlock()
 	ctx := context.Background()
@@ -521,7 +511,7 @@ func (kl *Kubelet) syncNodeStatus() {
 	}
 	if kl.registerNode {
 		// This will exit immediately if it doesn't need to do anything.
-		kl.registerWithAPIServer()
+		kl.registerWithAPIServer() // ✅
 	}
 	if err := kl.updateNodeStatus(ctx); err != nil {
 		klog.ErrorS(err, "Unable to update node status")
@@ -530,7 +520,7 @@ func (kl *Kubelet) syncNodeStatus() {
 
 // updateNodeStatus updates node status to master with retries if there is any
 // change or enough time passed from the last sync.
-func (kl *Kubelet) updateNodeStatus(ctx context.Context) error {
+func (kl *Kubelet) updateNodeStatus(ctx context.Context) error { // ✅
 	klog.V(5).InfoS("Updating node status")
 	for i := 0; i < nodeStatusUpdateRetry; i++ {
 		if err := kl.tryUpdateNodeStatus(ctx, i); err != nil {
@@ -581,9 +571,8 @@ func (kl *Kubelet) tryUpdateNodeStatus(ctx context.Context, tryNumber int) error
 	return err
 }
 
-// updateNode creates a copy of originalNode and runs update logic on it.
-// It returns the updated node object and a bool indicating if anything has been changed.
-func (kl *Kubelet) updateNode(ctx context.Context, originalNode *v1.Node) (*v1.Node, bool) {
+// 该函数返回更新后的节点对象和一个布尔值，指示是否有任何更改。// ✅
+func (kl *Kubelet) updateNode(ctx context.Context, originalNode *v1.Node) (*v1.Node, bool) { // ✅
 	node := originalNode.DeepCopy()
 
 	podCIDRChanged := false
@@ -623,11 +612,9 @@ func (kl *Kubelet) updateNode(ctx context.Context, originalNode *v1.Node) (*v1.N
 	return node, changed
 }
 
-// patchNodeStatus patches node on the API server based on originalNode.
-// It returns any potential error, or an updatedNode and refreshes the state of kubelet when successful.
-func (kl *Kubelet) patchNodeStatus(originalNode, node *v1.Node) (*v1.Node, error) {
+func (kl *Kubelet) patchNodeStatus(originalNode, node *v1.Node) (*v1.Node, error) { // ✅
 	// Patch the current status on the API server
-	updatedNode, _, err := nodeutil.PatchNodeStatus(kl.heartbeatClient.CoreV1(), types.NodeName(kl.nodeName), originalNode, node)
+	updatedNode, _, err := nodeutil.PatchNodeStatus(kl.heartbeatClient.CoreV1(), types.NodeName(kl.nodeName), originalNode, node) // ✅
 	if err != nil {
 		return nil, err
 	}
@@ -793,9 +780,8 @@ func validateNodeIP(nodeIP net.IP) error {
 	return fmt.Errorf("node IP: %q not found in the host's network interfaces", nodeIP.String())
 }
 
-// nodeStatusHasChanged compares the original node and current node's status and
-// returns true if any change happens. The heartbeat timestamp is ignored.
-func nodeStatusHasChanged(originalStatus *v1.NodeStatus, status *v1.NodeStatus) bool {
+// ✅
+func nodeStatusHasChanged(originalStatus *v1.NodeStatus, status *v1.NodeStatus) bool { // ✅
 	if originalStatus == nil && status == nil {
 		return false
 	}
@@ -818,8 +804,8 @@ func nodeStatusHasChanged(originalStatus *v1.NodeStatus, status *v1.NodeStatus) 
 
 // nodeConditionsHaveChanged compares the original node and current node's
 // conditions and returns true if any change happens. The heartbeat timestamp is
-// ignored.
-func nodeConditionsHaveChanged(originalConditions []v1.NodeCondition, conditions []v1.NodeCondition) bool {
+// ignored.// ✅
+func nodeConditionsHaveChanged(originalConditions []v1.NodeCondition, conditions []v1.NodeCondition) bool { // ✅
 	if len(originalConditions) != len(conditions) {
 		return true
 	}

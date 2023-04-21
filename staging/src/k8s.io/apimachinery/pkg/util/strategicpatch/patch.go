@@ -90,7 +90,7 @@ type MergeOptions struct {
 // CreateTwoWayMergePatch creates a patch that can be passed to StrategicMergePatch from an original
 // document and a modified document, which are passed to the method as json encoded content. It will
 // return a patch that yields the modified document when applied to the original document, or an error
-// if either of the two documents is invalid.
+// if either of the two documents is invalid.  // 对比
 func CreateTwoWayMergePatch(original, modified []byte, dataStruct interface{}, fns ...mergepatch.PreconditionFunc) ([]byte, error) {
 	schema, err := NewPatchMetaFromStruct(dataStruct)
 	if err != nil {

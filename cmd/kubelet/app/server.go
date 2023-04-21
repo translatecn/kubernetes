@@ -477,7 +477,7 @@ func getReservedCPUs(machineInfo *cadvisorapi.MachineInfo, cpus string) (cpuset.
 }
 
 func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Dependencies, featureGate featuregate.FeatureGate) (err error) {
-	// 根据初始KubeletServer上的值设置全局功能门.
+	// 根据初始KubeletServer上的值设置全局功能门. 设置实验性质的功能map
 	err = utilfeature.DefaultMutableFeatureGate.SetFromMap(s.KubeletConfiguration.FeatureGates)
 	if err != nil {
 		return err
@@ -514,7 +514,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	if err != nil {
 		klog.ErrorS(err, "Failed to register kubelet configuration with configz")
 	}
-
+	// 打开隐藏的metrics
 	if len(s.ShowHiddenMetricsForVersion) > 0 {
 		metrics.SetShowHidden()
 	}
@@ -524,7 +524,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	if len(s.KubeConfig) > 0 {
 		standaloneMode = false
 	}
-
+	// 初始化所需的依赖
 	if kubeDeps == nil {
 		kubeDeps, err = UnsecuredDependencies(s, featureGate)
 		if err != nil {
@@ -545,7 +545,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			kubeDeps.Cloud = cloud
 		}
 	}
-
+	// 获取节点nodename
 	hostName, err := nodeutil.GetHostname(s.HostnameOverride)
 	if err != nil {
 		return err
@@ -563,7 +563,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		kubeDeps.HeartbeatClient = nil
 		klog.InfoS("Standalone mode, no API client")
 
-	case kubeDeps.KubeClient == nil, kubeDeps.EventClient == nil, kubeDeps.HeartbeatClient == nil:
+	case kubeDeps.KubeClient == nil, kubeDeps.EventClient == nil, kubeDeps.HeartbeatClient == nil: // 对客户端进行初始化
 		clientConfig, onHeartbeatFailure, err := buildKubeletClientConfig(ctx, s, kubeDeps.TracerProvider, nodeName)
 		if err != nil {
 			return err
@@ -613,8 +613,14 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	}
 
 	var cgroupRoots []string
+	// 返回node的root cgroup path
+	//- CgroupRoot 默认为空，代表使用容器运行时
+	//- CgroupsPerQOS qos层级开关，默认为true代表开启
+	//- CgroupDriver driver类型，cgroupfs 或者 systemd
 	nodeAllocatableRoot := cm.NodeAllocatableRoot(s.CgroupRoot, s.CgroupsPerQOS, s.CgroupDriver)
 	cgroupRoots = append(cgroupRoots, nodeAllocatableRoot)
+
+	// 初始化 kubeletCgroup
 	kubeletCgroup, err := cm.GetKubeletContainer(s.KubeletCgroups)
 	if err != nil {
 		klog.InfoS("Failed to get the kubelet's cgroup. Kubelet system container metrics may be missing.", "err", err)
@@ -631,7 +637,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		// SystemCgroups is optional, so ignore if it isn't specified
 		cgroupRoots = append(cgroupRoots, s.SystemCgroups)
 	}
-	// 调用 cadvisor.New 生成kubeDeps.CAdvisorInterface对象
+	// 初始化内置的cadvisor
 	if kubeDeps.CAdvisorInterface == nil {
 		imageFsInfoProvider := cadvisor.NewImageFsInfoProvider(s.RemoteRuntimeEndpoint) // unix:///run/containerd/containerd.sock
 		//后续kubeDeps.CAdvisorInterface对象会被赋值给kubelet的cadvisor
@@ -649,7 +655,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 
 	// 如果需要,则设置事件记录器.
 	makeEventRecorder(kubeDeps, nodeName)
-
+	// 初始化ContainerManager
 	if kubeDeps.ContainerManager == nil {
 		if s.CgroupsPerQOS && s.CgroupRoot == "" {
 			klog.InfoS("--cgroups-per-qos enabled, but --cgroup-root was not specified.  defaulting to /")
@@ -775,7 +781,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	if err != nil {
 		return err
 	}
-
+	//RunKubelet运行kubelet
 	if err := RunKubelet(s, kubeDeps, s.RunOnce); err != nil {
 		return err
 	}
@@ -1183,6 +1189,7 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 
 func startKubelet(k kubelet.Bootstrap, podCfg *config.PodConfig, kubeCfg *kubeletconfiginternal.KubeletConfiguration, kubeDeps *kubelet.Dependencies, enableServer bool) {
 	// start the kubelet
+	var _ = new(kubelet.Kubelet).Run
 	go k.Run(podCfg.Updates())
 
 	// start the kubelet server

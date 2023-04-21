@@ -131,6 +131,7 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 		f             features
 	)
 	var _ = new(mount.Mounter).List
+
 	mountPoints, err := mountUtil.List()
 	if err != nil {
 		return f, fmt.Errorf("%s - %v", localErr, err)
