@@ -30,7 +30,7 @@ import (
 )
 
 func PatchNodeStatus(c v1core.CoreV1Interface, nodeName types.NodeName, oldNode *v1.Node, newNode *v1.Node) (*v1.Node, []byte, error) { // ✅
-	patchBytes, err := preparePatchBytesforNodeStatus(nodeName, oldNode, newNode) // 比较两个对象，获取patch
+	patchBytes, err := preparePatchBytesforNodeStatus(nodeName, oldNode, newNode) // 比较两个对象,获取patch
 	if err != nil {
 		return nil, nil, err
 	}

@@ -38,9 +38,7 @@ type LeaseSpec struct {
 	// holderIdentity 包含当前租约持有者的标识.
 	// +optional
 	HolderIdentity *string
-	// leaseDurationSeconds is a duration that candidates for a lease need
-	// to wait to force acquire it. This is measure against time of last
-	// observed RenewTime.
+	// 租约持续时间
 	// +optional
 	LeaseDurationSeconds *int32
 	// acquireTime是acquire当前租约的时间.

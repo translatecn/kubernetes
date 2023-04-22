@@ -39,7 +39,7 @@ var (
 	defaultCFSQuota = metav1.Duration{Duration: 100 * time.Millisecond}
 )
 
-// ValidateKubeletConfiguration 校验 KubeletConfiguration配置，校验各个字段是否合法
+// ValidateKubeletConfiguration 校验 KubeletConfiguration配置,校验各个字段是否合法
 func ValidateKubeletConfiguration(kc *kubeletconfig.KubeletConfiguration, featureGate featuregate.FeatureGate) error {
 	allErrors := []error{}
 

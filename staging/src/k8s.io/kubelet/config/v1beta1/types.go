@@ -274,7 +274,7 @@ type KubeletConfiguration struct {
 	// Default: "5m"
 	// +optional
 	NodeStatusReportFrequency metav1.Duration `json:"nodeStatusReportFrequency,omitempty"`
-	// nodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
+	// nodeLeaseDurationSeconds is Kubelet将在其相应的Lease上设置的持续时间.
 	// NodeLease provides an indicator of node health by having the Kubelet create and
 	// periodically renew a lease, named after the node, in the kube-node-lease namespace.
 	// If the lease expires, the node can be considered unhealthy.

@@ -97,11 +97,11 @@
             "description": "acquireTime is a time when the current lease was acquired."
           },
           "holderIdentity": {
-            "description": "holderIdentity contains the identity of the holder of a current lease.",
+            "description": "当前租约持有者的标识.",
             "type": "string"
           },
           "leaseDurationSeconds": {
-            "description": "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
+            "description": "租约持续时间",
             "format": "int32",
             "type": "integer"
           },

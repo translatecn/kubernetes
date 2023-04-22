@@ -40,7 +40,7 @@ var qualifiedNameRegexp = regexp.MustCompile("^" + qualifiedNameFmt + "$")
 // "qualified name".  This is a format used in various places throughout the
 // system.  If the value is not valid, a list of error strings is returned.
 // Otherwise an empty list (or nil) is returned.
-// 用于测试传递的值是否符合 Kubernetes 所谓的“限定名称”格式。这是系统中各种地方使用的一种格式。如果值无效，则返回一个错误字符串列表。否则返回一个空列表（或 nil）。
+// 用于测试传递的值是否符合 Kubernetes 所谓的“限定名称”格式.这是系统中各种地方使用的一种格式.如果值无效,则返回一个错误字符串列表.否则返回一个空列表（或 nil）.
 func IsQualifiedName(value string) []string {
 	var errs []string
 	parts := strings.Split(value, "/")

@@ -28,10 +28,10 @@ import (
 	"k8s.io/kubernetes/pkg/apis/core/helper"
 )
 
-// IsExtendedResourceName 用于判断一个资源名称是否为扩展资源名称。 具体来说，如果以下条件都满足，则该函数将返回 true：
-// 1、资源名称不在默认命名空间中。
-// 2、资源名称不具有 "requests." 前缀，以避免与配额约定中的前缀混淆。
-// 3、将资源名称转换为配额资源名称后，满足 IsQualifiedName() 规则。
+// IsExtendedResourceName 用于判断一个资源名称是否为扩展资源名称. 具体来说,如果以下条件都满足,则该函数将返回 true：
+// 1、资源名称不在默认命名空间中.
+// 2、资源名称不具有 "requests." 前缀,以避免与配额约定中的前缀混淆.
+// 3、将资源名称转换为配额资源名称后,满足 IsQualifiedName() 规则.
 func IsExtendedResourceName(name v1.ResourceName) bool {
 	if IsNativeResource(name) || strings.HasPrefix(string(name), v1.DefaultResourceRequestsPrefix) {
 		return false

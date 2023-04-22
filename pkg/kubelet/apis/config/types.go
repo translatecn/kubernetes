@@ -187,8 +187,7 @@ type KubeletConfiguration struct {
 	// frequency and post node status immediately if any change is detected. It is
 	// only used when node lease feature is enabled.
 	NodeStatusReportFrequency metav1.Duration
-	// nodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease.
-	NodeLeaseDurationSeconds int32
+	NodeLeaseDurationSeconds  int32 // Kubelet将在其相应的Lease上设置的持续时间.
 	// imageMinimumGCAge is the minimum age for an unused image before it is
 	// garbage collected.
 	ImageMinimumGCAge metav1.Duration
@@ -307,10 +306,9 @@ type KubeletConfiguration struct {
 	// manage attachment/detachment of volumes scheduled to this node, and
 	// disables kubelet from executing any attach/detach operations
 	EnableControllerAttachDetach bool
-	ProtectKernelDefaults        bool // 如果 protectKernelDefaults 为 true，则会导致 Kubelet 在内核标志不符合其预期时出错。否则，Kubelet 将尝试修改内核标志以匹配其预期。
-	// If true, Kubelet ensures a set of iptables rules are present on host.
-	// These rules will serve as utility for various components, e.g. kube-proxy.
-	// The rules will be created based on IPTablesMasqueradeBit and IPTablesDropBit.
+	ProtectKernelDefaults        bool // 如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期.
+	// 如果为true, kubelet将确保主机上存在iptables实用程序规则。
+	// 这些规则将作为各种组件的实用工具，例如kube-proxy。规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建。
 	MakeIPTablesUtilChains bool
 	// iptablesMasqueradeBit is the bit of the iptables fwmark space to mark for SNAT
 	// Values must be within the range [0, 31]. Must be different from other mark bits.

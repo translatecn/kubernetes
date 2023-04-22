@@ -614,9 +614,9 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 
 	var cgroupRoots []string
 	// 返回node的root cgroup path
-	//- CgroupRoot 默认为空，代表使用容器运行时
-	//- CgroupsPerQOS qos层级开关，默认为true代表开启
-	//- CgroupDriver driver类型，cgroupfs 或者 systemd
+	//- CgroupRoot 默认为空,代表使用容器运行时
+	//- CgroupsPerQOS qos层级开关,默认为true代表开启
+	//- CgroupDriver driver类型,cgroupfs 或者 systemd
 	nodeAllocatableRoot := cm.NodeAllocatableRoot(s.CgroupRoot, s.CgroupsPerQOS, s.CgroupDriver)
 	cgroupRoots = append(cgroupRoots, nodeAllocatableRoot)
 

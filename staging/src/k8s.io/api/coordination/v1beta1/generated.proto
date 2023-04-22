@@ -53,7 +53,7 @@ message LeaseList {
 
 // LeaseSpec is a specification of a Lease.
 message LeaseSpec {
-  // holderIdentity contains the identity of the holder of a current lease.
+  // 当前租约持有者的标识.
   // +optional
   optional string holderIdentity = 1;
 

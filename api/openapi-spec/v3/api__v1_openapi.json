@@ -4716,7 +4716,7 @@
               }
             ],
             "default": {},
-            "description": "Last time we probed the condition."
+            "description": "上次我们探测的时间"
           },
           "lastTransitionTime": {
             "allOf": [
@@ -4725,24 +4725,22 @@
               }
             ],
             "default": {},
-            "description": "Last time the condition transitioned from one status to another."
+            "description": "条件从一个状态转换到另一个状态的最后时间。"
           },
           "message": {
-            "description": "Human-readable message indicating details about last transition.",
+            "description": "人类可读的消息，指示有关上次转换的详细信息。",
             "type": "string"
           },
           "reason": {
-            "description": "Unique, one-word, CamelCase reason for the condition's last transition.",
+            "description": "唯一、单词、驼峰式 状态发生变换的原因",
             "type": "string"
           },
           "status": {
             "default": "",
-            "description": "Status is the status of the condition. Can be True, False, Unknown. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions",
             "type": "string"
           },
           "type": {
             "default": "",
-            "description": "Type is the type of the condition. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions",
             "type": "string"
           }
         },

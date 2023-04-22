@@ -26,19 +26,19 @@ import (
 const (
 	sysctlBase = "/proc/sys" // 是 sysctl 变量的基本路径
 
-	VMOvercommitMemory = "vm/overcommit_memory"      // 是负责定义内核使用的内存超额提交策略的 sysctl 变量。
-	VMPanicOnOOM       = "vm/panic_on_oom"           // 是负责定义内核使用的 OOM 行为的 sysctl 变量。
-	KernelPanic        = "kernel/panic"              // 是负责定义内核在崩溃后重新启动的超时时间的 sysctl 变量。
-	KernelPanicOnOops  = "kernel/panic_on_oops"      // 是负责定义内核在遇到 oops 或 BUG 时的行为的 sysctl 变量。
-	RootMaxKeys        = "kernel/keys/root_maxkeys"  // 是负责定义 root 用户（在 root 用户命名空间中的 UID 0）可以拥有的最大密钥数的 sysctl 变量。
-	RootMaxBytes       = "kernel/keys/root_maxbytes" // 是负责定义 root 用户（在 root 用户命名空间中的 UID 0）可以在拥有的密钥的负载中持有的最大数据字节数的 sysctl 变量。
+	VMOvercommitMemory = "vm/overcommit_memory"      // 是负责定义内核使用的内存超额提交策略的 sysctl 变量.
+	VMPanicOnOOM       = "vm/panic_on_oom"           // 是负责定义内核使用的 OOM 行为的 sysctl 变量.
+	KernelPanic        = "kernel/panic"              // 是负责定义内核在崩溃后重新启动的超时时间的 sysctl 变量.
+	KernelPanicOnOops  = "kernel/panic_on_oops"      // 是负责定义内核在遇到 oops 或 BUG 时的行为的 sysctl 变量.
+	RootMaxKeys        = "kernel/keys/root_maxkeys"  // 是负责定义 root 用户（在 root 用户命名空间中的 UID 0）可以拥有的最大密钥数的 sysctl 变量.
+	RootMaxBytes       = "kernel/keys/root_maxbytes" // 是负责定义 root 用户（在 root 用户命名空间中的 UID 0）可以在拥有的密钥的负载中持有的最大数据字节数的 sysctl 变量.
 
-	VMOvercommitMemoryAlways    = 1                       // 表示内核不执行内存超额提交处理。
-	VMPanicOnOOMInvokeOOMKiller = 0                       // 表示内核在发生 OOM 时调用 oom_killer 函数。
-	KernelPanicOnOopsAlways     = 1                       // 表示内核在发生 kernel oops 时崩溃。
-	KernelPanicRebootTimeout    = 10                      // 是内核在崩溃后重新启动的超时时间。
-	RootMaxKeysSetting          = 1000000                 // 是 root 用户（在 root 用户命名空间中的 UID 0）可以拥有的最大密钥数的设置值。
-	RootMaxBytesSetting         = RootMaxKeysSetting * 25 // 是 root 用户（在 root 用户命名空间中的 UID 0）可以在拥有的密钥的负载中持有的最大数据字节数的设置值。
+	VMOvercommitMemoryAlways    = 1                       // 表示内核不执行内存超额提交处理.
+	VMPanicOnOOMInvokeOOMKiller = 0                       // 表示内核在发生 OOM 时调用 oom_killer 函数.
+	KernelPanicOnOopsAlways     = 1                       // 表示内核在发生 kernel oops 时崩溃.
+	KernelPanicRebootTimeout    = 10                      // 是内核在崩溃后重新启动的超时时间.
+	RootMaxKeysSetting          = 1000000                 // 是 root 用户（在 root 用户命名空间中的 UID 0）可以拥有的最大密钥数的设置值.
+	RootMaxBytesSetting         = RootMaxKeysSetting * 25 // 是 root 用户（在 root 用户命名空间中的 UID 0）可以在拥有的密钥的负载中持有的最大数据字节数的设置值.
 )
 
 type Interface interface {

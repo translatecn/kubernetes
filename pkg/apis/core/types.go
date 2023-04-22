@@ -2865,10 +2865,11 @@ type PodSpec struct {
 	InitContainers []Container
 	// List of containers belonging to the pod.
 	Containers []Container
-	// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
-	// pod to perform user-initiated actions such as debugging. This list cannot be specified when
-	// creating a pod, and it cannot be modified by updating the pod spec. In order to add an
-	// ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
+	// Ephemeral Containers 是在 Pod 中运行的临时容器列表。可以在现有的 Pod 中运行临时容器，以执行用户启动的操作，例如调试。
+	// 创建 Pod 时不能指定此列表，也不能通过更新 Pod 规范来修改此列表。要向现有 Pod 添加临时容器，请使用 Pod 的 ephemeralcontainers 子资源。
+	//
+	// Ephemeral Containers 是 Kubernetes 1.16 中引入的新功能。它允许用户在运行中的 Pod 中添加临时容器，以便进行调试或其他任务。
+	// 与常规容器不同，临时容器不会在 Pod 的生命周期中一直存在，而是在任务完成后自动删除。因此，它们只能用于临时任务，而不能用于长期运行的服务。
 	// +optional
 	EphemeralContainers []EphemeralContainer
 	// +optional

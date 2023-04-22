@@ -24,12 +24,9 @@ import (
 )
 
 const (
-	// NamespaceDefault means the object is in the default namespace which is applied when not specified by clients
-	NamespaceDefault string = "default"
-	// NamespaceAll is the default argument to specify on a context when you want to list or filter resources across all namespaces
-	NamespaceAll string = ""
-	// NamespaceNodeLease is the namespace where we place node lease objects (used for node heartbeats)
-	NamespaceNodeLease string = "kube-node-lease"
+	NamespaceDefault   string = "default"
+	NamespaceAll       string = ""
+	NamespaceNodeLease string = "kube-node-lease" // 是放置节点租约对象的名称空间(用于节点心跳)
 )
 
 // Volume represents a named volume in a pod that may be accessed by any container in the pod.
@@ -2724,13 +2721,13 @@ type PodCondition struct {
 	// 上次我们探测的时间
 	// +optional
 	LastProbeTime metav1.Time `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
-	// 条件从一个状态转换到另一个状态的最后时间。
+	// 条件从一个状态转换到另一个状态的最后时间.
 	// +optional
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty" protobuf:"bytes,4,opt,name=lastTransitionTime"`
 	// 唯一、单词、驼峰式 状态发生变换的原因
 	// +optional
 	Reason string `json:"reason,omitempty" protobuf:"bytes,5,opt,name=reason"`
-	// 人类可读的消息，指示有关上次转换的详细信息。
+	// 人类可读的消息,指示有关上次转换的详细信息.
 	// +optional
 	Message string `json:"message,omitempty" protobuf:"bytes,6,opt,name=message"`
 }
@@ -3129,10 +3126,11 @@ type PodSpec struct {
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	Containers []Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,2,rep,name=containers"`
-	// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
-	// pod to perform user-initiated actions such as debugging. This list cannot be specified when
-	// creating a pod, and it cannot be modified by updating the pod spec. In order to add an
-	// ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
+	// Ephemeral Containers 是在 Pod 中运行的临时容器列表。可以在现有的 Pod 中运行临时容器，以执行用户启动的操作，例如调试。
+	// 创建 Pod 时不能指定此列表，也不能通过更新 Pod 规范来修改此列表。要向现有 Pod 添加临时容器，请使用 Pod 的 ephemeralcontainers 子资源。
+	//
+	// Ephemeral Containers 是 Kubernetes 1.16 中引入的新功能。它允许用户在运行中的 Pod 中添加临时容器，以便进行调试或其他任务。
+	// 与常规容器不同，临时容器不会在 Pod 的生命周期中一直存在，而是在任务完成后自动删除。因此，它们只能用于临时任务，而不能用于长期运行的服务。
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge

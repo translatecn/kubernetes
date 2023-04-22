@@ -423,8 +423,8 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 	return node, nil
 }
 
-// 除了最后一次运行外，它不会击中apisserver，在每个循环中由fastStatusUpdateOnce调用。
-// 它持有与syncNodeStatus相同的锁，并且在与syncNodeStatus并发调用时是线程安全的。它的返回值指示运行它的循环是否应该退出(最终运行)，并且它还设置了kl.containerRuntimeReadyExpected。
+// 除了最后一次运行外,它不会击中apisserver,在每个循环中由fastStatusUpdateOnce调用.
+// 它持有与syncNodeStatus相同的锁,并且在与syncNodeStatus并发调用时是线程安全的.它的返回值指示运行它的循环是否应该退出(最终运行),并且它还设置了kl.containerRuntimeReadyExpected.
 func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (completed bool) {
 	var _ = kl.syncNodeStatus // 的“轻量级”版本
 	kl.syncNodeStatusMux.Lock()
@@ -480,7 +480,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 		return false
 	}
 
-	klog.InfoS("快速更新节点状态，因为它刚刚准备好")
+	klog.InfoS("快速更新节点状态,因为它刚刚准备好")
 	if _, err := kl.patchNodeStatus(originalNode, node); err != nil {
 		// The originalNode is probably stale, but we know that the current state of kubelet would turn
 		// the node to be ready. Retry using syncNodeStatus() which fetches from the apiserver.
@@ -498,9 +498,6 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 	return true
 }
 
-// syncNodeStatus should be called periodically from a goroutine.
-// It synchronizes node status to master if there is any change or enough time
-// passed from the last sync, registering the kubelet first if necessary.
 func (kl *Kubelet) syncNodeStatus() { // ✅
 	kl.syncNodeStatusMux.Lock()
 	defer kl.syncNodeStatusMux.Unlock()
@@ -571,7 +568,7 @@ func (kl *Kubelet) tryUpdateNodeStatus(ctx context.Context, tryNumber int) error
 	return err
 }
 
-// 该函数返回更新后的节点对象和一个布尔值，指示是否有任何更改。// ✅
+// 该函数返回更新后的节点对象和一个布尔值,指示是否有任何更改.// ✅
 func (kl *Kubelet) updateNode(ctx context.Context, originalNode *v1.Node) (*v1.Node, bool) { // ✅
 	node := originalNode.DeepCopy()
 

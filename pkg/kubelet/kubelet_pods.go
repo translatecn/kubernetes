@@ -942,8 +942,8 @@ func (kl *Kubelet) PodCouldHaveRunningContainers(pod *v1.Pod) bool {
 	return false
 }
 
-// PodResourcesAreReclaimed returns true if all required node-level resources that a pod was consuming have
-// been reclaimed by the kubelet.  Reclaiming resources is a prerequisite to deleting a pod from the API server.
+// PodResourcesAreReclaimed 用于检查 kubelet 是否已回收 Pod 正在使用的所有必需的节点级资源。在删除 Pod 之前，必须确保 kubelet 已回收所有这些资源，否则可能会导致资源泄漏。
+// 如果 kubelet 已回收所有必需的节点级资源，则该方法返回 true；否则返回 false。
 func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bool {
 	if kl.podWorkers.CouldHaveRunningContainers(pod.UID) {
 		// We shouldn't delete pods that still have running containers

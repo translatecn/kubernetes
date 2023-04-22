@@ -56,13 +56,13 @@ type KubeletFlags struct {
 	KubeConfig                     string //
 	BootstrapKubeconfig            string //
 	HostnameOverride               string // 专门设置的主机名
-	NodeIP                         string // NodeIP为节点的IP地址。如果设置了，kubelet将为节点使用该IP地址。
+	NodeIP                         string // NodeIP为节点的IP地址.如果设置了,kubelet将为节点使用该IP地址.
 	config.ContainerRuntimeOptions        //
-	CertDirectory                  string // certDirectory为TLS证书所在目录。如果提供了tlsCertFile和tlprivatekeyfile，该标志将被忽略。
+	CertDirectory                  string // certDirectory为TLS证书所在目录.如果提供了tlsCertFile和tlprivatekeyfile,该标志将被忽略.
 	CloudProvider                  string // +optional
 	CloudConfigFile                string // +optional
 	RootDirectory                  string // 是放置kubelet文件（卷挂载等）的目录路径.
-	KubeletConfigFile              string // Kubelet将从这个文件加载它的初始配置。
+	KubeletConfigFile              string // Kubelet将从这个文件加载它的初始配置.
 	WindowsService                 bool   // 如果kubelet在Windows上作为服务运行,则应将其设置为true.其对应的标志仅在Windows构建中注册.
 
 	// WindowsPriorityClass设置与Kubelet进程关联的优先级类别
@@ -73,18 +73,18 @@ type KubeletFlags struct {
 
 	RemoteRuntimeEndpoint                              string            // 远程CRI端点
 	RemoteImageEndpoint                                string            // 远程镜像服务端点
-	ExperimentalMounterPath                            string            // mount二进制文件的路径。留空以使用默认挂载路径
+	ExperimentalMounterPath                            string            // mount二进制文件的路径.留空以使用默认挂载路径
 	ExperimentalNodeAllocatableIgnoreEvictionThreshold bool              // 实验性、忽略驱逐阈值
 	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签.
-	LockFilePath                                       string            // lockFilePath是kubelet用来作为锁文件的路径。它使用该文件作为锁，与可能正在运行的其他kubelet进程同步。
-	ExitOnLockContention                               bool              // 另一个进程试图打开该文件时释放锁并退出。
-	MinimumGCAge                                       metav1.Duration   // 一个容器在被垃圾收集之前的最小年龄。已弃用
-	MaxPerPodContainerCount                            int32             // 每个容器保留的旧实例的最大数量。
+	LockFilePath                                       string            // lockFilePath是kubelet用来作为锁文件的路径.它使用该文件作为锁,与可能正在运行的其他kubelet进程同步.
+	ExitOnLockContention                               bool              // 另一个进程试图打开该文件时释放锁并退出.
+	MinimumGCAge                                       metav1.Duration   // 一个容器在被垃圾收集之前的最小年龄.已弃用
+	MaxPerPodContainerCount                            int32             // 每个容器保留的旧实例的最大数量.
 	MaxContainerCount                                  int32             // 容器最大数量
 	MasterServiceNamespace                             string            // 主服务会放到这个名称空间里
-	RegisterSchedulable                                bool              // 告诉kubelet将节点注册为可调度的。如果register-node为false，则不起任何作用。 //已弃用:使用registerWithTaints代替
-	KeepTerminatedPodVolumes                           bool              // kubelet是否在pod终止时保留挂载到节点的卷。
-	SeccompDefault                                     bool              // 允许使用' RuntimeDefault '作为节点上所有工作负载的默认seccompp配置文件。
+	RegisterSchedulable                                bool              // 告诉kubelet将节点注册为可调度的.如果register-node为false,则不起任何作用. //已弃用:使用registerWithTaints代替
+	KeepTerminatedPodVolumes                           bool              // kubelet是否在pod终止时保留挂载到节点的卷.
+	SeccompDefault                                     bool              // 允许使用' RuntimeDefault '作为节点上所有工作负载的默认seccompp配置文件.
 }
 
 // NewKubeletFlags will create a new KubeletFlags with default values
@@ -106,7 +106,7 @@ func NewKubeletFlags() *KubeletFlags {
 func ValidateKubeletFlags(f *KubeletFlags) error {
 	unknownLabels := sets.NewString()
 	invalidLabelErrs := make(map[string][]string)
-	// --node-labels可以给node 添加标签，但是不允许标签key中出现kubernetes.io或者 k8s.io
+	// --node-labels可以给node 添加标签,但是不允许标签key中出现kubernetes.io或者 k8s.io
 	for k, v := range f.NodeLabels {
 		if isKubernetesLabel(k) && !kubeletapis.IsKubeletLabel(k) {
 			unknownLabels.Insert(k)
@@ -401,7 +401,7 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.StringVar(&c.VolumePluginDir, "volume-plugin-dir", c.VolumePluginDir, "The full path of the directory in which to search for additional third party volume plugins")
 	fs.StringSliceVar(&c.ClusterDNS, "cluster-dns", c.ClusterDNS, "Comma-separated list of DNS server IP address.  This value is used for containers DNS server in case of Pods with \"dnsPolicy=ClusterFirst\". Note: all DNS servers appearing in the list MUST serve the same set of records otherwise name resolution within the cluster may not work correctly. There is no guarantee as to which DNS server may be contacted for name resolution.")
 	fs.DurationVar(&c.StreamingConnectionIdleTimeout.Duration, "streaming-connection-idle-timeout", c.StreamingConnectionIdleTimeout.Duration, "Maximum time a streaming connection can be idle before the connection is automatically closed. 0 indicates no timeout. Example: '5m'. Note: All connections to the kubelet server have a maximum duration of 4 hours.")
-	fs.DurationVar(&c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率。", c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率。注意:修改该常数时要谨慎，必须与 nodecontroller 中的nodeMonitorGracePeriod配合使用。")
+	fs.DurationVar(&c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率.", c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率.注意:修改该常数时要谨慎,必须与 nodecontroller 中的nodeMonitorGracePeriod配合使用.")
 	fs.DurationVar(&c.ImageMinimumGCAge.Duration, "minimum-image-ttl-duration", c.ImageMinimumGCAge.Duration, "Minimum age for an unused image before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'.")
 	fs.Int32Var(&c.ImageGCHighThresholdPercent, "image-gc-high-threshold", c.ImageGCHighThresholdPercent, "The percent of disk usage after which image garbage collection is always run. Values must be within the range [0, 100], To disable image garbage collection, set to 100. ")
 	fs.Int32Var(&c.ImageGCLowThresholdPercent, "image-gc-low-threshold", c.ImageGCLowThresholdPercent, "The percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to. Values must be within the range [0, 100] and should not be larger than that of --image-gc-high-threshold.")
@@ -435,7 +435,7 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.BoolVar(&c.CPUCFSQuota, "cpu-cfs-quota", c.CPUCFSQuota, "Enable CPU CFS quota enforcement for containers that specify CPU limits")
 	fs.DurationVar(&c.CPUCFSQuotaPeriod.Duration, "cpu-cfs-quota-period", c.CPUCFSQuotaPeriod.Duration, "Sets CPU CFS quota period value, cpu.cfs_period_us, defaults to Linux Kernel default")
 	fs.BoolVar(&c.EnableControllerAttachDetach, "enable-controller-attach-detach", c.EnableControllerAttachDetach, "Enables the Attach/Detach controller to manage attachment/detachment of volumes scheduled to this node, and disables kubelet from executing any attach/detach operations")
-	fs.BoolVar(&c.MakeIPTablesUtilChains, "make-iptables-util-chains", c.MakeIPTablesUtilChains, "If true, kubelet will ensure iptables utility rules are present on host.")
+	fs.BoolVar(&c.MakeIPTablesUtilChains, "make-iptables-util-chains", c.MakeIPTablesUtilChains, "如果为true, kubelet将确保主机上存在iptables实用程序规则。")
 	fs.Int32Var(&c.IPTablesMasqueradeBit, "iptables-masquerade-bit", c.IPTablesMasqueradeBit, "The bit of the fwmark space to mark packets for SNAT. Must be within the range [0, 31]. Please match this parameter with corresponding parameter in kube-proxy.")
 	fs.Int32Var(&c.IPTablesDropBit, "iptables-drop-bit", c.IPTablesDropBit, "The bit of the fwmark space to mark packets for dropping. Must be within the range [0, 31].")
 	fs.StringVar(&c.ContainerLogMaxSize, "container-log-max-size", c.ContainerLogMaxSize, "<Warning: Beta feature> Set the maximum size (e.g. 10Mi) of container log file before it is rotated. This flag can only be used with --container-runtime=remote.")
@@ -479,5 +479,5 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 
 	fs.BoolVar(&c.RegisterNode, "register-node", c.RegisterNode, "Register the node with the apiserver. If --kubeconfig is not provided, this flag is irrelevant, as the Kubelet won't have an apiserver to register with.")
 
-	fs.Var(&utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "用给定的污点列表注册节点(逗号分隔的\"<key>=<value>:<effect>\")。如果register-node为false，则不执行操作。")
+	fs.Var(&utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "用给定的污点列表注册节点(逗号分隔的\"<key>=<value>:<effect>\").如果register-node为false,则不执行操作.")
 }

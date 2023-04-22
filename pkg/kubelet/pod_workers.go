@@ -149,12 +149,9 @@ type PodWorkers interface {
 	// Intended for use by the kubelet config loops, but not subsystems, which should
 	// use ShouldPod*().
 	IsPodKnownTerminated(uid types.UID) bool
-	// CouldHaveRunningContainers returns true before the pod workers have synced,
-	// once the pod workers see the pod (syncPod could be called), and returns false
-	// after the pod has been terminated (running containers guaranteed stopped).
-	//
-	// Intended for use by the kubelet config loops, but not subsystems, which should
-	// use ShouldPod*().
+	// CouldHaveRunningContainers 确定是否可以在 Pod 上运行容器。如果 Pod 尚未同步，则可能会返回 true，因为尚未确定 Pod 的状态。
+	// 如果 Pod 已同步，则可能会返回 true，因为 Pod 可能已经被调度到节点上，但尚未启动容器。
+	// 如果 Pod 已终止，则返回 false，因为在这种情况下，所有容器都已停止。
 	CouldHaveRunningContainers(uid types.UID) bool
 	// IsPodTerminationRequested returns true when pod termination has been requested
 	// until the termination completes and the pod is removed from config. This should

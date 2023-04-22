@@ -23,7 +23,7 @@ import (
 )
 
 func FromApiserverCache(opts *metav1.GetOptions) {
-	opts.ResourceVersion = "0" // 以便 GET 请求从 API 服务器缓存中提供而不是从 etcd 中提供。这可以显著减少请求的响应时间，并减轻 etcd 的负载。
+	opts.ResourceVersion = "0" // 以便 GET 请求从 API 服务器缓存中提供而不是从 etcd 中提供.这可以显著减少请求的响应时间,并减轻 etcd 的负载.
 }
 
 // GetNodenameForKernel gets hostname value to set in the hostname field (the nodename field of struct utsname) of the pod.

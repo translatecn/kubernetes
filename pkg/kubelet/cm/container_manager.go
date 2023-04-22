@@ -107,7 +107,7 @@ type ContainerManager interface {
 	// registration.
 	GetPluginRegistrationHandler() cache.PluginHandler
 
-	ShouldResetExtendedResourceCapacity() bool // 检查设备管理器，看看是否重新创建了节点，在这种情况下，应该将扩展资源归零，直到它们可用为止
+	ShouldResetExtendedResourceCapacity() bool // 检查设备管理器,看看是否重新创建了节点,在这种情况下,应该将扩展资源归零,直到它们可用为止
 
 	// GetAllocateResourcesPodAdmitHandler returns an instance of a PodAdmitHandler responsible for allocating pod resources.
 	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler
@@ -159,13 +159,13 @@ type NodeConfig struct {
 
 // NodeAllocatableConfig 存储节点可分配资源的配置信息
 type NodeAllocatableConfig struct {
-	KubeReservedCgroupName   string                  // 表示用于限制 Kubernetes 系统保留资源的 Cgroup 名称。
-	SystemReservedCgroupName string                  // 表示用于限制系统保留资源的 Cgroup 名称。
-	ReservedSystemCPUs       cpuset.CPUSet           // 保留给系统使用的 CPU 集合。
-	EnforceNodeAllocatable   sets.String             // 表示是否强制使用节点可分配资源。
-	KubeReserved             v1.ResourceList         // 表示 Kubernetes 系统保留资源的数量。
-	SystemReserved           v1.ResourceList         // 表示系统保留资源的数量。
-	HardEvictionThresholds   []evictionapi.Threshold // 表示硬驱逐阈值列表。
+	KubeReservedCgroupName   string                  // 表示用于限制 Kubernetes 系统保留资源的 Cgroup 名称.
+	SystemReservedCgroupName string                  // 表示用于限制系统保留资源的 Cgroup 名称.
+	ReservedSystemCPUs       cpuset.CPUSet           // 保留给系统使用的 CPU 集合.
+	EnforceNodeAllocatable   sets.String             // 表示是否强制使用节点可分配资源.
+	KubeReserved             v1.ResourceList         // 表示 Kubernetes 系统保留资源的数量.
+	SystemReserved           v1.ResourceList         // 表示系统保留资源的数量.
+	HardEvictionThresholds   []evictionapi.Threshold // 表示硬驱逐阈值列表.
 }
 
 type Status struct {

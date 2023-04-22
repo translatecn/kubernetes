@@ -77,7 +77,7 @@ type Runtime interface {
 	// This may be different from the runtime engine's version.
 	// TODO(random-liu): We should fold this into Version()
 	APIVersion() (Version, error)
-	Status(ctx context.Context) (*RuntimeStatus, error) // 返回运行时的状态。
+	Status(ctx context.Context) (*RuntimeStatus, error) // 返回运行时的状态.
 	// GetPods returns a list of containers grouped by pods. The boolean parameter
 	// specifies whether the runtime returns all containers including those already
 	// exited and dead containers (used for garbage collection).

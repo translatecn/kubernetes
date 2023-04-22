@@ -21,12 +21,12 @@ import (
 	"os"
 )
 
-// LinkTreatment 是 Exists 使用的常量的基本类型，用于指示符号链接在存在性检查中的处理方式。
+// LinkTreatment 是 Exists 使用的常量的基本类型,用于指示符号链接在存在性检查中的处理方式.
 type LinkTreatment int
 
 const (
-	CheckFollowSymlink LinkTreatment = iota // 遵循符号链接并验证符号链接的目标是否存在。
-	CheckSymlinkOnly                        // 不遵循符号链接，仅验证符号链接本身是否存在。
+	CheckFollowSymlink LinkTreatment = iota // 遵循符号链接并验证符号链接的目标是否存在.
+	CheckSymlinkOnly                        // 不遵循符号链接,仅验证符号链接本身是否存在.
 )
 
 // ErrInvalidLinkTreatment indicates that the link treatment behavior requested

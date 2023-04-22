@@ -49,11 +49,11 @@ func (LeaseList) SwaggerDoc() map[string]string {
 
 var map_LeaseSpec = map[string]string{
 	"":                     "LeaseSpec is a specification of a Lease.",
-	"holderIdentity":       "holderIdentity contains the identity of the holder of a current lease.",
-	"leaseDurationSeconds": "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
-	"acquireTime":          "acquireTime is a time when the current lease was acquired.",
-	"renewTime":            "renewTime is a time when the current holder of a lease has last updated the lease.",
-	"leaseTransitions":     "leaseTransitions is the number of transitions of a lease between holders.",
+	"holderIdentity":       "当前租约持有者的标识.",
+	"leaseDurationSeconds": "leaseDurationSeconds是租约候选者需要等待强制获取它的持续时间.这是针对上次观察到的更新时间的度量.",
+	"acquireTime":          "acquireTime是获取当前租约的时间.",
+	"renewTime":            "renewTime 当前租约持有者最近一次更新租约的时间",
+	"leaseTransitions":     "leaseTransitions 是承租人之间的租赁转换次数。",
 }
 
 func (LeaseSpec) SwaggerDoc() map[string]string {

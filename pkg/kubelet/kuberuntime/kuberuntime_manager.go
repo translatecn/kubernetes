@@ -328,7 +328,7 @@ func (m *kubeGenericRuntimeManager) APIVersion() (kubecontainer.Version, error) 
 	return newRuntimeVersion(typedVersion.RuntimeApiVersion)
 }
 
-// 返回运行时的状态。
+// 返回运行时的状态.
 func (m *kubeGenericRuntimeManager) Status(ctx context.Context) (*kubecontainer.RuntimeStatus, error) {
 	resp, err := m.runtimeService.Status(ctx, false)
 	if err != nil {

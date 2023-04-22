@@ -40,10 +40,10 @@ const (
 	defaultNodeAllocatableCgroupName = "kubepods"
 )
 
-// createNodeAllocatableCgroups 当指定 CgroupsPerQOS 标志为 true 时，将创建节点可分配 Cgroup。
+// createNodeAllocatableCgroups 当指定 CgroupsPerQOS 标志为 true 时,将创建节点可分配 Cgroup.
 func (cm *containerManagerImpl) createNodeAllocatableCgroups() error {
 	nodeAllocatable := cm.internalCapacity
-	// 如果用户请求强制使用节点可分配资源，则使用节点可分配限制而不是容量。
+	// 如果用户请求强制使用节点可分配资源,则使用节点可分配限制而不是容量.
 	nc := cm.NodeConfig.NodeAllocatableConfig
 	if cm.CgroupsPerQOS && nc.EnforceNodeAllocatable.Has(kubetypes.NodeAllocatableEnforcementKey) {
 		nodeAllocatable = cm.getNodeAllocatableInternalAbsolute()
@@ -191,8 +191,8 @@ func getCgroupConfig(rl v1.ResourceList) *ResourceConfig {
 	return &rc
 }
 
-// GetNodeAllocatableAbsolute 返回节点可分配资源的绝对值，主要用于强制执行。
-// 请注意，返回的资源列表中未包括节点上可用的所有资源。该函数返回 ResourceList 类型的结果。
+// GetNodeAllocatableAbsolute 返回节点可分配资源的绝对值,主要用于强制执行.
+// 请注意,返回的资源列表中未包括节点上可用的所有资源.该函数返回 ResourceList 类型的结果.
 func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceList {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.capacity)
 }
@@ -216,8 +216,8 @@ func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.Resou
 	return result
 }
 
-// getNodeAllocatableInternalAbsolute 类似于 getNodeAllocatableAbsolute，但它还包括内部资源（当前为进程 ID）。
-// 它旨在仅设置顶层 Cgroup。
+// getNodeAllocatableInternalAbsolute 类似于 getNodeAllocatableAbsolute,但它还包括内部资源（当前为进程 ID）.
+// 它旨在仅设置顶层 Cgroup.
 func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.ResourceList {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.internalCapacity)
 }

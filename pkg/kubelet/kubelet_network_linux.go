@@ -73,12 +73,9 @@ func (kl *Kubelet) initNetworkUtil() {
 	}
 }
 
-// syncIPTablesRules ensures the KUBE-IPTABLES-HINT chain exists, and the martian packet
-// protection rule is installed. If the IPTablesOwnershipCleanup feature gate is disabled
-// it will also synchronize additional deprecated iptables rules.
+// 确保KUBE-IPTABLES-HINT链存在，它还将同步其他已弃用的iptables规则。
 func (kl *Kubelet) syncIPTablesRules(iptClient utiliptables.Interface) bool {
-	// Create hint chain so other components can see whether we are using iptables-legacy
-	// or iptables-nft.
+	// 创建提示链，以便其他组件可以看到我们使用的是iptables-legacy还是iptables-nft。
 	if _, err := iptClient.EnsureChain(utiliptables.TableMangle, KubeIPTablesHintChain); err != nil {
 		klog.ErrorS(err, "Failed to ensure that iptables hint chain exists")
 		return false

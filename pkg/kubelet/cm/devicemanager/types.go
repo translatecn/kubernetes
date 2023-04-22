@@ -64,7 +64,7 @@ type Manager interface {
 	// GetAllocatableDevices returns information about all the devices known to the manager
 	GetAllocatableDevices() ResourceDeviceInstances
 
-	ShouldResetExtendedResourceCapacity() bool // 根据检查点文件的可用性返回扩展资源是否应该重置。检查点文件的缺失强烈表明节点已被重新创建。
+	ShouldResetExtendedResourceCapacity() bool // 根据检查点文件的可用性返回扩展资源是否应该重置.检查点文件的缺失强烈表明节点已被重新创建.
 
 	// TopologyManager HintProvider provider indicates the Device Manager implements the Topology Manager Interface
 	// and is consulted to make Topology aware resource alignments

@@ -41,15 +41,13 @@ type Lease struct {
 
 // LeaseSpec is a specification of a Lease.
 type LeaseSpec struct {
-	// holderIdentity contains the identity of the holder of a current lease.
+	// 当前租约持有者的标识.
 	// +optional
 	HolderIdentity *string `json:"holderIdentity,omitempty" protobuf:"bytes,1,opt,name=holderIdentity"`
-	// leaseDurationSeconds is a duration that candidates for a lease need
-	// to wait to force acquire it. This is measure against time of last
-	// observed RenewTime.
+	// 租约持续时间
 	// +optional
 	LeaseDurationSeconds *int32 `json:"leaseDurationSeconds,omitempty" protobuf:"varint,2,opt,name=leaseDurationSeconds"`
-	// acquireTime is a time when the current lease was acquired.
+	// acquireTime是获取当前租约的时间.
 	// +optional
 	AcquireTime *metav1.MicroTime `json:"acquireTime,omitempty" protobuf:"bytes,3,opt,name=acquireTime"`
 	// renewTime is a time when the current holder of a lease has last

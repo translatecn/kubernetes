@@ -113,7 +113,7 @@ type containerManagerImpl struct {
 }
 
 type features struct {
-	cpuHardcapping bool // 对 CPU 使用时间的硬限制。
+	cpuHardcapping bool // 对 CPU 使用时间的硬限制.
 }
 
 var _ ContainerManager = &containerManagerImpl{}
@@ -160,14 +160,14 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 		return f, fmt.Errorf("%s - 以下的 Cgroup 子系统没有挂载: %v", localErr, expectedCgroups.List())
 	}
 
-	// 检查是否有可用的 CPU 配额。CPU cgroup 是必需的，因此预期此时已经挂载。
-	periodExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_period_us")) // 是用于硬限制的 CPU 周期，以微秒为单位。
+	// 检查是否有可用的 CPU 配额.CPU cgroup 是必需的,因此预期此时已经挂载.
+	periodExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_period_us")) // 是用于硬限制的 CPU 周期,以微秒为单位.
 	if err != nil {
-		klog.ErrorS(err, "无法检测到 CPU cgroup cpu.cfs_period_us 是否可用。")
+		klog.ErrorS(err, "无法检测到 CPU cgroup cpu.cfs_period_us 是否可用.")
 	}
-	quotaExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_quota_us")) // CPU 使用时间的硬限制上限，以微秒为单位。
+	quotaExists, err := utilpath.Exists(utilpath.CheckFollowSymlink, path.Join(cpuMountPoint, "cpu.cfs_quota_us")) // CPU 使用时间的硬限制上限,以微秒为单位.
 	if err != nil {
-		klog.ErrorS(err, "无法检测到 CPU cgroup cpu.cfs_quota_us 是否可用。")
+		klog.ErrorS(err, "无法检测到 CPU cgroup cpu.cfs_quota_us 是否可用.")
 	}
 	if quotaExists && periodExists {
 		f.cpuHardcapping = true
@@ -367,7 +367,7 @@ func (cm *containerManagerImpl) InternalContainerLifecycle() InternalContainerLi
 	return &internalContainerLifecycleImpl{cm.cpuManager, cm.memoryManager, cm.topologyManager}
 }
 
-// 创建一个 cgroup 容器管理器。
+// 创建一个 cgroup 容器管理器.
 func createManager(containerName string) (cgroups.Manager, error) {
 	cg := &configs.Cgroup{
 		Parent: "/",
@@ -384,12 +384,12 @@ func createManager(containerName string) (cgroups.Manager, error) {
 type KernelTunableBehavior string
 
 const (
-	KernelTunableWarn   KernelTunableBehavior = "warn"   // 在控制台上发出警告，但不会修改内核可调整flag或返回错误。
+	KernelTunableWarn   KernelTunableBehavior = "warn"   // 在控制台上发出警告,但不会修改内核可调整flag或返回错误.
 	KernelTunableError  KernelTunableBehavior = "error"  // 发生错误时返回错误
 	KernelTunableModify KernelTunableBehavior = "modify" // 修改内核可调整标志
 )
 
-// setupKernelTunables 验证内核可调整flags是否按预期设置，具体取决于指定的选项，它将警告、出错或修改内核可调整标志。
+// setupKernelTunables 验证内核可调整flags是否按预期设置,具体取决于指定的选项,它将警告、出错或修改内核可调整标志.
 func setupKernelTunables(option KernelTunableBehavior) error {
 	desiredState := map[string]int{
 		utilsysctl.VMOvercommitMemory: utilsysctl.VMOvercommitMemoryAlways,
@@ -424,10 +424,10 @@ func setupKernelTunables(option KernelTunableBehavior) error {
 			if err != nil {
 				if libcontaineruserns.RunningInUserNS() { // 0,0,4294967295
 					if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.KubeletInUserNamespace) {
-						klog.V(2).InfoS("更新内核标志失败（正在运行于用户命名空间中，忽略）。", "flag", flag, "err", err)
+						klog.V(2).InfoS("更新内核标志失败（正在运行于用户命名空间中,忽略）.", "flag", flag, "err", err)
 						continue
 					}
-					klog.ErrorS(err, "更新内核标志失败（提示：启用 KubeletInUserNamespace 功能标志以忽略此错误）。", "flag", flag)
+					klog.ErrorS(err, "更新内核标志失败（提示：启用 KubeletInUserNamespace 功能标志以忽略此错误）.", "flag", flag)
 				}
 				errList = append(errList, err)
 			}

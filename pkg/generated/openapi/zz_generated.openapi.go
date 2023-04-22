@@ -15492,33 +15492,33 @@ func schema_k8sio_api_coordination_v1_LeaseSpec(ref common.ReferenceCallback) co
 				Properties: map[string]spec.Schema{
 					"holderIdentity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "holderIdentity contains the identity of the holder of a current lease.",
+							Description: "当前租约持有者的标识.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"leaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
+							Description: "租约持续时间",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"acquireTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "acquireTime is a time when the current lease was acquired.",
+							Description: "acquireTime是获取当前租约的时间.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"renewTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "renewTime is a time when the current holder of a lease has last updated the lease.",
+							Description: "renewTime 当前租约持有者最近一次更新租约的时间",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions is the number of transitions of a lease between holders.",
+							Description: "leaseTransitions 是承租人之间的租赁转换次数。",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -15634,33 +15634,33 @@ func schema_k8sio_api_coordination_v1beta1_LeaseSpec(ref common.ReferenceCallbac
 				Properties: map[string]spec.Schema{
 					"holderIdentity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "holderIdentity contains the identity of the holder of a current lease.",
+							Description: "当前租约持有者的标识.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"leaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseDurationSeconds is a duration that candidates for a lease need to wait to force acquire it. This is measure against time of last observed RenewTime.",
+							Description: "租约持续时间",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"acquireTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "acquireTime is a time when the current lease was acquired.",
+							Description: "acquireTime是获取当前租约的时间.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"renewTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "renewTime is a time when the current holder of a lease has last updated the lease.",
+							Description: "renewTime 当前租约持有者最近一次更新租约的时间",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions is the number of transitions of a lease between holders.",
+							Description: "leaseTransitions 是承租人之间的租赁转换次数。",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -22456,44 +22456,42 @@ func schema_k8sio_api_core_v1_PodCondition(ref common.ReferenceCallback) common.
 				Properties: map[string]spec.Schema{
 					"type": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type is the type of the condition. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Status is the status of the condition. Can be True, False, Unknown. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"lastProbeTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Last time we probed the condition.",
+							Description: "上次我们探测的时间",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"lastTransitionTime": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Last time the condition transitioned from one status to another.",
+							Description: "条件从一个状态转换到另一个状态的最后时间.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"reason": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Unique, one-word, CamelCase reason for the condition's last transition.",
+							Description: "唯一、单词、驼峰式 状态发生变换的原因",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"message": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Human-readable message indicating details about last transition.",
+							Description: "人类可读的消息,指示有关上次转换的详细信息.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -57971,7 +57969,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"nodeLeaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "nodeLeaseDurationSeconds is the duration the Kubelet will set on its corresponding Lease. NodeLease provides an indicator of node health by having the Kubelet create and periodically renew a lease, named after the node, in the kube-node-lease namespace. If the lease expires, the node can be considered unhealthy. The lease is currently renewed every 10s, per KEP-0009. In the future, the lease renewal interval may be set based on the lease duration. The field value must be greater than 0. Default: 40",
+							Description: "nodeLeaseDurationSeconds is Kubelet将在其相应的Lease上设置的持续时间. NodeLease provides an indicator of node health by having the Kubelet create and periodically renew a lease, named after the node, in the kube-node-lease namespace. If the lease expires, the node can be considered unhealthy. The lease is currently renewed every 10s, per KEP-0009. In the future, the lease renewal interval may be set based on the lease duration. The field value must be greater than 0. Default: 40",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
