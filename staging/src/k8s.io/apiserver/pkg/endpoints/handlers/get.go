@@ -19,13 +19,14 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"reflect"
+	rruntime "runtime"
 	"strings"
 	"time"
-
-	"go.opentelemetry.io/otel/attribute"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -257,6 +258,8 @@ func ListResource(r rest.Lister, rw rest.Watcher, scope *RequestScope, forceWatc
 			klog.V(3).InfoS("Starting watch", "path", req.URL.Path, "resourceVersion", opts.ResourceVersion, "labels", opts.LabelSelector, "fields", opts.FieldSelector, "timeout", timeout)
 			ctx, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
+			//k8s.io/kubernetes/pkg/registry/core/pod/storage.REST
+			var _ = rw.Watch
 			watcher, err := rw.Watch(ctx, &opts)
 			if err != nil {
 				scope.err(err, w, req)
@@ -281,4 +284,18 @@ func ListResource(r rest.Lister, rw rest.Watcher, scope *RequestScope, forceWatc
 		defer span.AddEvent("Writing http response done", attribute.Int("count", meta.LenList(result)))
 		transformResponseObject(ctx, scope, req, w, http.StatusOK, outputMediaType, result)
 	}
+}
+
+func printFuncInfo(fptr interface{}) string {
+	// 获取函数指针对应的 PC 值
+	pc := reflect.ValueOf(fptr).Pointer()
+	// 获取函数元数据
+	fn := rruntime.FuncForPC(pc)
+	if fn == nil {
+		fmt.Println("Failed to get function info")
+		return ""
+	}
+	// 获取函数所在的文件名和行号
+	file, line := fn.FileLine(pc)
+	return fmt.Sprintf("%s:%d", file, line)
 }

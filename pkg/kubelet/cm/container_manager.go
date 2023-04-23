@@ -120,10 +120,7 @@ type ContainerManager interface {
 
 	// UnrepareResources unprepares pod resources
 	UnprepareResources(*v1.Pod) error
-
-	// PodMightNeedToUnprepareResources returns true if the pod with the given UID
-	// might need to unprepare resources.
-	PodMightNeedToUnprepareResources(UID types.UID) bool
+	PodMightNeedToUnprepareResources(UID types.UID) bool // 如果具有给定UID的pod可能需要准备资源，则返回true。
 
 	// Implements the podresources Provider API for CPUs, Memory and Devices
 	podresources.CPUsProvider

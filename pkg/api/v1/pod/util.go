@@ -335,7 +335,7 @@ func GetContainersReadyCondition(status v1.PodStatus) *v1.PodCondition {
 
 // GetPodCondition extracts the provided condition from the given status and returns that.
 // Returns nil and -1 if the condition is not present, and the index of the located condition.
-func GetPodCondition(status *v1.PodStatus, conditionType v1.PodConditionType) (int, *v1.PodCondition) {
+func GetPodCondition(status *v1.PodStatus, conditionType v1.PodConditionType) (int, *v1.PodCondition) { // ✅
 	if status == nil {
 		return -1, nil
 	}
@@ -344,7 +344,7 @@ func GetPodCondition(status *v1.PodStatus, conditionType v1.PodConditionType) (i
 
 // GetPodConditionFromList extracts the provided condition from the given list of condition and
 // returns the index of the condition and the condition. Returns -1 and nil if the condition is not present.
-func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodConditionType) (int, *v1.PodCondition) {
+func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodConditionType) (int, *v1.PodCondition) { // ✅
 	if conditions == nil {
 		return -1, nil
 	}

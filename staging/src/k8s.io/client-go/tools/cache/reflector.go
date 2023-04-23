@@ -212,7 +212,7 @@ func (r *Reflector) resyncChan() (<-chan time.Time, func() bool) {
 // and then use the resource version to watch.
 // It returns error if ListAndWatch didn't even try to initialize watch.
 func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
-	fmt.Println("ListAndWatch", time.Now().Unix())
+	//fmt.Println("ListAndWatch", time.Now().Unix())
 	klog.V(3).Infof("Listing and watching %v from %s", r.expectedTypeName, r.name)
 
 	err := r.list(stopCh)
@@ -251,7 +251,7 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 
 	retry := NewRetryWithDeadline(r.MaxInternalErrorRetryDuration, time.Minute, apierrors.IsInternalError, r.clock)
 	for {
-		fmt.Println("ListAndWatch for", time.Now().Unix())
+		//fmt.Println("ListAndWatch for", time.Now().Unix())
 		// give the stopCh a chance to stop the loop, even in case of continue statements further down on errors
 		select {
 		case <-stopCh:

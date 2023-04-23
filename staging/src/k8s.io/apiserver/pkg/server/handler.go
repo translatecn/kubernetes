@@ -19,13 +19,12 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"github.com/emicklei/go-restful/v3"
+	"k8s.io/klog/v2"
 	"net/http"
 	rt "runtime"
 	"sort"
 	"strings"
-
-	"github.com/emicklei/go-restful/v3"
-	"k8s.io/klog/v2"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"

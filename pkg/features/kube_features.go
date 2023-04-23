@@ -273,12 +273,11 @@ const (
 	// Enables usage of hugepages-<size> in downward API.
 	DownwardAPIHugePages featuregate.Feature = "DownwardAPIHugePages"
 
-	// owner: @pohly
+	// DynamicResourceAllocation owner: @pohly
 	// kep: http://kep.k8s.io/3063
 	// alpha: v1.26
 	//
-	// Enables support for resources with custom parameters and a lifecycle
-	// that is independent of a Pod.
+	// 支持具有自定义参数和独立于Pod的生命周期的资源。
 	DynamicResourceAllocation featuregate.Feature = "DynamicResourceAllocation"
 
 	// owner: @andrewsykim
@@ -669,13 +668,14 @@ const (
 	// Enables controlling pod ranking on replicaset scale-down.
 	PodDeletionCost featuregate.Feature = "PodDeletionCost"
 
-	// owner: @mimowo
+	// PodDisruptionConditions owner: @mimowo
 	// kep: https://kep.k8s.io/3329
 	// alpha: v1.25
 	// beta: v1.26
 	//
-	// Enables support for appending a dedicated pod condition indicating that
-	// the pod is being deleted due to a disruption.
+	// 在 Kubernetes 中，Pod 可能会由于各种原因被删除，例如节点故障、调度器故障、手动删除等等。
+	// 在某些情况下，Pod 的删除可能会影响到应用程序的可用性，因此需要在删除过程中进行一些额外的处理。
+	// 指示该 Pod 正在由于干扰而被删除
 	PodDisruptionConditions featuregate.Feature = "PodDisruptionConditions"
 
 	// owner: @ddebroy

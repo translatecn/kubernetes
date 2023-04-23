@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -422,9 +423,28 @@ func (c *Container) Handle(pattern string, handler http.Handler) {
 		handler.ServeHTTP(writer, httpRequest)
 	}))
 }
+func printFuncInfo(fptr interface{}) string {
+	// 获取函数指针对应的 PC 值
+	pc := reflect.ValueOf(fptr).Pointer()
+	// 获取函数元数据
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		fmt.Println("Failed to get function info")
+		return ""
+	}
+	//fmt.Println(fn.Name())
+
+	//// 获取函数所在的文件名和行号
+	file, line := fn.FileLine(pc)
+	return fmt.Sprintf("%s:%d", file, line)
+}
 
 // Add a WebService to the Container. It will detect duplicate root paths and exit in that case.
 func (c *Container) Add(service *WebService) *Container {
+	for _, item := range service.Routes() {
+		//printFuncInfo(item.Function)
+		fmt.Println("注册路由:----->", item.Method, item.Path, printFuncInfo(item.Function))
+	}
 	c.webServicesLock.Lock()
 	defer c.webServicesLock.Unlock()
 

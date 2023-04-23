@@ -105,6 +105,8 @@ type REST struct {
 	categories []string
 }
 
+var _ = new(REST).Watch
+
 // Implement CategoriesProvider
 var _ rest.CategoriesProvider = &REST{}
 

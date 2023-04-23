@@ -2594,7 +2594,7 @@ type ContainerStateTerminated struct {
 	// Message regarding the last termination of the container
 	// +optional
 	Message string `json:"message,omitempty" protobuf:"bytes,4,opt,name=message"`
-	// Time at which previous execution of the container started
+	// 容器的前一次执行开始的时间
 	// +optional
 	StartedAt metav1.Time `json:"startedAt,omitempty" protobuf:"bytes,5,opt,name=startedAt"`
 	// Time at which the container last terminated
@@ -2655,44 +2655,24 @@ type ContainerStatus struct {
 // +enum
 type PodPhase string
 
-// These are the valid statuses of pods.
 const (
-	// PodPending means the pod has been accepted by the system, but one or more of the containers
-	// has not been started. This includes time before being bound to a node, as well as time spent
-	// pulling images onto the host.
-	PodPending PodPhase = "Pending"
-	// PodRunning means the pod has been bound to a node and all of the containers have been started.
-	// At least one container is still running or is in the process of being restarted.
-	PodRunning PodPhase = "Running"
-	// PodSucceeded means that all containers in the pod have voluntarily terminated
-	// with a container exit code of 0, and the system is not going to restart any of these containers.
-	PodSucceeded PodPhase = "Succeeded"
-	// PodFailed means that all containers in the pod have terminated, and at least one container has
-	// terminated in a failure (exited with a non-zero exit code or was stopped by the system).
-	PodFailed PodPhase = "Failed"
-	// PodUnknown means that for some reason the state of the pod could not be obtained, typically due
-	// to an error in communicating with the host of the pod.
-	// Deprecated: It isn't being set since 2015 (74da3b14b0c0f658b3bb8d2def5094686d0e9095)
-	PodUnknown PodPhase = "Unknown"
+	PodPending   PodPhase = "Pending"   // 表示该 Pod 已被系统接受，但一个或多个容器尚未启动。这包括绑定到节点之前的时间，以及在主机上拉取镜像的时间。
+	PodRunning   PodPhase = "Running"   // 表示该 Pod 已经绑定到节点，并且所有容器都已经启动。至少有一个容器仍在运行或正在重新启动过程中。
+	PodSucceeded PodPhase = "Succeeded" // 表示该 Pod 中的所有容器都已经自愿终止，并且系统不会重新启动这些容器。
+	PodFailed    PodPhase = "Failed"    // 表示该 Pod 中的所有容器都已经终止，并且至少有一个容器在失败中终止（以非零退出代码退出或被系统停止）。
+	PodUnknown   PodPhase = "Unknown"   // 表示由于某种原因无法获取 Pod 的状态，通常是由于与 Pod 所在主机通信时发生错误。
 )
 
 // PodConditionType is a valid value for PodCondition.Type
 type PodConditionType string
 
-// These are built-in conditions of pod. An application may use a custom condition not listed here.
+// Pod 的内置条件
 const (
-	// ContainersReady indicates whether all containers in the pod are ready.
-	ContainersReady PodConditionType = "ContainersReady"
-	// PodInitialized means that all init containers in the pod have started successfully.
-	PodInitialized PodConditionType = "Initialized"
-	// PodReady means the pod is able to service requests and should be added to the
-	// load balancing pools of all matching services.
-	PodReady PodConditionType = "Ready"
-	// PodScheduled represents status of the scheduling process for this pod.
-	PodScheduled PodConditionType = "PodScheduled"
-	// DisruptionTarget indicates the pod is about to be terminated due to a
-	// disruption (such as preemption, eviction API or garbage-collection).
-	DisruptionTarget PodConditionType = "DisruptionTarget"
+	ContainersReady  PodConditionType = "ContainersReady"  // 指示 Pod 中的所有容器是否已经就绪。
+	PodInitialized   PodConditionType = "Initialized"      // 表示 Pod 中的所有 init 容器是否已经成功启动。
+	PodReady         PodConditionType = "Ready"            // 表示 Pod 是否能够服务请求，并且应该添加到所有匹配服务的负载均衡池中。
+	PodScheduled     PodConditionType = "PodScheduled"     // 表示此 Pod 的调度过程的状态。
+	DisruptionTarget PodConditionType = "DisruptionTarget" // 表示该 Pod 即将被终止，因为发生了某种干扰（例如抢占、逐出 API 或垃圾回收）。
 )
 
 // These are reasons for a pod's transition to a condition.
@@ -3961,7 +3941,7 @@ type PodStatus struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-phase
 	// +optional
 	Phase PodPhase `json:"phase,omitempty" protobuf:"bytes,1,opt,name=phase,casttype=PodPhase"`
-	// Current service state of pod.
+	// pod的当前服务状态。
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
 	// +optional
 	// +patchMergeKey=type

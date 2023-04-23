@@ -831,8 +831,7 @@ func (s *GenericAPIServer) InstallLegacyAPIGroup(apiPrefix string, apiGroupInfo 
 	return nil
 }
 
-// InstallAPIGroups ✅
-func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) error {
+func (s *GenericAPIServer) InstallAPIGroups(apiGroupInfos ...*APIGroupInfo) error { // ✅
 	for _, apiGroupInfo := range apiGroupInfos {
 		// Do not register empty group or empty version.  Doing so claims /apis/ for the wrong entity to be returned.
 		// Catching these here places the error  much closer to its origin

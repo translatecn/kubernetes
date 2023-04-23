@@ -281,5 +281,5 @@ replace (
 	k8s.io/sample-cli-plugin => ./staging/src/k8s.io/sample-cli-plugin
 	k8s.io/sample-controller => ./staging/src/k8s.io/sample-controller
 	k8s.io/utils => ./staging/src/k8s.io/utils
-
+	github.com/emicklei/go-restful/v3  => ./staging/src/github.com/emicklei/go-restful/v3
 )

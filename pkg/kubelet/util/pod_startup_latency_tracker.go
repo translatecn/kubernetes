@@ -48,10 +48,8 @@ type basicPodStartupLatencyTracker struct {
 type perPodState struct {
 	firstStartedPulling time.Time
 	lastFinishedPulling time.Time
-	// first time, when pod status changed into Running
-	observedRunningTime time.Time
-	// log, if pod latency was already Observed
-	metricRecorded bool
+	observedRunningTime time.Time // 第一次，当pod状态变为Running
+	metricRecorded      bool      // 如果pod延迟已经被观察到
 }
 
 // NewPodStartupLatencyTracker creates an instance of PodStartupLatencyTracker
@@ -139,7 +137,7 @@ func (p *basicPodStartupLatencyTracker) RecordImageFinishedPulling(podUID types.
 	state.lastFinishedPulling = p.clock.Now() // Now is always grater than values from the past.
 }
 
-func (p *basicPodStartupLatencyTracker) RecordStatusUpdated(pod *v1.Pod) {
+func (p *basicPodStartupLatencyTracker) RecordStatusUpdated(pod *v1.Pod) { // ✅
 	p.lock.Lock()
 	defer p.lock.Unlock()
 

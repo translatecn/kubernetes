@@ -47,8 +47,5 @@ const (
 // entries here should be moved to staging/src/k8s.io.api/core/v1/types.go
 // once the feature managing the condition graduates to Beta.
 const (
-	// PodHasNetwork indicates networking has been configured successfully for the
-	// pod and IP address(es) assigned. Images for containers specified in the pod
-	// spec can be pulled and containers launched after this condition is true.
-	PodHasNetwork = "PodHasNetwork"
+	PodHasNetwork = "PodHasNetwork" // 表示已成功为pod配置网络并分配IP地址。在此条件为真之后，可以提取pod规范中指定的容器的映像，并启动容器。
 )

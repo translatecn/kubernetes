@@ -924,7 +924,7 @@ func countRunningContainerStatus(status v1.PodStatus) int {
 
 // PodCouldHaveRunningContainers returns true if the pod with the given UID could still have running
 // containers. This returns false if the pod has not yet been started or the pod is unknown.
-func (kl *Kubelet) PodCouldHaveRunningContainers(pod *v1.Pod) bool {
+func (kl *Kubelet) PodCouldHaveRunningContainers(pod *v1.Pod) bool { // ✅
 	if kl.podWorkers.CouldHaveRunningContainers(pod.UID) {
 		return true
 	}
