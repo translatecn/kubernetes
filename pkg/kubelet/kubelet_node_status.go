@@ -278,7 +278,7 @@ func (kl *Kubelet) reconcileCMADAnnotationWithExistingNode(node, existingNode *v
 // initialNode constructs the initial v1.Node for this Kubelet, incorporating node
 // labels, information from the cloud provider, and Kubelet configuration.
 func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
-	node := &v1.Node{
+	node := &v1.Node{ // 拼接节点信息字段
 		ObjectMeta: metav1.ObjectMeta{
 			Name: string(kl.nodeName),
 			Labels: map[string]string{
@@ -293,6 +293,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 			Unschedulable: !kl.registerSchedulable,
 		},
 	}
+	//如果有系统独特的标签就添加，linux上应该没有
 	osLabels, err := getOSSpecificLabels()
 	if err != nil {
 		return nil, err
@@ -300,21 +301,21 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 	for label, value := range osLabels {
 		node.Labels[label] = value
 	}
-
+	// 根据命令行传入的污点信息 --register-with-taints设置污点
 	nodeTaints := make([]v1.Taint, len(kl.registerWithTaints))
 	copy(nodeTaints, kl.registerWithTaints)
 	unschedulableTaint := v1.Taint{
 		Key:    v1.TaintNodeUnschedulable,
 		Effect: v1.TaintEffectNoSchedule,
 	}
-
+	// 如果节点设置为不能被调度就添加污点信息 key为 node.kubernetes.io/unschedulable，value为NoSchedule
 	// Taint node with TaintNodeUnschedulable when initializing
 	// node to avoid race condition; refer to #63897 for more detail.
 	if node.Spec.Unschedulable &&
 		!taintutil.TaintExists(nodeTaints, &unschedulableTaint) {
 		nodeTaints = append(nodeTaints, unschedulableTaint)
 	}
-
+	// 如果有外部云提供者就设置相关污点
 	if kl.externalCloudProvider {
 		taint := v1.Taint{
 			Key:    cloudproviderapi.TaintExternalCloudProvider,
@@ -337,7 +338,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 			LastTransitionTime: metav1.NewTime(kl.clock.Now()),
 		})
 	}
-
+	// 设置volume挂载卸载的 Annotations
 	if kl.enableControllerAttachDetach {
 		if node.Annotations == nil {
 			node.Annotations = make(map[string]string)
@@ -348,7 +349,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 	} else {
 		klog.V(2).InfoS("Controller attach/detach is disabled for this node; Kubelet will attach and detach volumes")
 	}
-
+	// 是否保留TerminatedPod的Volume
 	if kl.keepTerminatedPodVolumes {
 		if node.Annotations == nil {
 			node.Annotations = make(map[string]string)
@@ -358,6 +359,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 	}
 
 	// @question: should this be place after the call to the cloud provider? which also applies labels
+	// 检查用户设置的节点标签是否覆盖了默认的
 	for k, v := range kl.nodeLabels {
 		if cv, found := node.ObjectMeta.Labels[k]; found {
 			klog.InfoS("the node label will overwrite default setting", "labelKey", k, "labelValue", v, "default", cv)
@@ -368,7 +370,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 	if kl.providerID != "" {
 		node.Spec.ProviderID = kl.providerID
 	}
-
+	// 公有云相关的
 	if kl.cloud != nil {
 		instances, ok := kl.cloud.Instances()
 		if !ok {
@@ -417,7 +419,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 			}
 		}
 	}
-
+	// 通过预设的方法给node绑定状态属性
 	kl.setNodeStatus(ctx, node)
 
 	return node, nil
@@ -678,6 +680,7 @@ func (kl *Kubelet) recordNodeSchedulableEvent(ctx context.Context, node *v1.Node
 // any fields that are currently set.
 // TODO(madhusudancs): Simplify the logic for setting node conditions and
 // refactor the node status condition code out to a different file.
+// 通过预设的方法给node绑定状态属性
 func (kl *Kubelet) setNodeStatus(ctx context.Context, node *v1.Node) {
 	for i, f := range kl.setNodeStatusFuncs {
 		klog.V(5).InfoS("Setting node status condition code", "position", i, "node", klog.KObj(node))
@@ -698,8 +701,7 @@ func (kl *Kubelet) getLastObservedNodeAddresses() []v1.NodeAddress {
 	return kl.lastObservedNodeAddresses
 }
 
-// defaultNodeStatusFuncs is a factory that generates the default set of
-// setNodeStatus funcs
+// 给节点绑定属性信息的工厂函数
 func (kl *Kubelet) defaultNodeStatusFuncs() []func(context.Context, *v1.Node) error {
 	// if cloud is not nil, we expect the cloud resource sync manager to exist
 	var nodeAddressesFunc func() ([]v1.NodeAddress, error)
@@ -712,11 +714,25 @@ func (kl *Kubelet) defaultNodeStatusFuncs() []func(context.Context, *v1.Node) er
 	}
 	var setters []func(ctx context.Context, n *v1.Node) error
 	setters = append(setters,
+		// 设置IP，hostname
 		nodestatus.NodeAddress(kl.nodeIPs, kl.nodeIPValidator, kl.hostname, kl.hostnameOverridden, kl.externalCloudProvider, kl.cloud, nodeAddressesFunc),
-		nodestatus.MachineInfo(string(kl.nodeName), kl.maxPods, kl.podsPerCore, kl.GetCachedMachineInfo, kl.containerManager.GetCapacity,
-			kl.containerManager.GetDevicePluginResourceCapacity, kl.containerManager.GetNodeAllocatableReservation, kl.recordEvent, kl.supportLocalStorageCapacityIsolation()),
+		// 节点绑定Capacity(代表总量)和Allocatable(代表节点上可供普通 Pod 消耗的资源量)
+		nodestatus.MachineInfo(
+			string(kl.nodeName),
+			kl.maxPods,                      // 代表node上最多可以运行多少个pod 默认为110
+			kl.podsPerCore,                  // 代表node上一个核最多跑多少个pod 默认为0
+			kl.GetCachedMachineInfo,         // 获取机器信息的方法   staging/src/github.com/google/cadvisor/machine/info.go:57
+			kl.containerManager.GetCapacity, // 获取机器容量信息的函数
+			kl.containerManager.GetDevicePluginResourceCapacity, // 获取机器磁盘容量信息的函数
+			kl.containerManager.GetNodeAllocatableReservation,
+			kl.recordEvent, //
+			kl.supportLocalStorageCapacityIsolation(), //
+		),
+		// 节点绑定版本信息
 		nodestatus.VersionInfo(kl.cadvisor.VersionInfo, kl.containerRuntime.Type, kl.containerRuntime.Version),
+		// kubelet 运行的ip+port
 		nodestatus.DaemonEndpoints(kl.daemonEndpoints),
+		// Images 节点上的镜像list 信息
 		nodestatus.Images(kl.nodeStatusMaxImages, kl.imageManager.GetImageList),
 		nodestatus.GoRuntime(),
 	)

@@ -58132,7 +58132,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"maxPods": {
 						SchemaProps: spec.SchemaProps{
-							Description: "maxPods is the maximum number of Pods that can run on this Kubelet. The value must be a non-negative integer. Default: 110",
+							Description: "maxPods is the maximum 可以在Kubelet上运行的pod的数量. The value must be a non-negative integer. Default: 110",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},

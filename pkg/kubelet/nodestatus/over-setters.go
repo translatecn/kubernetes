@@ -48,9 +48,7 @@ import (
 )
 
 const (
-	// MaxNamesPerImageInNodeStatus is max number of names
-	// per image stored in the node status.
-	MaxNamesPerImageInNodeStatus = 5
+	MaxNamesPerImageInNodeStatus = 5 // 每个image id 最多上报5个tag
 )
 
 // Setter modifies the node in-place, and returns an error if the modification failed.
@@ -58,7 +56,7 @@ const (
 type Setter func(ctx context.Context, node *v1.Node) error
 
 // NodeAddress returns a Setter that updates address-related information on the node.
-func NodeAddress(nodeIPs []net.IP, // typically Kubelet.nodeIPs
+func NodeAddress(nodeIPs []net.IP, // typically Kubelet.nodeIPs ✅
 	validateNodeIPFunc func(net.IP) error, // typically Kubelet.nodeIPValidator
 	hostname string, // typically Kubelet.hostname
 	hostnameOverridden bool, // was the hostname force set?
@@ -241,7 +239,7 @@ func hasAddressValue(addresses []v1.NodeAddress, addressValue string) bool {
 }
 
 // MachineInfo returns a Setter that updates machine-related information on the node.
-func MachineInfo(nodeName string,
+func MachineInfo(nodeName string, // ✅
 	maxPods int,
 	podsPerCore int,
 	machineInfoFunc func() (*cadvisorapiv1.MachineInfo, error), // typically Kubelet.GetCachedMachineInfo
@@ -249,7 +247,7 @@ func MachineInfo(nodeName string,
 	devicePluginResourceCapacityFunc func() (v1.ResourceList, v1.ResourceList, []string), // typically Kubelet.containerManager.GetDevicePluginResourceCapacity
 	nodeAllocatableReservationFunc func() v1.ResourceList, // typically Kubelet.containerManager.GetNodeAllocatableReservation
 	recordEventFunc func(eventType, event, message string), // typically Kubelet.recordEvent
-	localStorageCapacityIsolation bool,
+	localStorageCapacityIsolation bool, // 启用本地临时存储隔离功能
 ) Setter {
 	return func(ctx context.Context, node *v1.Node) error {
 		// Note: avoid blindly overwriting the capacity in case opaque
@@ -760,6 +758,7 @@ func VolumeLimits(volumePluginListFunc func() []volume.VolumePluginWithAttachLim
 		}
 
 		pluginWithLimits := volumePluginListFunc()
+		// 几个Condition函数，给出节点是否有资源的压力
 		for _, volumePlugin := range pluginWithLimits {
 			attachLimits, err := volumePlugin.GetVolumeLimits()
 			if err != nil {

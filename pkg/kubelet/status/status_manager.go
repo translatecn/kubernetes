@@ -136,7 +136,9 @@ func isPodStatusByKubeletEqual(oldStatus, status *v1.PodStatus) bool {
 	return apiequality.Semantic.DeepEqual(oldCopy, status)
 }
 
-func (m *manager) Start() {
+// ✅
+
+func (m *manager) Start() { // ✅
 	// Don't start the status manager if we don't have a client. This will happen
 	// on the master, where the kubelet is responsible for bootstrapping the pods
 	// of the master components.
@@ -171,6 +173,8 @@ func (m *manager) Start() {
 		}
 	}, 0)
 }
+
+// ✅
 
 func (m *manager) GetPodStatus(uid types.UID) (v1.PodStatus, bool) {
 	m.podStatusesLock.RLock()
@@ -584,8 +588,8 @@ func (m *manager) RemoveOrphanedStatuses(podUIDs map[types.UID]bool) {
 	}
 }
 
-// syncBatch syncs pods statuses with the apiserver.
-func (m *manager) syncBatch() {
+// ✅
+func (m *manager) syncBatch() { // ✅
 	var updatedStatuses []podStatusSyncRequest
 	podToMirror, mirrorToPod := m.podManager.GetUIDTranslations()
 	func() { // Critical section
@@ -614,7 +618,7 @@ func (m *manager) syncBatch() {
 			}
 			if m.needsUpdate(types.UID(syncedUID), status) {
 				updatedStatuses = append(updatedStatuses, podStatusSyncRequest{uid, status})
-			} else if m.needsReconcile(uid, status.status) {
+			} else if m.needsReconcile(uid, status.status) { // 通知
 				// Delete the apiStatusVersions here to force an update on the pod status
 				// In most cases the deleted apiStatusVersions here should be filled
 				// soon after the following syncPod() [If the syncPod() sync an update

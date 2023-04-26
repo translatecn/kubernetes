@@ -169,7 +169,7 @@ const (
 	genericPlegRelistPeriod    = time.Second * 1
 	genericPlegRelistThreshold = time.Minute * 3
 
-	// Generic PLEG relist period and threshold when used with Evented PLEG.
+	//与事件PLEG一起使用时， PLEG list 周期和阈值。
 	eventedPlegRelistPeriod     = time.Second * 300
 	eventedPlegRelistThreshold  = time.Minute * 10
 	eventedPlegMaxStreamRetries = 5
@@ -924,6 +924,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	// Generating the status funcs should be the last thing we do,
 	// since this relies on the rest of the Kubelet having been constructed.
+	// 在tryUpdateNodeStatus loop中调用的处理程序✅
 	klet.setNodeStatusFuncs = klet.defaultNodeStatusFuncs()
 
 	return klet, nil
@@ -935,10 +936,10 @@ type serviceLister interface {
 
 // Kubelet is the main kubelet implementation.
 type Kubelet struct {
-	kubeletConfiguration                    kubeletconfiginternal.KubeletConfiguration // 表示 kubelet 的配置.
-	hostname                                string                                     // 表示节点的主机名.
-	hostnameOverridden                      bool                                       // 是否覆盖了节点的主机名.
-	nodeName                                types.NodeName                             // 表示节点的名称.
+	kubeletConfiguration                    kubeletconfiginternal.KubeletConfiguration // 表示 kubelet 的配置. ✅
+	hostname                                string                                     // 表示节点的主机名. ✅
+	hostnameOverridden                      bool                                       // 是否覆盖了节点的主机名. ✅
+	nodeName                                types.NodeName                             // 表示节点的名称. ✅
 	runtimeCache                            kubecontainer.RuntimeCache                 // 表示 kubelet 运行时的缓存.
 	kubeClient                              clientset.Interface                        // kubelet 使用的 Kubernetes API 客户端.
 	heartbeatClient                         clientset.Interface                        // kubelet 使用的心跳 API 客户端.
@@ -948,7 +949,7 @@ type Kubelet struct {
 	onRepeatedHeartbeatFailure              func()                                     // 当心跳操作失败多次时要调用的函数.✅
 	podWorkers                              PodWorkers                                 // 同步pod 状态到events
 	resyncInterval                          time.Duration                              // 周期性全量协调 pod 之间的间隔时间.
-	sourcesReady                            config.SourcesReady                        //  kubelet 记录的sources,是线程安全的.
+	sourcesReady                            config.SourcesReady                        // kubelet 记录的sources,是线程安全的.
 	podManager                              kubepod.Manager                            // pod 管理器.
 	evictionManager                         eviction.Manager                           // 用于观察和响应可能影响节点稳定性的情况的驱逐管理器.
 	logServer                               http.Handler                               // kubelet 使用的日志服务器.defaults to /logs/ from /var/log
@@ -979,7 +980,7 @@ type Kubelet struct {
 	secretManager                           secret.Manager                             // 用于管理 Secret 的 Secret 管理器.
 	configMapManager                        configmap.Manager                          // 用于管理 ConfigMap 的 ConfigMap 管理器.
 	machineInfoLock                         sync.RWMutex                               // 用于保护机器信息的读写锁.
-	machineInfo                             *cadvisorapi.MachineInfo                   // 表示由 cadvisor 返回的缓存的 MachineInfo.
+	machineInfo                             *cadvisorapi.MachineInfo                   // 表示由 cadvisor 返回的缓存的 MachineInfo. ✅
 	serverCertificateManager                certificate.Manager                        // 用于处理证书轮换的证书管理器.
 	statusManager                           status.Manager                             // 用于同步 pod 状态的状态管理器,也用作状态缓存.
 	volumeManager                           volumemanager.VolumeManager                // 运行一组异步循环,根据在此节点上调度的 pod 确定需要attached/mounted/unmounted/detached 哪些卷,并执行相关操作的卷管理器.
@@ -999,8 +1000,8 @@ type Kubelet struct {
 	updatePodCIDRMux                        sync.Mutex                                 // 表示更新 pod CIDR 的锁,因为该路径不是线程安全的.此锁由 Kubelet.updatePodCIDR 函数使用,不应在其他任何地方使用.
 	updateRuntimeMux                        sync.Mutex                                 // 更新运行时的锁.
 	nodeLeaseController                     lease.Controller                           // 为此 kubelet 声明和更新节点租约的节点租约控制器.// ✅
-	pleg                                    pleg.PodLifecycleEventGenerator            // pod 生命周期事件生成器.
-	eventedPleg                             pleg.PodLifecycleEventGenerator            // 事件化的 pod 生命周期事件生成器.
+	pleg                                    pleg.PodLifecycleEventGenerator            // list,  pod 生命周期事件生成器. ✅
+	eventedPleg                             pleg.PodLifecycleEventGenerator            // 事件化, pod 生命周期事件生成器. ✅
 	podCache                                kubecontainer.Cache                        // 表示存储所有 pod 的 kubecontainer.PodStatus 的缓存.
 	os                                      kubecontainer.OSInterface                  // 在测试期间需要模拟的各种系统调用.
 	oomWatcher                              oomwatcher.Watcher                         // 表示内存不足事件的监视器.
@@ -1011,17 +1012,17 @@ type Kubelet struct {
 	hostutil                                hostutil.HostUtils                         // 用于与节点文件系统交互的 hostutil.HostUtils 实例.
 	subpather                               subpath.Interface                          // 用于执行子路径操作的 subpath.Interface 接口实现.
 	containerManager                        cm.ContainerManager                        // 非运行时容器的管理器.
-	maxPods                                 int                                        // 最多可运行的pod数量
+	maxPods                                 int                                        // 最多可运行的pod数量 ✅
 	syncLoopMonitor                         atomic.Value                               // Kubelet 同步循环监视器.
 	backOff                                 *flowcontrol.Backoff                       // 容器重启的退避时间.
-	daemonEndpoints                         *v1.NodeDaemonEndpoints                    // 记录节点上守护进程打开的端口信息.
+	daemonEndpoints                         *v1.NodeDaemonEndpoints                    // 记录节点上守护进程打开的端口信息.✅
 	workQueue                               queue.WorkQueue                            // 用于触发 Pod 工作器的队列.
 	oneTimeInitializer                      sync.Once                                  // 刚运行时运行一次
-	nodeIPs                                 []net.IP                                   // 指定的节点IP
+	nodeIPs                                 []net.IP                                   // 命令行指定的节点IP ✅
 	nodeIPValidator                         func(net.IP) error                         // nodeip 校验
 	providerID                              string                                     // 如果非nil,这是外部数据库中节点的唯一标识符.cloudprovider
 	clock                                   clock.WithTicker                           //
-	setNodeStatusFuncs                      []func(context.Context, *v1.Node) error    // 在tryUpdateNodeStatus loop中调用的处理程序
+	setNodeStatusFuncs                      []func(context.Context, *v1.Node) error    // 在tryUpdateNodeStatus loop中调用的处理程序✅
 	lastNodeUnschedulableLock               sync.Mutex                                 //
 	lastNodeUnschedulable                   bool                                       // 是否维护上一次的Node.Spec.Unschedulable的值
 	admitHandlers                           lifecycle.PodAdmitHandlers                 // Pod 准入处理程序列表.
@@ -1039,7 +1040,7 @@ type Kubelet struct {
 	StatsProvider                           *stats.Provider                            // 提供节点和容器统计信息的 stats.Provider 实例.
 	keepTerminatedPodVolumes                bool                                       // DEPRECATED 是否保留已终止 Pod 的卷挂载.
 	pluginManager                           pluginmanager.PluginManager                // 插件管理器,用于异步处理插件注册和注销.
-	nodeStatusMaxImages                     int32                                      // 节点状态中最多报告的镜像数量.
+	nodeStatusMaxImages                     int32                                      // 节点状态上报时，最多报告的镜像数量.
 	runtimeClassManager                     *runtimeclass.Manager                      // 用于处理 RuntimeClass 对象的 runtimeclass.Manager 实例.
 	shutdownManager                         nodeshutdown.Manager                       // 用于协调节点关机的 nodeshutdown.Manager 实例.
 	usernsManager                           *usernsManager                             // 用于管理用户命名空间的 usernsManager 实例.
@@ -1335,7 +1336,7 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 		// start syncing lease
 		go kl.nodeLeaseController.Run(wait.NeverStop) // ✅
 	}
-	go wait.Until(kl.updateRuntimeUp, 5*time.Second, wait.NeverStop) // 更新启动时间 后台✅
+	go wait.Until(kl.updateRuntimeUp, 5*time.Second, wait.NeverStop) // 更新运行时间 后台✅
 
 	// iptables管理器
 	if kl.makeIPTablesUtilChains {
@@ -1343,19 +1344,19 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 	}
 
 	// 与api server同步pod信息
-	kl.statusManager.Start()
+	kl.statusManager.Start() // ✅
 
 	// Start syncing RuntimeClasses if enabled.
 	if kl.runtimeClassManager != nil {
-		kl.runtimeClassManager.Start(wait.NeverStop)
+		kl.runtimeClassManager.Start(wait.NeverStop) // watch runtime class// ✅
 	}
 
 	// Start the pod lifecycle event generator.
-	kl.pleg.Start()
+	kl.pleg.Start() // ✅
 
 	// Start eventedPLEG only if EventedPLEG feature gate is enabled.
 	if utilfeature.DefaultFeatureGate.Enabled(features.EventedPLEG) {
-		kl.eventedPleg.Start()
+		kl.eventedPleg.Start() // ✅
 	}
 	//处理pod请求的主循环
 	kl.syncLoop(ctx, updates, kl)

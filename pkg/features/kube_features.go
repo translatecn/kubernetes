@@ -297,12 +297,11 @@ const (
 	// Allows running an ephemeral container in pod namespaces to troubleshoot a running pod.
 	EphemeralContainers featuregate.Feature = "EphemeralContainers"
 
-	// owner: @harche
+	// EventedPLEG owner: @harche
 	// kep: http://kep.k8s.io/3386
 	// alpha: v1.25
 	//
-	// Allows using event-driven PLEG (pod lifecycle event generator) through kubelet
-	// which avoids frequent relisting of containers which helps optimize performance.
+	// 使用事件驱动机制来监视容器的状态，并生成有关 Pod 生命周期事件的信息。
 	EventedPLEG featuregate.Feature = "EventedPLEG"
 
 	// owner: @andrewsykim @SergeyKanzhelev

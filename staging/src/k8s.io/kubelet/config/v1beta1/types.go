@@ -415,7 +415,7 @@ type KubeletConfiguration struct {
 	// Default: "promiscuous-bridge"
 	// +optional
 	HairpinMode string `json:"hairpinMode,omitempty"`
-	// maxPods is the maximum number of Pods that can run on this Kubelet.
+	// maxPods is the maximum 可以在Kubelet上运行的pod的数量.
 	// The value must be a non-negative integer.
 	// Default: 110
 	// +optional

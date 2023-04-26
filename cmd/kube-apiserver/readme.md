@@ -16,7 +16,7 @@ Run
 
 
 
-
+- kubernetes/pkg/registry/core/service/strategy.go
 
 
 
@@ -31,5 +31,5 @@ Run
 - https://www.cnblogs.com/huanglingfa/p/13773344.html
 - https://www.zhihu.com/people/yan-ting-shuai-41/posts?page=1
 - https://blog.csdn.net/sinat_37367944/article/details/116329588
-- 
+- https://blog.csdn.net/plchenliang/article/details/127038013
 

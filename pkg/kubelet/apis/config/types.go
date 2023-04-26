@@ -253,8 +253,7 @@ type KubeletConfiguration struct {
 	// Generally, one must set --hairpin-mode=hairpin-veth to achieve hairpin NAT,
 	// because promiscuous-bridge assumes the existence of a container bridge named cbr0.
 	HairpinMode string
-	// maxPods is the number of pods that can run on this Kubelet.
-	MaxPods int32
+	MaxPods     int32 // 可以在Kubelet上运行的pod的数量
 	// The CIDR to use for pod IP addresses, only used in standalone mode.
 	// In cluster mode, this is obtained from the master.
 	PodCIDR string

@@ -171,36 +171,26 @@ type CommandRunner interface {
 
 // Pod is a group of containers.
 type Pod struct {
-	// The ID of the pod, which can be used to retrieve a particular pod
-	// from the pod list returned by GetPods().
-	ID types.UID
-	// The name and namespace of the pod, which is readable by human.
-	Name      string
-	Namespace string
-	// Creation timestamps of the Pod in nanoseconds.
-	CreatedAt uint64
-	// List of containers that belongs to this pod. It may contain only
-	// running containers, or mixed with dead ones (when GetPods(true)).
-	Containers []*Container
-	// List of sandboxes associated with this pod. The sandboxes are converted
-	// to Container temporarily to avoid substantial changes to other
-	// components. This is only populated by kuberuntime.
-	// TODO: use the runtimeApi.PodSandbox type directly.
-	Sandboxes []*Container
+	ID         types.UID    // Pod 的唯一标识符，可用于从 GetPods() 返回的 Pod 列表中检索特定的 Pod。
+	Name       string       //
+	Namespace  string       //
+	CreatedAt  uint64       // Pod 的创建时间戳，以纳秒为单位。
+	Containers []*Container // 属于此 Pod 的容器列表。它可能仅包含正在运行的容器，也可能包含已经停止的容器（当使用 GetPods(true) 时）。
+	Sandboxes  []*Container // 与此 Pod 关联的沙盒列表。为了避免对其他组件造成重大影响，沙盒被临时转换为容器。这仅由 kuberuntime 填充。需要注意的是，这个字段不是 Kubernetes 标准 API 的一部分，而是用于特定的容器运行时实现。
 }
 
 // PodPair contains both runtime#Pod and api#Pod
 type PodPair struct {
-	// APIPod is the v1.Pod
+	// APIPod is the v1.Pod													v1 "k8s.io/api/core/v1"
 	APIPod *v1.Pod
-	// RunningPod is the pod defined in pkg/kubelet/container/runtime#Pod
+	// RunningPod is the pod defined in pkg/kubelet/container/runtime#Pod 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 	RunningPod *Pod
 }
 
 // ContainerID is a type that identifies a container.
 type ContainerID struct {
 	// The type of the container runtime. e.g. 'docker'.
-	Type string
+	Type string // 容器运行时
 	// The identification of the container, this is comsumable by
 	// the underlying container runtime. (Note that the container
 	// runtime interface still takes the whole struct as input).
@@ -279,42 +269,24 @@ const (
 // Container provides the runtime information for a container, such as ID, hash,
 // state of the container.
 type Container struct {
-	// The ID of the container, used by the container runtime to identify
-	// a container.
-	ID ContainerID
-	// The name of the container, which should be the same as specified by
-	// v1.Container.
-	Name string
-	// The image name of the container, this also includes the tag of the image,
-	// the expected form is "NAME:TAG".
-	Image string
-	// The id of the image used by the container.
+	ID      ContainerID
+	Name    string
+	Image   string
 	ImageID string
-	// Hash of the container, used for comparison. Optional for containers
-	// not managed by kubelet.
-	Hash uint64
-	// State is the state of the container.
-	State State
+	Hash    uint64
+	State   State
 }
 
 // PodStatus represents the status of the pod and its containers.
 // v1.PodStatus can be derived from examining PodStatus and v1.Pod.
 type PodStatus struct {
-	// ID of the pod.
-	ID types.UID
-	// Name of the pod.
-	Name string
-	// Namespace of the pod.
-	Namespace string
-	// All IPs assigned to this pod
-	IPs []string
-	// Status of containers in the pod.
-	ContainerStatuses []*Status
-	// Status of the pod sandbox.
-	// Only for kuberuntime now, other runtime may keep it nil.
-	SandboxStatuses []*runtimeapi.PodSandboxStatus
-	// Timestamp at which container and pod statuses were recorded
-	TimeStamp time.Time
+	ID                types.UID
+	Name              string
+	Namespace         string
+	IPs               []string
+	ContainerStatuses []*Status                      // pod里每个容器的状态
+	SandboxStatuses   []*runtimeapi.PodSandboxStatus // 沙箱的状态
+	TimeStamp         time.Time
 }
 
 // Status represents the status of a container.

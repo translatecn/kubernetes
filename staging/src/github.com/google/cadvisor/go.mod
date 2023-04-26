@@ -29,8 +29,7 @@ require (
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 )
 
-
 replace (
-	k8s.io/utils   => ../../../../../staging/src/k8s.io/utils
 	github.com/opencontainers/runc => ../../../../../staging/src/github.com/opencontainers/runc
+	k8s.io/utils => ../../../../../staging/src/k8s.io/utils
 )

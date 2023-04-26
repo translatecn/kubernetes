@@ -103,7 +103,7 @@ func (c *hollowNodeConfig) addFlags(fs *pflag.FlagSet) {
 	bindableNodeLabels := cliflag.ConfigurationMap(c.NodeLabels)
 	fs.Var(&bindableNodeLabels, "node-labels", "Additional node labels")
 	fs.Var(utilflag.RegisterWithTaintsVar{Value: &c.RegisterWithTaints}, "register-with-taints", "用给定的污点列表注册节点(逗号分隔的\"<key>=<value>:<effect>\").如果register-node为false,则不执行操作.")
-	fs.IntVar(&c.MaxPods, "max-pods", maxPods, "Number of pods that can run on this Kubelet.")
+	fs.IntVar(&c.MaxPods, "max-pods", maxPods, "可以在Kubelet上运行的pod的数量.")
 	bindableExtendedResources := cliflag.ConfigurationMap(c.ExtendedResources)
 	fs.Var(&bindableExtendedResources, "extended-resources", "Register the node with extended resources (comma separated \"<name>=<quantity>\")")
 	fs.BoolVar(&c.UseHostImageService, "use-host-image-service", true, "Set to true if the hollow-kubelet should use the host image service. If set to false the fake image service will be used")

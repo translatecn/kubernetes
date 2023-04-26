@@ -103,7 +103,6 @@ type Manager interface {
 	// Returns true if the named container exists.
 	Exists(containerName string) bool
 
-	// Get information about the machine.
 	GetMachineInfo() (*info.MachineInfo, error)
 
 	// Get version information about different components we depend on.

@@ -60,28 +60,17 @@ func setEventedPLEGUsage(enable bool) {
 }
 
 type EventedPLEG struct {
-	// The container runtime.
-	runtime kubecontainer.Runtime
-	// The runtime service.
-	runtimeService internalapi.RuntimeService
-	// The channel from which the subscriber listens events.
-	eventChannel chan *PodLifecycleEvent
-	// Cache for storing the runtime states required for syncing pods.
-	cache kubecontainer.Cache
-	// For testability.
-	clock clock.Clock
-	// GenericPLEG is used to force relist when required.
-	genericPleg PodLifecycleEventGenerator
-	// The maximum number of retries when getting container events from the runtime.
-	eventedPlegMaxStreamRetries int
-	// Indicates relisting related parameters
-	relistDuration *RelistDuration
-	// Stop the Evented PLEG by closing the channel.
-	stopCh chan struct{}
-	// Stops the periodic update of the cache global timestamp.
-	stopCacheUpdateCh chan struct{}
-	// Locks the start/stop operation of the Evented PLEG.
-	runningMu sync.Mutex
+	runtime                     kubecontainer.Runtime      // 容器运行时，用于管理容器和 Pod。
+	runtimeService              internalapi.RuntimeService // 运行时服务，用于与容器运行时交互。
+	eventChannel                chan *PodLifecycleEvent    // 事件通道，用于监听 Pod 生命周期事件。
+	cache                       kubecontainer.Cache        // 缓存，用于存储运行时状态，以便同步 Pod 状态。
+	clock                       clock.Clock                //
+	genericPleg                 PodLifecycleEventGenerator // 通用 Pod 生命周期事件生成器，用于强制重新列出。
+	eventedPlegMaxStreamRetries int                        // 最大重试次数，用于获取容器事件。
+	relistDuration              *RelistDuration            // 重新列出周期，用于定期重新列出 Pod。
+	stopCh                      chan struct{}              // 停止通道，用于停止 Evented PLEG。
+	stopCacheUpdateCh           chan struct{}              // 停止缓存更新通道，用于停止缓存的定期更新。
+	runningMu                   sync.Mutex                 //
 }
 
 // NewEventedPLEG instantiates a new EventedPLEG object and return it.

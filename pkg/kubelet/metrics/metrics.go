@@ -199,7 +199,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PLEGRelistDurationKey,
-			Help:           "Duration in seconds for relisting pods in PLEG.",
+			Help:           "在PLEG中relist执行的时间,以秒为单位。",
 			Buckets:        metrics.DefBuckets,
 			StabilityLevel: metrics.ALPHA,
 		},
@@ -220,7 +220,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PLEGRelistIntervalKey,
-			Help:           "Interval in seconds between relisting in PLEG.",
+			Help:           "在PLEG中relist之间的间隔,以秒为单位。",
 			Buckets:        metrics.DefBuckets,
 			StabilityLevel: metrics.ALPHA,
 		},
