@@ -52,6 +52,7 @@ func DefaultNamespaceScopedAttr(obj runtime.Object) (labels.Set, fields.Set, err
 		"metadata.name":      metadata.GetName(),
 		"metadata.namespace": metadata.GetNamespace(),
 	}
+	var _ = fieldSet.AsSelector().Matches
 
 	return labels.Set(metadata.GetLabels()), fieldSet, nil
 }
@@ -132,7 +133,7 @@ func (s *SelectionPredicate) Empty() bool {
 
 // For any index defined by IndexFields, if a matcher can match only (a subset)
 // of objects that return <value> for a given index, a pair (<index name>, <value>)
-// wil be returned.
+// wil be returned
 func (s *SelectionPredicate) MatcherIndex() []MatchValue {
 	var result []MatchValue
 	for _, field := range s.IndexFields {

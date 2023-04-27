@@ -1288,7 +1288,7 @@ func (kl *Kubelet) initializeRuntimeDependentModules() {
 	}
 }
 
-// Run starts the kubelet reacting to config updates
+// Run 启动kubelet响应配置更新
 func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 	ctx := context.Background()
 	if kl.logServer == nil {

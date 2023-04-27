@@ -170,9 +170,7 @@ type KubeletConfiguration struct {
 	// configure all containers to search this domain in addition to the
 	// host's search domains.
 	ClusterDomain string
-	// clusterDNS is a list of IP addresses for a cluster DNS server. If set,
-	// kubelet will configure all containers to use this for DNS resolution
-	// instead of the host's DNS servers.
+	// 逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用
 	ClusterDNS []string
 	// streamingConnectionIdleTimeout is the maximum time a streaming connection
 	// can be idle before the connection is automatically closed.
@@ -262,9 +260,7 @@ type KubeletConfiguration struct {
 	// ResolverConfig is the resolver configuration file used as the basis
 	// for the container DNS resolution configuration.
 	ResolverConfig string
-	// RunOnce causes the Kubelet to check the API server once for pods,
-	// run those in addition to the pods specified by static pod files, and exit.
-	RunOnce bool
+	RunOnce        bool // Kubelet 仅检查一次 API 服务器以获取 Pod，运行这些 Pod 并在完成后退出，除了静态 Pod 文件中指定的 Pod 之外
 	// cpuCFSQuota enables CPU CFS quota enforcement for containers that
 	// specify CPU limits
 	CPUCFSQuota bool

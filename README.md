@@ -19,7 +19,7 @@ If your company wants to help shape the evolution of
 technologies that are container-packaged, dynamically scheduled,
 and microservices-oriented, consider joining the CNCF.
 For details about who's involved and how Kubernetes plays a role,
-read the CNCF [announcement].
+read the CNCF [announcemexnt].
 
 ----
 
