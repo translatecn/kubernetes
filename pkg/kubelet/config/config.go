@@ -39,34 +39,20 @@ import (
 type PodConfigNotificationMode int
 
 const (
-	// PodConfigNotificationUnknown is the default value for
-	// PodConfigNotificationMode when uninitialized.
-	PodConfigNotificationUnknown PodConfigNotificationMode = iota
-	// PodConfigNotificationSnapshot delivers the full configuration as a SET whenever
-	// any change occurs.
-	PodConfigNotificationSnapshot
-	// PodConfigNotificationSnapshotAndUpdates delivers an UPDATE and DELETE message whenever pods are
-	// changed, and a SET message if there are any additions or removals.
-	PodConfigNotificationSnapshotAndUpdates
-	// PodConfigNotificationIncremental delivers ADD, UPDATE, DELETE, REMOVE, RECONCILE to the update channel.
-	PodConfigNotificationIncremental
+	PodConfigNotificationUnknown            PodConfigNotificationMode = iota
+	PodConfigNotificationSnapshot                                     // 全部配置文件
+	PodConfigNotificationSnapshotAndUpdates                           // UPDATE、DELETE
+	PodConfigNotificationIncremental                                  // ADD, UPDATE, DELETE, REMOVE, RECONCILE
 )
 
 type podStartupSLIObserver interface {
 	ObservedPodOnWatch(pod *v1.Pod, when time.Time)
 }
 
-// PodConfig is a configuration mux that merges many sources of pod configuration into a single
-// consistent structure, and then delivers incremental change notifications to listeners
-// in order.
 type PodConfig struct {
-	pods *podStorage
-	mux  *config.Mux
-
-	// the channel of denormalized changes passed to listeners
-	updates chan kubetypes.PodUpdate
-
-	// contains the list of all configured sources
+	pods        *podStorage
+	mux         *config.Mux
+	updates     chan kubetypes.PodUpdate
 	sourcesLock sync.Mutex
 	sources     sets.String
 }
@@ -87,7 +73,7 @@ func NewPodConfig(mode PodConfigNotificationMode, recorder record.EventRecorder,
 
 // Channel creates or returns a config source channel.  The channel
 // only accepts PodUpdates
-func (c *PodConfig) Channel(ctx context.Context, source string) chan<- interface{} {
+func (c *PodConfig) Channel(ctx context.Context, source string) chan<- interface{} { // ✅
 	c.sourcesLock.Lock()
 	defer c.sourcesLock.Unlock()
 	c.sources.Insert(source)
@@ -122,9 +108,8 @@ func (c *PodConfig) Sync() {
 // available, then this object should be considered authoritative.
 type podStorage struct {
 	podLock sync.RWMutex
-	// map of source name to pod uid to pod reference
-	pods map[string]map[types.UID]*v1.Pod
-	mode PodConfigNotificationMode
+	pods    map[string]map[types.UID]*v1.Pod // 分类， {api:{},file:{},url:{}}
+	mode    PodConfigNotificationMode
 
 	// ensures that updates are delivered in strict order
 	// on the updates channel

@@ -78,8 +78,7 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// KubeletConfiguration contains the configuration for the Kubelet
-type KubeletConfiguration struct {
+type KubeletConfiguration struct { // --config
 	metav1.TypeMeta
 
 	// enableServer enables Kubelet's secured server.
@@ -87,27 +86,18 @@ type KubeletConfiguration struct {
 	EnableServer bool
 	// staticPodPath is the path to the directory containing local (static) pods to
 	// run, or the path to a single static pod file.
-	StaticPodPath string
+	StaticPodPath string // 静态pod的文件夹
 	// syncFrequency is the max period between synchronizing running
 	// containers and config
-	SyncFrequency metav1.Duration
-	// fileCheckFrequency is the duration between checking config files for
-	// new data
-	FileCheckFrequency metav1.Duration
+	SyncFrequency      metav1.Duration
+	FileCheckFrequency metav1.Duration // 静态pod文件检查周期
 	// httpCheckFrequency is the duration between checking http for new data
 	HTTPCheckFrequency metav1.Duration
-	// staticPodURL is the URL for accessing static pods to run
-	StaticPodURL string
-	// staticPodURLHeader is a map of slices with HTTP headers to use when accessing the podURL
-	StaticPodURLHeader map[string][]string `datapolicy:"token"`
-	// address is the IP address for the Kubelet to serve on (set to 0.0.0.0
-	// for all interfaces)
-	Address string
-	// port is the port for the Kubelet to serve on.
-	Port int32
-	// readOnlyPort is the read-only port for the Kubelet to serve on with
-	// no authentication/authorization (set to 0 to disable)
-	ReadOnlyPort int32
+	StaticPodURL       string              // 获取静态文件列表的地址
+	StaticPodURLHeader map[string][]string `datapolicy:"token"` // 获取静态文件列表的地址，需要使用一些 HTTP 头部信息
+	Address            string              //
+	Port               int32               //
+	ReadOnlyPort       int32               // 0 禁用
 	// volumePluginDir is the full path of the directory in which to search
 	// for additional third party volume plugins.
 	VolumePluginDir string

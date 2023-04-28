@@ -39,6 +39,10 @@ func main() {
 
 	// curl -k --key /etc/kubernetes/pki/apiserver-kubelet-client.key --cert /etc/kubernetes/pki/apiserver-kubelet-client.crt --cacert /etc/kubernetes/pki/ca.crt https://127.0.0.1:10250/pods
 	// curl -k --key /etc/kubernetes/pki/apiserver-kubelet-client.key --cert /etc/kubernetes/pki/apiserver-kubelet-client.crt --cacert /etc/kubernetes/pki/ca.crt https://127.0.0.1:10250/metrics/resource
+
+	// export TOKEN=$(cat /run/secrets/kubernetes.io/serviceaccount/token)
+	// curl -k -s --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $TOKEN"  http://10.96.181.196:10250/stats/summary   |python -m json.tool
+
 	os.Args = kubelet.Init(os.Args)
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)

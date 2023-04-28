@@ -200,8 +200,7 @@ func IsDNS1123Label(value string) []string {
 const dns1123SubdomainFmt string = dns1123LabelFmt + "(\\." + dns1123LabelFmt + ")*"
 const dns1123SubdomainErrorMsg string = "a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character"
 
-// DNS1123SubdomainMaxLength is a subdomain's max length in DNS (RFC 1123)
-const DNS1123SubdomainMaxLength int = 253
+const DNS1123SubdomainMaxLength int = 253 // 子域的最大字符长度
 
 var dns1123SubdomainRegexp = regexp.MustCompile("^" + dns1123SubdomainFmt + "$")
 

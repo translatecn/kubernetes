@@ -76,7 +76,7 @@ func (m *Mux) ChannelWithContext(ctx context.Context, source string) chan interf
 	newChannel := make(chan interface{})
 	m.sources[source] = newChannel
 
-	go wait.Until(func() { m.listen(source, newChannel) }, 0, ctx.Done())
+	go wait.Until(func() { m.listen(source, newChannel) }, 0, ctx.Done()) // 保证每种类型只有一个goroutine
 	return newChannel
 }
 

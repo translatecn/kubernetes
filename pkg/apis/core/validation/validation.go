@@ -3355,18 +3355,11 @@ func validateFSGroupChangePolicy(fsGroupPolicy *core.PodFSGroupChangePolicy, fld
 }
 
 const (
-	// Limits on various DNS parameters. These are derived from
-	// restrictions in Linux libc name resolution handling.
-	// Max number of DNS name servers.
-	MaxDNSNameservers = 3
-	// Expanded max number of domains in the search path list.
-	MaxDNSSearchPathsExpanded = 32
-	// Expanded max number of characters in the search path.
-	MaxDNSSearchListCharsExpanded = 2048
-	// Max number of domains in the search path list.
-	MaxDNSSearchPathsLegacy = 6
-	// Max number of characters in the search path list.
-	MaxDNSSearchListCharsLegacy = 256
+	MaxDNSNameservers             = 3    // 最大 DNS 名称服务器数
+	MaxDNSSearchPathsExpanded     = 32   // 扩展的 最大域数
+	MaxDNSSearchListCharsExpanded = 2048 // 扩展的 最大字符数
+	MaxDNSSearchPathsLegacy       = 6    // 最大domain数。
+	MaxDNSSearchListCharsLegacy   = 256  // 最大字符数和
 )
 
 func validateReadinessGates(readinessGates []core.PodReadinessGate, fldPath *field.Path) field.ErrorList {

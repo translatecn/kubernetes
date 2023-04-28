@@ -64,13 +64,9 @@ type Configurer struct {
 	nodeIPs  []net.IP
 
 	// If non-nil, use this for container DNS server.
-	clusterDNS []net.IP
-	// If non-empty, use this for container DNS search.
-	ClusterDomain string
-	// The path to the DNS resolver configuration file used as the base to generate
-	// the container's DNS resolver configuration file. This can be used in
-	// conjunction with clusterDomain and clusterDNS.
-	ResolverConfig string
+	clusterDNS     []net.IP
+	ClusterDomain  string // 自定义 域
+	ResolverConfig string // 用于配置 Kubernetes 中容器 DNS 的选项，用于指定 DNS 解析器配置文件的路径 , 可以与 clusterDomain 和 clusterDNS 选项一起使用
 }
 
 // NewConfigurer returns a DNS configurer for launching pods.
@@ -176,7 +172,6 @@ func (c *Configurer) generateSearchesForDNSClusterFirst(hostSearch []string, pod
 	return omitDuplicates(append(clusterSearch, hostSearch...))
 }
 
-// CheckLimitsForResolvConf checks limits in resolv.conf.
 func (c *Configurer) CheckLimitsForResolvConf() {
 	f, err := os.Open(c.ResolverConfig)
 	if err != nil {
@@ -186,7 +181,7 @@ func (c *Configurer) CheckLimitsForResolvConf() {
 	}
 	defer f.Close()
 
-	_, hostSearch, _, err := parseResolvConf(f)
+	_, hostSearch, _, err := parseResolvConf(f) // ✅
 	if err != nil {
 		c.recorder.Event(c.nodeRef, v1.EventTypeWarning, "CheckLimitsForResolvConf", err.Error())
 		klog.V(4).InfoS("Check limits for resolv.conf failed at parse resolv.conf", "err", err)
@@ -226,9 +221,7 @@ func (c *Configurer) CheckLimitsForResolvConf() {
 	}
 }
 
-// parseResolvConf reads a resolv.conf file from the given reader, and parses
-// it into nameservers, searches and options, possibly returning an error.
-func parseResolvConf(reader io.Reader) (nameservers []string, searches []string, options []string, err error) {
+func parseResolvConf(reader io.Reader) (nameservers []string, searches []string, options []string, err error) { // ✅
 	file, err := utilio.ReadAtMost(reader, maxResolvConfLength)
 	if err != nil {
 		return nil, nil, nil, err

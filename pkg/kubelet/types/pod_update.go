@@ -54,14 +54,10 @@ const (
 
 // These constants identify the sources of pods.
 const (
-	// Filesource idenitified updates from a file.
-	FileSource = "file"
-	// HTTPSource identifies updates from querying a web page.
-	HTTPSource = "http"
-	// ApiserverSource identifies updates from Kubernetes API Server.
+	FileSource      = "file"
+	HTTPSource      = "http"
 	ApiserverSource = "api"
-	// AllSource identifies updates from all sources.
-	AllSource = "*"
+	AllSource       = "*"
 )
 
 // NamespaceDefault is a string representing the default namespace.

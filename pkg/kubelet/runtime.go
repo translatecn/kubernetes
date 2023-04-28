@@ -96,7 +96,7 @@ func (s *runtimeState) runtimeErrors() error {
 	} else if !s.lastBaseRuntimeSync.Add(s.baseRuntimeSyncThreshold).After(time.Now()) {
 		errs = append(errs, errors.New("container runtime is down"))
 	}
-	for _, hc := range s.healthChecks {
+	for _, hc := range s.healthChecks { // pleg eventpleg 健康检查器
 		if ok, err := hc.fn(); !ok {
 			errs = append(errs, fmt.Errorf("%s is not healthy: %v", hc.name, err))
 		}

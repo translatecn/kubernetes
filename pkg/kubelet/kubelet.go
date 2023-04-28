@@ -137,9 +137,7 @@ const (
 
 	// MaxContainerBackOff is the max backoff period, exported for the e2e test
 	MaxContainerBackOff = 300 * time.Second
-
-	// Period for performing global cleanup tasks.
-	housekeepingPeriod = time.Second * 2
+	housekeepingPeriod  = time.Second * 2 // 执行全局清理任务的时间间隔
 
 	// Duration at which housekeeping failed to satisfy the invariant that
 	// housekeeping should be fast to avoid blocking pod config (while
@@ -246,7 +244,7 @@ type Dependencies struct {
 	HostUtil                 hostutil.HostUtils              // 主机工具的接口.
 	OOMAdjuster              *oom.OOMAdjuster                // OOM调整器的接口.
 	OSInterface              kubecontainer.OSInterface       // 操作系统接口.
-	PodConfig                *config.PodConfig               // Pod配置的接口.
+	PodConfig                *config.PodConfig               // Pod配置的接口.✅
 	ProbeManager             prober.Manager                  // 用于管理探针的接口.
 	Recorder                 record.EventRecorder            // 用于记录事件的接口.
 	Subpather                subpath.Interface               // 用于处理子路径的接口.
@@ -261,9 +259,12 @@ type Dependencies struct {
 	useLegacyCadvisorStats bool // 指示是否使用旧版本的cAdvisor统计信息.
 }
 
-// makePodSourceConfig creates a config.PodConfig from the given
-// KubeletConfiguration or returns an error.
-func makePodSourceConfig(kubeCfg *kubeletconfiginternal.KubeletConfiguration, kubeDeps *Dependencies, nodeName types.NodeName, nodeHasSynced func() bool) (*config.PodConfig, error) {
+func makePodSourceConfig( // ✅ 获取要运行的pod
+	kubeCfg *kubeletconfiginternal.KubeletConfiguration,
+	kubeDeps *Dependencies,
+	nodeName types.NodeName,
+	nodeHasSynced func() bool,
+) (*config.PodConfig, error) {
 	manifestURLHeader := make(http.Header)
 	if len(kubeCfg.StaticPodURLHeader) > 0 {
 		for k, v := range kubeCfg.StaticPodURLHeader {
@@ -406,7 +407,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	if kubeDeps.PodConfig == nil {
 		var err error
-		kubeDeps.PodConfig, err = makePodSourceConfig(kubeCfg, kubeDeps, nodeName, nodeHasSynced)
+		kubeDeps.PodConfig, err = makePodSourceConfig(kubeCfg, kubeDeps, nodeName, nodeHasSynced) // ✅
 		if err != nil {
 			return nil, err
 		}
@@ -1013,7 +1014,7 @@ type Kubelet struct {
 	subpather                               subpath.Interface                          // 用于执行子路径操作的 subpath.Interface 接口实现.
 	containerManager                        cm.ContainerManager                        // 非运行时容器的管理器.
 	maxPods                                 int                                        // 最多可运行的pod数量 ✅
-	syncLoopMonitor                         atomic.Value                               // Kubelet 同步循环监视器.
+	syncLoopMonitor                         atomic.Value                               // Kubelet 同步循环监视器.记录开始、结束的时间✅
 	backOff                                 *flowcontrol.Backoff                       // 容器重启的退避时间.
 	daemonEndpoints                         *v1.NodeDaemonEndpoints                    // 记录节点上守护进程打开的端口信息.✅
 	workQueue                               queue.WorkQueue                            // 用于触发 Pod 工作器的队列.
@@ -1288,8 +1289,10 @@ func (kl *Kubelet) initializeRuntimeDependentModules() {
 	}
 }
 
-// Run 启动kubelet响应配置更新
-func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
+// 启动kubelet响应配置更新
+
+func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) { // ✅
+	// go k.Run(podCfg.Updates())
 	ctx := context.Background()
 	if kl.logServer == nil {
 		kl.logServer = http.StripPrefix("/logs/", http.FileServer(http.Dir("/var/log/")))
@@ -1926,15 +1929,12 @@ func (kl *Kubelet) syncLoop(ctx context.Context, updates <-chan kubetypes.PodUpd
 		factor = 2
 	)
 	duration := base
-	// Responsible for checking limits in resolv.conf
-	// The limits do not have anything to do with individual pods
-	// Since this is called in syncLoop, we don't need to call it anywhere else
 	if kl.dnsConfigurer != nil && kl.dnsConfigurer.ResolverConfig != "" {
-		kl.dnsConfigurer.CheckLimitsForResolvConf()
+		kl.dnsConfigurer.CheckLimitsForResolvConf() // 主要是检查 resolv.conf 的一些配置
 	}
 
 	for {
-		if err := kl.runtimeState.runtimeErrors(); err != nil {
+		if err := kl.runtimeState.runtimeErrors(); err != nil { // ✅
 			klog.ErrorS(err, "Skipping pod synchronization")
 			// exponential backoff
 			time.Sleep(duration)
@@ -1944,46 +1944,22 @@ func (kl *Kubelet) syncLoop(ctx context.Context, updates <-chan kubetypes.PodUpd
 		// reset backoff if we have a success
 		duration = base
 
-		kl.syncLoopMonitor.Store(kl.clock.Now())
+		kl.syncLoopMonitor.Store(kl.clock.Now()) // ✅
 		if !kl.syncLoopIteration(ctx, updates, handler, syncTicker.C, housekeepingTicker.C, plegCh) {
 			break
 		}
-		kl.syncLoopMonitor.Store(kl.clock.Now())
+		kl.syncLoopMonitor.Store(kl.clock.Now()) // ✅
 	}
 }
 
-// syncLoopIteration reads from various channels and dispatches pods to the
-// given handler.
+// 从各种通道中读取信息，并将 Pod 分派给给定的处理程序。
 //
 // Arguments:
-// 1.  configCh:       a channel to read config events from
-// 2.  handler:        the SyncHandler to dispatch pods to
-// 3.  syncCh:         a channel to read periodic sync events from
-// 4.  housekeepingCh: a channel to read housekeeping events from
-// 5.  plegCh:         a channel to read PLEG updates from
-//
-// Events are also read from the kubelet liveness manager's update channel.
-//
-// The workflow is to read from one of the channels, handle that event, and
-// update the timestamp in the sync loop monitor.
-//
-// Here is an appropriate place to note that despite the syntactical
-// similarity to the switch statement, the case statements in a select are
-// evaluated in a pseudorandom order if there are multiple channels ready to
-// read from when the select is evaluated.  In other words, case statements
-// are evaluated in random order, and you can not assume that the case
-// statements evaluate in order if multiple channels have events.
-//
-// With that in mind, in truly no particular order, the different channels
-// are handled as follows:
-//
-//   - configCh: dispatch the pods for the config change to the appropriate
-//     handler callback for the event type
-//   - plegCh: update the runtime cache; sync pod
-//   - syncCh: sync all pods waiting for sync
-//   - housekeepingCh: trigger cleanup of pods
-//   - health manager: sync pods that have failed or in which one or more
-//     containers have failed health checks
+// 1.  configCh:       读取配置事件
+// 2.  handler:        要分派 Pod 的 SyncHandler
+// 3.  syncCh:         读取周期性同步事件
+// 4.  housekeepingCh: 读取清理事件
+// 5.  plegCh:         读取 PLEG 更新
 func (kl *Kubelet) syncLoopIteration(ctx context.Context, configCh <-chan kubetypes.PodUpdate, handler SyncHandler,
 	syncCh <-chan time.Time, housekeepingCh <-chan time.Time, plegCh <-chan *pleg.PodLifecycleEvent) bool {
 	select {
