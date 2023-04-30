@@ -99,6 +99,7 @@ type DeploymentController struct {
 }
 
 // NewDeploymentController creates a new DeploymentController.
+// informer监听资源的那套逻辑，可以复习一下
 func NewDeploymentController(dInformer appsinformers.DeploymentInformer, rsInformer appsinformers.ReplicaSetInformer, podInformer coreinformers.PodInformer, client clientset.Interface) (*DeploymentController, error) {
 	eventBroadcaster := record.NewBroadcaster()
 
@@ -128,7 +129,9 @@ func NewDeploymentController(dInformer appsinformers.DeploymentInformer, rsInfor
 		DeleteFunc: dc.deletePod,
 	})
 
+	// 这里是重要的方法，整个deployment调协逻辑就是syncDeployment这个方法
 	dc.syncHandler = dc.syncDeployment
+	// 入队方法
 	dc.enqueueDeployment = dc.enqueue
 
 	dc.dLister = dInformer.Lister()
@@ -141,6 +144,8 @@ func NewDeploymentController(dInformer appsinformers.DeploymentInformer, rsInfor
 }
 
 // Run begins watching and syncing.
+// 执行controller控制器，本质：list && watch监听的资源。
+// 监听资源不仅仅是deployment，还有deployment所关心的资源对象(ex: rs pod等)
 func (dc *DeploymentController) Run(ctx context.Context, workers int) {
 	defer utilruntime.HandleCrash()
 
@@ -158,6 +163,7 @@ func (dc *DeploymentController) Run(ctx context.Context, workers int) {
 		return
 	}
 
+	// 启动多个worker，dc.worker是重要入口
 	for i := 0; i < workers; i++ {
 		go wait.UntilWithContext(ctx, dc.worker, time.Second)
 	}
@@ -383,6 +389,7 @@ func (dc *DeploymentController) enqueue(deployment *apps.Deployment) {
 		return
 	}
 
+	// 放入限速队列
 	dc.queue.Add(key)
 }
 
@@ -458,18 +465,22 @@ func (dc *DeploymentController) resolveControllerRef(namespace string, controlle
 
 // worker runs a worker thread that just dequeues items, processes them, and marks them done.
 // It enforces that the syncHandler is never invoked concurrently with the same key.
+// 一直不断从队列中弹出的资源对象，并处理
 func (dc *DeploymentController) worker(ctx context.Context) {
 	for dc.processNextWorkItem(ctx) {
 	}
 }
 
+// processNextWorkItem
 func (dc *DeploymentController) processNextWorkItem(ctx context.Context) bool {
+	// 从queue中弹出key
 	key, quit := dc.queue.Get()
 	if quit {
 		return false
 	}
 	defer dc.queue.Done(key)
 
+	// 对弹出的资源对象进行处理
 	err := dc.syncHandler(ctx, key.(string))
 	dc.handleErr(err, key)
 
@@ -504,17 +515,21 @@ func (dc *DeploymentController) handleErr(err error, key interface{}) {
 func (dc *DeploymentController) getReplicaSetsForDeployment(ctx context.Context, d *apps.Deployment) ([]*apps.ReplicaSet, error) {
 	// List all ReplicaSets to find those we own but that no longer match our
 	// selector. They will be orphaned by ClaimReplicaSets().
+	// 取出所有该namespace下的rs
 	rsList, err := dc.rsLister.ReplicaSets(d.Namespace).List(labels.Everything())
 	if err != nil {
 		return nil, err
 	}
+	// 使用selector捞出对应的rs
 	deploymentSelector, err := metav1.LabelSelectorAsSelector(d.Spec.Selector)
 	if err != nil {
 		return nil, fmt.Errorf("deployment %s/%s has invalid label selector: %v", d.Namespace, d.Name, err)
 	}
 	// If any adoptions are attempted, we should first recheck for deletion with
 	// an uncached quorum read sometime after listing ReplicaSets (see #42639).
+	// 先检查是否有删除操作，才能做ownerReference
 	canAdoptFunc := controller.RecheckDeletionTimestamp(func(ctx context.Context) (metav1.Object, error) {
+		//
 		fresh, err := dc.client.AppsV1().Deployments(d.Namespace).Get(ctx, d.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
@@ -525,6 +540,7 @@ func (dc *DeploymentController) getReplicaSetsForDeployment(ctx context.Context,
 		return fresh, nil
 	})
 	cm := controller.NewReplicaSetControllerRefManager(dc.rsControl, d, deploymentSelector, controllerKind, canAdoptFunc)
+	// 会返回所有关连的rs list
 	return cm.ClaimReplicaSets(ctx, rsList)
 }
 
@@ -534,21 +550,26 @@ func (dc *DeploymentController) getReplicaSetsForDeployment(ctx context.Context,
 // according to the Pod's ControllerRef.
 // NOTE: The pod pointers returned by this method point the pod objects in the cache and thus
 // shouldn't be modified in any way.
+// 返回与此deployment关连的pods
 func (dc *DeploymentController) getPodMapForDeployment(d *apps.Deployment, rsList []*apps.ReplicaSet) (map[types.UID][]*v1.Pod, error) {
 	// Get all Pods that potentially belong to this Deployment.
+	// 使用selector捞出与之关连的pods
 	selector, err := metav1.LabelSelectorAsSelector(d.Spec.Selector)
 	if err != nil {
 		return nil, err
 	}
+	// 也是从informer本地缓存取出
 	pods, err := dc.podLister.Pods(d.Namespace).List(selector)
 	if err != nil {
 		return nil, err
 	}
 	// Group Pods by their controller (if it's in rsList).
 	podMap := make(map[types.UID][]*v1.Pod, len(rsList))
+	// 每个rsList都给一个podList
 	for _, rs := range rsList {
 		podMap[rs.UID] = []*v1.Pod{}
 	}
+	// 根据rs的uid来判断是否为关连的pod
 	for _, pod := range pods {
 		// Do not ignore inactive Pods because Recreate Deployments need to verify that no
 		// Pods from older versions are running before spinning up new Pods.
@@ -566,19 +587,23 @@ func (dc *DeploymentController) getPodMapForDeployment(d *apps.Deployment, rsLis
 
 // syncDeployment will sync the deployment with the given key.
 // This function is not meant to be invoked concurrently with the same key.
+// 调协deployment的所有逻辑
 func (dc *DeploymentController) syncDeployment(ctx context.Context, key string) error {
+	// 1. 对key进行操作，拆分 <namespace/name>
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		klog.ErrorS(err, "Failed to split meta namespace cache key", "cacheKey", key)
 		return err
 	}
 
+	// 2. 记录使用耗时
 	startTime := time.Now()
 	klog.V(4).InfoS("Started syncing deployment", "deployment", klog.KRef(namespace, name), "startTime", startTime)
 	defer func() {
 		klog.V(4).InfoS("Finished syncing deployment", "deployment", klog.KRef(namespace, name), "duration", time.Since(startTime))
 	}()
 
+	// 3. 使用informer获取缓存内的deployment
 	deployment, err := dc.dLister.Deployments(namespace).Get(name)
 	if errors.IsNotFound(err) {
 		klog.V(2).InfoS("Deployment has been deleted", "deployment", klog.KRef(namespace, name))
@@ -604,6 +629,7 @@ func (dc *DeploymentController) syncDeployment(ctx context.Context, key string) 
 
 	// List ReplicaSets owned by this Deployment, while reconciling ControllerRef
 	// through adoption/orphaning.
+	// 4. 由目前监听到的deployment找到与之相关的rs list
 	rsList, err := dc.getReplicaSetsForDeployment(ctx, d)
 	if err != nil {
 		return err
@@ -613,11 +639,13 @@ func (dc *DeploymentController) syncDeployment(ctx context.Context, key string) 
 	//
 	// * check if a Pod is labeled correctly with the pod-template-hash label.
 	// * check that no old Pods are running in the middle of Recreate Deployments.
+	// 获取目前监听到的deployment关连的pod
 	podMap, err := dc.getPodMapForDeployment(d, rsList)
 	if err != nil {
 		return err
 	}
 
+	// 如果是删除操作，调用syncStatusOnly
 	if d.DeletionTimestamp != nil {
 		return dc.syncStatusOnly(ctx, d, rsList)
 	}
@@ -629,6 +657,7 @@ func (dc *DeploymentController) syncDeployment(ctx context.Context, key string) 
 		return err
 	}
 
+	// 如果是暂停操作，调用sync
 	if d.Spec.Paused {
 		return dc.sync(ctx, d, rsList)
 	}
@@ -636,10 +665,12 @@ func (dc *DeploymentController) syncDeployment(ctx context.Context, key string) 
 	// rollback is not re-entrant in case the underlying replica sets are updated with a new
 	// revision so we should ensure that we won't proceed to update replica sets until we
 	// make sure that the deployment has cleaned up its rollback spec in subsequent enqueues.
+	// 如果是回滚操作
 	if getRollbackTo(d) != nil {
 		return dc.rollback(ctx, d, rsList)
 	}
 
+	// 如果是扩缩容操作
 	scalingEvent, err := dc.isScalingEvent(ctx, d, rsList)
 	if err != nil {
 		return err
@@ -648,9 +679,12 @@ func (dc *DeploymentController) syncDeployment(ctx context.Context, key string) 
 		return dc.sync(ctx, d, rsList)
 	}
 
+	// 如果是滚动更新操作
 	switch d.Spec.Strategy.Type {
+	// rolloutRecreate用的少，跳过～～
 	case apps.RecreateDeploymentStrategyType:
 		return dc.rolloutRecreate(ctx, d, rsList, podMap)
+	// 介绍滚动更新
 	case apps.RollingUpdateDeploymentStrategyType:
 		return dc.rolloutRolling(ctx, d, rsList)
 	}

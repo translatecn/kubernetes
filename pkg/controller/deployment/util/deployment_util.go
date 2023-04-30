@@ -704,6 +704,7 @@ func IsRollingUpdate(deployment *apps.Deployment) bool {
 
 // DeploymentComplete considers a deployment to be complete once all of its desired replicas
 // are updated and available, and no old pods are running.
+// 检查所有pod都是updated和available，且没有旧的pod在running
 func DeploymentComplete(deployment *apps.Deployment, newStatus *apps.DeploymentStatus) bool {
 	return newStatus.UpdatedReplicas == *(deployment.Spec.Replicas) &&
 		newStatus.Replicas == *(deployment.Spec.Replicas) &&
@@ -780,8 +781,13 @@ func DeploymentTimedOut(deployment *apps.Deployment, newStatus *apps.DeploymentS
 // When one of the followings is true, we're rolling out the deployment; otherwise, we're scaling it.
 // 1) The new RS is saturated: newRS's replicas == deployment's replicas
 // 2) Max number of pods allowed is reached: deployment's replicas + maxSurge == all RSs' replicas
+// 计算deployment 新的rs的副本数
+// 当有下列两种情况，会滚动更新，否则会扩容(在扩容与滚动更新操作都会用到这个方法)
+// 1. 新rs满足时：newRS的replicas == deployment的replicas
+// 2. 达到允许的最大 pod 数量：deployment's replicas + maxSurge == all RSs' replicas
 func NewRSNewReplicas(deployment *apps.Deployment, allRSs []*apps.ReplicaSet, newRS *apps.ReplicaSet) (int32, error) {
 	switch deployment.Spec.Strategy.Type {
+	// 滚动更新
 	case apps.RollingUpdateDeploymentStrategyType:
 		// Check if we can scale up.
 		maxSurge, err := intstrutil.GetScaledValueFromIntOrPercent(deployment.Spec.Strategy.RollingUpdate.MaxSurge, int(*(deployment.Spec.Replicas)), true)
