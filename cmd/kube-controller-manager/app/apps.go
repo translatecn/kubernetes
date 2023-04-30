@@ -69,7 +69,9 @@ func startReplicaSetController(ctx context.Context, controllerContext Controller
 	return nil, true, nil
 }
 
+// startDeploymentController 初始化deployment controller
 func startDeploymentController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
+	// 初始化
 	dc, err := deployment.NewDeploymentController(
 		controllerContext.InformerFactory.Apps().V1().Deployments(),
 		controllerContext.InformerFactory.Apps().V1().ReplicaSets(),
@@ -79,6 +81,7 @@ func startDeploymentController(ctx context.Context, controllerContext Controller
 	if err != nil {
 		return nil, true, fmt.Errorf("error creating Deployment controller: %v", err)
 	}
+	// 异步启动controller
 	go dc.Run(ctx, int(controllerContext.ComponentConfig.DeploymentController.ConcurrentDeploymentSyncs))
 	return nil, true, nil
 }

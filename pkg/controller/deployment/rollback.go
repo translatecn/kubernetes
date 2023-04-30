@@ -32,11 +32,13 @@ import (
 
 // rollback the deployment to the specified revision. In any case cleanup the rollback spec.
 func (dc *DeploymentController) rollback(ctx context.Context, d *apps.Deployment, rsList []*apps.ReplicaSet) error {
+	// 拿到所有此deployment关连的rs
 	newRS, allOldRSs, err := dc.getAllReplicaSetsAndSyncRevision(ctx, d, rsList, true)
 	if err != nil {
 		return err
 	}
 
+	// 返回需要回滚的版本
 	allRSs := append(allOldRSs, newRS)
 	rollbackTo := getRollbackTo(d)
 	// If rollback revision is 0, rollback to the last revision
@@ -48,6 +50,7 @@ func (dc *DeploymentController) rollback(ctx context.Context, d *apps.Deployment
 			return dc.updateDeploymentAndClearRollbackTo(ctx, d)
 		}
 	}
+	// 遍历上面的rs，获取版本，如果版本与需要回滚的版本一致，调用rollbackToTemplate方法
 	for _, rs := range allRSs {
 		v, err := deploymentutil.Revision(rs)
 		if err != nil {
@@ -59,6 +62,7 @@ func (dc *DeploymentController) rollback(ctx context.Context, d *apps.Deployment
 			// rollback by copying podTemplate.Spec from the replica set
 			// revision number will be incremented during the next getAllReplicaSetsAndSyncRevision call
 			// no-op if the spec matches current deployment's podTemplate.Spec
+			// 滚动更新主逻辑
 			performedRollback, err := dc.rollbackToTemplate(ctx, d, rs)
 			if performedRollback && err == nil {
 				dc.emitRollbackNormalEvent(d, fmt.Sprintf("Rolled back deployment %q to revision %d", d.Name, rollbackTo.Revision))
@@ -74,6 +78,9 @@ func (dc *DeploymentController) rollback(ctx context.Context, d *apps.Deployment
 // rollbackToTemplate compares the templates of the provided deployment and replica set and
 // updates the deployment with the replica set template in case they are different. It also
 // cleans up the rollback spec so subsequent requeues of the deployment won't end up in here.
+// rollbackToTemplate 比较提供的deployment和rs的模板
+// 如果不同，则使用rs模板更新deployment。
+// 它还会清理回滚规范，因此后续的部署重新排队不会在这里结束。
 func (dc *DeploymentController) rollbackToTemplate(ctx context.Context, d *apps.Deployment, rs *apps.ReplicaSet) (bool, error) {
 	performedRollback := false
 	if !deploymentutil.EqualIgnoreHash(&d.Spec.Template, &rs.Spec.Template) {
@@ -112,6 +119,8 @@ func (dc *DeploymentController) emitRollbackNormalEvent(d *apps.Deployment, mess
 // updateDeploymentAndClearRollbackTo sets .spec.rollbackTo to nil and update the input deployment
 // It is assumed that the caller will have updated the deployment template appropriately (in case
 // we want to rollback).
+// updateDeploymentAndClearRollbackTo 将 .spec.rollbackTo 设置为 nil 并更新deployment
+// 假设caller已经适当更新deployment模板。
 func (dc *DeploymentController) updateDeploymentAndClearRollbackTo(ctx context.Context, d *apps.Deployment) error {
 	klog.V(4).Infof("Cleans up rollbackTo of deployment %q", d.Name)
 	setRollbackTo(d, nil)
@@ -120,6 +129,7 @@ func (dc *DeploymentController) updateDeploymentAndClearRollbackTo(ctx context.C
 }
 
 // TODO: Remove this when extensions/v1beta1 and apps/v1beta1 Deployment are dropped.
+// 如何查看rollback版本：使用annotation的key来判断
 func getRollbackTo(d *apps.Deployment) *extensions.RollbackConfig {
 	// Extract the annotation used for round-tripping the deprecated RollbackTo field.
 	revision := d.Annotations[apps.DeprecatedRollbackTo]

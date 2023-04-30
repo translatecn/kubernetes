@@ -30,6 +30,7 @@ import (
 
 // rolloutRolling implements the logic for rolling a new replica set.
 func (dc *DeploymentController) rolloutRolling(ctx context.Context, d *apps.Deployment, rsList []*apps.ReplicaSet) error {
+	// 拿到所有的rs对象，如果不存在就create
 	newRS, oldRSs, err := dc.getAllReplicaSetsAndSyncRevision(ctx, d, rsList, true)
 	if err != nil {
 		return err
@@ -37,6 +38,7 @@ func (dc *DeploymentController) rolloutRolling(ctx context.Context, d *apps.Depl
 	allRSs := append(oldRSs, newRS)
 
 	// Scale up, if we can.
+	// 调协New rs
 	scaledUp, err := dc.reconcileNewReplicaSet(ctx, allRSs, newRS, d)
 	if err != nil {
 		return err
@@ -47,6 +49,7 @@ func (dc *DeploymentController) rolloutRolling(ctx context.Context, d *apps.Depl
 	}
 
 	// Scale down, if we can.
+	// 调节旧 rs
 	scaledDown, err := dc.reconcileOldReplicaSets(ctx, allRSs, controller.FilterActiveReplicaSets(oldRSs), newRS, d)
 	if err != nil {
 		return err
@@ -56,6 +59,7 @@ func (dc *DeploymentController) rolloutRolling(ctx context.Context, d *apps.Depl
 		return dc.syncRolloutStatus(ctx, allRSs, newRS, d)
 	}
 
+	// 检查deployment字段，如果true，就调用cleanupDeployment清理旧版本的rs对象
 	if deploymentutil.DeploymentComplete(d, &d.Status) {
 		if err := dc.cleanupDeployment(ctx, oldRSs, d); err != nil {
 			return err
@@ -63,19 +67,23 @@ func (dc *DeploymentController) rolloutRolling(ctx context.Context, d *apps.Depl
 	}
 
 	// Sync deployment status
+	// 更新deployment状态
 	return dc.syncRolloutStatus(ctx, allRSs, newRS, d)
 }
 
 func (dc *DeploymentController) reconcileNewReplicaSet(ctx context.Context, allRSs []*apps.ReplicaSet, newRS *apps.ReplicaSet, deployment *apps.Deployment) (bool, error) {
+	// 最新的rs副本数与deployment期望的一致，直接返回
 	if *(newRS.Spec.Replicas) == *(deployment.Spec.Replicas) {
 		// Scaling not required.
 		return false, nil
 	}
+	// 如果rs副本数比deployment期望的还大，调用scaleReplicaSetAndRecordEvent缩容
 	if *(newRS.Spec.Replicas) > *(deployment.Spec.Replicas) {
 		// Scale down.
 		scaled, _, err := dc.scaleReplicaSetAndRecordEvent(ctx, newRS, *(deployment.Spec.Replicas), deployment)
 		return scaled, err
 	}
+	// 操作new rs的滚动更新
 	newReplicasCount, err := deploymentutil.NewRSNewReplicas(deployment, allRSs, newRS)
 	if err != nil {
 		return false, err
@@ -86,11 +94,13 @@ func (dc *DeploymentController) reconcileNewReplicaSet(ctx context.Context, allR
 
 func (dc *DeploymentController) reconcileOldReplicaSets(ctx context.Context, allRSs []*apps.ReplicaSet, oldRSs []*apps.ReplicaSet, newRS *apps.ReplicaSet, deployment *apps.Deployment) (bool, error) {
 	oldPodsCount := deploymentutil.GetReplicaCountForReplicaSets(oldRSs)
+	// 如果旧pod数量为0，不用调协
 	if oldPodsCount == 0 {
 		// Can't scale down further
 		return false, nil
 	}
 
+	// 算出最大不可用maxUnavailable的pod数量
 	allPodsCount := deploymentutil.GetReplicaCountForReplicaSets(allRSs)
 	klog.V(4).Infof("New replica set %s/%s has %d available pods.", newRS.Namespace, newRS.Name, newRS.Status.AvailableReplicas)
 	maxUnavailable := deploymentutil.MaxUnavailable(*deployment)
@@ -125,6 +135,8 @@ func (dc *DeploymentController) reconcileOldReplicaSets(ctx context.Context, all
 	// * The new replica set created must start with 0 replicas because allPodsCount is already at 13.
 	// * However, newRSPodsUnavailable would also be 0, so the 2 old replica sets could be scaled down by 5 (13 - 8 - 0), which would then
 	// allow the new replica set to be scaled up by 5.
+	// 根据 maxUnavailable值与deployment期望副本数与新rs的期望副本数与新rs的对象处于Available状态的副本数来计算出maxScaledDown(最大可缩容副本数)
+	// 如果<0 直接返回
 	minAvailable := *(deployment.Spec.Replicas) - maxUnavailable
 	newRSUnavailablePodCount := *(newRS.Spec.Replicas) - newRS.Status.AvailableReplicas
 	maxScaledDown := allPodsCount - minAvailable - newRSUnavailablePodCount
@@ -134,6 +146,7 @@ func (dc *DeploymentController) reconcileOldReplicaSets(ctx context.Context, all
 
 	// Clean up unhealthy replicas first, otherwise unhealthy replicas will block deployment
 	// and cause timeout. See https://github.com/kubernetes/kubernetes/issues/16737
+	// 按照rs创建时间排序，清理副本数(清理not-ready unscheduler pending等pod)
 	oldRSs, cleanupCount, err := dc.cleanupUnhealthyReplicas(ctx, oldRSs, deployment, maxScaledDown)
 	if err != nil {
 		return false, nil
@@ -141,6 +154,7 @@ func (dc *DeploymentController) reconcileOldReplicaSets(ctx context.Context, all
 	klog.V(4).Infof("Cleaned up unhealthy replicas from old RSes by %d", cleanupCount)
 
 	// Scale down old replica sets, need check maxUnavailable to ensure we can scale down
+	// 调用scaleDownOldReplicaSetsForRollingUpdate来更新old rs的缩容
 	allRSs = append(oldRSs, newRS)
 	scaledDownCount, err := dc.scaleDownOldReplicaSetsForRollingUpdate(ctx, allRSs, oldRSs, deployment)
 	if err != nil {
@@ -148,6 +162,7 @@ func (dc *DeploymentController) reconcileOldReplicaSets(ctx context.Context, all
 	}
 	klog.V(4).Infof("Scaled down old RSes of deployment %s by %d", deployment.Name, scaledDownCount)
 
+	// 如果缩容的副本数>0返回true 否则返回false
 	totalScaledDown := cleanupCount + scaledDownCount
 	return totalScaledDown > 0, nil
 }
@@ -193,6 +208,7 @@ func (dc *DeploymentController) cleanupUnhealthyReplicas(ctx context.Context, ol
 func (dc *DeploymentController) scaleDownOldReplicaSetsForRollingUpdate(ctx context.Context, allRSs []*apps.ReplicaSet, oldRSs []*apps.ReplicaSet, deployment *apps.Deployment) (int32, error) {
 	maxUnavailable := deploymentutil.MaxUnavailable(*deployment)
 
+	// 计算出目前需要缩容的数量 totalScaleDownCount := availablePodCount - minAvailable
 	// Check if we can scale down.
 	minAvailable := *(deployment.Spec.Replicas) - maxUnavailable
 	// Find the number of available pods.
@@ -203,10 +219,12 @@ func (dc *DeploymentController) scaleDownOldReplicaSetsForRollingUpdate(ctx cont
 	}
 	klog.V(4).Infof("Found %d available pods in deployment %s, scaling down old RSes", availablePodCount, deployment.Name)
 
+	// 对创建时间排序
 	sort.Sort(controller.ReplicaSetsByCreationTimestamp(oldRSs))
 
 	totalScaledDown := int32(0)
 	totalScaleDownCount := availablePodCount - minAvailable
+	// 遍历 旧rs 根据需要的数量调用scaleReplicaSetAndRecordEvent缩容
 	for _, targetRS := range oldRSs {
 		if totalScaledDown >= totalScaleDownCount {
 			// No further scaling required.

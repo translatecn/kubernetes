@@ -3,6 +3,12 @@
 ### 项目思路：
 目前在学习看k8s源码，并在上面加上一些注解与简易文档。欢迎大家提交pr或文档，也欢迎大家的指正点评。
 
+- 进行中：
+    1. api-server
+    2. kube-scheduler
+    3. deployment controller
+    4. informer模块
+
 ### cmd
 ```
 .

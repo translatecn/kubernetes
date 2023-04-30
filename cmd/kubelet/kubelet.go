@@ -32,6 +32,7 @@ import (
 )
 
 func main() {
+	// 启动kubelet入口
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)
 	os.Exit(code)

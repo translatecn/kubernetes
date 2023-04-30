@@ -32,6 +32,7 @@ import (
 )
 
 func main() {
+	// controller-manager入口
 	command := app.NewControllerManagerCommand()
 	code := cli.Run(command)
 	os.Exit(code)

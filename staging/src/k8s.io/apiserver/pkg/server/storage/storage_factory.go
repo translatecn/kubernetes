@@ -166,7 +166,7 @@ func NewDefaultStorageFactory(
 		APIResourceConfigSource: resourceConfig,
 		DefaultResourcePrefixes: specialDefaultResourcePrefixes,
 
-		newStorageCodecFn: NewStorageCodec,
+		newStorageCodecFn: NewStorageCodec,	// 为提供存储媒介类型，序列化和请求存储与内存版本组装一个存储codec
 	}
 }
 

@@ -78,6 +78,7 @@ var storageTypes = sets.NewString(
 	storagebackend.StorageTypeETCD3,
 )
 
+// etcd配置文件初始化
 func NewEtcdOptions(backendConfig *storagebackend.Config) *EtcdOptions {
 	options := &EtcdOptions{
 		StorageConfig:           *backendConfig,
@@ -319,7 +320,7 @@ func (s *EtcdOptions) ApplyWithStorageFactoryTo(factory serverstorage.StorageFac
 			resourceTransformers: s.resourceTransformers,
 		}
 	}
-
+	// 把初始化好的DefaultStorageFactory 放入genericapiserver.Config的RESTOptionsGetter中
 	c.RESTOptionsGetter = &StorageFactoryRestOptionsFactory{Options: *s, StorageFactory: factory}
 	return nil
 }

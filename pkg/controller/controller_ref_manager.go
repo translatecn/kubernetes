@@ -66,6 +66,21 @@ func (m *BaseControllerRefManager) CanAdopt(ctx context.Context) error {
 // own the object.
 //
 // No reconciliation will be attempted if the controller is being deleted.
+// ClaimObject 尝试为此控制器获取对象的所有权。
+//
+// 它将协调以下内容：
+// - 如果 match 函数返回 true，则收养孤儿。
+// - 如果匹配函数返回 false，则释放拥有的对象。
+//
+// 如果尝试了某种形式的协调，则返回非零错误，并且
+// 失败的。 通常，控制器应稍后重试，以防对帐
+// 仍然需要。
+//
+// 如果error为nil，要么对账成功，要么不对账
+// 协调是必要的。 返回的布尔值表示您现在是否
+// 拥有对象。
+//
+// 如果正在删除控制器，则不会尝试协调。
 func (m *BaseControllerRefManager) ClaimObject(ctx context.Context, obj metav1.Object, match func(metav1.Object) bool, adopt, release func(context.Context, metav1.Object) error) (bool, error) {
 	controllerRef := metav1.GetControllerOfNoCopy(obj)
 	if controllerRef != nil {
@@ -73,11 +88,16 @@ func (m *BaseControllerRefManager) ClaimObject(ctx context.Context, obj metav1.O
 			// Owned by someone else. Ignore.
 			return false, nil
 		}
+		// 如果match方法，ownerReferences关连对象
 		if match(obj) {
 			// We already own it and the selector matches.
 			// Return true (successfully claimed) before checking deletion timestamp.
 			// We're still allowed to claim things we already own while being deleted
 			// because doing so requires taking no actions.
+			// 我们已经拥有它并且选择器匹配。
+			// 在检查删除时间戳之前返回 true（成功声明）。
+			// 我们仍然可以在被删除时声明我们已经拥有的东西
+			// 因为这样做不需要采取任何行动。
 			return true, nil
 		}
 		// Owned by us but selector doesn't match.
@@ -85,6 +105,7 @@ func (m *BaseControllerRefManager) ClaimObject(ctx context.Context, obj metav1.O
 		if m.Controller.GetDeletionTimestamp() != nil {
 			return false, nil
 		}
+		//
 		if err := release(ctx, obj); err != nil {
 			// If the pod no longer exists, ignore the error.
 			if errors.IsNotFound(err) {
@@ -316,26 +337,35 @@ func NewReplicaSetControllerRefManager(
 // If the error is nil, either the reconciliation succeeded, or no
 // reconciliation was necessary. The list of ReplicaSets that you now own is
 // returned.
+// 遍历所有deployment相同namespace的rs，并调用ClaimObject方法
 func (m *ReplicaSetControllerRefManager) ClaimReplicaSets(ctx context.Context, sets []*apps.ReplicaSet) ([]*apps.ReplicaSet, error) {
 	var claimed []*apps.ReplicaSet
 	var errlist []error
 
+	// 匹配的情况
 	match := func(obj metav1.Object) bool {
 		return m.Selector.Matches(labels.Set(obj.GetLabels()))
 	}
+
+	// 找到是自己的孩子但没关连，使用patch操作关连ownerReferences
 	adopt := func(ctx context.Context, obj metav1.Object) error {
 		return m.AdoptReplicaSet(ctx, obj.(*apps.ReplicaSet))
 	}
+
+	// 找到不是自己的孩子，使用patch操作解除关连
 	release := func(ctx context.Context, obj metav1.Object) error {
 		return m.ReleaseReplicaSet(ctx, obj.(*apps.ReplicaSet))
 	}
 
+	// 遍历所有的rs
 	for _, rs := range sets {
+		// 调用ClaimObject 完成match adopt release 操作
 		ok, err := m.ClaimObject(ctx, rs, match, adopt, release)
 		if err != nil {
 			errlist = append(errlist, err)
 			continue
 		}
+		// 放入要返回的list中
 		if ok {
 			claimed = append(claimed, rs)
 		}
@@ -345,6 +375,7 @@ func (m *ReplicaSetControllerRefManager) ClaimReplicaSets(ctx context.Context, s
 
 // AdoptReplicaSet sends a patch to take control of the ReplicaSet. It returns
 // the error if the patching fails.
+// AdoptReplicaSet 发送补丁来控制 ReplicaSet。 它返回修补失败时的错误。
 func (m *ReplicaSetControllerRefManager) AdoptReplicaSet(ctx context.Context, rs *apps.ReplicaSet) error {
 	if err := m.CanAdopt(ctx); err != nil {
 		return fmt.Errorf("can't adopt ReplicaSet %v/%v (%v): %v", rs.Namespace, rs.Name, rs.UID, err)
@@ -358,6 +389,8 @@ func (m *ReplicaSetControllerRefManager) AdoptReplicaSet(ctx context.Context, rs
 	return m.rsControl.PatchReplicaSet(ctx, rs.Namespace, rs.Name, patchBytes)
 }
 
+// ReleaseReplicaSet sends a patch to free the ReplicaSet from the control of the Deployment controller.
+// It returns the error if the patching fails. 404 and 422 errors are ignored.
 // ReleaseReplicaSet sends a patch to free the ReplicaSet from the control of the Deployment controller.
 // It returns the error if the patching fails. 404 and 422 errors are ignored.
 func (m *ReplicaSetControllerRefManager) ReleaseReplicaSet(ctx context.Context, replicaSet *apps.ReplicaSet) error {

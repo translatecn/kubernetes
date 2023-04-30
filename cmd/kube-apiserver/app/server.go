@@ -377,6 +377,7 @@ func buildGenericConfig(
 	// 1. 返回重要的genericapiserver.Config。
 	// 当中有个重要的方法：DefaultBuildHandlerChain，就是请求在进入api-server前，需要做的事情，可以想成中间件
 	genericConfig = genericapiserver.NewConfig(legacyscheme.Codecs)
+	// 加载默认支持的资源
 	genericConfig.MergedResourceConfig = controlplane.DefaultAPIResourceConfigSource()
 
 	if lastErr = s.GenericServerRunOptions.ApplyTo(genericConfig); lastErr != nil {
