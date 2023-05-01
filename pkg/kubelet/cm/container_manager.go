@@ -107,11 +107,8 @@ type ContainerManager interface {
 	// registration.
 	GetPluginRegistrationHandler() cache.PluginHandler
 
-	ShouldResetExtendedResourceCapacity() bool // 检查设备管理器,看看是否重新创建了节点,在这种情况下,应该将扩展资源归零,直到它们可用为止
-
-	// GetAllocateResourcesPodAdmitHandler returns an instance of a PodAdmitHandler responsible for allocating pod resources.
-	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler
-
+	ShouldResetExtendedResourceCapacity() bool                      // 检查设备管理器,看看是否重新创建了节点,在这种情况下,应该将扩展资源归零,直到它们可用为止
+	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // 检查是否还有创建 pod 所需要的资源
 	// GetNodeAllocatableAbsolute returns the absolute value of Node Allocatable which is primarily useful for enforcement.
 	GetNodeAllocatableAbsolute() v1.ResourceList
 

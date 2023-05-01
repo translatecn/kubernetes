@@ -33,13 +33,12 @@ const (
 // checks validity via a sysctl and prefix map, rejecting those which are not known
 // to be namespaced.
 type patternAllowlist struct {
-	sysctls  map[string]Namespace
+	sysctls  map[string]Namespace // 指令参数->对应的namespace
 	prefixes map[string]Namespace
 }
 
 var _ lifecycle.PodAdmitHandler = &patternAllowlist{}
 
-// NewAllowlist creates a new Allowlist from a list of sysctls and sysctl pattern (ending in *).
 func NewAllowlist(patterns []string) (*patternAllowlist, error) {
 	w := &patternAllowlist{
 		sysctls:  map[string]Namespace{},
@@ -81,13 +80,15 @@ func NewAllowlist(patterns []string) (*patternAllowlist, error) {
 // respective namespaces with the host. This check is only possible for sysctls on
 // the static default allowlist, not those on the custom allowlist provided by the admin.
 func (w *patternAllowlist) validateSysctl(sysctl string, hostNet, hostIPC bool) error {
+	// sysctl: kubelet 记录的指令参数
+	// hostNet, hostIPC pod是否需要开启
 	sysctl = convertSysctlVariableToDotsSeparator(sysctl)
 	nsErrorFmt := "%q not allowed with host %s enabled"
 	if ns, found := w.sysctls[sysctl]; found {
-		if ns == ipcNamespace && hostIPC {
+		if ns == ipcNamespace && hostIPC { // 进程隔离
 			return fmt.Errorf(nsErrorFmt, sysctl, ns)
 		}
-		if ns == netNamespace && hostNet {
+		if ns == netNamespace && hostNet { // 网络隔离
 			return fmt.Errorf(nsErrorFmt, sysctl, ns)
 		}
 		return nil

@@ -16,15 +16,20 @@ limitations under the License.
 
 package sysctl
 
+// https://blog.51cto.com/u_11979904/5675931
+
 // SafeSysctlAllowlist returns the allowlist of safe sysctls and safe sysctl patterns (ending in *).
 //
 // A sysctl is called safe iff
 // - it is namespaced in the container or the pod
 // - it is isolated, i.e. has no influence on any other pod on the same node.
+// 当且仅当 sysctl
+// - 它在容器或 Pod 中具有 命名空间
+// - 它是隔离的，即对同一节点上的任何其他 Pod 没有影响时，sysctl 被称为安全。
 func SafeSysctlAllowlist() []string {
 	return []string{
-		"kernel.shm_rmid_forced",
-		"net.ipv4.ip_local_port_range",
+		"kernel.shm_rmid_forced",       // =1 表示是否强制将共享内存和一个进程联系在一起，这样的话可以通过杀死进程来释放共享内存
+		"net.ipv4.ip_local_port_range", // 表示允许使用的端口范围
 		"net.ipv4.tcp_syncookies",
 		"net.ipv4.ping_group_range",
 		"net.ipv4.ip_unprivileged_port_start",

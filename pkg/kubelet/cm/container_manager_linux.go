@@ -51,7 +51,6 @@ import (
 	podresourcesapi "k8s.io/kubelet/pkg/apis/podresources/v1"
 	kubefeatures "k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/kubelet/cadvisor"
-	"k8s.io/kubernetes/pkg/kubelet/cm/admission"
 	"k8s.io/kubernetes/pkg/kubelet/cm/containermap"
 	"k8s.io/kubernetes/pkg/kubelet/cm/cpumanager"
 	"k8s.io/kubernetes/pkg/kubelet/cm/devicemanager"
@@ -108,7 +107,7 @@ type containerManagerImpl struct {
 	deviceManager       devicemanager.Manager   // 设备插件 报告的设备的 导出和分配的接口.
 	cpuManager          cpumanager.Manager      // CPU 亲和性管理的接口.
 	memoryManager       memorymanager.Manager   // 内存亲和性管理的接口.
-	topologyManager     topologymanager.Manager // 拓扑资源协调的接口.
+	topologyManager     topologymanager.Manager // 拓扑资源协调的接口. ✅
 	draManager          dra.Manager             // 动态资源分配管理的接口.
 }
 
@@ -666,51 +665,12 @@ func (cm *containerManagerImpl) UpdatePluginResources(node *schedulerframework.N
 	return cm.deviceManager.UpdatePluginResources(node, attrs)
 }
 
+// GetAllocateResourcesPodAdmitHandler 检查是否还有创建 pod 所需要的资源
 func (cm *containerManagerImpl) GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler {
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
-		return cm.topologyManager
+		return cm.topologyManager // 默认开启
 	}
-	// TODO: we need to think about a better way to do this. This will work for
-	// now so long as we have only the cpuManager and deviceManager relying on
-	// allocations here. However, going forward it is not generalized enough to
-	// work as we add more and more hint providers that the TopologyManager
-	// needs to call Allocate() on (that may not be directly intstantiated
-	// inside this component).
-	return &resourceAllocator{cm.cpuManager, cm.memoryManager, cm.deviceManager, cm.draManager}
-}
-
-type resourceAllocator struct {
-	cpuManager    cpumanager.Manager
-	memoryManager memorymanager.Manager
-	deviceManager devicemanager.Manager
-	draManager    dra.Manager
-}
-
-func (m *resourceAllocator) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
-	pod := attrs.Pod
-
-	for _, container := range append(pod.Spec.InitContainers, pod.Spec.Containers...) {
-		err := m.deviceManager.Allocate(pod, &container)
-		if err != nil {
-			return admission.GetPodAdmitResult(err)
-		}
-
-		if m.cpuManager != nil {
-			err = m.cpuManager.Allocate(pod, &container)
-			if err != nil {
-				return admission.GetPodAdmitResult(err)
-			}
-		}
-
-		if m.memoryManager != nil {
-			err = m.memoryManager.Allocate(pod, &container)
-			if err != nil {
-				return admission.GetPodAdmitResult(err)
-			}
-		}
-	}
-
-	return admission.GetPodAdmitResult(nil)
+	return cm.topologyManager // 默认开启,已修改代码
 }
 
 func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceList {

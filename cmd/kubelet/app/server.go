@@ -1226,7 +1226,7 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 		kubeServer.ImageCredentialProviderBinDir,
 		kubeServer.RegisterNode,
 		kubeServer.RegisterWithTaints,
-		kubeServer.AllowedUnsafeSysctls,
+		kubeServer.AllowedUnsafeSysctls, // 被允许的 sysctl 不安全指令
 		kubeServer.ExperimentalMounterPath,
 		kubeServer.KernelMemcgNotification,
 		kubeServer.ExperimentalNodeAllocatableIgnoreEvictionThreshold,

@@ -319,13 +319,9 @@ type KubeletConfiguration struct { // --config
 	ContainerLogMaxFiles int32
 	// ConfigMapAndSecretChangeDetectionStrategy is a mode in which config map and secret managers are running.
 	ConfigMapAndSecretChangeDetectionStrategy ResourceChangeDetectionStrategy
-	// A comma separated allowlist of unsafe sysctls or sysctl patterns (ending in `*`).
-	// Unsafe sysctl groups are `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.
-	// These sysctls are namespaced but not allowed by default.
-	// For example: "`kernel.msg*,net.ipv4.route.min_pmtu`"
 	// +optional
-	AllowedUnsafeSysctls    []string
-	KernelMemcgNotification bool // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
+	AllowedUnsafeSysctls    []string // 被允许的 sysctl 不安全指令；这些系统设置了名称空间，但默认情况下不允许。 `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.
+	KernelMemcgNotification bool     // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
 
 	/* the following fields are meant for Node Allocatable */
 

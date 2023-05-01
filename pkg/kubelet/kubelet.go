@@ -335,7 +335,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	imageCredentialProviderBinDir string,
 	registerNode bool,
 	registerWithTaints []v1.Taint,
-	allowedUnsafeSysctls []string,
+	allowedUnsafeSysctls []string, //
 	experimentalMounterPath string,
 	kernelMemcgNotification bool,
 	experimentalNodeAllocatableIgnoreEvictionThreshold bool,
@@ -833,7 +833,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		volumepathhandler.NewBlockVolumePathHandler())
 
 	klet.backOff = flowcontrol.NewBackOff(backOffPeriod, MaxContainerBackOff)
-	// evictionManager的初始化
+	// evictionManager 的初始化
 	evictionManager, evictionAdmitHandler := eviction.NewManager(
 		klet.resourceAnalyzer,
 		evictionConfig,
@@ -856,12 +856,14 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.
 	// Hence, we concatenate those two lists.
-	safeAndUnsafeSysctls := append(sysctl.SafeSysctlAllowlist(), allowedUnsafeSysctls...)
+	//安全的、被允许的系统tls总是可以在规范中用作不安全的系统tls。
+	//因此，我们将这两个列表连接起来。
+	safeAndUnsafeSysctls := append(sysctl.SafeSysctlAllowlist(), allowedUnsafeSysctls...) // 安全的sysctl指令、被允许的不安全指令
 	sysctlsAllowlist, err := sysctl.NewAllowlist(safeAndUnsafeSysctls)
 	if err != nil {
 		return nil, err
 	}
-	klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist)
+	klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist) // 主要是判断 sysctl 与pod Sc 是否冲突✅
 
 	// enable active deadline handler
 	activeDeadlineHandler, err := newActiveDeadlineHandler(klet.statusManager, kubeDeps.Recorder, klet.clock)

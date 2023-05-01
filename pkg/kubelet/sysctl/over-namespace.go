@@ -20,12 +20,14 @@ import (
 	"strings"
 )
 
+// https://blog.51cto.com/u_11979904/5675931
+
 // Namespace represents a kernel namespace name.
 type Namespace string
 
 const (
 	// the Linux IPC namespace
-	ipcNamespace = Namespace("ipc")
+	ipcNamespace = Namespace("ipc") // 进程
 
 	// the network namespace
 	netNamespace = Namespace("net")
@@ -35,14 +37,14 @@ const (
 )
 
 var namespaces = map[string]Namespace{
-	"kernel.sem": ipcNamespace,
+	"kernel.sem": ipcNamespace, // 内核中信号量参数
 }
 
 var prefixNamespaces = map[string]Namespace{
-	"kernel.shm": ipcNamespace,
-	"kernel.msg": ipcNamespace,
-	"fs.mqueue.": ipcNamespace,
-	"net.":       netNamespace,
+	"kernel.shm": ipcNamespace, // 内核中共享内存相关参数
+	"kernel.msg": ipcNamespace, // 内核中SystemV消息队列相关参数
+	"fs.mqueue.": ipcNamespace, // 内核中POSIX消息队列相关参数
+	"net.":       netNamespace, // 内核中网络配置项相关参数
 }
 
 // NamespacedBy returns the namespace of the Linux kernel for a sysctl, or

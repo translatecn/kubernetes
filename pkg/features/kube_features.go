@@ -817,11 +817,11 @@ const (
 	// Enables topology aware hints for EndpointSlices
 	TopologyAwareHints featuregate.Feature = "TopologyAwareHints"
 
-	// owner: @lmdaly
+	// TopologyManager owner: @lmdaly
 	// alpha: v1.16
 	// beta: v1.18
 	//
-	// Enable resource managers to make NUMA aligned decisions
+	// 使资源管理人员能够做出与NUMA一致的决策
 	TopologyManager featuregate.Feature = "TopologyManager"
 
 	// owner: @PiotrProkop

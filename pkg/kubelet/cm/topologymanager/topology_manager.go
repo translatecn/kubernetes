@@ -52,6 +52,7 @@ func (e TopologyAffinityError) Type() string {
 }
 
 // Manager interface provides methods for Kubelet to manage pod topology hints
+// 用于管理节点的拓扑结构信息，以优化容器的调度和运行
 type Manager interface {
 	// PodAdmitHandler is implemented by Manager
 	lifecycle.PodAdmitHandler
