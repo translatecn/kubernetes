@@ -65,14 +65,12 @@ func NewPodConfig(mode PodConfigNotificationMode, recorder record.EventRecorder,
 	podConfig := &PodConfig{
 		pods:    storage,
 		mux:     config.NewMux(storage),
-		updates: updates,
+		updates: updates, // 发送给监听者事件
 		sources: sets.String{},
 	}
 	return podConfig
 }
 
-// Channel creates or returns a config source channel.  The channel
-// only accepts PodUpdates
 func (c *PodConfig) Channel(ctx context.Context, source string) chan<- interface{} { // ✅
 	c.sourcesLock.Lock()
 	defer c.sourcesLock.Unlock()
@@ -107,22 +105,15 @@ func (c *PodConfig) Sync() {
 // "truth" and on creation contains zero entries.  Once all previously read sources are
 // available, then this object should be considered authoritative.
 type podStorage struct {
-	podLock sync.RWMutex
-	pods    map[string]map[types.UID]*v1.Pod // 分类， {api:{},file:{},url:{}}
-	mode    PodConfigNotificationMode
-
-	// ensures that updates are delivered in strict order
-	// on the updates channel
+	podLock    sync.RWMutex
+	pods       map[string]map[types.UID]*v1.Pod // 分类， {api:{},file:{},url:{}}
+	mode       PodConfigNotificationMode        // 事件通知的类型
 	updateLock sync.Mutex
-	updates    chan<- kubetypes.PodUpdate
-
+	updates    chan<- kubetypes.PodUpdate // 用于发送给监听者，处理事件的变更
 	// contains the set of all sources that have sent at least one SET
-	sourcesSeenLock sync.RWMutex
-	sourcesSeen     sets.String
-
-	// the EventRecorder to use
-	recorder record.EventRecorder
-
+	sourcesSeenLock    sync.RWMutex
+	sourcesSeen        sets.String
+	recorder           record.EventRecorder
 	startupSLIObserver podStartupSLIObserver
 }
 
@@ -144,6 +135,7 @@ func newPodStorage(updates chan<- kubetypes.PodUpdate, mode PodConfigNotificatio
 // and ensures that redundant changes are filtered out, and then pushes zero or more minimal
 // updates onto the update channel.  Ensures that updates are delivered in order.
 func (s *podStorage) Merge(source string, change interface{}) error {
+	// change  用于接收全量数据
 	s.updateLock.Lock()
 	defer s.updateLock.Unlock()
 
@@ -399,7 +391,8 @@ func updateAnnotations(existing, ref *v1.Pod) {
 	existing.Annotations = annotations
 }
 
-func podsDifferSemantically(existing, ref *v1.Pod) bool {
+// pod在语义上是否不同
+func podsDifferSemantically(existing, ref *v1.Pod) bool { // ✅
 	if reflect.DeepEqual(existing.Spec, ref.Spec) &&
 		reflect.DeepEqual(existing.Labels, ref.Labels) &&
 		reflect.DeepEqual(existing.DeletionTimestamp, ref.DeletionTimestamp) &&
@@ -410,18 +403,20 @@ func podsDifferSemantically(existing, ref *v1.Pod) bool {
 	return true
 }
 
-// checkAndUpdatePod updates existing, and:
-//   - if ref makes a meaningful change, returns needUpdate=true
-//   - if ref makes a meaningful change, and this change is graceful deletion, returns needGracefulDelete=true
-//   - if ref makes no meaningful change, but changes the pod status, returns needReconcile=true
-//   - else return all false
-//     Now, needUpdate, needGracefulDelete and needReconcile should never be both true
+// checkAndUpdatePod更新现有的;
+// -如果ref做了一个有意义的更改，返回needUpdate=true
+// -如果ref做了一个有意义的改变，并且这个改变是优雅的删除，返回 needGracefulDelete=true
+// -如果ref没有做任何有意义的改变，但是改变了pod的状态，返回   needReconcile=true
+// - else返回全部false
+// 现在，needUpdate, needGracefulDelete和needReconcile不应该同时为真
 func checkAndUpdatePod(existing, ref *v1.Pod) (needUpdate, needReconcile, needGracefulDelete bool) {
 
 	// 1. this is a reconcile
 	// TODO: it would be better to update the whole object and only preserve certain things
 	//       like the source annotation or the UID (to ensure safety)
-	if !podsDifferSemantically(existing, ref) {
+	if !podsDifferSemantically(existing, ref) { // pod在语义上是否不同
+		// 在语义上一样
+		// 这不是一个更新。只有当它不是更新时才检查调和，因为如果pod要更新，那么额外的调和是不必要的
 		// this is not an update
 		// Only check reconcile when it is not an update, because if the pod is going to
 		// be updated, an extra reconcile is unnecessary

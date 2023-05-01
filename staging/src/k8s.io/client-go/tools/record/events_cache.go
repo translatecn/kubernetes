@@ -413,10 +413,8 @@ type EventCorrelator struct {
 
 // EventCorrelateResult is the result of a Correlate
 type EventCorrelateResult struct {
-	// the event after correlation
-	Event *v1.Event
-	// if provided, perform a strategic patch when updating the record on the server
-	Patch []byte
+	Event *v1.Event // 经过关联后的事件。
+	Patch []byte    // 如果提供，则在更新服务器上的记录时执行patch
 	// if true, do no further processing of the event
 	Skip bool
 }
@@ -454,7 +452,7 @@ func NewEventCorrelator(clock clock.PassiveClock) *EventCorrelator {
 }
 
 func NewEventCorrelatorWithOptions(options CorrelatorOptions) *EventCorrelator {
-	optionsWithDefaults := populateDefaults(options)
+	optionsWithDefaults := populateDefaults(options) // ✅
 	spamFilter := NewEventSourceObjectSpamFilter(
 		optionsWithDefaults.LRUCacheSize,
 		optionsWithDefaults.BurstSize,
@@ -474,8 +472,7 @@ func NewEventCorrelatorWithOptions(options CorrelatorOptions) *EventCorrelator {
 	}
 }
 
-// populateDefaults populates the zero value options with defaults
-func populateDefaults(options CorrelatorOptions) CorrelatorOptions {
+func populateDefaults(options CorrelatorOptions) CorrelatorOptions { // ✅
 	if options.LRUCacheSize == 0 {
 		options.LRUCacheSize = maxLruCacheEntries
 	}

@@ -63,7 +63,7 @@ func (recorder *recorderImpl) Eventf(regarding runtime.Object, related runtime.O
 	event := recorder.makeEvent(refRegarding, refRelated, timestamp, eventtype, reason, message, recorder.reportingController, recorder.reportingInstance, action)
 	go func() {
 		defer utilruntime.HandleCrash()
-		recorder.Action(watch.Added, event)
+		recorder.Action(watch.Added, event) // ✅
 	}()
 }
 

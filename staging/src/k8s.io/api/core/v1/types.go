@@ -5797,22 +5797,19 @@ type SerializedReference struct {
 	Reference ObjectReference `json:"reference,omitempty" protobuf:"bytes,1,opt,name=reference"`
 }
 
-// EventSource contains information for an event.
 type EventSource struct {
-	// Component from which the event is generated.
+	// 事件源名称
 	// +optional
 	Component string `json:"component,omitempty" protobuf:"bytes,1,opt,name=component"`
-	// Node name on which the event is generated.
+	// 事件源的IP
 	// +optional
 	Host string `json:"host,omitempty" protobuf:"bytes,2,opt,name=host"`
 }
 
 // Valid values for event types (new types could be added in future)
 const (
-	// Information only and will not cause any problems
-	EventTypeNormal string = "Normal"
-	// These events are to warn that something might go wrong
-	EventTypeWarning string = "Warning"
+	EventTypeNormal  string = "Normal"  // 仅供参考，不会造成任何问题
+	EventTypeWarning string = "Warning" // 这些事件是为了警告可能会出问题
 )
 
 // +genclient
@@ -5848,19 +5845,19 @@ type Event struct {
 	// +optional
 	Source EventSource `json:"source,omitempty" protobuf:"bytes,5,opt,name=source"`
 
-	// The time at which the event was first recorded. (Time of server receipt is in TypeMeta.)
+	// 事件被记录的时间。 （服务器接收时间在 TypeMeta 中。）
 	// +optional
 	FirstTimestamp metav1.Time `json:"firstTimestamp,omitempty" protobuf:"bytes,6,opt,name=firstTimestamp"`
 
-	// The time at which the most recent occurrence of this event was recorded.
+	// 最近一次发生此事件被记录的时间。
 	// +optional
 	LastTimestamp metav1.Time `json:"lastTimestamp,omitempty" protobuf:"bytes,7,opt,name=lastTimestamp"`
 
-	// The number of times this event has occurred.
+	// 这个事件发生的次数。
 	// +optional
 	Count int32 `json:"count,omitempty" protobuf:"varint,8,opt,name=count"`
 
-	// Type of this event (Normal, Warning), new types could be added in the future
+	// 事件类型(Normal, Warning)
 	// +optional
 	Type string `json:"type,omitempty" protobuf:"bytes,9,opt,name=type"`
 

@@ -40,13 +40,9 @@ func (f MergeFunc) Merge(source string, update interface{}) error {
 // Mux is a class for merging configuration from multiple sources.  Changes are
 // pushed via channels and sent to the merge function.
 type Mux struct {
-	// Invoked when an update is sent to a source.
-	merger Merger
-
-	// Sources and their lock.
-	sourceLock sync.RWMutex
-	// Maps source names to channels
-	sources map[string]chan interface{}
+	merger     Merger                      //
+	sourceLock sync.RWMutex                //
+	sources    map[string]chan interface{} // 从file、api、url 获取全量数据
 }
 
 // NewMux creates a new mux that can merge changes from multiple sources.
@@ -73,7 +69,7 @@ func (m *Mux) ChannelWithContext(ctx context.Context, source string) chan interf
 	if exists {
 		return channel
 	}
-	newChannel := make(chan interface{})
+	newChannel := make(chan interface{}) // listenChannel 接收的都是 set 请求
 	m.sources[source] = newChannel
 
 	go wait.Until(func() { m.listen(source, newChannel) }, 0, ctx.Done()) // 保证每种类型只有一个goroutine
@@ -81,6 +77,7 @@ func (m *Mux) ChannelWithContext(ctx context.Context, source string) chan interf
 }
 
 func (m *Mux) listen(source string, listenChannel <-chan interface{}) {
+	// listenChannel 接收的都是 set 请求
 	for update := range listenChannel {
 		m.merger.Merge(source, update)
 	}

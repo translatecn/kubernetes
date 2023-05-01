@@ -122,9 +122,7 @@ func updateMetrics(oldPod, newPod *v1.Pod) {
 	}
 }
 
-// updatePodsInternal replaces the given pods in the current state of the
-// manager, updating the various indices. The caller is assumed to hold the
-// lock.
+// 替换管理器当前状态下的给定pod，更新各种索引。假定调用方持有锁。
 func (pm *basicManager) updatePodsInternal(pods ...*v1.Pod) {
 	for _, pod := range pods {
 		podFullName := kubecontainer.GetPodFullName(pod)

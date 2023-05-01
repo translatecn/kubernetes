@@ -140,28 +140,12 @@ type PodWorkers interface {
 	// subsequent calls to ShouldPodContentBeRemoved on unknown pods will return
 	// true. It returns a map describing the state of each known pod worker.
 	SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState
-
-	// IsPodKnownTerminated returns true if the provided pod UID is known by the pod
-	// worker to be terminated. If the pod has been force deleted and the pod worker
-	// has completed termination this method will return false, so this method should
-	// only be used to filter out pods from the desired set such as in admission.
-	//
-	// Intended for use by the kubelet config loops, but not subsystems, which should
-	// use ShouldPod*().
-	IsPodKnownTerminated(uid types.UID) bool
+	IsPodKnownTerminated(uid types.UID) bool // pod是否被被完全终止
 	// CouldHaveRunningContainers 确定是否可以在 Pod 上运行容器。如果 Pod 尚未同步，则可能会返回 true，因为尚未确定 Pod 的状态。
 	// 如果 Pod 已同步，则可能会返回 true，因为 Pod 可能已经被调度到节点上，但尚未启动容器。
 	// 如果 Pod 已终止，则返回 false，因为在这种情况下，所有容器都已停止。
 	CouldHaveRunningContainers(uid types.UID) bool
-	// IsPodTerminationRequested returns true when pod termination has been requested
-	// until the termination completes and the pod is removed from config. This should
-	// not be used in cleanup loops because it will return false if the pod has already
-	// been cleaned up - use ShouldPodContainersBeTerminating instead. Also, this method
-	// may return true while containers are still being initialized by the pod worker.
-	//
-	// Intended for use by the kubelet sync* methods, but not subsystems, which should
-	// use ShouldPod*().
-	IsPodTerminationRequested(uid types.UID) bool
+	IsPodTerminationRequested(uid types.UID) bool // 判断 Pod 是否已经被请求终止，并且正在等待终止完成并从配置中删除。   kubelet的sync中使用
 
 	// ShouldPodContainersBeTerminating returns false before pod workers have synced,
 	// or once a pod has started terminating. This check is similar to
@@ -255,11 +239,9 @@ type podSyncStatus struct {
 	gracePeriod int64
 	// evicted is true if the kill indicated this was an eviction (an evicted
 	// pod can be more aggressively cleaned up).
-	evicted bool
-	// terminatedAt is set once the pod worker has completed a successful
-	// syncTerminatingPod call and means all running containers are stopped.
-	terminatedAt time.Time
-	finished     bool // 一旦pod worker完成pod的处理（syncTerminatedPod 无错误退出）,finished为true,直到调用SyncKnownPods以删除pod.终端pod（已成功/已失败）将具有终止状态,直到删除pod.
+	evicted      bool
+	terminatedAt time.Time // 在pod worker成功完成syncTerminatingPod调用后设置，这意味着所有正在运行的容器都将停止。
+	finished     bool      // 一旦pod worker完成pod的处理（syncTerminatedPod 无错误退出）,finished为true,直到调用SyncKnownPods以删除pod.终端pod（已成功/已失败）将具有终止状态,直到删除pod.
 	// restartRequested is true if the pod worker was informed the pod is
 	// expected to exist (update type of create, update, or sync) after
 	// it has been killed. When known pods are synced, any pod that is
@@ -455,6 +437,7 @@ func (p *podWorkers) IsPodTerminationRequested(uid types.UID) bool {
 	}
 	// an unknown pod is considered not to be terminating (use ShouldPodContainersBeTerminating in
 	// cleanup loops to avoid failing to cleanup pods that have already been removed from config)
+	// 未知的pod被认为没有终止(在清理循环中使用ShouldPodContainersBeTerminating以避免无法清除已经从配置中删除的pod)
 	return false
 }
 

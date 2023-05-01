@@ -438,17 +438,16 @@ func initConfigz(kc *kubeletconfiginternal.KubeletConfiguration) error {
 	return nil
 }
 
-// makeEventRecorder sets up kubeDeps.Recorder if it's nil. It's a no-op otherwise.
 func makeEventRecorder(kubeDeps *kubelet.Dependencies, nodeName types.NodeName) {
 	if kubeDeps.Recorder != nil {
 		return
 	}
-	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster := record.NewBroadcaster() // ✅
 	kubeDeps.Recorder = eventBroadcaster.NewRecorder(legacyscheme.Scheme, v1.EventSource{Component: componentKubelet, Host: string(nodeName)})
-	eventBroadcaster.StartStructuredLogging(3)
+	eventBroadcaster.StartStructuredLogging(3) // 打印日志到终端
 	if kubeDeps.EventClient != nil {
 		klog.V(4).InfoS("Sending events to api server")
-		eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: kubeDeps.EventClient.Events("")})
+		eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: kubeDeps.EventClient.Events("")}) // 记录日志到api-server
 	} else {
 		klog.InfoS("No api server defined - no events will be sent to API server")
 	}
@@ -654,7 +653,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	}
 
 	// 如果需要,则设置事件记录器.
-	makeEventRecorder(kubeDeps, nodeName)
+	makeEventRecorder(kubeDeps, nodeName) // 1、run ,设置事件记录器
 	// 初始化ContainerManager
 	if kubeDeps.ContainerManager == nil {
 		if s.CgroupsPerQOS && s.CgroupRoot == "" {
@@ -1116,8 +1115,7 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 		return err
 	}
 	hostnameOverridden := len(kubeServer.HostnameOverride) > 0
-	// Setup event recorder if required.
-	makeEventRecorder(kubeDeps, nodeName)
+	makeEventRecorder(kubeDeps, nodeName) // RunKubelet ,设置事件记录器
 
 	var nodeIPs []net.IP
 	if kubeServer.NodeIP != "" {

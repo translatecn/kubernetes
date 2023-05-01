@@ -986,21 +986,21 @@ func (kl *Kubelet) podResourcesAreReclaimed(pod *v1.Pod) bool {
 	return kl.PodResourcesAreReclaimed(pod, status)
 }
 
-// filterOutInactivePods returns pods that are not in a terminal phase
-// or are known to be fully terminated. This method should only be used
-// when the set of pods being filtered is upstream of the pod worker, i.e.
-// the pods the pod manager is aware of.
+// 返回未处于终止阶段 或 已知已完全终止的pod。
 func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
 	filteredPods := make([]*v1.Pod, 0, len(pods))
+	// activePods 列表只包含被准许且仍然存活的 Pod
 	for _, p := range pods {
-		// if a pod is fully terminated by UID, it should be excluded from the
-		// list of pods
-		if kl.podWorkers.IsPodKnownTerminated(p.UID) {
+
+		if kl.podWorkers.IsPodKnownTerminated(p.UID) { // pod是否被被完全终止
 			continue
 		}
+		// pod 没有被完全终止
 
 		// terminal pods are considered inactive UNLESS they are actively terminating
+		// 终止中的 Pod 被视为非活动状态，除非它们正在主动终止。
 		if kl.isAdmittedPodTerminal(p) && !kl.podWorkers.IsPodTerminationRequested(p.UID) {
+			// pod 已结束 且 pod 不在终止中
 			continue
 		}
 
@@ -1009,20 +1009,12 @@ func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
 	return filteredPods
 }
 
-// isAdmittedPodTerminal returns true if the provided config source pod is in
-// a terminal phase, or if the Kubelet has already indicated the pod has reached
-// a terminal phase but the config source has not accepted it yet. This method
-// should only be used within the pod configuration loops that notify the pod
-// worker, other components should treat the pod worker as authoritative.
+// 判断一个已经被准许的 Pod 是否已经达到终止阶段
 func (kl *Kubelet) isAdmittedPodTerminal(pod *v1.Pod) bool {
-	// pods are considered inactive if the config source has observed a
-	// terminal phase (if the Kubelet recorded that the pod reached a terminal
-	// phase the pod should never be restarted)
 	if pod.Status.Phase == v1.PodSucceeded || pod.Status.Phase == v1.PodFailed {
 		return true
 	}
-	// a pod that has been marked terminal within the Kubelet is considered
-	// inactive (may have been rejected by Kubelet admision)
+
 	if status, ok := kl.statusManager.GetPodStatus(pod.UID); ok {
 		if status.Phase == v1.PodSucceeded || status.Phase == v1.PodFailed {
 			return true

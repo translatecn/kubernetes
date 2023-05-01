@@ -50,62 +50,22 @@ type EventSink interface {
 	Patch(oldEvent *v1.Event, data []byte) (*v1.Event, error)
 }
 
-// CorrelatorOptions allows you to change the default of the EventSourceObjectSpamFilter
-// and EventAggregator in EventCorrelator
+// CorrelatorOptions 用于聚合和过滤事件
 type CorrelatorOptions struct {
-	// The lru cache size used for both EventSourceObjectSpamFilter and the EventAggregator
-	// If not specified (zero value), the default specified in events_cache.go will be picked
-	// This means that the LRUCacheSize has to be greater than 0.
-	LRUCacheSize int
-	// The burst size used by the token bucket rate filtering in EventSourceObjectSpamFilter
-	// If not specified (zero value), the default specified in events_cache.go will be picked
-	// This means that the BurstSize has to be greater than 0.
-	BurstSize int
-	// The fill rate of the token bucket in queries per second in EventSourceObjectSpamFilter
-	// If not specified (zero value), the default specified in events_cache.go will be picked
-	// This means that the QPS has to be greater than 0.
-	QPS float32
-	// The func used by the EventAggregator to group event keys for aggregation
-	// If not specified (zero value), EventAggregatorByReasonFunc will be used
-	KeyFunc EventAggregatorKeyFunc
-	// The func used by the EventAggregator to produced aggregated message
-	// If not specified (zero value), EventAggregatorByReasonMessageFunc will be used
-	MessageFunc EventAggregatorMessageFunc
-	// The number of events in an interval before aggregation happens by the EventAggregator
-	// If not specified (zero value), the default specified in events_cache.go will be picked
-	// This means that the MaxEvents has to be greater than 0
-	MaxEvents int
-	// The amount of time in seconds that must transpire since the last occurrence of a similar event before it is considered new by the EventAggregator
-	// If not specified (zero value), the default specified in events_cache.go will be picked
-	// This means that the MaxIntervalInSeconds has to be greater than 0
-	MaxIntervalInSeconds int
-	// The clock used by the EventAggregator to allow for testing
-	// If not specified (zero value), clock.RealClock{} will be used
-	Clock clock.PassiveClock
-	// The func used by EventFilterFunc, which returns a key for given event, based on which filtering will take place
-	// If not specified (zero value), getSpamKey will be used
-	SpamKeyFunc EventSpamKeyFunc
+	LRUCacheSize         int                        // 用于 EventSourceObjectSpamFilter 和 EventAggregator 的 LRU 缓存大小。
+	BurstSize            int                        // 事件令牌桶速率过滤器中使用的突发大小。
+	QPS                  float32                    // 事件令牌桶中的查询速率（每秒）。
+	KeyFunc              EventAggregatorKeyFunc     // 用于聚合事件键的函数。
+	MessageFunc          EventAggregatorMessageFunc // 用于生成聚合消息的函数。
+	MaxEvents            int                        // 在聚合之前的一个时间间隔内的事件数。
+	MaxIntervalInSeconds int                        // 自上一个类似事件发生以来必须经过的时间（以秒为单位），才能被 EventAggregator 视为新事件。
+	Clock                clock.PassiveClock         //
+	SpamKeyFunc          EventSpamKeyFunc           // 使用的函数，根据给定事件返回一个键，基于该键进行过滤。
 }
 
-// EventRecorder knows how to record events on behalf of an EventSource.
 type EventRecorder interface {
-	// Event constructs an event from the given information and puts it in the queue for sending.
-	// 'object' is the object this event is about. Event will make a reference-- or you may also
-	// pass a reference to the object directly.
-	// 'eventtype' of this event, and can be one of Normal, Warning. New types could be added in future
-	// 'reason' is the reason this event is generated. 'reason' should be short and unique; it
-	// should be in UpperCamelCase format (starting with a capital letter). "reason" will be used
-	// to automate handling of events, so imagine people writing switch statements to handle them.
-	// You want to make that easy.
-	// 'message' is intended to be human readable.
-	//
-	// The resulting event will be created in the same namespace as the reference object.
 	Event(object runtime.Object, eventtype, reason, message string)
-
-	// Eventf is just like Event, but with Sprintf for the message field.
 	Eventf(object runtime.Object, eventtype, reason, messageFmt string, args ...interface{})
-
-	// AnnotatedEventf is just like eventf, but with annotations attached
 	AnnotatedEventf(object runtime.Object, annotations map[string]string, eventtype, reason, messageFmt string, args ...interface{})
 }
 
@@ -115,22 +75,13 @@ type EventBroadcaster interface {
 	// event handler function. The return value can be ignored or used to stop recording, if
 	// desired.
 	StartEventWatcher(eventHandler func(*v1.Event)) watch.Interface
-
-	// StartRecordingToSink starts sending events received from this EventBroadcaster to the given
-	// sink. The return value can be ignored or used to stop recording, if desired.
-	StartRecordingToSink(sink EventSink) watch.Interface
+	StartRecordingToSink(sink EventSink) watch.Interface // 设置要发送到的名称空间
 
 	// StartLogging starts sending events received from this EventBroadcaster to the given logging
 	// function. The return value can be ignored or used to stop recording, if desired.
 	StartLogging(logf func(format string, args ...interface{})) watch.Interface
-
-	// StartStructuredLogging starts sending events received from this EventBroadcaster to the structured
-	// logging function. The return value can be ignored or used to stop recording, if desired.
-	StartStructuredLogging(verbosity klog.Level) watch.Interface
-
-	// NewRecorder returns an EventRecorder that can be used to send events to this EventBroadcaster
-	// with the event source set to the given event source.
-	NewRecorder(scheme *runtime.Scheme, source v1.EventSource) EventRecorder
+	StartStructuredLogging(verbosity klog.Level) watch.Interface             // 设置结构化日志等级阈值
+	NewRecorder(scheme *runtime.Scheme, source v1.EventSource) EventRecorder // 用于发送事件
 
 	// Shutdown shuts down the broadcaster
 	Shutdown()
@@ -155,10 +106,9 @@ func (a *EventRecorderAdapter) Eventf(regarding, _ runtime.Object, eventtype, re
 	a.recorder.Eventf(regarding, eventtype, reason, note, args...)
 }
 
-// Creates a new event broadcaster.
 func NewBroadcaster() EventBroadcaster {
 	return &eventBroadcasterImpl{
-		Broadcaster:   watch.NewLongQueueBroadcaster(maxQueuedEvents, watch.DropIfChannelFull),
+		Broadcaster:   watch.NewLongQueueBroadcaster(maxQueuedEvents, watch.DropIfChannelFull), // ✅
 		sleepDuration: defaultSleepDuration,
 	}
 }
@@ -170,26 +120,15 @@ func NewBroadcasterForTests(sleepDuration time.Duration) EventBroadcaster {
 	}
 }
 
-func NewBroadcasterWithCorrelatorOptions(options CorrelatorOptions) EventBroadcaster {
-	return &eventBroadcasterImpl{
-		Broadcaster:   watch.NewLongQueueBroadcaster(maxQueuedEvents, watch.DropIfChannelFull),
-		sleepDuration: defaultSleepDuration,
-		options:       options,
-	}
-}
-
 type eventBroadcasterImpl struct {
 	*watch.Broadcaster
 	sleepDuration time.Duration
 	options       CorrelatorOptions
 }
 
-// StartRecordingToSink starts sending events received from the specified eventBroadcaster to the given sink.
-// The return value can be ignored or used to stop recording, if desired.
-// TODO: make me an object with parameterizable queue length and retry interval
 func (e *eventBroadcasterImpl) StartRecordingToSink(sink EventSink) watch.Interface {
 	eventCorrelator := NewEventCorrelatorWithOptions(e.options)
-	return e.StartEventWatcher(
+	return e.StartEventWatcher( // 会生成一个新的watcher
 		func(event *v1.Event) {
 			recordToSink(sink, event, eventCorrelator, e.sleepDuration)
 		})
@@ -199,6 +138,7 @@ func (e *eventBroadcasterImpl) Shutdown() {
 	e.Broadcaster.Shutdown()
 }
 
+// 将事件发送到指定的目标
 func recordToSink(sink EventSink, event *v1.Event, eventCorrelator *EventCorrelator, sleepDuration time.Duration) {
 	// Make a copy before modification, because there could be multiple listeners.
 	// Events are safe to copy like this.
@@ -241,7 +181,7 @@ func recordEvent(sink EventSink, event *v1.Event, patch []byte, updateExistingEv
 	if updateExistingEvent {
 		newEvent, err = sink.Patch(event, patch)
 	}
-	// Update can fail because the event may have been removed and it no longer exists.
+	// 更新可能会失败，因为该事件可能已被删除，因此不再存在。
 	if !updateExistingEvent || (updateExistingEvent && util.IsKeyNotFoundError(err)) {
 		// Making sure that ResourceVersion is empty on creation
 		event.ResourceVersion = ""
@@ -286,17 +226,15 @@ func (e *eventBroadcasterImpl) StartLogging(logf func(format string, args ...int
 		})
 }
 
-// StartStructuredLogging starts sending events received from this EventBroadcaster to the structured logging function.
-// The return value can be ignored or used to stop recording, if desired.
+// StartStructuredLogging 打印日志到终端
 func (e *eventBroadcasterImpl) StartStructuredLogging(verbosity klog.Level) watch.Interface {
 	return e.StartEventWatcher(
 		func(e *v1.Event) {
-			klog.V(verbosity).InfoS("Event occurred", "object", klog.KRef(e.InvolvedObject.Namespace, e.InvolvedObject.Name), "fieldPath", e.InvolvedObject.FieldPath, "kind", e.InvolvedObject.Kind, "apiVersion", e.InvolvedObject.APIVersion, "type", e.Type, "reason", e.Reason, "message", e.Message)
+			klog.V(verbosity).InfoS("Event 发生", "object", klog.KRef(e.InvolvedObject.Namespace, e.InvolvedObject.Name),
+				"fieldPath", e.InvolvedObject.FieldPath, "kind", e.InvolvedObject.Kind, "apiVersion", e.InvolvedObject.APIVersion, "type", e.Type, "reason", e.Reason, "message", e.Message)
 		})
 }
 
-// StartEventWatcher starts sending events received from this EventBroadcaster to the given event handler function.
-// The return value can be ignored or used to stop recording, if desired.
 func (e *eventBroadcasterImpl) StartEventWatcher(eventHandler func(*v1.Event)) watch.Interface {
 	watcher, err := e.Watch()
 	if err != nil {
@@ -344,11 +282,8 @@ func (recorder *recorderImpl) generateEvent(object runtime.Object, annotations m
 	event := recorder.makeEvent(ref, annotations, eventtype, reason, message)
 	event.Source = recorder.source
 
-	// NOTE: events should be a non-blocking operation, but we also need to not
-	// put this in a goroutine, otherwise we'll race to write to a closed channel
-	// when we go to shut down this broadcaster.  Just drop events if we get overloaded,
-	// and log an error if that happens (we've configured the broadcaster to drop
-	// outgoing events anyway).
+	// 注意:事件应该是一个非阻塞操作，但我们也不需要把它放在一个例程中，否则当我们关闭这个广播器时，我们会竞相写一个关闭的通道。
+	// 如果我们超载了，就丢弃事件，如果发生了，就记录一个错误(我们已经配置了广播器来丢弃传出的事件)。
 	sent, err := recorder.ActionOrDrop(watch.Added, event)
 	if err != nil {
 		klog.Errorf("unable to record event: %v (will not retry!)", err)

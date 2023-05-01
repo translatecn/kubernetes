@@ -236,8 +236,8 @@ type Dependencies struct {
 	CAdvisorInterface        cadvisor.Interface              // 用于与cAdvisor交互的接口.
 	Cloud                    cloudprovider.Interface         // 用于与云提供商交互的接口.
 	ContainerManager         cm.ContainerManager             // 容器管理器的接口.
-	EventClient              v1core.EventsGetter             // 用于与Kubernetes事件系统交互的接口.
-	HeartbeatClient          clientset.Interface             // 用于与Kubernetes心跳系统交互的接口.
+	EventClient              v1core.EventsGetter             // 用于与Kubernetes event 系统交互的接口.
+	HeartbeatClient          clientset.Interface             // 用于与Kubernetes 心跳系统交互的接口.✅
 	OnHeartbeatFailure       func()                          // 心跳失败时执行的回调函数.
 	KubeClient               clientset.Interface             // 与Kubernetes API Server交互的客户端接口.
 	Mounter                  mount.Interface                 // 用于挂载卷的接口.
@@ -246,7 +246,7 @@ type Dependencies struct {
 	OSInterface              kubecontainer.OSInterface       // 操作系统接口.
 	PodConfig                *config.PodConfig               // Pod配置的接口.✅
 	ProbeManager             prober.Manager                  // 用于管理探针的接口.
-	Recorder                 record.EventRecorder            // 用于记录事件的接口.
+	Recorder                 record.EventRecorder            // 用于记录事件的接口.✅
 	Subpather                subpath.Interface               // 用于处理子路径的接口.
 	TracerProvider           trace.TracerProvider            // 用于提供跟踪器的接口.
 	VolumePlugins            []volume.VolumePlugin           // 卷插件的列表.
@@ -517,7 +517,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		onRepeatedHeartbeatFailure:              kubeDeps.OnHeartbeatFailure,
 		rootDirectory:                           rootDirectory,
 		resyncInterval:                          kubeCfg.SyncFrequency.Duration,
-		sourcesReady:                            config.NewSourcesReady(kubeDeps.PodConfig.SeenAllSources),
+		sourcesReady:                            config.NewSourcesReady(kubeDeps.PodConfig.SeenAllSources), // ✅
 		registerNode:                            registerNode,
 		registerWithTaints:                      registerWithTaints,
 		registerSchedulable:                     registerSchedulable,
@@ -560,7 +560,6 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		keepTerminatedPodVolumes:                keepTerminatedPodVolumes,
 		nodeStatusMaxImages:                     nodeStatusMaxImages,
 	}
-
 	if klet.cloud != nil {
 		klet.cloudResourceSyncManager = cloudresource.NewSyncManager(klet.cloud, nodeName, klet.nodeStatusUpdateFrequency)
 	}
@@ -950,7 +949,7 @@ type Kubelet struct {
 	onRepeatedHeartbeatFailure              func()                                     // 当心跳操作失败多次时要调用的函数.✅
 	podWorkers                              PodWorkers                                 // 同步pod 状态到events
 	resyncInterval                          time.Duration                              // 周期性全量协调 pod 之间的间隔时间.
-	sourcesReady                            config.SourcesReady                        // kubelet 记录的sources,是线程安全的.
+	sourcesReady                            config.SourcesReady                        // kubelet 记录的sources,是线程安全的. api、file、url ✅
 	podManager                              kubepod.Manager                            // pod 管理器.
 	evictionManager                         eviction.Manager                           // 用于观察和响应可能影响节点稳定性的情况的驱逐管理器.
 	logServer                               http.Handler                               // kubelet 使用的日志服务器.defaults to /logs/ from /var/log
@@ -974,7 +973,7 @@ type Kubelet struct {
 	readinessManager                        proberesults.Manager                       // 用于管理容器可用性检查结果的存活性管理器.
 	startupManager                          proberesults.Manager                       // 用于管理容器启动检查结果的启动管理器.
 	streamingConnectionIdleTimeout          time.Duration                              // 表示在终止execution/port 连接之前保持空闲的时间.
-	recorder                                record.EventRecorder                       // 用于记录事件的事件记录器
+	recorder                                record.EventRecorder                       // 用于记录事件的事件记录器✅
 	containerGC                             kubecontainer.GC                           // 用于处理死亡容器垃圾回收的容器 GC 策略.
 	imageManager                            images.ImageGCManager                      // 管理镜像垃圾回收的镜像 GC 管理器.
 	containerLogManager                     logs.ContainerLogManager                   // 用于管理容器日志的容器日志管理器.
@@ -1026,7 +1025,7 @@ type Kubelet struct {
 	setNodeStatusFuncs                      []func(context.Context, *v1.Node) error    // 在tryUpdateNodeStatus loop中调用的处理程序✅
 	lastNodeUnschedulableLock               sync.Mutex                                 //
 	lastNodeUnschedulable                   bool                                       // 是否维护上一次的Node.Spec.Unschedulable的值
-	admitHandlers                           lifecycle.PodAdmitHandlers                 // Pod 准入处理程序列表.
+	admitHandlers                           lifecycle.PodAdmitHandlers                 // Pod 准入处理程序列表.✅
 	softAdmitHandlers                       lifecycle.PodAdmitHandlers                 // 用于在 Kubelet 准入 Pod 后但在运行之前对其进行处理.如果一个 Pod 被 softAdmitHandler 拒绝,它将被保留在 Pending 状态中.
 	lifecycle.PodSyncLoopHandlers                                                      // Pod 同步循环处理程序列表.
 	lifecycle.PodSyncHandlers                                                          // Pod 同步处理程序列表.
@@ -1840,19 +1839,15 @@ func (kl *Kubelet) getPodsToSync() []*v1.Pod {
 	return podsToSync
 }
 
-// deletePod deletes the pod from the internal state of the kubelet by:
-// 1.  stopping the associated pod worker asynchronously
-// 2.  signaling to kill the pod by sending on the podKillingCh channel
-//
-// deletePod returns an error if not all sources are ready or the pod is not
-// found in the runtime cache.
+// 允许删除失败，因为定期清理 go routine 将再次触发删除。
 func (kl *Kubelet) deletePod(pod *v1.Pod) error {
+	// 异步停止关联的pod worker
+	// 通过 podKillingCh 发送 杀死pod的信号
 	if pod == nil {
 		return fmt.Errorf("deletePod does not allow nil pod")
 	}
 	if !kl.sourcesReady.AllReady() {
-		// If the sources aren't ready, skip deletion, as we may accidentally delete pods
-		// for sources that haven't reported yet.
+		// 可能会不小心删除尚未报告来源的pod。
 		return fmt.Errorf("skipping delete because sources aren't ready yet")
 	}
 	klog.V(3).InfoS("Pod has been deleted and must be killed", "pod", klog.KObj(pod), "podUID", pod.UID)
@@ -1860,7 +1855,7 @@ func (kl *Kubelet) deletePod(pod *v1.Pod) error {
 		Pod:        pod,
 		UpdateType: kubetypes.SyncPodKill,
 	})
-	// We leave the volume/directory cleanup to the periodic cleanup routine.
+	// 我们将 volume/directory  清理留给定期清理例程。
 	return nil
 }
 
@@ -1874,17 +1869,13 @@ func (kl *Kubelet) rejectPod(pod *v1.Pod, reason, message string) {
 		Message: "Pod was rejected: " + message})
 }
 
-// canAdmitPod determines if a pod can be admitted, and gives a reason if it
-// cannot. "pod" is new pod, while "pods" are all admitted pods
-// The function returns a boolean value indicating whether the pod
-// can be admitted, a brief single-word reason and a message explaining why
-// the pod cannot be admitted.
-func (kl *Kubelet) canAdmitPod(pods []*v1.Pod, pod *v1.Pod) (bool, string, string) {
-	// the kubelet will invoke each pod admit handler in sequence
-	// if any handler rejects, the pod is rejected.
+// 在 Kubernetes 中，当一个 Pod 被创建时，它需要经过准入控制器（admission controller）的审批才能被准许运行。
+// 准入控制器是 Kubernetes 中的一个重要组件，用于对新创建的资源进行审批和验证，以确保它们符合集群的策略和要求。
+// 如果符合，则准许该 Pod 运行；否则，拒绝该 Pod。
+func (kl *Kubelet) canAdmitPod(activePods []*v1.Pod, pod *v1.Pod) (bool, string, string) {
 	// TODO: move out of disk check into a pod admitter
 	// TODO: out of resource eviction should have a pod admitter call-out
-	attrs := &lifecycle.PodAdmitAttributes{Pod: pod, OtherPods: pods}
+	attrs := &lifecycle.PodAdmitAttributes{Pod: pod, OtherPods: activePods}
 	for _, podAdmitHandler := range kl.admitHandlers {
 		if result := podAdmitHandler.Admit(attrs); !result.Admit {
 			return false, result.Reason, result.Message
@@ -1908,11 +1899,6 @@ func (kl *Kubelet) canRunPod(pod *v1.Pod) lifecycle.PodAdmitResult {
 	return lifecycle.PodAdmitResult{Admit: true}
 }
 
-// syncLoop is the main loop for processing changes. It watches for changes from
-// three channels (file, apiserver, and http) and creates a union of them. For
-// any new change seen, will run a sync against desired state and running state. If
-// no changes are seen to the configuration, will synchronize the last known desired
-// state every sync-frequency seconds. Never returns.
 func (kl *Kubelet) syncLoop(ctx context.Context, updates <-chan kubetypes.PodUpdate, handler SyncHandler) {
 	klog.InfoS("Starting kubelet main sync loop")
 	// The syncTicker wakes up kubelet to checks if there are any pod workers
@@ -1962,6 +1948,7 @@ func (kl *Kubelet) syncLoop(ctx context.Context, updates <-chan kubetypes.PodUpd
 // 5.  plegCh:         读取 PLEG 更新
 func (kl *Kubelet) syncLoopIteration(ctx context.Context, configCh <-chan kubetypes.PodUpdate, handler SyncHandler,
 	syncCh <-chan time.Time, housekeepingCh <-chan time.Time, plegCh <-chan *pleg.PodLifecycleEvent) bool {
+	// kubelet 的日志通常可以在 /var/log/messages 或 /var/log/syslog 中找到。
 	select {
 	case u, open := <-configCh:
 		// Update from a config source; dispatch it to the right handler
@@ -1974,11 +1961,13 @@ func (kl *Kubelet) syncLoopIteration(ctx context.Context, configCh <-chan kubety
 		switch u.Op {
 		case kubetypes.ADD:
 			klog.V(2).InfoS("SyncLoop ADD", "source", u.Source, "pods", klog.KObjSlice(u.Pods))
-			// After restarting, kubelet will get all existing pods through
-			// ADD as if they are new pods. These pods will then go through the
-			// admission process and *may* be rejected. This can be resolved
-			// once we have checkpointing.
-			handler.HandlePodAdditions(u.Pods)
+			// 在重启 kubelet 后，kubelet 将通过 ADD 操作获取所有现有的 Pod，就像它们是新的 Pod 一样。然后，这些 Pod 将通过准入控制器进行处理，并且可能会被拒绝。这个问题可以在实现检查点机制后解决。
+			//
+			// 为了避免这个问题，我们需要实现检查点机制，使 kubelet 可以在重启后恢复之前的状态。检查点机制可以将节点上所有现有的 Pod 的状态保存到持久存储中，并在 kubelet 重启时使用这些状态来恢复 Pod。
+			// 这样，kubelet 将不会将现有的 Pod 作为新的 Pod 处理，并且它们将不会被提交到准入控制器进行处理。
+			//
+			// 需要注意的是，检查点机制可能会增加 kubelet 的开销和复杂性，并且可能会影响性能。因此，在实现检查点机制之前，需要仔细考虑其影响，并进行充分的测试和评估。
+			handler.HandlePodAdditions(u.Pods) // ✅
 		case kubetypes.UPDATE:
 			klog.V(2).InfoS("SyncLoop UPDATE", "source", u.Source, "pods", klog.KObjSlice(u.Pods))
 			handler.HandlePodUpdates(u.Pods)
@@ -2081,10 +2070,9 @@ func handleProbeSync(kl *Kubelet, update proberesults.Update, handler SyncHandle
 	handler.HandlePodSyncs([]*v1.Pod{pod})
 }
 
-// dispatchWork starts the asynchronous sync of the pod in a pod worker.
-// If the pod has completed termination, dispatchWork will perform no action.
+// 在pod worker中启动pod的异步同步。如果pod已经完成终止，dispatchWork将不执行任何操作。
 func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
-	// Run the sync in an async worker.
+	// 异步更新
 	kl.podWorkers.UpdatePod(UpdatePodOptions{ // dispatchWork
 		Pod:        pod,
 		MirrorPod:  mirrorPod,
@@ -2099,45 +2087,36 @@ func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mir
 
 // TODO: handle mirror pods in a separate component (issue #17251)
 func (kl *Kubelet) handleMirrorPod(mirrorPod *v1.Pod, start time.Time) {
-	// Mirror pod ADD/UPDATE/DELETE operations are considered an UPDATE to the
-	// corresponding static pod. Send update to the pod worker if the static
-	// pod exists.
+	// 镜像pod的ADD/UPDATE/DELETE操作被认为是对相应静态pod的UPDATE操作。如果静态pod存在，则向pod worker发送更新。
 	if pod, ok := kl.podManager.GetPodByMirrorPod(mirrorPod); ok {
 		kl.dispatchWork(pod, kubetypes.SyncPodUpdate, mirrorPod, start)
 	}
 }
 
-// HandlePodAdditions is the callback in SyncHandler for pods being added from
-// a config source.
-func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
+func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) { // ✅
 	start := kl.clock.Now()
 	sort.Sort(sliceutils.PodsByCreationTime(pods))
 	for _, pod := range pods {
 		existingPods := kl.podManager.GetPods()
-		// Always add the pod to the pod manager. Kubelet relies on the pod
-		// manager as the source of truth for the desired state. If a pod does
-		// not exist in the pod manager, it means that it has been deleted in
-		// the apiserver and no action (other than cleanup) is required.
-		kl.podManager.AddPod(pod)
+		// 始终将 Pod 添加到 Pod 管理器中。Kubelet 依赖于 Pod 管理器作为期望状态的真实来源。
+		// 如果 Pod 在 Pod 管理器中不存在，那么就意味着它已经在 apiserver 中被删除了，此时不需要采取任何行动（除了清理）。
+		kl.podManager.AddPod(pod) // 只更新了索引
 
 		if kubetypes.IsMirrorPod(pod) {
 			kl.handleMirrorPod(pod, start)
 			continue
 		}
 
-		// Only go through the admission process if the pod is not requested
-		// for termination by another part of the kubelet. If the pod is already
-		// using resources (previously admitted), the pod worker is going to be
-		// shutting it down. If the pod hasn't started yet, we know that when
-		// the pod worker is invoked it will also avoid setting up the pod, so
-		// we simply avoid doing any work.
+		// 判断 Pod 是否已经被请求终止，并且正在等待终止完成并从配置中删除。
 		if !kl.podWorkers.IsPodTerminationRequested(pod.UID) {
-			// We failed pods that we rejected, so activePods include all admitted
-			// pods that are alive.
-			activePods := kl.filterOutInactivePods(existingPods)
+			// 没有在正在 删除
+
+			// 我们会将被拒绝的 Pod 标记为失败，因此 activePods 列表包含所有被准许且仍然存活的 Pod。
+			activePods := kl.filterOutInactivePods(existingPods) // 过滤掉不活跃的pod
 
 			// Check if we can admit the pod; if not, reject it.
-			if ok, reason, message := kl.canAdmitPod(activePods, pod); !ok {
+			// 检查是否可以准许该 Pod，如果不能，则拒绝它。
+			if ok, reason, message := kl.canAdmitPod(activePods, pod); !ok { // ✅
 				kl.rejectPod(pod, reason, message)
 				continue
 			}
@@ -2147,8 +2126,6 @@ func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
 	}
 }
 
-// HandlePodUpdates is the callback in the SyncHandler interface for pods
-// being updated from a config source.
 func (kl *Kubelet) HandlePodUpdates(pods []*v1.Pod) {
 	start := kl.clock.Now()
 	for _, pod := range pods {
@@ -2162,8 +2139,6 @@ func (kl *Kubelet) HandlePodUpdates(pods []*v1.Pod) {
 	}
 }
 
-// HandlePodRemoves is the callback in the SyncHandler interface for pods
-// being removed from a config source.
 func (kl *Kubelet) HandlePodRemoves(pods []*v1.Pod) {
 	start := kl.clock.Now()
 	for _, pod := range pods {
@@ -2172,8 +2147,7 @@ func (kl *Kubelet) HandlePodRemoves(pods []*v1.Pod) {
 			kl.handleMirrorPod(pod, start)
 			continue
 		}
-		// Deletion is allowed to fail because the periodic cleanup routine
-		// will trigger deletion again.
+		// 允许删除失败，因为定期清理例程将再次触发删除。
 		if err := kl.deletePod(pod); err != nil {
 			klog.V(2).InfoS("Failed to delete pod", "pod", klog.KObj(pod), "err", err)
 		}

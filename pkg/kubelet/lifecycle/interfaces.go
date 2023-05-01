@@ -18,23 +18,15 @@ package lifecycle
 
 import "k8s.io/api/core/v1"
 
-// PodAdmitAttributes is the context for a pod admission decision.
-// The member fields of this struct should never be mutated.
 type PodAdmitAttributes struct {
-	// the pod to evaluate for admission
-	Pod *v1.Pod
-	// all pods bound to the kubelet excluding the pod being evaluated
-	OtherPods []*v1.Pod
+	Pod       *v1.Pod   // 要评估准入的 Pod。
+	OtherPods []*v1.Pod // 所有绑定到 kubelet 的 Pod，不包括正在评估的 Pod。
 }
 
-// PodAdmitResult provides the result of a pod admission decision.
-type PodAdmitResult struct {
-	// if true, the pod should be admitted.
-	Admit bool
-	// a brief single-word reason why the pod could not be admitted.
-	Reason string
-	// a brief message explaining why the pod could not be admitted.
-	Message string
+type PodAdmitResult struct { // 评估结果
+	Admit   bool   // 是否允许创建pod
+	Reason  string //
+	Message string //
 }
 
 type PodAdmitHandler interface {

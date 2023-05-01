@@ -42,12 +42,9 @@ func NewSourcesReady(sourcesReadyFn SourcesReadyFn) SourcesReady {
 
 // sourcesImpl implements SourcesReady.  It is thread-safe.
 type sourcesImpl struct {
-	// lock protects access to sources seen.
-	lock sync.RWMutex
-	// set of sources seen.
-	sourcesSeen sets.String
-	// sourcesReady is a function that evaluates if the sources are ready.
-	sourcesReadyFn SourcesReadyFn
+	lock           sync.RWMutex
+	sourcesSeen    sets.String
+	sourcesReadyFn SourcesReadyFn // 计算是否所有pod来源均已包含
 }
 
 // Add adds the specified source to the set of sources managed.
