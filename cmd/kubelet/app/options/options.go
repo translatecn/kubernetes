@@ -79,12 +79,14 @@ type KubeletFlags struct {
 	LockFilePath                                       string            // lockFilePath是kubelet用来作为锁文件的路径.它使用该文件作为锁,与可能正在运行的其他kubelet进程同步.
 	ExitOnLockContention                               bool              // 另一个进程试图打开该文件时释放锁并退出.
 	MinimumGCAge                                       metav1.Duration   // 一个容器在被垃圾收集之前的最小年龄.已弃用
-	MaxPerPodContainerCount                            int32             // 每个容器保留的旧实例的最大数量.
-	MaxContainerCount                                  int32             // 容器最大数量
-	MasterServiceNamespace                             string            // 主服务会放到这个名称空间里
-	RegisterSchedulable                                bool              // 告诉kubelet将节点注册为可调度的.如果register-node为false,则不起任何作用. //已弃用:使用registerWithTaints代替
-	KeepTerminatedPodVolumes                           bool              // kubelet是否在pod终止时保留挂载到节点的卷.
-	SeccompDefault                                     bool              // 允许使用' RuntimeDefault '作为节点上所有工作负载的默认seccompp配置文件.
+
+	// 在 Kubernetes 中，可以使用 rolling update 策略来更新 Pod 中的容器。rolling update 策略会逐步将旧容器替换为新容器，以避免在更新期间出现中断。在 rolling update 过程中，可以指定每个容器保留的旧实例的最大数量，以控制磁盘空间的使用量。
+	MaxPerPodContainerCount  int32  // 每个容器保留的旧实例的最大数量。每个容器都占用一些磁盘空间，因此需要限制容器保留的旧实例数量，以避免磁盘空间不足。.
+	MaxContainerCount        int32  // 容器最大数量
+	MasterServiceNamespace   string // 主服务会放到这个名称空间里
+	RegisterSchedulable      bool   // 告诉kubelet将节点注册为可调度的.如果register-node为false,则不起任何作用. //已弃用:使用registerWithTaints代替
+	KeepTerminatedPodVolumes bool   // kubelet是否在pod终止时保留挂载到节点的卷.
+	SeccompDefault           bool   // 允许使用' RuntimeDefault '作为节点上所有工作负载的默认seccompp配置文件.
 }
 
 // NewKubeletFlags will create a new KubeletFlags with default values
@@ -281,7 +283,7 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 	// DEPRECATED FLAGS
 	fs.DurationVar(&f.MinimumGCAge.Duration, "minimum-container-ttl-duration", f.MinimumGCAge.Duration, "Minimum age for a finished container before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'")
 	fs.MarkDeprecated("minimum-container-ttl-duration", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
-	fs.Int32Var(&f.MaxPerPodContainerCount, "maximum-dead-containers-per-container", f.MaxPerPodContainerCount, "Maximum number of old instances to retain per container.  Each container takes up some disk space.")
+	fs.Int32Var(&f.MaxPerPodContainerCount, "maximum-dead-containers-per-container", f.MaxPerPodContainerCount, "每个容器保留的旧实例的最大数量。每个容器都占用一些磁盘空间，因此需要限制容器保留的旧实例数量，以避免磁盘空间不足。")
 	fs.MarkDeprecated("maximum-dead-containers-per-container", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
 	fs.Int32Var(&f.MaxContainerCount, "maximum-dead-containers", f.MaxContainerCount, "Maximum number of old instances of containers to retain globally.  Each container takes up some disk space. To disable, set to a negative number.")
 	fs.MarkDeprecated("maximum-dead-containers", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")

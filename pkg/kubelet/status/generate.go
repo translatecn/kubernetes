@@ -28,24 +28,18 @@ import (
 )
 
 const (
-	// UnknownContainerStatuses says that all container statuses are unknown.
-	UnknownContainerStatuses = "UnknownContainerStatuses"
-	// PodCompleted says that all related containers have succeeded.
-	PodCompleted = "PodCompleted"
-	// PodFailed says that the pod has failed and as such the containers have failed.
-	PodFailed = "PodFailed"
-	// ContainersNotReady says that one or more containers are not ready.
-	ContainersNotReady = "ContainersNotReady"
-	// ContainersNotInitialized says that one or more init containers have not succeeded.
-	ContainersNotInitialized = "ContainersNotInitialized"
-	// ReadinessGatesNotReady says that one or more pod readiness gates are not ready.
-	ReadinessGatesNotReady = "ReadinessGatesNotReady"
+	UnknownContainerStatuses = "UnknownContainerStatuses" // 所有容器状态都是未知的。
+	PodCompleted             = "PodCompleted"             // 所有相关容器已成功。
+	PodFailed                = "PodFailed"                // 容器失败
+	ContainersNotReady       = "ContainersNotReady"       // 至少一个容器 没 ready
+	ContainersNotInitialized = "ContainersNotInitialized" // 至少一个init容器没成功
+	ReadinessGatesNotReady   = "ReadinessGatesNotReady"   // 至少一个容器的 readiness 没ready
 )
 
-// GenerateContainersReadyCondition returns the status of "ContainersReady" condition.
-// The status of "ContainersReady" condition is true when all containers are ready.
-func GenerateContainersReadyCondition(spec *v1.PodSpec, containerStatuses []v1.ContainerStatus, podPhase v1.PodPhase) v1.PodCondition {
-	// Find if all containers are ready or not.
+func GenerateContainersReadyCondition(spec *v1.PodSpec, containerStatuses []v1.ContainerStatus, podPhase v1.PodPhase) v1.PodCondition { // ✅
+
+	// 容器就绪状态是指容器是否已经准备好开始处理请求
+	// 如果containerStatuses（容器状态）为空，则代表肯定没有ready，直接status返回false
 	if containerStatuses == nil {
 		return v1.PodCondition{
 			Type:   v1.ContainersReady,
@@ -67,10 +61,11 @@ func GenerateContainersReadyCondition(spec *v1.PodSpec, containerStatuses []v1.C
 
 	// If all containers are known and succeeded, just return PodCompleted.
 	if podPhase == v1.PodSucceeded && len(unknownContainers) == 0 {
+		//如果容器已经运行完成了（源码中会显示Succeeded，kubectl会显示Completed）并且没有没启动的容器，则返回未就绪，原因是已完成
 		return generateContainersReadyConditionForTerminalPhase(podPhase)
 	}
 
-	// If the pod phase is failed, explicitly set the ready condition to false for containers since they may be in progress of terminating.
+	// 如果pod阶段失败，则显式地将容器的就绪条件设置为false，因为它们可能正在终止。
 	if podPhase == v1.PodFailed {
 		return generateContainersReadyConditionForTerminalPhase(podPhase)
 	}
@@ -99,12 +94,9 @@ func GenerateContainersReadyCondition(spec *v1.PodSpec, containerStatuses []v1.C
 	}
 }
 
-// GeneratePodReadyCondition returns "Ready" condition of a pod.
-// The status of "Ready" condition is "True", if all containers in a pod are ready
-// AND all matching conditions specified in the ReadinessGates have status equal to "True".
-func GeneratePodReadyCondition(spec *v1.PodSpec, conditions []v1.PodCondition, containerStatuses []v1.ContainerStatus, podPhase v1.PodPhase) v1.PodCondition {
-	containersReady := GenerateContainersReadyCondition(spec, containerStatuses, podPhase)
-	// If the status of ContainersReady is not True, return the same status, reason and message as ContainersReady.
+func GeneratePodReadyCondition(spec *v1.PodSpec, conditions []v1.PodCondition, containerStatuses []v1.ContainerStatus, podPhase v1.PodPhase) v1.PodCondition { // ✅
+	// 返回包含此pod当前状态的详细信息。
+	containersReady := GenerateContainersReadyCondition(spec, containerStatuses, podPhase) // 容器是否已经准备好开始处理请求 ✅
 	if containersReady.Status != v1.ConditionTrue {
 		return v1.PodCondition{
 			Type:    v1.PodReady,

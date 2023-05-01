@@ -26,15 +26,9 @@ import (
 
 // GCPolicy specifies a policy for garbage collecting containers.
 type GCPolicy struct {
-	// Minimum age at which a container can be garbage collected, zero for no limit.
-	MinAge time.Duration
-
-	// Max number of dead containers any single pod (UID, container name) pair is
-	// allowed to have, less than zero for no limit.
-	MaxPerPodContainer int
-
-	// Max number of total dead containers, less than zero for no limit.
-	MaxContainers int
+	MinAge             time.Duration // 容器可以进行垃圾回收的最小年龄，零表示没有限制。
+	MaxPerPodContainer int           // 允许每个 Pod（UID，容器名称）具有的最大死亡容器数量，小于零表示没有限制。
+	MaxContainers      int           // 最大死亡容器的总数，小于零表示没有限制。
 }
 
 // GC manages garbage collection of dead containers.

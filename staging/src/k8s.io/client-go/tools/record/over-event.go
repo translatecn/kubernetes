@@ -71,19 +71,11 @@ type EventRecorder interface {
 
 // EventBroadcaster knows how to receive events and send them to any EventSink, watcher, or log.
 type EventBroadcaster interface {
-	// StartEventWatcher starts sending events received from this EventBroadcaster to the given
-	// event handler function. The return value can be ignored or used to stop recording, if
-	// desired.
-	StartEventWatcher(eventHandler func(*v1.Event)) watch.Interface
-	StartRecordingToSink(sink EventSink) watch.Interface // 设置要发送到的名称空间
-
-	// StartLogging starts sending events received from this EventBroadcaster to the given logging
-	// function. The return value can be ignored or used to stop recording, if desired.
-	StartLogging(logf func(format string, args ...interface{})) watch.Interface
-	StartStructuredLogging(verbosity klog.Level) watch.Interface             // 设置结构化日志等级阈值
-	NewRecorder(scheme *runtime.Scheme, source v1.EventSource) EventRecorder // 用于发送事件
-
-	// Shutdown shuts down the broadcaster
+	StartEventWatcher(eventHandler func(*v1.Event)) watch.Interface             // 启动一个新的事件监听器
+	StartRecordingToSink(sink EventSink) watch.Interface                        // 设置要发送到的名称空间
+	StartLogging(logf func(format string, args ...interface{})) watch.Interface //
+	StartStructuredLogging(verbosity klog.Level) watch.Interface                // 设置结构化日志等级阈值
+	NewRecorder(scheme *runtime.Scheme, source v1.EventSource) EventRecorder    // 用于发送事件
 	Shutdown()
 }
 
@@ -217,8 +209,6 @@ func recordEvent(sink EventSink, event *v1.Event, patch []byte, updateExistingEv
 	return false
 }
 
-// StartLogging starts sending events received from this EventBroadcaster to the given logging function.
-// The return value can be ignored or used to stop recording, if desired.
 func (e *eventBroadcasterImpl) StartLogging(logf func(format string, args ...interface{})) watch.Interface {
 	return e.StartEventWatcher(
 		func(e *v1.Event) {

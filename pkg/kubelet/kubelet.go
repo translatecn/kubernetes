@@ -180,11 +180,9 @@ const (
 	// ContainerGCPeriod is the period for performing container garbage collection.
 	ContainerGCPeriod = time.Minute
 	// ImageGCPeriod is the period for performing image garbage collection.
-	ImageGCPeriod = 5 * time.Minute
-
-	// Minimum number of dead containers to keep in a pod
-	minDeadContainerInPod          = 1
-	nodeLeaseRenewIntervalFraction = 0.25 // 租期的一部分是否需要续租
+	ImageGCPeriod                  = 5 * time.Minute //
+	minDeadContainerInPod          = 1               // 每个pod至少可以保留一个dead 容器
+	nodeLeaseRenewIntervalFraction = 0.25            // 租期的一部分是否需要续租
 )
 
 var (
@@ -322,8 +320,6 @@ func PreInitRuntimeService(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	return nil
 }
 
-// NewMainKubelet instantiates a new Kubelet object along with all the required internal modules.
-// No initialization of Kubelet and its modules should happen here.
 func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	kubeDeps *Dependencies,
 	crOptions *config.ContainerRuntimeOptions,
@@ -756,7 +752,13 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		return nil, err
 	}
 	klet.containerGC = containerGC
-	klet.containerDeletor = newPodContainerDeletor(klet.containerRuntime, integer.IntMax(containerGCPolicy.MaxPerPodContainer, minDeadContainerInPod))
+	klet.containerDeletor = newPodContainerDeletor( // ✅
+		klet.containerRuntime,
+		integer.IntMax(
+			containerGCPolicy.MaxPerPodContainer, // 每个容器 具有的最大死亡容器数量
+			minDeadContainerInPod,                // 每个pod至少可以保留一个dead 容器
+		),
+	)
 
 	// setup imageManager
 	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
@@ -1031,7 +1033,7 @@ type Kubelet struct {
 	lifecycle.PodSyncHandlers                                                          // Pod 同步处理程序列表.
 	podsPerCore                             int                                        // 每个 CPU 核心允许的 Pod 数量.
 	enableControllerAttachDetach            bool                                       // 是否启用控制器的 Attach/Detach 功能.
-	containerDeletor                        *podContainerDeletor                       // 容器删除器.
+	containerDeletor                        *podContainerDeletor                       // 容器删除器.✅
 	makeIPTablesUtilChains                  bool                                       // 是否创建 iptables 规则.✅
 	iptablesMasqueradeBit                   int                                        // 用于 SNAT 的 fwmark 位.
 	iptablesDropBit                         int                                        // 用于丢弃的 fwmark 位.
@@ -1859,8 +1861,6 @@ func (kl *Kubelet) deletePod(pod *v1.Pod) error {
 	return nil
 }
 
-// rejectPod records an event about the pod with the given reason and message,
-// and updates the pod to the failed phase in the status manage.
 func (kl *Kubelet) rejectPod(pod *v1.Pod, reason, message string) {
 	kl.recorder.Eventf(pod, v1.EventTypeWarning, reason, message)
 	kl.statusManager.SetPodStatus(pod, v1.PodStatus{
@@ -2154,25 +2154,21 @@ func (kl *Kubelet) HandlePodRemoves(pods []*v1.Pod) {
 	}
 }
 
-// HandlePodReconcile is the callback in the SyncHandler interface for pods
-// that should be reconciled.
-func (kl *Kubelet) HandlePodReconcile(pods []*v1.Pod) {
+func (kl *Kubelet) HandlePodReconcile(pods []*v1.Pod) { // ✅
 	start := kl.clock.Now()
 	for _, pod := range pods {
-		// Update the pod in pod manager, status manager will do periodically reconcile according
-		// to the pod manager.
+		// 在pod管理器中更新pod，状态管理器会根据pod管理器定期进行调整。
 		kl.podManager.UpdatePod(pod)
 
-		// Reconcile Pod "Ready" condition if necessary. Trigger sync pod for reconciliation.
-		if status.NeedToReconcilePodReadiness(pod) {
+		// 是否需要 同步 Readiness 状态
+		if status.NeedToReconcilePodReadiness(pod) { // 判断这个pod是否需要调谐
 			mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
 			kl.dispatchWork(pod, kubetypes.SyncPodSync, mirrorPod, start)
 		}
 
-		// After an evicted pod is synced, all dead containers in the pod can be removed.
-		if eviction.PodIsEvicted(pod.Status) {
+		if eviction.PodIsEvicted(pod.Status) { // 驱逐状态的pod,要把所有容器删除
 			if podStatus, err := kl.podCache.Get(pod.UID); err == nil {
-				kl.containerDeletor.deleteContainersInPod("", podStatus, true)
+				kl.containerDeletor.deleteContainersInPod("", podStatus, true) // ✅
 			}
 		}
 	}

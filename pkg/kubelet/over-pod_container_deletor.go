@@ -35,7 +35,7 @@ type containerStatusbyCreatedList []*kubecontainer.Status
 
 type podContainerDeletor struct {
 	worker           chan<- kubecontainer.ContainerID
-	containersToKeep int
+	containersToKeep int // dead 容器的保存数量
 }
 
 func (a containerStatusbyCreatedList) Len() int      { return len(a) }
@@ -49,7 +49,7 @@ func newPodContainerDeletor(runtime kubecontainer.Runtime, containersToKeep int)
 	go wait.Until(func() {
 		for {
 			id := <-buffer
-			if err := runtime.DeleteContainer(context.Background(), id); err != nil {
+			if err := runtime.DeleteContainer(context.Background(), id); err != nil { // 删除容器
 				klog.InfoS("DeleteContainer returned error", "containerID", id, "err", err)
 			}
 		}
@@ -61,8 +61,7 @@ func newPodContainerDeletor(runtime kubecontainer.Runtime, containersToKeep int)
 	}
 }
 
-// getContainersToDeleteInPod returns the exited containers in a pod whose name matches the name inferred from filterContainerId (if not empty), ordered by the creation time from the latest to the earliest.
-// If filterContainerID is empty, all dead containers in the pod are returned.
+// 获取pod里要删除的容器
 func getContainersToDeleteInPod(filterContainerID string, podStatus *kubecontainer.PodStatus, containersToKeep int) containerStatusbyCreatedList {
 	matchedContainer := func(filterContainerId string, podStatus *kubecontainer.PodStatus) *kubecontainer.Status {
 		if filterContainerId == "" {
@@ -82,6 +81,7 @@ func getContainersToDeleteInPod(filterContainerID string, podStatus *kubecontain
 	}
 
 	// Find the exited containers whose name matches the name of the container with id being filterContainerId
+	// 查找名称与id为filterContainerId的容器名称匹配的已退出容器
 	var candidates containerStatusbyCreatedList
 	for _, containerStatus := range podStatus.ContainerStatuses {
 		if containerStatus.State != kubecontainer.ContainerStateExited {
@@ -92,7 +92,7 @@ func getContainersToDeleteInPod(filterContainerID string, podStatus *kubecontain
 		}
 	}
 
-	if len(candidates) <= containersToKeep {
+	if len(candidates) <= containersToKeep { // 只有pod超过一定数量的dead container 才会删除
 		return containerStatusbyCreatedList{}
 	}
 	sort.Sort(candidates)
@@ -100,16 +100,17 @@ func getContainersToDeleteInPod(filterContainerID string, podStatus *kubecontain
 }
 
 // deleteContainersInPod issues container deletion requests for containers selected by getContainersToDeleteInPod.
-func (p *podContainerDeletor) deleteContainersInPod(filterContainerID string, podStatus *kubecontainer.PodStatus, removeAll bool) {
+func (p *podContainerDeletor) deleteContainersInPod(filterContainerID string, podStatus *kubecontainer.PodStatus, removeAll bool) { // ✅
+	// filterContainerID 指定要删除的容器ID
 	containersToKeep := p.containersToKeep
 	if removeAll {
 		containersToKeep = 0
 		filterContainerID = ""
 	}
 
-	for _, candidate := range getContainersToDeleteInPod(filterContainerID, podStatus, containersToKeep) {
+	for _, candidate := range getContainersToDeleteInPod(filterContainerID, podStatus, containersToKeep) { // ✅
 		select {
-		case p.worker <- candidate.ID:
+		case p.worker <- candidate.ID: // 候选人
 		default:
 			klog.InfoS("Failed to issue the request to remove container", "containerID", candidate.ID)
 		}

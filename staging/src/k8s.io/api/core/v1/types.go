@@ -2554,14 +2554,10 @@ type Lifecycle struct {
 
 type ConditionStatus string
 
-// These are valid condition statuses. "ConditionTrue" means a resource is in the condition.
-// "ConditionFalse" means a resource is not in the condition. "ConditionUnknown" means kubernetes
-// can't decide if a resource is in the condition or not. In the future, we could add other
-// intermediate conditions, e.g. ConditionDegraded.
 const (
-	ConditionTrue    ConditionStatus = "True"
-	ConditionFalse   ConditionStatus = "False"
-	ConditionUnknown ConditionStatus = "Unknown"
+	ConditionTrue    ConditionStatus = "True"    //
+	ConditionFalse   ConditionStatus = "False"   // pod 否可用
+	ConditionUnknown ConditionStatus = "Unknown" // 无法确定资源是否处于该状态
 )
 
 // ContainerStateWaiting is a waiting state of a container.
@@ -2668,10 +2664,10 @@ type PodConditionType string
 
 // Pod 的内置条件
 const (
-	ContainersReady  PodConditionType = "ContainersReady"  // 指示 Pod 中的所有容器是否已经就绪。
+	ContainersReady  PodConditionType = "ContainersReady"  // Pod 中所有容器都已就绪
 	PodInitialized   PodConditionType = "Initialized"      // 表示 Pod 中的所有 init 容器是否已经成功启动。
-	PodReady         PodConditionType = "Ready"            // 表示 Pod 是否能够服务请求，并且应该添加到所有匹配服务的负载均衡池中。
-	PodScheduled     PodConditionType = "PodScheduled"     // 表示此 Pod 的调度过程的状态。
+	PodReady         PodConditionType = "Ready"            // 表示 Pod 能够服务请求，并且应该添加到所有匹配服务的负载均衡池中。
+	PodScheduled     PodConditionType = "PodScheduled"     // Pod 已经被调度到某节点
 	DisruptionTarget PodConditionType = "DisruptionTarget" // 表示该 Pod 即将被终止，因为发生了某种干扰（例如抢占、逐出 API 或垃圾回收）。
 )
 
@@ -2694,10 +2690,33 @@ const (
 	PodReasonTerminationByKubelet = "TerminationByKubelet"
 )
 
-// PodCondition contains details for the current condition of this pod.
+//   conditions:
+//    - type: Initialized
+//      status: 'True'
+//      lastProbeTime: null
+//      lastTransitionTime: '2023-05-01T09:34:01Z'
+//    - type: Ready
+//      status: 'False'
+//      lastProbeTime: null
+//      lastTransitionTime: '2023-05-01T09:34:01Z'
+//      reason: ContainersNotReady
+//      message: 'containers with unready status: [coredns]'
+//    - type: ContainersReady
+//      status: 'False'
+//      lastProbeTime: null
+//      lastTransitionTime: '2023-05-01T09:34:01Z'
+//      reason: ContainersNotReady
+//      message: 'containers with unready status: [coredns]'
+//    - type: PodScheduled
+//      status: 'True'
+//      lastProbeTime: null
+//      lastTransitionTime: '2023-05-01T09:34:01Z'
+
+// PodCondition 包含此pod当前状态的详细信息。
 type PodCondition struct {
-	Type   PodConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=PodConditionType"`    //
-	Status ConditionStatus  `json:"status" protobuf:"bytes,2,opt,name=status,casttype=ConditionStatus"` // 是不是处于这种状态下
+	Type PodConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=PodConditionType"` //
+	//https://kubernetes.io/docs/user-guide/pod-states#pod-conditions
+	Status ConditionStatus `json:"status" protobuf:"bytes,2,opt,name=status,casttype=ConditionStatus"` // 是不是处于这种状态下
 	// 上次我们探测的时间
 	// +optional
 	LastProbeTime metav1.Time `json:"lastProbeTime,omitempty" protobuf:"bytes,3,opt,name=lastProbeTime"`
@@ -3921,27 +3940,11 @@ type EphemeralContainer struct {
 // state of a system, especially if the node that hosts the pod cannot contact the control
 // plane.
 type PodStatus struct {
-	// The phase of a Pod is a simple, high-level summary of where the Pod is in its lifecycle.
-	// The conditions array, the reason and message fields, and the individual container status
-	// arrays contain more detail about the pod's status.
-	// There are five possible phase values:
-	//
-	// Pending: The pod has been accepted by the Kubernetes system, but one or more of the
-	// container images has not been created. This includes time before being scheduled as
-	// well as time spent downloading images over the network, which could take a while.
-	// Running: The pod has been bound to a node, and all of the containers have been created.
-	// At least one container is still running, or is in the process of starting or restarting.
-	// Succeeded: All containers in the pod have terminated in success, and will not be restarted.
-	// Failed: All containers in the pod have terminated, and at least one container has
-	// terminated in failure. The container either exited with non-zero status or was terminated
-	// by the system.
-	// Unknown: For some reason the state of the pod could not be obtained, typically due to an
-	// error in communicating with the host of the pod.
-	//
+	// pod的阶段 Pending、Running、Succeeded、Failed、Unknown
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-phase
 	// +optional
 	Phase PodPhase `json:"phase,omitempty" protobuf:"bytes,1,opt,name=phase,casttype=PodPhase"`
-	// pod的当前服务状态。
+	// pod的历史服务状态。
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
 	// +optional
 	// +patchMergeKey=type
@@ -3990,8 +3993,7 @@ type PodStatus struct {
 	// startTime set.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
 	InitContainerStatuses []ContainerStatus `json:"initContainerStatuses,omitempty" protobuf:"bytes,10,rep,name=initContainerStatuses"`
-
-	// The list has one entry per container in the manifest.
+	// 每个容器的当前状态
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
 	// +optional
 	ContainerStatuses []ContainerStatus `json:"containerStatuses,omitempty" protobuf:"bytes,8,rep,name=containerStatuses"`

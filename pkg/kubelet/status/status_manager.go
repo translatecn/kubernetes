@@ -908,14 +908,19 @@ func mergePodStatus(oldPodStatus, newPodStatus v1.PodStatus, couldHaveRunningCon
 	return newPodStatus
 }
 
-// NeedToReconcilePodReadiness returns if the pod "Ready" condition need to be reconcile
-func NeedToReconcilePodReadiness(pod *v1.Pod) bool {
+// NeedToReconcilePodReadiness 是否需要 同步 Readiness 状态
+func NeedToReconcilePodReadiness(pod *v1.Pod) bool { // ✅
 	if len(pod.Spec.ReadinessGates) == 0 {
 		return false
 	}
-	podReadyCondition := GeneratePodReadyCondition(&pod.Spec, pod.Status.Conditions, pod.Status.ContainerStatuses, pod.Status.Phase)
-	i, curCondition := podutil.GetPodConditionFromList(pod.Status.Conditions, v1.PodReady)
-	// Only reconcile if "Ready" condition is present and Status or Message is not expected
+	podReadyCondition := GeneratePodReadyCondition( // ✅
+		&pod.Spec,
+		pod.Status.Conditions,
+		pod.Status.ContainerStatuses,
+		pod.Status.Phase,
+	) // pod 是否ready, 以及没就绪的原因
+	i, curCondition := podutil.GetPodConditionFromList(pod.Status.Conditions, v1.PodReady) // ✅
+	// 有过ready状态，且是当前状态
 	if i >= 0 && (curCondition.Status != podReadyCondition.Status || curCondition.Message != podReadyCondition.Message) {
 		return true
 	}
