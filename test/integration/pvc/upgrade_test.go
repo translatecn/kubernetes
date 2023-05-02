@@ -68,7 +68,7 @@ func test_UpgradePVC(t *testing.T, featureEnabled bool) {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
 				},
 			},

@@ -356,7 +356,7 @@ func getTestPVC(volumeName string, specSize, statusSize, allocatedSize string, r
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-			Resources:   v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceStorage: resource.MustParse(specSize)}},
+			Resources:   v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceStorage: resource.MustParse(specSize)}},
 			VolumeName:  volumeName,
 		},
 		Status: v1.PersistentVolumeClaimStatus{
@@ -364,10 +364,10 @@ func getTestPVC(volumeName string, specSize, statusSize, allocatedSize string, r
 		},
 	}
 	if len(statusSize) > 0 {
-		pvc.Status.Capacity = v1.ResourceList{v1.ResourceStorage: resource.MustParse(statusSize)}
+		pvc.Status.Capacity = v1.ResourceMap{v1.ResourceStorage: resource.MustParse(statusSize)}
 	}
 	if len(allocatedSize) > 0 {
-		pvc.Status.AllocatedResources = v1.ResourceList{v1.ResourceStorage: resource.MustParse(allocatedSize)}
+		pvc.Status.AllocatedResources = v1.ResourceMap{v1.ResourceStorage: resource.MustParse(allocatedSize)}
 	}
 	pvc.Status.ResizeStatus = &resizeStatus
 	return pvc
@@ -381,7 +381,7 @@ func getTestPV(volumeName string, specSize string) *v1.PersistentVolume {
 		},
 		Spec: v1.PersistentVolumeSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceStorage: resource.MustParse(specSize),
 			},
 		},

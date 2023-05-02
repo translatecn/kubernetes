@@ -53,7 +53,7 @@ type ContainerManager interface {
 
 	// SystemCgroupsLimit returns resources allocated to system cgroups in the machine.
 	// These cgroups include the system and Kubernetes services.
-	SystemCgroupsLimit() v1.ResourceList
+	SystemCgroupsLimit() v1.ResourceMap
 
 	// GetNodeConfig returns a NodeConfig that is being used by the container manager.
 	GetNodeConfig() NodeConfig
@@ -72,15 +72,15 @@ type ContainerManager interface {
 	GetQOSContainersInfo() QOSContainersInfo
 
 	// GetNodeAllocatableReservation returns the amount of compute resources that have to be reserved from scheduling.
-	GetNodeAllocatableReservation() v1.ResourceList
+	GetNodeAllocatableReservation() v1.ResourceMap
 
 	// GetCapacity returns the amount of compute resources tracked by container manager available on the node.
-	GetCapacity(localStorageCapacityIsolation bool) v1.ResourceList
+	GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap
 
 	// GetDevicePluginResourceCapacity returns the node capacity (amount of total device plugin resources),
 	// node allocatable (amount of total healthy resources reported by device plugin),
 	// and inactive device plugin resources previously registered on the node.
-	GetDevicePluginResourceCapacity() (v1.ResourceList, v1.ResourceList, []string)
+	GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string)
 
 	// UpdateQOSCgroups performs housekeeping updates to ensure that the top
 	// level QoS containers have their desired state in a thread-safe way
@@ -88,16 +88,9 @@ type ContainerManager interface {
 
 	// GetResources returns RunContainerOptions with devices, mounts, and env fields populated for
 	// extended resources required by container.
-	GetResources(pod *v1.Pod, container *v1.Container) (*kubecontainer.RunContainerOptions, error)
-
-	// UpdatePluginResources calls Allocate of device plugin handler for potential
-	// requests for device plugin resources, and returns an error if fails.
-	// Otherwise, it updates allocatableResource in nodeInfo if necessary,
-	// to make sure it is at least equal to the pod's requested capacity for
-	// any registered device plugin resource
-	UpdatePluginResources(*schedulerframework.NodeInfo, *lifecycle.PodAdmitAttributes) error
-
-	InternalContainerLifecycle() InternalContainerLifecycle
+	GetResources(pod *v1.Pod, container *v1.Container) (*kubecontainer.RunContainerOptions, error) //
+	UpdatePluginResources(*schedulerframework.NodeInfo, *lifecycle.PodAdmitAttributes) error       // 预分配需要的资源
+	InternalContainerLifecycle() InternalContainerLifecycle                                        //
 
 	// GetPodCgroupRoot returns the cgroup which contains all pods.
 	GetPodCgroupRoot() string
@@ -108,9 +101,9 @@ type ContainerManager interface {
 	GetPluginRegistrationHandler() cache.PluginHandler
 
 	ShouldResetExtendedResourceCapacity() bool                      // 检查设备管理器,看看是否重新创建了节点,在这种情况下,应该将扩展资源归零,直到它们可用为止
-	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // 检查是否还有创建 pod 所需要的资源
+	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // 在Pod创建时，资源预分配检查
 	// GetNodeAllocatableAbsolute returns the absolute value of Node Allocatable which is primarily useful for enforcement.
-	GetNodeAllocatableAbsolute() v1.ResourceList
+	GetNodeAllocatableAbsolute() v1.ResourceMap
 
 	// PrepareResource prepares pod resources
 	PrepareResources(pod *v1.Pod, container *v1.Container) (*dra.ContainerInfo, error)
@@ -157,8 +150,8 @@ type NodeAllocatableConfig struct {
 	SystemReservedCgroupName string                  // 表示用于限制系统保留资源的 Cgroup 名称.
 	ReservedSystemCPUs       cpuset.CPUSet           // 保留给系统使用的 CPU 集合.
 	EnforceNodeAllocatable   sets.String             // 表示是否强制使用节点可分配资源.
-	KubeReserved             v1.ResourceList         // 表示 Kubernetes 系统保留资源的数量.
-	SystemReserved           v1.ResourceList         // 表示系统保留资源的数量.
+	KubeReserved             v1.ResourceMap          // 表示 Kubernetes 系统保留资源的数量.
+	SystemReserved           v1.ResourceMap          // 表示系统保留资源的数量.
 	HardEvictionThresholds   []evictionapi.Threshold // 表示硬驱逐阈值列表.
 }
 

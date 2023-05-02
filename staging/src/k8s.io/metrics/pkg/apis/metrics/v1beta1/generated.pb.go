@@ -190,9 +190,9 @@ var xxx_messageInfo_PodMetricsList proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*ContainerMetrics)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.ContainerMetrics")
-	proto.RegisterMapType((k8s_io_api_core_v1.ResourceList)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.ContainerMetrics.UsageEntry")
+	proto.RegisterMapType((k8s_io_api_core_v1.ResourceMap)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.ContainerMetrics.UsageEntry")
 	proto.RegisterType((*NodeMetrics)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.NodeMetrics")
-	proto.RegisterMapType((k8s_io_api_core_v1.ResourceList)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.NodeMetrics.UsageEntry")
+	proto.RegisterMapType((k8s_io_api_core_v1.ResourceMap)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.NodeMetrics.UsageEntry")
 	proto.RegisterType((*NodeMetricsList)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.NodeMetricsList")
 	proto.RegisterType((*PodMetrics)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.PodMetrics")
 	proto.RegisterType((*PodMetricsList)(nil), "k8s.io.metrics.pkg.apis.metrics.v1beta1.PodMetricsList")
@@ -673,7 +673,7 @@ func (this *ContainerMetrics) String() string {
 		keysForUsage = append(keysForUsage, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForUsage)
-	mapStringForUsage := "k8s_io_api_core_v1.ResourceList{"
+	mapStringForUsage := "k8s_io_api_core_v1.ResourceMap{"
 	for _, k := range keysForUsage {
 		mapStringForUsage += fmt.Sprintf("%v: %v,", k, this.Usage[k8s_io_api_core_v1.ResourceName(k)])
 	}
@@ -694,7 +694,7 @@ func (this *NodeMetrics) String() string {
 		keysForUsage = append(keysForUsage, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForUsage)
-	mapStringForUsage := "k8s_io_api_core_v1.ResourceList{"
+	mapStringForUsage := "k8s_io_api_core_v1.ResourceMap{"
 	for _, k := range keysForUsage {
 		mapStringForUsage += fmt.Sprintf("%v: %v,", k, this.Usage[k8s_io_api_core_v1.ResourceName(k)])
 	}
@@ -857,7 +857,7 @@ func (m *ContainerMetrics) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Usage == nil {
-				m.Usage = make(k8s_io_api_core_v1.ResourceList)
+				m.Usage = make(k8s_io_api_core_v1.ResourceMap)
 			}
 			var mapkey k8s_io_api_core_v1.ResourceName
 			mapvalue := &resource.Quantity{}
@@ -1135,7 +1135,7 @@ func (m *NodeMetrics) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Usage == nil {
-				m.Usage = make(k8s_io_api_core_v1.ResourceList)
+				m.Usage = make(k8s_io_api_core_v1.ResourceMap)
 			}
 			var mapkey k8s_io_api_core_v1.ResourceName
 			mapvalue := &resource.Quantity{}

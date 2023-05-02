@@ -166,11 +166,11 @@ func TestGenerateLinuxContainerConfigResources(t *testing.T) {
 		{
 			name: "Request 128M/1C, Limit 256M/3C",
 			podResources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("128Mi"),
 					v1.ResourceCPU:    resource.MustParse("1"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("256Mi"),
 					v1.ResourceCPU:    resource.MustParse("3"),
 				},
@@ -185,7 +185,7 @@ func TestGenerateLinuxContainerConfigResources(t *testing.T) {
 		{
 			name: "Request 128M/2C, No Limit",
 			podResources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("128Mi"),
 					v1.ResourceCPU:    resource.MustParse("2"),
 				},
@@ -320,10 +320,10 @@ func TestGenerateContainerConfigWithMemoryQoSEnforced(t *testing.T) {
 					Command:         []string{"testCommand"},
 					WorkingDir:      "testWorkingDir",
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceMemory: resource.MustParse("128Mi"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceMemory: resource.MustParse("256Mi"),
 						},
 					},
@@ -347,7 +347,7 @@ func TestGenerateContainerConfigWithMemoryQoSEnforced(t *testing.T) {
 					Command:         []string{"testCommand"},
 					WorkingDir:      "testWorkingDir",
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceMemory: resource.MustParse("128Mi"),
 						},
 					},
@@ -418,7 +418,7 @@ func TestGetHugepageLimitsFromResources(t *testing.T) {
 		{
 			name: "Success2MB",
 			resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					"hugepages-2Mi": resource.MustParse("2Mi"),
 				},
 			},
@@ -432,7 +432,7 @@ func TestGetHugepageLimitsFromResources(t *testing.T) {
 		{
 			name: "Success1GB",
 			resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					"hugepages-1Gi": resource.MustParse("2Gi"),
 				},
 			},
@@ -446,7 +446,7 @@ func TestGetHugepageLimitsFromResources(t *testing.T) {
 		{
 			name: "Skip2MB",
 			resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					"hugepages-2MB": resource.MustParse("2Mi"),
 				},
 			},
@@ -460,7 +460,7 @@ func TestGetHugepageLimitsFromResources(t *testing.T) {
 		{
 			name: "Skip1GB",
 			resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					"hugepages-1GB": resource.MustParse("2Gi"),
 				},
 			},
@@ -474,7 +474,7 @@ func TestGetHugepageLimitsFromResources(t *testing.T) {
 		{
 			name: "Success2MBand1GB",
 			resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU): resource.MustParse("0"),
 					"hugepages-2Mi":                 resource.MustParse("2Mi"),
 					"hugepages-1Gi":                 resource.MustParse("2Gi"),
@@ -494,7 +494,7 @@ func TestGetHugepageLimitsFromResources(t *testing.T) {
 		{
 			name: "Skip2MBand1GB",
 			resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU): resource.MustParse("0"),
 					"hugepages-2MB":                 resource.MustParse("2Mi"),
 					"hugepages-1GB":                 resource.MustParse("2Gi"),
@@ -646,10 +646,10 @@ func TestGenerateLinuxContainerConfigSwap(t *testing.T) {
 					Containers: []v1.Container{{
 						Name: containerName,
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								"memory": resource.MustParse("1000"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								"memory": resource.MustParse("1000"),
 							},
 						},
@@ -679,10 +679,10 @@ func TestGenerateLinuxContainerConfigSwap(t *testing.T) {
 					Containers: []v1.Container{{
 						Name: containerName,
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								"memory": resource.MustParse("1000"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								"memory": resource.MustParse("1000"),
 							},
 						},

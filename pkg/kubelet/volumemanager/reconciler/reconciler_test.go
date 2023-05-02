@@ -673,7 +673,7 @@ func Test_Run_Positive_VolumeAttachAndMap(t *testing.T) {
 	gcepv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "001", Name: "volume-name"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{GCEPersistentDisk: &v1.GCEPersistentDiskVolumeSource{PDName: "fake-device1"}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -770,7 +770,7 @@ func Test_Run_Positive_BlockVolumeMapControllerAttachEnabled(t *testing.T) {
 	gcepv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "001", Name: "volume-name"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{GCEPersistentDisk: &v1.GCEPersistentDiskVolumeSource{PDName: "fake-device1"}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -884,7 +884,7 @@ func Test_Run_Positive_BlockVolumeAttachMapUnmapDetach(t *testing.T) {
 	gcepv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "001", Name: "volume-name"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{GCEPersistentDisk: &v1.GCEPersistentDiskVolumeSource{PDName: "fake-device1"}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -992,7 +992,7 @@ func Test_Run_Positive_VolumeUnmapControllerAttachEnabled(t *testing.T) {
 	gcepv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "001", Name: "volume-name"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{GCEPersistentDisk: &v1.GCEPersistentDiskVolumeSource{PDName: "fake-device1"}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -1396,7 +1396,7 @@ func getTestPVC(pvName string, volumeMode *v1.PersistentVolumeMode, specSize, st
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceStorage: specSize,
 				},
 			},
@@ -1404,7 +1404,7 @@ func getTestPVC(pvName string, volumeMode *v1.PersistentVolumeMode, specSize, st
 			VolumeMode: volumeMode,
 		},
 		Status: v1.PersistentVolumeClaimStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceStorage: statusSize,
 			},
 		},
@@ -1421,7 +1421,7 @@ func getTestPV(pvName string, volumeMode *v1.PersistentVolumeMode, pvSize resour
 		Spec: v1.PersistentVolumeSpec{
 			ClaimRef:   &v1.ObjectReference{Name: "pvc"},
 			VolumeMode: volumeMode,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceStorage: pvSize,
 			},
 		},
@@ -1727,7 +1727,7 @@ func Test_UncertainVolumeMountState(t *testing.T) {
 					},
 				}
 				if tc.pvSize.CmpInt64(0) > 0 {
-					pv.Spec.Capacity = v1.ResourceList{
+					pv.Spec.Capacity = v1.ResourceMap{
 						v1.ResourceStorage: tc.pvSize,
 					}
 				}
@@ -1743,7 +1743,7 @@ func Test_UncertainVolumeMountState(t *testing.T) {
 				}
 				if tc.pvcStatusSize.CmpInt64(0) > 0 {
 					pvc.Status = v1.PersistentVolumeClaimStatus{
-						Capacity: v1.ResourceList{
+						Capacity: v1.ResourceMap{
 							v1.ResourceStorage: tc.pvcStatusSize,
 						},
 					}

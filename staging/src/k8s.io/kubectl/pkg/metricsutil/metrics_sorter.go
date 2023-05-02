@@ -56,7 +56,7 @@ type PodMetricsSorter struct {
 	metrics       []metricsapi.PodMetrics
 	sortBy        string
 	withNamespace bool
-	podMetrics    []v1.ResourceList
+	podMetrics    []v1.ResourceMap
 }
 
 func (p *PodMetricsSorter) Len() int {
@@ -83,7 +83,7 @@ func (p *PodMetricsSorter) Less(i, j int) bool {
 }
 
 func NewPodMetricsSorter(metrics []metricsapi.PodMetrics, withNamespace bool, sortBy string) *PodMetricsSorter {
-	var podMetrics = make([]v1.ResourceList, len(metrics))
+	var podMetrics = make([]v1.ResourceMap, len(metrics))
 	if len(sortBy) > 0 {
 		for i, v := range metrics {
 			podMetrics[i] = getPodMetrics(&v)

@@ -84,8 +84,8 @@ func makePodResourcesTestPod(desc podDesc) *v1.Pod {
 		Name:  desc.cntName,
 		Image: busyboxImage,
 		Resources: v1.ResourceRequirements{
-			Requests: v1.ResourceList{},
-			Limits:   v1.ResourceList{},
+			Requests: v1.ResourceMap{},
+			Limits:   v1.ResourceMap{},
 		},
 		Command: []string{"sh", "-c", "sleep 1d"},
 	}

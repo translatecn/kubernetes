@@ -642,8 +642,8 @@ func TestMachineInfo(t *testing.T) {
 	const nodeName = "test-node"
 
 	type dprc struct {
-		capacity    v1.ResourceList
-		allocatable v1.ResourceList
+		capacity    v1.ResourceMap
+		allocatable v1.ResourceMap
 		inactive    []string
 	}
 
@@ -654,9 +654,9 @@ func TestMachineInfo(t *testing.T) {
 		podsPerCore                          int
 		machineInfo                          *cadvisorapiv1.MachineInfo
 		machineInfoError                     error
-		capacity                             v1.ResourceList
+		capacity                             v1.ResourceMap
 		devicePluginResourceCapacity         dprc
-		nodeAllocatableReservation           v1.ResourceList
+		nodeAllocatableReservation           v1.ResourceMap
 		expectNode                           *v1.Node
 		expectEvents                         []testEvent
 		disableLocalStorageCapacityIsolation bool
@@ -677,12 +677,12 @@ func TestMachineInfo(t *testing.T) {
 						MachineID:  "MachineID",
 						SystemUUID: "SystemUUID",
 					},
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
@@ -701,12 +701,12 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(8, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(8, resource.DecimalSI),
@@ -725,12 +725,12 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(10, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(10, resource.DecimalSI),
@@ -746,7 +746,7 @@ func TestMachineInfo(t *testing.T) {
 				NumCores:       2,
 				MemoryCapacity: 1024,
 			},
-			nodeAllocatableReservation: v1.ResourceList{
+			nodeAllocatableReservation: v1.ResourceMap{
 				// reserve 1 unit for each resource
 				v1.ResourceCPU:              *resource.NewMilliQuantity(1, resource.DecimalSI),
 				v1.ResourceMemory:           *resource.NewQuantity(1, resource.BinarySI),
@@ -755,12 +755,12 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(1999, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1023, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(109, resource.DecimalSI),
@@ -772,7 +772,7 @@ func TestMachineInfo(t *testing.T) {
 			desc: "allocatable memory does not double-count hugepages reservations",
 			node: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						// it's impossible on any real system to reserve 1 byte,
 						// but we just need to test that the setter does the math
 						v1.ResourceHugePagesPrefix + "test": *resource.NewQuantity(1, resource.BinarySI),
@@ -786,13 +786,13 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:                      *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:                   *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourceHugePagesPrefix + "test": *resource.NewQuantity(1, resource.BinarySI),
 						v1.ResourcePods:                     *resource.NewQuantity(110, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						// memory has 1-unit difference for hugepages reservation
 						v1.ResourceMemory:                   *resource.NewQuantity(1023, resource.BinarySI),
@@ -806,7 +806,7 @@ func TestMachineInfo(t *testing.T) {
 			desc: "negative capacity resources should be set to 0 in allocatable",
 			node: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						"negative-resource": *resource.NewQuantity(-1, resource.BinarySI),
 					},
 				},
@@ -818,13 +818,13 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:      *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:   *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:     *resource.NewQuantity(110, resource.DecimalSI),
 						"negative-resource": *resource.NewQuantity(-1, resource.BinarySI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:      *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:   *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:     *resource.NewQuantity(110, resource.DecimalSI),
@@ -841,18 +841,18 @@ func TestMachineInfo(t *testing.T) {
 				NumCores:       2,
 				MemoryCapacity: 1024,
 			},
-			capacity: v1.ResourceList{
+			capacity: v1.ResourceMap{
 				v1.ResourceEphemeralStorage: *resource.NewQuantity(5000, resource.BinarySI),
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:              *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:           *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
 						v1.ResourceEphemeralStorage: *resource.NewQuantity(5000, resource.BinarySI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:              *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:           *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
@@ -869,18 +869,18 @@ func TestMachineInfo(t *testing.T) {
 				NumCores:       2,
 				MemoryCapacity: 1024,
 			},
-			capacity: v1.ResourceList{
+			capacity: v1.ResourceMap{
 				v1.ResourceEphemeralStorage: *resource.NewQuantity(5000, resource.BinarySI),
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:              *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:           *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
 						v1.ResourceEphemeralStorage: *resource.NewQuantity(5000, resource.BinarySI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:              *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory:           *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
@@ -899,22 +899,22 @@ func TestMachineInfo(t *testing.T) {
 				MemoryCapacity: 1024,
 			},
 			devicePluginResourceCapacity: dprc{
-				capacity: v1.ResourceList{
+				capacity: v1.ResourceMap{
 					"device-plugin": *resource.NewQuantity(1, resource.BinarySI),
 				},
-				allocatable: v1.ResourceList{
+				allocatable: v1.ResourceMap{
 					"device-plugin": *resource.NewQuantity(1, resource.BinarySI),
 				},
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 						"device-plugin":   *resource.NewQuantity(1, resource.BinarySI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
@@ -927,7 +927,7 @@ func TestMachineInfo(t *testing.T) {
 			desc: "inactive device plugin resources should have their capacity set to 0",
 			node: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						"inactive": *resource.NewQuantity(1, resource.BinarySI),
 					},
 				},
@@ -942,13 +942,13 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 						"inactive":        *resource.NewQuantity(0, resource.BinarySI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
@@ -961,7 +961,7 @@ func TestMachineInfo(t *testing.T) {
 			desc: "extended resources not present in capacity are removed from allocatable",
 			node: &v1.Node{
 				Status: v1.NodeStatus{
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						"example.com/extended": *resource.NewQuantity(1, resource.BinarySI),
 					},
 				},
@@ -973,12 +973,12 @@ func TestMachineInfo(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
@@ -995,12 +995,12 @@ func TestMachineInfo(t *testing.T) {
 			machineInfoError: fmt.Errorf("foo"),
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(0, resource.DecimalSI),
 						v1.ResourceMemory: resource.MustParse("0Gi"),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(0, resource.DecimalSI),
 						v1.ResourceMemory: resource.MustParse("0Gi"),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
@@ -1028,12 +1028,12 @@ func TestMachineInfo(t *testing.T) {
 					NodeInfo: v1.NodeSystemInfo{
 						BootID: "bar",
 					},
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 						v1.ResourceMemory: *resource.NewQuantity(1024, resource.BinarySI),
 						v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
@@ -1056,14 +1056,14 @@ func TestMachineInfo(t *testing.T) {
 			machineInfoFunc := func() (*cadvisorapiv1.MachineInfo, error) {
 				return tc.machineInfo, tc.machineInfoError
 			}
-			capacityFunc := func(localStorageCapacityIsolation bool) v1.ResourceList {
+			capacityFunc := func(localStorageCapacityIsolation bool) v1.ResourceMap {
 				return tc.capacity
 			}
-			devicePluginResourceCapacityFunc := func() (v1.ResourceList, v1.ResourceList, []string) {
+			devicePluginResourceCapacityFunc := func() (v1.ResourceMap, v1.ResourceMap, []string) {
 				c := tc.devicePluginResourceCapacity
 				return c.capacity, c.allocatable, c.inactive
 			}
-			nodeAllocatableReservationFunc := func() v1.ResourceList {
+			nodeAllocatableReservationFunc := func() v1.ResourceMap {
 				return tc.nodeAllocatableReservation
 			}
 
@@ -1267,7 +1267,7 @@ func TestReadyCondition(t *testing.T) {
 
 	withCapacity := &v1.Node{
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceCPU:              *resource.NewMilliQuantity(2000, resource.DecimalSI),
 				v1.ResourceMemory:           *resource.NewQuantity(10e9, resource.BinarySI),
 				v1.ResourcePods:             *resource.NewQuantity(100, resource.DecimalSI),
@@ -1278,7 +1278,7 @@ func TestReadyCondition(t *testing.T) {
 
 	withoutStorageCapacity := &v1.Node{
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceCPU:    *resource.NewMilliQuantity(2000, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(10e9, resource.BinarySI),
 				v1.ResourcePods:   *resource.NewQuantity(100, resource.DecimalSI),
@@ -1893,10 +1893,10 @@ func TestVolumeLimits(t *testing.T) {
 			},
 			expectNode: &v1.Node{
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						volumeLimitKey: *resource.NewQuantity(volumeLimitVal, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						volumeLimitKey: *resource.NewQuantity(volumeLimitVal, resource.DecimalSI),
 					},
 				},

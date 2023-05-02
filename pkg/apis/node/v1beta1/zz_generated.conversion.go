@@ -93,7 +93,7 @@ func Convert_v1beta1_Overhead_To_node_Overhead(in *v1beta1.Overhead, out *node.O
 }
 
 func autoConvert_node_Overhead_To_v1beta1_Overhead(in *node.Overhead, out *v1beta1.Overhead, s conversion.Scope) error {
-	out.PodFixed = *(*v1.ResourceList)(unsafe.Pointer(&in.PodFixed))
+	out.PodFixed = *(*v1.ResourceMap)(unsafe.Pointer(&in.PodFixed))
 	return nil
 }
 

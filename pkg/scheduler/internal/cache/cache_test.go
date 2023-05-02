@@ -1029,7 +1029,7 @@ func TestNodeOperators(t *testing.T) {
 					Name: nodeName,
 				},
 				Status: v1.NodeStatus{
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:                   cpu1,
 						v1.ResourceMemory:                mem100m,
 						v1.ResourceName(resourceFooName): resourceFoo,
@@ -1056,7 +1056,7 @@ func TestNodeOperators(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    cpuHalf,
 										v1.ResourceMemory: mem50m,
 									},
@@ -1080,7 +1080,7 @@ func TestNodeOperators(t *testing.T) {
 					Name: nodeName,
 				},
 				Status: v1.NodeStatus{
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:                   cpu1,
 						v1.ResourceMemory:                mem100m,
 						v1.ResourceName(resourceFooName): resourceFoo,
@@ -1107,7 +1107,7 @@ func TestNodeOperators(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    cpuHalf,
 										v1.ResourceMemory: mem50m,
 									},
@@ -1126,7 +1126,7 @@ func TestNodeOperators(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    cpuHalf,
 										v1.ResourceMemory: mem50m,
 									},
@@ -1257,7 +1257,7 @@ func TestSchedulerCache_UpdateSnapshot(t *testing.T) {
 				Name: fmt.Sprintf("test-node%v", i),
 			},
 			Status: v1.NodeStatus{
-				Allocatable: v1.ResourceList{
+				Allocatable: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("1000m"),
 					v1.ResourceMemory: resource.MustParse("100m"),
 				},
@@ -1269,7 +1269,7 @@ func TestSchedulerCache_UpdateSnapshot(t *testing.T) {
 	var updatedNodes []*v1.Node
 	for _, n := range nodes {
 		updatedNode := n.DeepCopy()
-		updatedNode.Status.Allocatable = v1.ResourceList{
+		updatedNode.Status.Allocatable = v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse("2000m"),
 			v1.ResourceMemory: resource.MustParse("500m"),
 		}

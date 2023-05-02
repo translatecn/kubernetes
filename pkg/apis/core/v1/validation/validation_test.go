@@ -34,11 +34,11 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Resources with Requests equal to Limits",
 			requirements: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -47,7 +47,7 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Resources with only Limits",
 			requirements: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 					v1.ResourceName("my.org/resource"): resource.MustParse("10"),
@@ -57,7 +57,7 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Resources with only Requests",
 			requirements: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 					v1.ResourceName("my.org/resource"): resource.MustParse("10"),
@@ -67,12 +67,12 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Resources with Requests Less Than Limits",
 			requirements: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("9"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("9G"),
 					v1.ResourceName("my.org/resource"): resource.MustParse("9"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 					v1.ResourceName("my.org/resource"): resource.MustParse("9"),
@@ -95,12 +95,12 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Resources with Requests Larger Than Limits",
 			requirements: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 					v1.ResourceName("my.org/resource"): resource.MustParse("10m"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("9"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("9G"),
 					v1.ResourceName("my.org/resource"): resource.MustParse("9m"),
@@ -110,7 +110,7 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Invalid Resources with Requests",
 			requirements: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName("my.org"): resource.MustParse("10m"),
 				},
 			},
@@ -118,7 +118,7 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "Invalid Resources with Limits",
 			requirements: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName("my.org"): resource.MustParse("9m"),
 				},
 			},

@@ -154,8 +154,8 @@ func getSidecarContainer(name string, cpuLimit, memLimit int64) v1.Container {
 	}
 
 	if cpuLimit > 0 || memLimit > 0 {
-		container.Resources.Limits = v1.ResourceList{}
-		container.Resources.Requests = v1.ResourceList{}
+		container.Resources.Limits = v1.ResourceMap{}
+		container.Resources.Requests = v1.ResourceMap{}
 	}
 
 	if cpuLimit > 0 {

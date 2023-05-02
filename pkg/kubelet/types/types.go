@@ -102,9 +102,9 @@ func SortStatusesOfInitContainers(p *v1.Pod, statusMap map[string]*v1.ContainerS
 // Reservation represents reserved resources for non-pod components.
 type Reservation struct {
 	// System represents resources reserved for non-kubernetes components.
-	System v1.ResourceList
+	System v1.ResourceMap
 	// Kubernetes represents resources reserved for kubernetes system components.
-	Kubernetes v1.ResourceList
+	Kubernetes v1.ResourceMap
 }
 
 // ResolvedPodUID is a pod UID which has been translated/resolved to the representation known to kubelets.

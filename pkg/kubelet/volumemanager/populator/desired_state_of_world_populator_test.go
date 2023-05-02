@@ -1391,8 +1391,8 @@ func createResizeRelatedVolumes(volumeMode *v1.PersistentVolumeMode) (pv *v1.Per
 	return
 }
 
-func volumeCapacity(size int) v1.ResourceList {
-	return v1.ResourceList{v1.ResourceStorage: resource.MustParse(fmt.Sprintf("%dGi", size))}
+func volumeCapacity(size int) v1.ResourceMap {
+	return v1.ResourceMap{v1.ResourceStorage: resource.MustParse(fmt.Sprintf("%dGi", size))}
 }
 
 func reconcileASW(asw cache.ActualStateOfWorld, dsw cache.DesiredStateOfWorld, t *testing.T) {

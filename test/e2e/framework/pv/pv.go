@@ -605,7 +605,7 @@ func MakePersistentVolume(pvConfig PersistentVolumeConfig) *v1.PersistentVolume 
 		},
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeReclaimPolicy: pvConfig.ReclaimPolicy,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceStorage: resource.MustParse(pvConfig.Capacity),
 			},
 			PersistentVolumeSource: pvConfig.PVSource,
@@ -649,7 +649,7 @@ func MakePersistentVolumeClaim(cfg PersistentVolumeClaimConfig, ns string) *v1.P
 			Selector:    cfg.Selector,
 			AccessModes: cfg.AccessModes,
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceStorage: resource.MustParse(cfg.ClaimSize),
 				},
 			},

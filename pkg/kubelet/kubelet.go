@@ -852,7 +852,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查,满足条件后才会继续创建Pod,通过Admit方法来检查
 	var _ = new(eviction.ManagerImpl).Admit
-	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler)
+	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler) // ✅
 
 	// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.
 	// Hence, we concatenate those two lists.
@@ -873,10 +873,21 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.AddPodSyncLoopHandler(activeDeadlineHandler)
 	klet.AddPodSyncHandler(activeDeadlineHandler)
 
-	klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler())
+	klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // todo
 
-	criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler(klet.GetActivePods, killPodNow(klet.podWorkers, kubeDeps.Recorder), kubeDeps.Recorder)
-	klet.admitHandlers.AddPodAdmitHandler(lifecycle.NewPredicateAdmitHandler(klet.getNodeAnyWay, criticalPodAdmissionHandler, klet.containerManager.UpdatePluginResources))
+	criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // pod 准入失败恢复器  ✅
+		klet.GetActivePods,
+		killPodNow(klet.podWorkers, kubeDeps.Recorder),
+		kubeDeps.Recorder,
+	)
+
+	klet.admitHandlers.AddPodAdmitHandler( // ✅
+		lifecycle.NewPredicateAdmitHandler(
+			klet.getNodeAnyWay,
+			criticalPodAdmissionHandler,
+			klet.containerManager.UpdatePluginResources,
+		),
+	)
 	// apply functional Option's
 	for _, opt := range kubeDeps.Options {
 		opt(klet)

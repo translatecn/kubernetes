@@ -70,7 +70,7 @@ func (p *IntegrationTestNodePreparer) PrepareNodes(nextNodeIndex int) error {
 			GenerateName: p.nodeNamePrefix,
 		},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 				v1.ResourceCPU:    resource.MustParse("4"),
 				v1.ResourceMemory: resource.MustParse("32Gi"),

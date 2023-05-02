@@ -406,7 +406,7 @@ func Convert_v1_Secret_To_core_Secret(in *v1.Secret, out *core.Secret, s convers
 }
 
 // +k8s:conversion-fn=copy-only
-func Convert_v1_ResourceList_To_core_ResourceList(in *v1.ResourceList, out *core.ResourceList, s conversion.Scope) error {
+func Convert_v1_ResourceList_To_core_ResourceList(in *v1.ResourceMap, out *core.ResourceList, s conversion.Scope) error {
 	if *in == nil {
 		return nil
 	}

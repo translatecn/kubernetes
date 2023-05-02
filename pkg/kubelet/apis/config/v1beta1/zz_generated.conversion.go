@@ -769,7 +769,7 @@ func Convert_config_KubeletX509Authentication_To_v1beta1_KubeletX509Authenticati
 
 func autoConvert_v1beta1_MemoryReservation_To_config_MemoryReservation(in *v1beta1.MemoryReservation, out *config.MemoryReservation, s conversion.Scope) error {
 	out.NumaNode = in.NumaNode
-	out.Limits = *(*corev1.ResourceList)(unsafe.Pointer(&in.Limits))
+	out.Limits = *(*corev1.ResourceMap)(unsafe.Pointer(&in.Limits))
 	return nil
 }
 
@@ -780,7 +780,7 @@ func Convert_v1beta1_MemoryReservation_To_config_MemoryReservation(in *v1beta1.M
 
 func autoConvert_config_MemoryReservation_To_v1beta1_MemoryReservation(in *config.MemoryReservation, out *v1beta1.MemoryReservation, s conversion.Scope) error {
 	out.NumaNode = in.NumaNode
-	out.Limits = *(*corev1.ResourceList)(unsafe.Pointer(&in.Limits))
+	out.Limits = *(*corev1.ResourceMap)(unsafe.Pointer(&in.Limits))
 	return nil
 }
 

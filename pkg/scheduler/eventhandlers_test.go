@@ -54,20 +54,20 @@ func TestNodeAllocatableChanged(t *testing.T) {
 	for _, test := range []struct {
 		Name           string
 		Changed        bool
-		OldAllocatable v1.ResourceList
-		NewAllocatable v1.ResourceList
+		OldAllocatable v1.ResourceMap
+		NewAllocatable v1.ResourceMap
 	}{
 		{
 			Name:           "no allocatable resources changed",
 			Changed:        false,
-			OldAllocatable: v1.ResourceList{v1.ResourceMemory: newQuantity(1024)},
-			NewAllocatable: v1.ResourceList{v1.ResourceMemory: newQuantity(1024)},
+			OldAllocatable: v1.ResourceMap{v1.ResourceMemory: newQuantity(1024)},
+			NewAllocatable: v1.ResourceMap{v1.ResourceMemory: newQuantity(1024)},
 		},
 		{
 			Name:           "new node has more allocatable resources",
 			Changed:        true,
-			OldAllocatable: v1.ResourceList{v1.ResourceMemory: newQuantity(1024)},
-			NewAllocatable: v1.ResourceList{v1.ResourceMemory: newQuantity(1024), v1.ResourceStorage: newQuantity(1024)},
+			OldAllocatable: v1.ResourceMap{v1.ResourceMemory: newQuantity(1024)},
+			NewAllocatable: v1.ResourceMap{v1.ResourceMemory: newQuantity(1024), v1.ResourceStorage: newQuantity(1024)},
 		},
 	} {
 		t.Run(test.Name, func(t *testing.T) {
@@ -485,7 +485,7 @@ func TestAdmissionCheck(t *testing.T) {
 		{
 			name: "check PodOverhead and nodeAffinity, PodOverhead need fail quickly if includeAllFailures is false",
 			node: st.MakeNode().Name("fake-node").Label("foo", "bar").Capacity(cpu).Obj(),
-			pod:  st.MakePod().Name("pod2").Container("c").Overhead(v1.ResourceList{v1.ResourceCPU: resource.MustParse("1")}).Req(map[v1.ResourceName]string{v1.ResourceCPU: "1"}).NodeSelector(map[string]string{"foo": "bar1"}).Obj(),
+			pod:  st.MakePod().Name("pod2").Container("c").Overhead(v1.ResourceMap{v1.ResourceCPU: resource.MustParse("1")}).Req(map[v1.ResourceName]string{v1.ResourceCPU: "1"}).NodeSelector(map[string]string{"foo": "bar1"}).Obj(),
 			existingPods: []*v1.Pod{
 				st.MakePod().Name("pod1").Req(map[v1.ResourceName]string{v1.ResourceCPU: "7"}).Node("fake-node").Obj(),
 			},

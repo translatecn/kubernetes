@@ -26,7 +26,7 @@ import (
 
 func TestCreateQuota(t *testing.T) {
 	hards := []string{"cpu=1", "cpu=1,pods=42"}
-	var resourceQuotaSpecLists []corev1.ResourceList
+	var resourceQuotaSpecLists []corev1.ResourceMap
 	for _, hard := range hards {
 		resourceQuotaSpecList, err := populateResourceListV1(hard)
 		if err != nil {

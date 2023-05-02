@@ -397,7 +397,7 @@ func (in *MemoryReservation) DeepCopyInto(out *MemoryReservation) {
 	*out = *in
 	if in.Limits != nil {
 		in, out := &in.Limits, &out.Limits
-		*out = make(corev1.ResourceList, len(*in))
+		*out = make(corev1.ResourceMap, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val.DeepCopy()
 		}

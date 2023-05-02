@@ -27,7 +27,7 @@ import (
 )
 
 // Equals returns true if the two lists are equivalent
-func Equals(a corev1.ResourceList, b corev1.ResourceList) bool {
+func Equals(a corev1.ResourceMap, b corev1.ResourceMap) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -47,7 +47,7 @@ func Equals(a corev1.ResourceList, b corev1.ResourceList) bool {
 
 // LessThanOrEqual returns true if a < b for each key in b
 // If false, it returns the keys in a that exceeded b
-func LessThanOrEqual(a corev1.ResourceList, b corev1.ResourceList) (bool, []corev1.ResourceName) {
+func LessThanOrEqual(a corev1.ResourceMap, b corev1.ResourceMap) (bool, []corev1.ResourceName) {
 	result := true
 	resourceNames := []corev1.ResourceName{}
 	for key, value := range b {
@@ -62,8 +62,8 @@ func LessThanOrEqual(a corev1.ResourceList, b corev1.ResourceList) (bool, []core
 }
 
 // Max returns the result of Max(a, b) for each named resource
-func Max(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList {
-	result := corev1.ResourceList{}
+func Max(a corev1.ResourceMap, b corev1.ResourceMap) corev1.ResourceMap {
+	result := corev1.ResourceMap{}
 	for key, value := range a {
 		if other, found := b[key]; found {
 			if value.Cmp(other) <= 0 {
@@ -82,8 +82,8 @@ func Max(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList {
 }
 
 // Add returns the result of a + b for each named resource
-func Add(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList {
-	result := corev1.ResourceList{}
+func Add(a corev1.ResourceMap, b corev1.ResourceMap) corev1.ResourceMap {
+	result := corev1.ResourceMap{}
 	for key, value := range a {
 		quantity := value.DeepCopy()
 		if other, found := b[key]; found {
@@ -101,10 +101,10 @@ func Add(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList {
 
 // SubtractWithNonNegativeResult - subtracts and returns result of a - b but
 // makes sure we don't return negative values to prevent negative resource usage.
-func SubtractWithNonNegativeResult(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList {
+func SubtractWithNonNegativeResult(a corev1.ResourceMap, b corev1.ResourceMap) corev1.ResourceMap {
 	zero := resource.MustParse("0")
 
-	result := corev1.ResourceList{}
+	result := corev1.ResourceMap{}
 	for key, value := range a {
 		quantity := value.DeepCopy()
 		if other, found := b[key]; found {
@@ -126,8 +126,8 @@ func SubtractWithNonNegativeResult(a corev1.ResourceList, b corev1.ResourceList)
 }
 
 // Subtract returns the result of a - b for each named resource
-func Subtract(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList {
-	result := corev1.ResourceList{}
+func Subtract(a corev1.ResourceMap, b corev1.ResourceMap) corev1.ResourceMap {
+	result := corev1.ResourceMap{}
 	for key, value := range a {
 		quantity := value.DeepCopy()
 		if other, found := b[key]; found {
@@ -146,9 +146,9 @@ func Subtract(a corev1.ResourceList, b corev1.ResourceList) corev1.ResourceList 
 }
 
 // Mask returns a new resource list that only has the values with the specified names
-func Mask(resources corev1.ResourceList, names []corev1.ResourceName) corev1.ResourceList {
+func Mask(resources corev1.ResourceMap, names []corev1.ResourceName) corev1.ResourceMap {
 	nameSet := ToSet(names)
-	result := corev1.ResourceList{}
+	result := corev1.ResourceMap{}
 	for key, value := range resources {
 		if nameSet.Has(string(key)) {
 			result[key] = value.DeepCopy()
@@ -157,8 +157,8 @@ func Mask(resources corev1.ResourceList, names []corev1.ResourceName) corev1.Res
 	return result
 }
 
-// ResourceNames returns a list of all resource names in the ResourceList
-func ResourceNames(resources corev1.ResourceList) []corev1.ResourceName {
+// ResourceNames returns a list of all resource names in the ResourceMap
+func ResourceNames(resources corev1.ResourceMap) []corev1.ResourceName {
 	result := []corev1.ResourceName{}
 	for resourceName := range resources {
 		result = append(result, resourceName)
@@ -216,7 +216,7 @@ func Difference(a []corev1.ResourceName, b []corev1.ResourceName) []corev1.Resou
 }
 
 // IsZero returns true if each key maps to the quantity value 0
-func IsZero(a corev1.ResourceList) bool {
+func IsZero(a corev1.ResourceMap) bool {
 	zero := resource.MustParse("0")
 	for _, v := range a {
 		if v.Cmp(zero) != 0 {
@@ -227,8 +227,8 @@ func IsZero(a corev1.ResourceList) bool {
 }
 
 // RemoveZeros returns a new resource list that only has no zero values
-func RemoveZeros(a corev1.ResourceList) corev1.ResourceList {
-	result := corev1.ResourceList{}
+func RemoveZeros(a corev1.ResourceMap) corev1.ResourceMap {
+	result := corev1.ResourceMap{}
 	for key, value := range a {
 		if !value.IsZero() {
 			result[key] = value
@@ -238,7 +238,7 @@ func RemoveZeros(a corev1.ResourceList) corev1.ResourceList {
 }
 
 // IsNegative returns the set of resource names that have a negative value.
-func IsNegative(a corev1.ResourceList) []corev1.ResourceName {
+func IsNegative(a corev1.ResourceMap) []corev1.ResourceName {
 	results := []corev1.ResourceName{}
 	zero := resource.MustParse("0")
 	for k, v := range a {
@@ -258,9 +258,9 @@ func ToSet(resourceNames []corev1.ResourceName) sets.String {
 	return result
 }
 
-// CalculateUsage calculates and returns the requested ResourceList usage.
+// CalculateUsage calculates and returns the requested ResourceMap usage.
 // If an error is returned, usage only contains the resources which encountered no calculation errors.
-func CalculateUsage(namespaceName string, scopes []corev1.ResourceQuotaScope, hardLimits corev1.ResourceList, registry Registry, scopeSelector *corev1.ScopeSelector) (corev1.ResourceList, error) {
+func CalculateUsage(namespaceName string, scopes []corev1.ResourceQuotaScope, hardLimits corev1.ResourceMap, registry Registry, scopeSelector *corev1.ScopeSelector) (corev1.ResourceMap, error) {
 	// find the intersection between the hard resources on the quota
 	// and the resources this controller can track to know what we can
 	// look to measure updated usage stats for
@@ -276,7 +276,7 @@ func CalculateUsage(namespaceName string, scopes []corev1.ResourceQuotaScope, ha
 	errors := []error{}
 
 	// sum the observed usage from each evaluator
-	newUsage := corev1.ResourceList{}
+	newUsage := corev1.ResourceMap{}
 	for _, evaluator := range evaluators {
 		// only trigger the evaluator if it matches a resource in the quota, otherwise, skip calculating anything
 		intersection := evaluator.MatchingResources(matchedResources)

@@ -190,7 +190,7 @@ var xxx_messageInfo_Scheduling proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*Overhead)(nil), "k8s.io.api.node.v1alpha1.Overhead")
-	proto.RegisterMapType((k8s_io_api_core_v1.ResourceList)(nil), "k8s.io.api.node.v1alpha1.Overhead.PodFixedEntry")
+	proto.RegisterMapType((k8s_io_api_core_v1.ResourceMap)(nil), "k8s.io.api.node.v1alpha1.Overhead.PodFixedEntry")
 	proto.RegisterType((*RuntimeClass)(nil), "k8s.io.api.node.v1alpha1.RuntimeClass")
 	proto.RegisterType((*RuntimeClassList)(nil), "k8s.io.api.node.v1alpha1.RuntimeClassList")
 	proto.RegisterType((*RuntimeClassSpec)(nil), "k8s.io.api.node.v1alpha1.RuntimeClassSpec")
@@ -621,7 +621,7 @@ func (this *Overhead) String() string {
 		keysForPodFixed = append(keysForPodFixed, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForPodFixed)
-	mapStringForPodFixed := "k8s_io_api_core_v1.ResourceList{"
+	mapStringForPodFixed := "k8s_io_api_core_v1.ResourceMap{"
 	for _, k := range keysForPodFixed {
 		mapStringForPodFixed += fmt.Sprintf("%v: %v,", k, this.PodFixed[k8s_io_api_core_v1.ResourceName(k)])
 	}
@@ -764,7 +764,7 @@ func (m *Overhead) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.PodFixed == nil {
-				m.PodFixed = make(k8s_io_api_core_v1.ResourceList)
+				m.PodFixed = make(k8s_io_api_core_v1.ResourceMap)
 			}
 			var mapkey k8s_io_api_core_v1.ResourceName
 			mapvalue := &resource.Quantity{}

@@ -1391,7 +1391,7 @@ func createPV(name, path, cap string, mode []v1.PersistentVolumeAccessMode, recl
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeSource:        v1.PersistentVolumeSource{HostPath: &v1.HostPathVolumeSource{Path: path}},
-			Capacity:                      v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)},
+			Capacity:                      v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)},
 			AccessModes:                   mode,
 			PersistentVolumeReclaimPolicy: reclaim,
 		},
@@ -1403,7 +1403,7 @@ func createPVWithStorageClass(name, path, cap, scName string, mode []v1.Persiste
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeSource:        v1.PersistentVolumeSource{HostPath: &v1.HostPathVolumeSource{Path: path}},
-			Capacity:                      v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)},
+			Capacity:                      v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)},
 			AccessModes:                   mode,
 			PersistentVolumeReclaimPolicy: reclaim,
 			StorageClassName:              scName,
@@ -1418,7 +1418,7 @@ func createPVC(name, namespace, cap string, mode []v1.PersistentVolumeAccessMode
 			Namespace: namespace,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
-			Resources:        v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)}},
+			Resources:        v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)}},
 			AccessModes:      mode,
 			StorageClassName: &class,
 		},
@@ -1432,7 +1432,7 @@ func createPVCWithNilStorageClass(name, namespace, cap string, mode []v1.Persist
 			Namespace: namespace,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
-			Resources:   v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)}},
+			Resources:   v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse(cap)}},
 			AccessModes: mode,
 		},
 	}

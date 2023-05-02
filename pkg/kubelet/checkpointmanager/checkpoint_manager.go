@@ -41,8 +41,7 @@ type CheckpointManager interface {
 	GetCheckpoint(checkpointKey string, checkpoint Checkpoint) error
 	// WARNING: RemoveCheckpoint will not return error if checkpoint does not exist.
 	RemoveCheckpoint(checkpointKey string) error
-	// ListCheckpoint returns the list of existing checkpoints.
-	ListCheckpoints() ([]string, error)
+	ListCheckpoints() ([]string, error) // 返回检查点列表
 }
 
 // impl is an implementation of CheckpointManager. It persists checkpoint in CheckpointStore

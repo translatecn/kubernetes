@@ -62,7 +62,7 @@ func TestRuntimeClassConversion(t *testing.T) {
 				Spec: v1alpha1.RuntimeClassSpec{
 					RuntimeHandler: handler,
 					Overhead: &v1alpha1.Overhead{
-						PodFixed: corev1.ResourceList{
+						PodFixed: corev1.ResourceMap{
 							corev1.ResourceCPU: resource.MustParse(cpuOverhead),
 						},
 					},

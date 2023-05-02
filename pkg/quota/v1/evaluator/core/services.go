@@ -110,8 +110,8 @@ func toExternalServiceOrError(obj runtime.Object) (*corev1.Service, error) {
 }
 
 // Usage knows how to measure usage associated with services
-func (p *serviceEvaluator) Usage(item runtime.Object) (corev1.ResourceList, error) {
-	result := corev1.ResourceList{}
+func (p *serviceEvaluator) Usage(item runtime.Object) (corev1.ResourceMap, error) {
+	result := corev1.ResourceMap{}
 	svc, err := toExternalServiceOrError(item)
 	if err != nil {
 		return result, err

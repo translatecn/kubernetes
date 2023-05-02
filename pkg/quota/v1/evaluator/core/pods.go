@@ -216,7 +216,7 @@ func (p *podEvaluator) UncoveredQuotaScopes(limitedScopes []corev1.ScopedResourc
 }
 
 // Usage knows how to measure usage associated with pods
-func (p *podEvaluator) Usage(item runtime.Object) (corev1.ResourceList, error) {
+func (p *podEvaluator) Usage(item runtime.Object) (corev1.ResourceMap, error) {
 	// delegate to normal usage
 	return PodUsageFunc(item, p.clock)
 }
@@ -250,8 +250,8 @@ func enforcePodContainerConstraints(container *corev1.Container, requiredSet set
 }
 
 // podComputeUsageHelper can summarize the pod compute quota usage based on requests and limits
-func podComputeUsageHelper(requests corev1.ResourceList, limits corev1.ResourceList) corev1.ResourceList {
-	result := corev1.ResourceList{}
+func podComputeUsageHelper(requests corev1.ResourceMap, limits corev1.ResourceMap) corev1.ResourceMap {
+	result := corev1.ResourceMap{}
 	result[corev1.ResourcePods] = resource.MustParse("1")
 	if request, found := requests[corev1.ResourceCPU]; found {
 		result[corev1.ResourceCPU] = request
@@ -332,17 +332,17 @@ func podMatchesScopeFunc(selector corev1.ScopedResourceSelectorRequirement, obje
 // A pod is charged for quota if the following are not true.
 //   - pod has a terminal phase (failed or succeeded)
 //   - pod has been marked for deletion and grace period has expired
-func PodUsageFunc(obj runtime.Object, clock clock.Clock) (corev1.ResourceList, error) {
+func PodUsageFunc(obj runtime.Object, clock clock.Clock) (corev1.ResourceMap, error) {
 	pod, err := toExternalPodOrError(obj)
 	if err != nil {
-		return corev1.ResourceList{}, err
+		return corev1.ResourceMap{}, err
 	}
 
 	// always quota the object count (even if the pod is end of life)
 	// object count quotas track all objects that are in storage.
 	// where "pods" tracks all pods that have not reached a terminal state,
 	// count/pods tracks all pods independent of state.
-	result := corev1.ResourceList{
+	result := corev1.ResourceMap{
 		podObjectCountName: *(resource.NewQuantity(1, resource.DecimalSI)),
 	}
 
@@ -352,8 +352,8 @@ func PodUsageFunc(obj runtime.Object, clock clock.Clock) (corev1.ResourceList, e
 		return result, nil
 	}
 
-	requests := corev1.ResourceList{}
-	limits := corev1.ResourceList{}
+	requests := corev1.ResourceMap{}
+	limits := corev1.ResourceMap{}
 	// TODO: ideally, we have pod level requests and limits in the future.
 	for i := range pod.Spec.Containers {
 		requests = quota.Add(requests, pod.Spec.Containers[i].Resources.Requests)

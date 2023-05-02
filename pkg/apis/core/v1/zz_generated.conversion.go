@@ -2247,8 +2247,8 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddConversionFunc((*v1.ResourceList)(nil), (*core.ResourceList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1_ResourceList_To_core_ResourceList(a.(*v1.ResourceList), b.(*core.ResourceList), scope)
+	if err := s.AddConversionFunc((*v1.ResourceMap)(nil), (*core.ResourceList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1_ResourceList_To_core_ResourceList(a.(*v1.ResourceMap), b.(*core.ResourceList), scope)
 	}); err != nil {
 		return err
 	}
@@ -4294,11 +4294,11 @@ func Convert_v1_LimitRangeItem_To_core_LimitRangeItem(in *v1.LimitRangeItem, out
 
 func autoConvert_core_LimitRangeItem_To_v1_LimitRangeItem(in *core.LimitRangeItem, out *v1.LimitRangeItem, s conversion.Scope) error {
 	out.Type = v1.LimitType(in.Type)
-	out.Max = *(*v1.ResourceList)(unsafe.Pointer(&in.Max))
-	out.Min = *(*v1.ResourceList)(unsafe.Pointer(&in.Min))
-	out.Default = *(*v1.ResourceList)(unsafe.Pointer(&in.Default))
-	out.DefaultRequest = *(*v1.ResourceList)(unsafe.Pointer(&in.DefaultRequest))
-	out.MaxLimitRequestRatio = *(*v1.ResourceList)(unsafe.Pointer(&in.MaxLimitRequestRatio))
+	out.Max = *(*v1.ResourceMap)(unsafe.Pointer(&in.Max))
+	out.Min = *(*v1.ResourceMap)(unsafe.Pointer(&in.Min))
+	out.Default = *(*v1.ResourceMap)(unsafe.Pointer(&in.Default))
+	out.DefaultRequest = *(*v1.ResourceMap)(unsafe.Pointer(&in.DefaultRequest))
+	out.MaxLimitRequestRatio = *(*v1.ResourceMap)(unsafe.Pointer(&in.MaxLimitRequestRatio))
 	return nil
 }
 
@@ -4882,7 +4882,7 @@ func Convert_v1_NodeResources_To_core_NodeResources(in *v1.NodeResources, out *c
 }
 
 func autoConvert_core_NodeResources_To_v1_NodeResources(in *core.NodeResources, out *v1.NodeResources, s conversion.Scope) error {
-	out.Capacity = *(*v1.ResourceList)(unsafe.Pointer(&in.Capacity))
+	out.Capacity = *(*v1.ResourceMap)(unsafe.Pointer(&in.Capacity))
 	return nil
 }
 
@@ -5003,8 +5003,8 @@ func Convert_v1_NodeStatus_To_core_NodeStatus(in *v1.NodeStatus, out *core.NodeS
 }
 
 func autoConvert_core_NodeStatus_To_v1_NodeStatus(in *core.NodeStatus, out *v1.NodeStatus, s conversion.Scope) error {
-	out.Capacity = *(*v1.ResourceList)(unsafe.Pointer(&in.Capacity))
-	out.Allocatable = *(*v1.ResourceList)(unsafe.Pointer(&in.Allocatable))
+	out.Capacity = *(*v1.ResourceMap)(unsafe.Pointer(&in.Capacity))
+	out.Allocatable = *(*v1.ResourceMap)(unsafe.Pointer(&in.Allocatable))
 	out.Phase = v1.NodePhase(in.Phase)
 	out.Conditions = *(*[]v1.NodeCondition)(unsafe.Pointer(&in.Conditions))
 	out.Addresses = *(*[]v1.NodeAddress)(unsafe.Pointer(&in.Addresses))
@@ -5290,9 +5290,9 @@ func Convert_v1_PersistentVolumeClaimStatus_To_core_PersistentVolumeClaimStatus(
 func autoConvert_core_PersistentVolumeClaimStatus_To_v1_PersistentVolumeClaimStatus(in *core.PersistentVolumeClaimStatus, out *v1.PersistentVolumeClaimStatus, s conversion.Scope) error {
 	out.Phase = v1.PersistentVolumeClaimPhase(in.Phase)
 	out.AccessModes = *(*[]v1.PersistentVolumeAccessMode)(unsafe.Pointer(&in.AccessModes))
-	out.Capacity = *(*v1.ResourceList)(unsafe.Pointer(&in.Capacity))
+	out.Capacity = *(*v1.ResourceMap)(unsafe.Pointer(&in.Capacity))
 	out.Conditions = *(*[]v1.PersistentVolumeClaimCondition)(unsafe.Pointer(&in.Conditions))
-	out.AllocatedResources = *(*v1.ResourceList)(unsafe.Pointer(&in.AllocatedResources))
+	out.AllocatedResources = *(*v1.ResourceMap)(unsafe.Pointer(&in.AllocatedResources))
 	out.ResizeStatus = (*v1.PersistentVolumeClaimResizeStatus)(unsafe.Pointer(in.ResizeStatus))
 	return nil
 }
@@ -5470,7 +5470,7 @@ func autoConvert_v1_PersistentVolumeSpec_To_core_PersistentVolumeSpec(in *v1.Per
 }
 
 func autoConvert_core_PersistentVolumeSpec_To_v1_PersistentVolumeSpec(in *core.PersistentVolumeSpec, out *v1.PersistentVolumeSpec, s conversion.Scope) error {
-	out.Capacity = *(*v1.ResourceList)(unsafe.Pointer(&in.Capacity))
+	out.Capacity = *(*v1.ResourceMap)(unsafe.Pointer(&in.Capacity))
 	if err := Convert_core_PersistentVolumeSource_To_v1_PersistentVolumeSource(&in.PersistentVolumeSource, &out.PersistentVolumeSource, s); err != nil {
 		return err
 	}
@@ -6357,7 +6357,7 @@ func autoConvert_core_PodSpec_To_v1_PodSpec(in *core.PodSpec, out *v1.PodSpec, s
 	out.DNSConfig = (*v1.PodDNSConfig)(unsafe.Pointer(in.DNSConfig))
 	out.ReadinessGates = *(*[]v1.PodReadinessGate)(unsafe.Pointer(&in.ReadinessGates))
 	out.RuntimeClassName = (*string)(unsafe.Pointer(in.RuntimeClassName))
-	out.Overhead = *(*v1.ResourceList)(unsafe.Pointer(&in.Overhead))
+	out.Overhead = *(*v1.ResourceMap)(unsafe.Pointer(&in.Overhead))
 	out.EnableServiceLinks = (*bool)(unsafe.Pointer(in.EnableServiceLinks))
 	out.TopologySpreadConstraints = *(*[]v1.TopologySpreadConstraint)(unsafe.Pointer(&in.TopologySpreadConstraints))
 	out.OS = (*v1.PodOS)(unsafe.Pointer(in.OS))
@@ -7138,7 +7138,7 @@ func Convert_v1_ResourceQuotaSpec_To_core_ResourceQuotaSpec(in *v1.ResourceQuota
 }
 
 func autoConvert_core_ResourceQuotaSpec_To_v1_ResourceQuotaSpec(in *core.ResourceQuotaSpec, out *v1.ResourceQuotaSpec, s conversion.Scope) error {
-	out.Hard = *(*v1.ResourceList)(unsafe.Pointer(&in.Hard))
+	out.Hard = *(*v1.ResourceMap)(unsafe.Pointer(&in.Hard))
 	out.Scopes = *(*[]v1.ResourceQuotaScope)(unsafe.Pointer(&in.Scopes))
 	out.ScopeSelector = (*v1.ScopeSelector)(unsafe.Pointer(in.ScopeSelector))
 	return nil
@@ -7161,8 +7161,8 @@ func Convert_v1_ResourceQuotaStatus_To_core_ResourceQuotaStatus(in *v1.ResourceQ
 }
 
 func autoConvert_core_ResourceQuotaStatus_To_v1_ResourceQuotaStatus(in *core.ResourceQuotaStatus, out *v1.ResourceQuotaStatus, s conversion.Scope) error {
-	out.Hard = *(*v1.ResourceList)(unsafe.Pointer(&in.Hard))
-	out.Used = *(*v1.ResourceList)(unsafe.Pointer(&in.Used))
+	out.Hard = *(*v1.ResourceMap)(unsafe.Pointer(&in.Hard))
+	out.Used = *(*v1.ResourceMap)(unsafe.Pointer(&in.Used))
 	return nil
 }
 
@@ -7184,8 +7184,8 @@ func Convert_v1_ResourceRequirements_To_core_ResourceRequirements(in *v1.Resourc
 }
 
 func autoConvert_core_ResourceRequirements_To_v1_ResourceRequirements(in *core.ResourceRequirements, out *v1.ResourceRequirements, s conversion.Scope) error {
-	out.Limits = *(*v1.ResourceList)(unsafe.Pointer(&in.Limits))
-	out.Requests = *(*v1.ResourceList)(unsafe.Pointer(&in.Requests))
+	out.Limits = *(*v1.ResourceMap)(unsafe.Pointer(&in.Limits))
+	out.Requests = *(*v1.ResourceMap)(unsafe.Pointer(&in.Requests))
 	out.Claims = *(*[]v1.ResourceClaim)(unsafe.Pointer(&in.Claims))
 	return nil
 }

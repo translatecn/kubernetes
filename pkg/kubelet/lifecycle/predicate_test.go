@@ -47,42 +47,42 @@ func TestRemoveMissingExtendedResources(t *testing.T) {
 		{
 			desc: "requests in Limits should be ignored",
 			pod: makeTestPod(
-				v1.ResourceList{},                        // Requests
-				v1.ResourceList{"foo.com/bar": quantity}, // Limits
+				v1.ResourceMap{},                        // Requests
+				v1.ResourceMap{"foo.com/bar": quantity}, // Limits
 			),
 			node: makeTestNode(
-				v1.ResourceList{"foo.com/baz": quantity}, // Allocatable
+				v1.ResourceMap{"foo.com/baz": quantity}, // Allocatable
 			),
 			expectedPod: makeTestPod(
-				v1.ResourceList{},                        // Requests
-				v1.ResourceList{"foo.com/bar": quantity}, // Limits
+				v1.ResourceMap{},                        // Requests
+				v1.ResourceMap{"foo.com/bar": quantity}, // Limits
 			),
 		},
 		{
 			desc: "requests for resources available in node should not be removed",
 			pod: makeTestPod(
-				v1.ResourceList{"foo.com/bar": quantity}, // Requests
-				v1.ResourceList{},                        // Limits
+				v1.ResourceMap{"foo.com/bar": quantity}, // Requests
+				v1.ResourceMap{},                        // Limits
 			),
 			node: makeTestNode(
-				v1.ResourceList{"foo.com/bar": quantity}, // Allocatable
+				v1.ResourceMap{"foo.com/bar": quantity}, // Allocatable
 			),
 			expectedPod: makeTestPod(
-				v1.ResourceList{"foo.com/bar": quantity}, // Requests
-				v1.ResourceList{}),                       // Limits
+				v1.ResourceMap{"foo.com/bar": quantity}, // Requests
+				v1.ResourceMap{}),                       // Limits
 		},
 		{
 			desc: "requests for resources unavailable in node should be removed",
 			pod: makeTestPod(
-				v1.ResourceList{"foo.com/bar": quantity}, // Requests
-				v1.ResourceList{},                        // Limits
+				v1.ResourceMap{"foo.com/bar": quantity}, // Requests
+				v1.ResourceMap{},                        // Limits
 			),
 			node: makeTestNode(
-				v1.ResourceList{"foo.com/baz": quantity}, // Allocatable
+				v1.ResourceMap{"foo.com/baz": quantity}, // Allocatable
 			),
 			expectedPod: makeTestPod(
-				v1.ResourceList{}, // Requests
-				v1.ResourceList{}, // Limits
+				v1.ResourceMap{}, // Requests
+				v1.ResourceMap{}, // Limits
 			),
 		},
 	} {
@@ -95,7 +95,7 @@ func TestRemoveMissingExtendedResources(t *testing.T) {
 	}
 }
 
-func makeTestPod(requests, limits v1.ResourceList) *v1.Pod {
+func makeTestPod(requests, limits v1.ResourceMap) *v1.Pod {
 	return &v1.Pod{
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
@@ -110,7 +110,7 @@ func makeTestPod(requests, limits v1.ResourceList) *v1.Pod {
 	}
 }
 
-func makeTestNode(allocatable v1.ResourceList) *v1.Node {
+func makeTestNode(allocatable v1.ResourceMap) *v1.Node {
 	return &v1.Node{
 		Status: v1.NodeStatus{
 			Allocatable: allocatable,
@@ -125,7 +125,7 @@ var (
 
 func makeResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) v1.NodeResources {
 	return v1.NodeResources{
-		Capacity: v1.ResourceList{
+		Capacity: v1.ResourceMap{
 			v1.ResourceCPU:              *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 			v1.ResourceMemory:           *resource.NewQuantity(memory, resource.BinarySI),
 			v1.ResourcePods:             *resource.NewQuantity(pods, resource.DecimalSI),
@@ -136,8 +136,8 @@ func makeResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) 
 	}
 }
 
-func makeAllocatableResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) v1.ResourceList {
-	return v1.ResourceList{
+func makeAllocatableResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) v1.ResourceMap {
+	return v1.ResourceMap{
 		v1.ResourceCPU:              *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 		v1.ResourceMemory:           *resource.NewQuantity(memory, resource.BinarySI),
 		v1.ResourcePods:             *resource.NewQuantity(pods, resource.DecimalSI),
@@ -147,7 +147,7 @@ func makeAllocatableResources(milliCPU, memory, pods, extendedA, storage, hugePa
 	}
 }
 
-func newResourcePod(containerResources ...v1.ResourceList) *v1.Pod {
+func newResourcePod(containerResources ...v1.ResourceMap) *v1.Pod {
 	containers := []v1.Container{}
 	for _, rl := range containerResources {
 		containers = append(containers, v1.Container{
@@ -188,7 +188,7 @@ func TestGeneralPredicates(t *testing.T) {
 		{
 			pod: &v1.Pod{},
 			nodeInfo: schedulerframework.NewNodeInfo(
-				newResourcePod(v1.ResourceList{
+				newResourcePod(v1.ResourceMap{
 					v1.ResourceCPU:    *resource.NewMilliQuantity(9, resource.DecimalSI),
 					v1.ResourceMemory: *resource.NewQuantity(19, resource.BinarySI),
 				})),
@@ -199,12 +199,12 @@ func TestGeneralPredicates(t *testing.T) {
 			name: "no resources/port/host requested always fits",
 		},
 		{
-			pod: newResourcePod(v1.ResourceList{
+			pod: newResourcePod(v1.ResourceMap{
 				v1.ResourceCPU:    *resource.NewMilliQuantity(8, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(10, resource.BinarySI),
 			}),
 			nodeInfo: schedulerframework.NewNodeInfo(
-				newResourcePod(v1.ResourceList{
+				newResourcePod(v1.ResourceMap{
 					v1.ResourceCPU:    *resource.NewMilliQuantity(5, resource.DecimalSI),
 					v1.ResourceMemory: *resource.NewQuantity(19, resource.BinarySI),
 				})),

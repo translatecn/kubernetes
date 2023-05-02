@@ -96,11 +96,11 @@ func makeContainers(ctnCmd string, ctnAttributes []tmCtnAttribute) (ctns []v1.Co
 			Name:  ctnAttr.ctnName,
 			Image: busyboxImage,
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse(ctnAttr.cpuRequest),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("100Mi"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse(ctnAttr.cpuLimit),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("100Mi"),
 				},

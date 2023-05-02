@@ -703,10 +703,10 @@ func TestOrderedByExceedsRequestMemory(t *testing.T) {
 
 func TestOrderedByExceedsRequestDisk(t *testing.T) {
 	below := newPod("below-requests", -1, []v1.Container{
-		newContainer("below-requests", v1.ResourceList{v1.ResourceEphemeralStorage: resource.MustParse("200Mi")}, newResourceList("", "", "")),
+		newContainer("below-requests", v1.ResourceMap{v1.ResourceEphemeralStorage: resource.MustParse("200Mi")}, newResourceList("", "", "")),
 	}, nil)
 	exceeds := newPod("exceeds-requests", 1, []v1.Container{
-		newContainer("exceeds-requests", v1.ResourceList{v1.ResourceEphemeralStorage: resource.MustParse("100Mi")}, newResourceList("", "", "")),
+		newContainer("exceeds-requests", v1.ResourceMap{v1.ResourceEphemeralStorage: resource.MustParse("100Mi")}, newResourceList("", "", "")),
 	}, nil)
 	stats := map[*v1.Pod]statsapi.PodStats{
 		below:   newPodDiskStats(below, resource.MustParse("100Mi"), resource.MustParse("99Mi"), resource.MustParse("0Mi")),  // -1 relative to request
@@ -2045,8 +2045,8 @@ func newPodProcessStats(pod *v1.Pod, num uint64) statsapi.PodStats {
 	}
 }
 
-func newResourceList(cpu, memory, disk string) v1.ResourceList {
-	res := v1.ResourceList{}
+func newResourceList(cpu, memory, disk string) v1.ResourceMap {
+	res := v1.ResourceMap{}
 	if cpu != "" {
 		res[v1.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -2059,14 +2059,14 @@ func newResourceList(cpu, memory, disk string) v1.ResourceList {
 	return res
 }
 
-func newResourceRequirements(requests, limits v1.ResourceList) v1.ResourceRequirements {
+func newResourceRequirements(requests, limits v1.ResourceMap) v1.ResourceRequirements {
 	res := v1.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits
 	return res
 }
 
-func newContainer(name string, requests v1.ResourceList, limits v1.ResourceList) v1.Container {
+func newContainer(name string, requests v1.ResourceMap, limits v1.ResourceMap) v1.Container {
 	return v1.Container{
 		Name:      name,
 		Resources: newResourceRequirements(requests, limits),

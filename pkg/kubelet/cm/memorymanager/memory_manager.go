@@ -117,7 +117,7 @@ type manager struct {
 var _ Manager = &manager{}
 
 // NewManager returns new instance of the memory manager
-func NewManager(policyName string, machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceList, reservedMemory []kubeletconfig.MemoryReservation, stateFileDirectory string, affinity topologymanager.Store) (Manager, error) {
+func NewManager(policyName string, machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceMap, reservedMemory []kubeletconfig.MemoryReservation, stateFileDirectory string, affinity topologymanager.Store) (Manager, error) {
 	var policy Policy
 
 	switch policyType(policyName) {
@@ -362,7 +362,7 @@ func getTotalMemoryTypeReserved(machineInfo *cadvisorapi.MachineInfo, reservedMe
 	return totalMemoryType, nil
 }
 
-func validateReservedMemory(machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceList, reservedMemory []kubeletconfig.MemoryReservation) error {
+func validateReservedMemory(machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceMap, reservedMemory []kubeletconfig.MemoryReservation) error {
 	totalMemoryType, err := getTotalMemoryTypeReserved(machineInfo, reservedMemory)
 	if err != nil {
 		return err
@@ -418,7 +418,7 @@ func convertReserved(machineInfo *cadvisorapi.MachineInfo, reservedMemory []kube
 	return reservedMemoryConverted, nil
 }
 
-func getSystemReservedMemory(machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceList, reservedMemory []kubeletconfig.MemoryReservation) (systemReservedMemory, error) {
+func getSystemReservedMemory(machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceMap, reservedMemory []kubeletconfig.MemoryReservation) (systemReservedMemory, error) {
 	if err := validateReservedMemory(machineInfo, nodeAllocatableReservation, reservedMemory); err != nil {
 		return nil, err
 	}

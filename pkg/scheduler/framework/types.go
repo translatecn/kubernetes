@@ -142,17 +142,17 @@ func (pi *PodInfo) DeepCopy() *PodInfo {
 	}
 }
 
-// Update creates a full new PodInfo by default. And only updates the pod when the PodInfo
-// has been instantiated and the passed pod is the exact same one as the original pod.
-func (pi *PodInfo) Update(pod *v1.Pod) error {
+func (pi *PodInfo) Update(pod *v1.Pod) error { // ✅
+	// 将pod 信息更新到一个空的pi
 	if pod != nil && pi.Pod != nil && pi.Pod.UID == pod.UID {
 		// PodInfo includes immutable information, and so it is safe to update the pod in place if it is
 		// the exact same pod
 		pi.Pod = pod
 		return nil
 	}
-	var preferredAffinityTerms []v1.WeightedPodAffinityTerm
-	var preferredAntiAffinityTerms []v1.WeightedPodAffinityTerm
+	//pod 级别
+	var preferredAffinityTerms []v1.WeightedPodAffinityTerm     // 亲和性
+	var preferredAntiAffinityTerms []v1.WeightedPodAffinityTerm // 反亲和性
 	if affinity := pod.Spec.Affinity; affinity != nil {
 		if a := affinity.PodAffinity; a != nil {
 			preferredAffinityTerms = a.PreferredDuringSchedulingIgnoredDuringExecution
@@ -162,14 +162,13 @@ func (pi *PodInfo) Update(pod *v1.Pod) error {
 		}
 	}
 
-	// Attempt to parse the affinity terms
+	// 尝试解析亲和性规则
 	var parseErrs []error
-	requiredAffinityTerms, err := getAffinityTerms(pod, getPodAffinityTerms(pod.Spec.Affinity))
+	requiredAffinityTerms, err := getAffinityTerms(pod, getPodAffinityTerms(pod.Spec.Affinity)) // ✅
 	if err != nil {
 		parseErrs = append(parseErrs, fmt.Errorf("requiredAffinityTerms: %w", err))
 	}
-	requiredAntiAffinityTerms, err := getAffinityTerms(pod,
-		getPodAntiAffinityTerms(pod.Spec.Affinity))
+	requiredAntiAffinityTerms, err := getAffinityTerms(pod, getPodAntiAffinityTerms(pod.Spec.Affinity)) // ✅
 	if err != nil {
 		parseErrs = append(parseErrs, fmt.Errorf("requiredAntiAffinityTerms: %w", err))
 	}
@@ -287,8 +286,6 @@ func newAffinityTerm(pod *v1.Pod, term *v1.PodAffinityTerm) (*AffinityTerm, erro
 	return &AffinityTerm{Namespaces: namespaces, Selector: selector, TopologyKey: term.TopologyKey, NamespaceSelector: nsSelector}, nil
 }
 
-// getAffinityTerms receives a Pod and affinity terms and returns the namespaces and
-// selectors of the terms.
 func getAffinityTerms(pod *v1.Pod, v1Terms []v1.PodAffinityTerm) ([]AffinityTerm, error) {
 	if v1Terms == nil {
 		return nil, nil
@@ -377,47 +374,23 @@ type ImageStateSummary struct {
 	NumNodes int
 }
 
-// NodeInfo is node level aggregated information.
+// NodeInfo node 级别的聚合信息
 type NodeInfo struct {
-	// Overall node information.
-	node *v1.Node
-
-	// Pods running on the node.
-	Pods []*PodInfo
-
-	// The subset of pods with affinity.
-	PodsWithAffinity []*PodInfo
-
-	// The subset of pods with required anti-affinity.
-	PodsWithRequiredAntiAffinity []*PodInfo
-
-	// Ports allocated on the node.
-	UsedPorts HostPortInfo
-
-	// Total requested resources of all pods on this node. This includes assumed
-	// pods, which scheduler has sent for binding, but may not be scheduled yet.
-	Requested *Resource
-	// Total requested resources of all pods on this node with a minimum value
-	// applied to each container's CPU and memory requests. This does not reflect
-	// the actual resource requests for this node, but is used to avoid scheduling
-	// many zero-request pods onto one node.
-	NonZeroRequested *Resource
-	// We store allocatedResources (which is Node.Status.Allocatable.*) explicitly
-	// as int64, to avoid conversions and accessing map.
-	Allocatable *Resource
+	node                         *v1.Node     //
+	Pods                         []*PodInfo   // 正在运行的pod信息
+	PodsWithAffinity             []*PodInfo   // 反亲和性的pod的子集。
+	PodsWithRequiredAntiAffinity []*PodInfo   // 必须满足 反亲和性的pod的子集。
+	UsedPorts                    HostPortInfo // 分配的节点 ip\proto\port
+	Requested                    *Resource    // 表示节点 已经 requests 的资源
+	NonZeroRequested             *Resource    // 此节点上所有pod请求的总资源，并对每个容器的CPU和内存请求应用最小值。这并不反映该节点的实际资源请求，但用于避免将许多零请求pod调度到一个节点上。
+	Allocatable                  *Resource    // 表示节点可用于调度的资源。
 
 	// ImageStates holds the entry of an image if and only if this image is on the node. The entry can be used for
 	// checking an image's existence and advanced usage (e.g., image locality scheduling policy) based on the image
 	// state information.
-	ImageStates map[string]*ImageStateSummary
-
-	// PVCRefCounts contains a mapping of PVC names to the number of pods on the node using it.
-	// Keys are in the format "namespace/name".
-	PVCRefCounts map[string]int
-
-	// Whenever NodeInfo changes, generation is bumped.
-	// This is used to avoid cloning it if the object didn't change.
-	Generation int64
+	ImageStates  map[string]*ImageStateSummary
+	PVCRefCounts map[string]int // 包含PVC名称到使用它的节点上pod数量的映射
+	Generation   int64          // node 信息版本号
 }
 
 // nextGeneration: Let's make sure history never forgets the name...
@@ -430,25 +403,22 @@ func nextGeneration() int64 {
 
 // Resource is a collection of compute resource.
 type Resource struct {
-	MilliCPU         int64
-	Memory           int64
-	EphemeralStorage int64
-	// We store allowedPodNumber (which is Node.Status.Allocatable.Pods().Value())
-	// explicitly as int, to avoid conversions and improve performance.
-	AllowedPodNumber int
-	// ScalarResources
-	ScalarResources map[v1.ResourceName]int64
+	MilliCPU         int64                     // 毫CPU
+	Memory           int64                     // 内存
+	EphemeralStorage int64                     // 临时存储
+	AllowedPodNumber int                       // 节点可使用的 pod 数量
+	ScalarResources  map[v1.ResourceName]int64 // 标量资源
 }
 
-// NewResource creates a Resource from ResourceList
-func NewResource(rl v1.ResourceList) *Resource {
+// NewResource creates a Resource from ResourceMap
+func NewResource(rl v1.ResourceMap) *Resource {
 	r := &Resource{}
 	r.Add(rl)
 	return r
 }
 
-// Add adds ResourceList into Resource.
-func (r *Resource) Add(rl v1.ResourceList) {
+// Add adds ResourceMap into Resource.
+func (r *Resource) Add(rl v1.ResourceMap) {
 	if r == nil {
 		return
 	}
@@ -459,12 +429,12 @@ func (r *Resource) Add(rl v1.ResourceList) {
 			r.MilliCPU += rQuant.MilliValue()
 		case v1.ResourceMemory:
 			r.Memory += rQuant.Value()
-		case v1.ResourcePods:
+		case v1.ResourcePods: // 啥意思？
 			r.AllowedPodNumber += int(rQuant.Value())
 		case v1.ResourceEphemeralStorage:
 			r.EphemeralStorage += rQuant.Value()
 		default:
-			if schedutil.IsScalarResourceName(rName) {
+			if schedutil.IsScalarResourceName(rName) { // ✅
 				r.AddScalar(rName, rQuant.Value())
 			}
 		}
@@ -502,8 +472,8 @@ func (r *Resource) SetScalar(name v1.ResourceName, quantity int64) {
 	r.ScalarResources[name] = quantity
 }
 
-// SetMaxResource compares with ResourceList and takes max value for each Resource.
-func (r *Resource) SetMaxResource(rl v1.ResourceList) {
+// SetMaxResource 与ResourceMap中的每种类型都进行比较
+func (r *Resource) SetMaxResource(rl v1.ResourceMap) {
 	if r == nil {
 		return
 	}
@@ -524,9 +494,6 @@ func (r *Resource) SetMaxResource(rl v1.ResourceList) {
 	}
 }
 
-// NewNodeInfo returns a ready to use empty NodeInfo object.
-// If any pods are given in arguments, their information will be aggregated in
-// the returned object.
 func NewNodeInfo(pods ...*v1.Pod) *NodeInfo {
 	ni := &NodeInfo{
 		Requested:        &Resource{},
@@ -598,23 +565,18 @@ func (n *NodeInfo) String() string {
 		podKeys, n.Requested, n.NonZeroRequested, n.UsedPorts, n.Allocatable)
 }
 
-// AddPodInfo adds pod information to this NodeInfo.
-// Consider using this instead of AddPod if a PodInfo is already computed.
 func (n *NodeInfo) AddPodInfo(podInfo *PodInfo) {
 	n.Pods = append(n.Pods, podInfo)
-	if podWithAffinity(podInfo.Pod) {
+	if podWithAffinity(podInfo.Pod) { // 设置了亲和性
 		n.PodsWithAffinity = append(n.PodsWithAffinity, podInfo)
 	}
-	if podWithRequiredAntiAffinity(podInfo.Pod) {
+	if podWithRequiredAntiAffinity(podInfo.Pod) { // 设置了 required 亲和性
 		n.PodsWithRequiredAntiAffinity = append(n.PodsWithRequiredAntiAffinity, podInfo)
 	}
 	n.update(podInfo.Pod, 1)
 }
 
-// AddPod is a wrapper around AddPodInfo.
 func (n *NodeInfo) AddPod(pod *v1.Pod) {
-	// ignore this err since apiserver doesn't properly validate affinity terms
-	// and we can't fix the validation for backwards compatibility.
 	podInfo, _ := NewPodInfo(pod)
 	n.AddPodInfo(podInfo)
 }
@@ -682,7 +644,7 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 // update node info based on the pod and sign.
 // The sign will be set to `+1` when AddPod and to `-1` when RemovePod.
 func (n *NodeInfo) update(pod *v1.Pod, sign int64) {
-	res, non0CPU, non0Mem := calculateResource(pod)
+	res, non0CPU, non0Mem := calculateResource(pod) // ✅ 获取pod使用的资源总和
 	n.Requested.MilliCPU += sign * res.MilliCPU
 	n.Requested.Memory += sign * res.Memory
 	n.Requested.EphemeralStorage += sign * res.EphemeralStorage
@@ -692,12 +654,12 @@ func (n *NodeInfo) update(pod *v1.Pod, sign int64) {
 	for rName, rQuant := range res.ScalarResources {
 		n.Requested.ScalarResources[rName] += sign * rQuant
 	}
-	n.NonZeroRequested.MilliCPU += sign * non0CPU
-	n.NonZeroRequested.Memory += sign * non0Mem
+	n.NonZeroRequested.MilliCPU += sign * non0CPU // 包含 sanbox 所需要的资源
+	n.NonZeroRequested.Memory += sign * non0Mem   // 包含 sanbox 所需要的资源
 
 	// Consume ports when pod added or release ports when pod removed.
-	n.updateUsedPorts(pod, sign > 0)
-	n.updatePVCRefCounts(pod, sign > 0)
+	n.updateUsedPorts(pod, sign > 0)    // ✅
+	n.updatePVCRefCounts(pod, sign > 0) // ✅
 
 	n.Generation = nextGeneration()
 }
@@ -724,6 +686,7 @@ func max(a, b int64) int64 {
 
 // resourceRequest = max(sum(podSpec.Containers), podSpec.InitContainers) + overHead
 func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64) {
+	// 计算pod所需要的资源
 	resPtr := &res
 	for _, c := range pod.Spec.Containers {
 		resPtr.Add(c.Resources.Requests)
@@ -734,7 +697,7 @@ func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64)
 	}
 
 	for _, ic := range pod.Spec.InitContainers {
-		resPtr.SetMaxResource(ic.Resources.Requests)
+		resPtr.SetMaxResource(ic.Resources.Requests) // 比较init容器与 总容器的资源大小
 		non0CPUReq, non0MemReq := schedutil.GetNonzeroRequests(&ic.Resources.Requests)
 		non0CPU = max(non0CPU, non0CPUReq)
 		non0Mem = max(non0Mem, non0MemReq)
@@ -768,7 +731,7 @@ func (n *NodeInfo) updateUsedPorts(pod *v1.Pod, add bool) {
 	}
 }
 
-// updatePVCRefCounts updates the PVCRefCounts of NodeInfo.
+// 更新节点的 pvc 引用信息
 func (n *NodeInfo) updatePVCRefCounts(pod *v1.Pod, add bool) {
 	for _, v := range pod.Spec.Volumes {
 		if v.PersistentVolumeClaim == nil {
@@ -790,7 +753,7 @@ func (n *NodeInfo) updatePVCRefCounts(pod *v1.Pod, add bool) {
 // SetNode sets the overall node information.
 func (n *NodeInfo) SetNode(node *v1.Node) {
 	n.node = node
-	n.Allocatable = NewResource(node.Status.Allocatable)
+	n.Allocatable = NewResource(node.Status.Allocatable) // 表示节点可用于调度的资源。
 	n.Generation = nextGeneration()
 }
 

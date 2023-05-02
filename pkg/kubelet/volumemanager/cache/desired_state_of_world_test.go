@@ -486,14 +486,14 @@ func Test_AddPodToVolume_WithEmptyDirSizeLimit(t *testing.T) {
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceEphemeralStorage: quantity1Gi,
 						},
 					},
 				},
 				{
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceEphemeralStorage: quantity1Gi,
 						},
 					},

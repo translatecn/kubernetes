@@ -190,7 +190,7 @@ func (o TopNodeOptions) RunTopNode() error {
 		nodes = append(nodes, nodeList.Items...)
 	}
 
-	availableResources := make(map[string]v1.ResourceList)
+	availableResources := make(map[string]v1.ResourceMap)
 
 	for _, n := range nodes {
 		if !o.ShowCapacity {

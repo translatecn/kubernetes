@@ -577,10 +577,10 @@ func TestInstallCSIDriver(t *testing.T) {
 					Annotations: map[string]string{annotationKeyNodeID: marshall(nodeIDMap{"com.example.csi.driver1": "com.example.csi/csi-node1"})},
 				},
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewScaledQuantity(4, -3),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewScaledQuantity(4, -3),
 					},
 				},
@@ -750,11 +750,11 @@ func TestUninstallCSIDriver(t *testing.T) {
 					Name: "node1",
 				},
 				Status: v1.NodeStatus{
-					Capacity: v1.ResourceList{
+					Capacity: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewScaledQuantity(4, -3),
 						v1.ResourceName(util.GetCSIAttachLimitKey("com.example.csi/driver1")): *resource.NewQuantity(10, resource.DecimalSI),
 					},
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewScaledQuantity(4, -3),
 						v1.ResourceName(util.GetCSIAttachLimitKey("com.example.csi/driver1")): *resource.NewQuantity(10, resource.DecimalSI),
 					},
@@ -1108,8 +1108,8 @@ func generateNode(nodeIDs, labels map[string]string, capacity map[v1.ResourceNam
 	}
 
 	if len(capacity) > 0 {
-		node.Status.Capacity = v1.ResourceList(capacity)
-		node.Status.Allocatable = v1.ResourceList(capacity)
+		node.Status.Capacity = v1.ResourceMap(capacity)
+		node.Status.Allocatable = v1.ResourceMap(capacity)
 	}
 	return node
 }

@@ -1521,7 +1521,7 @@ func Test_checkNodeTopologyDistribution(t *testing.T) {
 					}}
 				}
 				if nodeInfo.cpu != nil {
-					node.Status.Allocatable = v1.ResourceList{
+					node.Status.Allocatable = v1.ResourceMap{
 						v1.ResourceCPU: *nodeInfo.cpu,
 					}
 				}

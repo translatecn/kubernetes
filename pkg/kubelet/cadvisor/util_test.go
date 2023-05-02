@@ -42,7 +42,7 @@ func TestCapacityFromMachineInfoWithHugePagesEnable(t *testing.T) {
 		},
 	}
 
-	expected := v1.ResourceList{
+	expected := v1.ResourceMap{
 		v1.ResourceCPU:    *resource.NewMilliQuantity(int64(2000), resource.DecimalSI),
 		v1.ResourceMemory: *resource.NewQuantity(int64(2048), resource.BinarySI),
 		"hugepages-5Ki":   *resource.NewQuantity(int64(51200), resource.BinarySI),

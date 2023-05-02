@@ -984,7 +984,7 @@ func TestApplyWithApplyConfiguration(t *testing.T) {
 							WithProtocol(v1.ProtocolTCP),
 						).
 						WithResources(corev1ac.ResourceRequirements().
-							WithLimits(v1.ResourceList{
+							WithLimits(v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("4"),
 								v1.ResourceMemory: resource.MustParse("32Gi"),
 							}),

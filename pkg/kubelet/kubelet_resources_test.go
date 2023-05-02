@@ -37,7 +37,7 @@ func TestPodResourceLimitsDefaulting(t *testing.T) {
 					Name: string(tk.kubelet.nodeName),
 				},
 				Status: v1.NodeStatus{
-					Allocatable: v1.ResourceList{
+					Allocatable: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("6"),
 						v1.ResourceMemory: resource.MustParse("4Gi"),
 					},
@@ -79,7 +79,7 @@ func TestPodResourceLimitsDefaulting(t *testing.T) {
 func getPod(cpuLimit, memoryLimit string) *v1.Pod {
 	resources := v1.ResourceRequirements{}
 	if cpuLimit != "" || memoryLimit != "" {
-		resources.Limits = make(v1.ResourceList)
+		resources.Limits = make(v1.ResourceMap)
 	}
 	if cpuLimit != "" {
 		resources.Limits[v1.ResourceCPU] = resource.MustParse(cpuLimit)

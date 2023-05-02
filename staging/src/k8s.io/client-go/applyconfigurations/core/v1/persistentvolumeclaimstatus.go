@@ -27,9 +27,9 @@ import (
 type PersistentVolumeClaimStatusApplyConfiguration struct {
 	Phase              *v1.PersistentVolumeClaimPhase                     `json:"phase,omitempty"`
 	AccessModes        []v1.PersistentVolumeAccessMode                    `json:"accessModes,omitempty"`
-	Capacity           *v1.ResourceList                                   `json:"capacity,omitempty"`
+	Capacity           *v1.ResourceMap                                    `json:"capacity,omitempty"`
 	Conditions         []PersistentVolumeClaimConditionApplyConfiguration `json:"conditions,omitempty"`
-	AllocatedResources *v1.ResourceList                                   `json:"allocatedResources,omitempty"`
+	AllocatedResources *v1.ResourceMap                                    `json:"allocatedResources,omitempty"`
 	ResizeStatus       *v1.PersistentVolumeClaimResizeStatus              `json:"resizeStatus,omitempty"`
 }
 
@@ -60,7 +60,7 @@ func (b *PersistentVolumeClaimStatusApplyConfiguration) WithAccessModes(values .
 // WithCapacity sets the Capacity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Capacity field is set to the value of the last call.
-func (b *PersistentVolumeClaimStatusApplyConfiguration) WithCapacity(value v1.ResourceList) *PersistentVolumeClaimStatusApplyConfiguration {
+func (b *PersistentVolumeClaimStatusApplyConfiguration) WithCapacity(value v1.ResourceMap) *PersistentVolumeClaimStatusApplyConfiguration {
 	b.Capacity = &value
 	return b
 }
@@ -81,7 +81,7 @@ func (b *PersistentVolumeClaimStatusApplyConfiguration) WithConditions(values ..
 // WithAllocatedResources sets the AllocatedResources field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AllocatedResources field is set to the value of the last call.
-func (b *PersistentVolumeClaimStatusApplyConfiguration) WithAllocatedResources(value v1.ResourceList) *PersistentVolumeClaimStatusApplyConfiguration {
+func (b *PersistentVolumeClaimStatusApplyConfiguration) WithAllocatedResources(value v1.ResourceMap) *PersistentVolumeClaimStatusApplyConfiguration {
 	b.AllocatedResources = &value
 	return b
 }

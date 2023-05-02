@@ -152,7 +152,7 @@ func newStatefulSetPVC(name string) v1.PersistentVolumeClaim {
 				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceStorage: *resource.NewQuantity(1, resource.BinarySI),
 				},
 			},

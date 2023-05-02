@@ -117,7 +117,7 @@ func NewManager(
 		thresholdNotifiers:            []ThresholdNotifier{},
 		localStorageCapacityIsolation: localStorageCapacityIsolation,
 	}
-	return manager, manager
+	return manager, manager // ; 用于创建pod时的admit
 }
 
 // Admit 评估一个pod是否可以被允许创建.
@@ -140,6 +140,7 @@ func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	if nodeOnlyHasMemoryPressureCondition {
 		notBestEffort := v1.PodQOSBestEffort != v1qos.GetPodQOS(attrs.Pod)
 		if notBestEffort {
+			// 不是努力送达
 			return lifecycle.PodAdmitResult{Admit: true} // 低优先级的不让进、高优先级的让进
 		}
 

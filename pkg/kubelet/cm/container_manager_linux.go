@@ -99,8 +99,8 @@ type containerManagerImpl struct {
 	subsystems          *CgroupSubsystems       // 所有已挂载的 cgroup 子系统.
 	nodeInfo            *v1.Node                //
 	cgroupManager       CgroupManager           // 与 cgroup 进行管理的接口.
-	capacity            v1.ResourceList         // 节点的容量信息,包括内部资源.
-	internalCapacity    v1.ResourceList         // 节点的容量信息,包括内部资源.
+	capacity            v1.ResourceMap          // 节点的容量信息,包括内部资源.
+	internalCapacity    v1.ResourceMap          // 节点的容量信息,包括内部资源.
 	cgroupRoot          CgroupName              // 绝对 cgroupfs 路径,Kubelet 需要将所有 pod 放在该路径下的顶级容器中,以实现节点可分配性.
 	recorder            record.EventRecorder    // 事件记录器接口.
 	qosContainerManager QOSContainerManager     // QoS cgroup 管理的接口.
@@ -212,7 +212,7 @@ func NewContainerManager(
 		}
 	}
 
-	var internalCapacity = v1.ResourceList{}
+	var internalCapacity = v1.ResourceMap{}
 	// It is safe to invoke `MachineInfo` on cAdvisor before logically initializing cAdvisor here because
 	// machine info is computed and cached once as part of cAdvisor object creation.
 	// But `RootFsInfo` and `ImagesFsInfo` are not available at this moment so they will be called later during manager starts
@@ -275,7 +275,7 @@ func NewContainerManager(
 
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
 		cm.topologyManager, err = topologymanager.NewManager(
-			machineInfo.Topology,
+			machineInfo.Topology, // 机器拓扑信息
 			nodeConfig.ExperimentalTopologyManagerPolicy,
 			nodeConfig.ExperimentalTopologyManagerScope,
 			nodeConfig.ExperimentalTopologyManagerPolicyOptions,
@@ -673,7 +673,7 @@ func (cm *containerManagerImpl) GetAllocateResourcesPodAdmitHandler() lifecycle.
 	return cm.topologyManager // 默认开启,已修改代码
 }
 
-func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceList {
+func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceMap {
 	cpuLimit := int64(0)
 
 	// Sum up resources of all external containers.
@@ -681,7 +681,7 @@ func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceList {
 		cpuLimit += cont.cpuMillicores
 	}
 
-	return v1.ResourceList{
+	return v1.ResourceMap{
 		v1.ResourceCPU: *resource.NewMilliQuantity(
 			cpuLimit,
 			resource.DecimalSI),
@@ -879,7 +879,7 @@ func isKernelPid(pid int) bool {
 
 // GetCapacity returns node capacity data for "cpu", "memory", "ephemeral-storage", and "huge-pages*"
 // At present this method is only invoked when introspecting ephemeral storage
-func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceList {
+func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap {
 	if localStorageCapacityIsolation {
 		// We store allocatable ephemeral-storage in the capacity property once we Start() the container manager
 		if _, ok := cm.capacity[v1.ResourceEphemeralStorage]; !ok {
@@ -891,9 +891,9 @@ func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) 
 					// If the rootfsinfo retrieval from cAdvisor fails for any reason, fallback to returning the capacity property with no ephemeral storage data
 					return cm.capacity
 				}
-				// We don't want to mutate cm.capacity here so we'll manually construct a v1.ResourceList from it,
+				// We don't want to mutate cm.capacity here so we'll manually construct a v1.ResourceMap from it,
 				// and add ephemeral-storage
-				capacityWithEphemeralStorage := v1.ResourceList{}
+				capacityWithEphemeralStorage := v1.ResourceMap{}
 				for rName, rQuant := range cm.capacity {
 					capacityWithEphemeralStorage[rName] = rQuant
 				}
@@ -905,7 +905,7 @@ func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) 
 	return cm.capacity
 }
 
-func (cm *containerManagerImpl) GetDevicePluginResourceCapacity() (v1.ResourceList, v1.ResourceList, []string) {
+func (cm *containerManagerImpl) GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
 	return cm.deviceManager.GetCapacity()
 }
 

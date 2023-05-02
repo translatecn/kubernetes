@@ -92,7 +92,7 @@ func newPodQuota(name, number string) *v1.ResourceQuota {
 			Name: name,
 		},
 		Spec: v1.ResourceQuotaSpec{
-			Hard: v1.ResourceList{
+			Hard: v1.ResourceMap{
 				v1.ResourcePods: resource.MustParse(number),
 			},
 		},

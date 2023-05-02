@@ -57,7 +57,7 @@ type PodSpecApplyConfiguration struct {
 	RuntimeClassName              *string                                      `json:"runtimeClassName,omitempty"`
 	EnableServiceLinks            *bool                                        `json:"enableServiceLinks,omitempty"`
 	PreemptionPolicy              *corev1.PreemptionPolicy                     `json:"preemptionPolicy,omitempty"`
-	Overhead                      *corev1.ResourceList                         `json:"overhead,omitempty"`
+	Overhead                      *corev1.ResourceMap                          `json:"overhead,omitempty"`
 	TopologySpreadConstraints     []TopologySpreadConstraintApplyConfiguration `json:"topologySpreadConstraints,omitempty"`
 	SetHostnameAsFQDN             *bool                                        `json:"setHostnameAsFQDN,omitempty"`
 	OS                            *PodOSApplyConfiguration                     `json:"os,omitempty"`
@@ -377,7 +377,7 @@ func (b *PodSpecApplyConfiguration) WithPreemptionPolicy(value corev1.Preemption
 // WithOverhead sets the Overhead field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Overhead field is set to the value of the last call.
-func (b *PodSpecApplyConfiguration) WithOverhead(value corev1.ResourceList) *PodSpecApplyConfiguration {
+func (b *PodSpecApplyConfiguration) WithOverhead(value corev1.ResourceMap) *PodSpecApplyConfiguration {
 	b.Overhead = &value
 	return b
 }

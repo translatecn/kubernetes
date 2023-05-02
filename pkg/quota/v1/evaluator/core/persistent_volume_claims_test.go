@@ -90,12 +90,12 @@ func TestPersistentVolumeClaimEvaluatorUsage(t *testing.T) {
 	evaluator := NewPersistentVolumeClaimEvaluator(nil)
 	testCases := map[string]struct {
 		pvc                        *core.PersistentVolumeClaim
-		usage                      corev1.ResourceList
+		usage                      corev1.ResourceMap
 		enableRecoverFromExpansion bool
 	}{
 		"pvc-usage": {
 			pvc: validClaim,
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceRequestsStorage:        resource.MustParse("10Gi"),
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				generic.ObjectCountQuotaResourceNameFor(schema.GroupResource{Resource: "persistentvolumeclaims"}): resource.MustParse("1"),
@@ -104,7 +104,7 @@ func TestPersistentVolumeClaimEvaluatorUsage(t *testing.T) {
 		},
 		"pvc-usage-by-class": {
 			pvc: validClaimByStorageClass,
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceRequestsStorage:                                                                    resource.MustParse("10Gi"),
 				corev1.ResourcePersistentVolumeClaims:                                                             resource.MustParse("1"),
 				V1ResourceByStorageClass(classGold, corev1.ResourceRequestsStorage):                               resource.MustParse("10Gi"),
@@ -116,7 +116,7 @@ func TestPersistentVolumeClaimEvaluatorUsage(t *testing.T) {
 
 		"pvc-usage-rounded": {
 			pvc: validClaimWithNonIntegerStorage,
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceRequestsStorage:        resource.MustParse("2"), // 1001m -> 2
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				generic.ObjectCountQuotaResourceNameFor(schema.GroupResource{Resource: "persistentvolumeclaims"}): resource.MustParse("1"),
@@ -125,7 +125,7 @@ func TestPersistentVolumeClaimEvaluatorUsage(t *testing.T) {
 		},
 		"pvc-usage-by-class-rounded": {
 			pvc: validClaimByStorageClassWithNonIntegerStorage,
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceRequestsStorage:                                                                    resource.MustParse("2"), // 1001m -> 2
 				corev1.ResourcePersistentVolumeClaims:                                                             resource.MustParse("1"),
 				V1ResourceByStorageClass(classGold, corev1.ResourceRequestsStorage):                               resource.MustParse("2"), // 1001m -> 2
@@ -136,7 +136,7 @@ func TestPersistentVolumeClaimEvaluatorUsage(t *testing.T) {
 		},
 		"pvc-usage-higher-allocated-resource": {
 			pvc: getPVCWithAllocatedResource("5G", "10G"),
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceRequestsStorage:        resource.MustParse("10G"),
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				generic.ObjectCountQuotaResourceNameFor(schema.GroupResource{Resource: "persistentvolumeclaims"}): resource.MustParse("1"),
@@ -145,7 +145,7 @@ func TestPersistentVolumeClaimEvaluatorUsage(t *testing.T) {
 		},
 		"pvc-usage-lower-allocated-resource": {
 			pvc: getPVCWithAllocatedResource("10G", "5G"),
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceRequestsStorage:        resource.MustParse("10G"),
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				generic.ObjectCountQuotaResourceNameFor(schema.GroupResource{Resource: "persistentvolumeclaims"}): resource.MustParse("1"),

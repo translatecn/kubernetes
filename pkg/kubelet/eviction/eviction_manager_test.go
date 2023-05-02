@@ -101,7 +101,7 @@ func (m *mockDiskGC) DeleteAllUnusedContainers(_ context.Context) error {
 	return m.err
 }
 
-func makePodWithMemoryStats(name string, priority int32, requests v1.ResourceList, limits v1.ResourceList, memoryWorkingSet string) (*v1.Pod, statsapi.PodStats) {
+func makePodWithMemoryStats(name string, priority int32, requests v1.ResourceMap, limits v1.ResourceMap, memoryWorkingSet string) (*v1.Pod, statsapi.PodStats) {
 	pod := newPod(name, priority, []v1.Container{
 		newContainer(name, requests, limits),
 	}, nil)
@@ -109,7 +109,7 @@ func makePodWithMemoryStats(name string, priority int32, requests v1.ResourceLis
 	return pod, podStats
 }
 
-func makePodWithDiskStats(name string, priority int32, requests v1.ResourceList, limits v1.ResourceList, rootFsUsed, logsUsed, perLocalVolumeUsed string) (*v1.Pod, statsapi.PodStats) {
+func makePodWithDiskStats(name string, priority int32, requests v1.ResourceMap, limits v1.ResourceMap, rootFsUsed, logsUsed, perLocalVolumeUsed string) (*v1.Pod, statsapi.PodStats) {
 	pod := newPod(name, priority, []v1.Container{
 		newContainer(name, requests, limits),
 	}, nil)
@@ -176,8 +176,8 @@ func makeDiskStats(rootFsAvailableBytes, imageFsAvailableBytes string, podStats 
 type podToMake struct {
 	name                     string
 	priority                 int32
-	requests                 v1.ResourceList
-	limits                   v1.ResourceList
+	requests                 v1.ResourceMap
+	limits                   v1.ResourceMap
 	memoryWorkingSet         string
 	rootFsUsed               string
 	logsFsUsed               string
@@ -1211,7 +1211,7 @@ func TestNodeReclaimFuncs(t *testing.T) {
 }
 
 func TestInodePressureNodeFsInodes(t *testing.T) {
-	podMaker := func(name string, priority int32, requests v1.ResourceList, limits v1.ResourceList, rootInodes, logInodes, volumeInodes string) (*v1.Pod, statsapi.PodStats) {
+	podMaker := func(name string, priority int32, requests v1.ResourceMap, limits v1.ResourceMap, rootInodes, logInodes, volumeInodes string) (*v1.Pod, statsapi.PodStats) {
 		pod := newPod(name, priority, []v1.Container{
 			newContainer(name, requests, limits),
 		}, nil)

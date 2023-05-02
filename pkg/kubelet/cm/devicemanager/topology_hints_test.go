@@ -679,7 +679,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -699,7 +699,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -708,7 +708,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("4"),
@@ -728,7 +728,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -748,7 +748,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -758,7 +758,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -770,7 +770,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("1"),
@@ -780,7 +780,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("1"),
@@ -801,7 +801,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -811,7 +811,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("3"),
@@ -823,7 +823,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("1"),
@@ -833,7 +833,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("1"),
@@ -853,7 +853,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -863,7 +863,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("2"),
@@ -875,7 +875,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("3"),
@@ -885,7 +885,7 @@ func TestGetPodDeviceRequest(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 									v1.ResourceName("gpu"):             resource.MustParse("3"),
@@ -994,7 +994,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("1"),
 								},
 							},
@@ -1025,7 +1025,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("1"),
 								},
 							},
@@ -1063,7 +1063,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("1"),
 								},
 							},
@@ -1105,7 +1105,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("2"),
 								},
 							},
@@ -1139,7 +1139,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("2"),
 								},
 							},
@@ -1183,7 +1183,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("2"),
 								},
 							},
@@ -1226,7 +1226,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("2"),
 									v1.ResourceName("testdevice2"): resource.MustParse("1"),
 								},
@@ -1284,7 +1284,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("6"),
 								},
 							},
@@ -1315,7 +1315,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("2"),
 								},
 							},
@@ -1360,7 +1360,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("4"),
 								},
 							},
@@ -1398,7 +1398,7 @@ func getCommonTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice"): resource.MustParse("2"),
 								},
 							},
@@ -1441,7 +1441,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer1",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("2"),
 								},
 							},
@@ -1449,7 +1449,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer2",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice2"): resource.MustParse("2"),
 								},
 							},
@@ -1457,7 +1457,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer3",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("notRegistered"): resource.MustParse("2"),
 								},
 							},
@@ -1520,7 +1520,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("1"),
 									v1.ResourceName("testdevice2"): resource.MustParse("1"),
 								},
@@ -1528,7 +1528,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("1"),
 									v1.ResourceName("testdevice2"): resource.MustParse("2"),
 								},
@@ -1539,7 +1539,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer1",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("1"),
 									v1.ResourceName("testdevice2"): resource.MustParse("1"),
 								},
@@ -1548,7 +1548,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer2",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("1"),
 									v1.ResourceName("testdevice2"): resource.MustParse("1"),
 								},
@@ -1557,7 +1557,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer3",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("notRegistered"): resource.MustParse("1"),
 								},
 							},
@@ -1621,7 +1621,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer1",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("1"),
 									v1.ResourceName("testdevice2"): resource.MustParse("1"),
 								},
@@ -1630,7 +1630,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer2",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("testdevice1"): resource.MustParse("1"),
 									v1.ResourceName("testdevice2"): resource.MustParse("1"),
 								},
@@ -1639,7 +1639,7 @@ func getPodScopeTestCases() []topologyHintTestCase {
 						{
 							Name: "fakeContainer3",
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("notRegistered"): resource.MustParse("1"),
 								},
 							},

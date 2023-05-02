@@ -59,11 +59,11 @@ func (cm *FakeContainerManager) Start(_ *v1.Node, _ ActivePodsFunc, _ config.Sou
 	return nil
 }
 
-func (cm *FakeContainerManager) SystemCgroupsLimit() v1.ResourceList {
+func (cm *FakeContainerManager) SystemCgroupsLimit() v1.ResourceMap {
 	cm.Lock()
 	defer cm.Unlock()
 	cm.CalledFunctions = append(cm.CalledFunctions, "SystemCgroupsLimit")
-	return v1.ResourceList{}
+	return v1.ResourceMap{}
 }
 
 func (cm *FakeContainerManager) GetNodeConfig() NodeConfig {
@@ -101,21 +101,21 @@ func (cm *FakeContainerManager) Status() Status {
 	return Status{}
 }
 
-func (cm *FakeContainerManager) GetNodeAllocatableReservation() v1.ResourceList {
+func (cm *FakeContainerManager) GetNodeAllocatableReservation() v1.ResourceMap {
 	cm.Lock()
 	defer cm.Unlock()
 	cm.CalledFunctions = append(cm.CalledFunctions, "GetNodeAllocatableReservation")
 	return nil
 }
 
-func (cm *FakeContainerManager) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceList {
+func (cm *FakeContainerManager) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap {
 	cm.Lock()
 	defer cm.Unlock()
 	cm.CalledFunctions = append(cm.CalledFunctions, "GetCapacity")
 	if !localStorageCapacityIsolation {
-		return v1.ResourceList{}
+		return v1.ResourceMap{}
 	}
-	c := v1.ResourceList{
+	c := v1.ResourceMap{
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(
 			int64(0),
 			resource.BinarySI),
@@ -130,7 +130,7 @@ func (cm *FakeContainerManager) GetPluginRegistrationHandler() cache.PluginHandl
 	return nil
 }
 
-func (cm *FakeContainerManager) GetDevicePluginResourceCapacity() (v1.ResourceList, v1.ResourceList, []string) {
+func (cm *FakeContainerManager) GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
 	cm.Lock()
 	defer cm.Unlock()
 	cm.CalledFunctions = append(cm.CalledFunctions, "GetDevicePluginResourceCapacity")
@@ -233,7 +233,7 @@ func (cm *FakeContainerManager) GetAllocatableMemory() []*podresourcesapi.Contai
 	return nil
 }
 
-func (cm *FakeContainerManager) GetNodeAllocatableAbsolute() v1.ResourceList {
+func (cm *FakeContainerManager) GetNodeAllocatableAbsolute() v1.ResourceMap {
 	cm.Lock()
 	defer cm.Unlock()
 	return nil

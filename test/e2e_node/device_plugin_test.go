@@ -312,7 +312,7 @@ func testDevicePlugin(f *framework.Framework, pluginSockDir string) {
 // that requests resourceName and runs the specified command.
 func makeBusyboxPod(resourceName, cmd string) *v1.Pod {
 	podName := "device-plugin-test-" + string(uuid.NewUUID())
-	rl := v1.ResourceList{v1.ResourceName(resourceName): *resource.NewQuantity(1, resource.DecimalSI)}
+	rl := v1.ResourceMap{v1.ResourceName(resourceName): *resource.NewQuantity(1, resource.DecimalSI)}
 
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Name: podName},

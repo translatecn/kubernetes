@@ -330,7 +330,7 @@ func (p *azureDiskProvisioner) Provision(selectedNode *v1.Node, allowedTopologie
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeReclaimPolicy: p.options.PersistentVolumeReclaimPolicy,
 			AccessModes:                   supportedModes,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse(fmt.Sprintf("%dGi", requestGiB)),
 			},
 			VolumeMode: volumeMode,

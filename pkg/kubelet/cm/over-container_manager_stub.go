@@ -38,7 +38,7 @@ import (
 
 type containerManagerStub struct {
 	shouldResetExtendedResourceCapacity bool
-	extendedPluginResources             v1.ResourceList
+	extendedPluginResources             v1.ResourceMap
 }
 
 var _ ContainerManager = &containerManagerStub{}
@@ -48,8 +48,8 @@ func (cm *containerManagerStub) Start(_ *v1.Node, _ ActivePodsFunc, _ config.Sou
 	return nil
 }
 
-func (cm *containerManagerStub) SystemCgroupsLimit() v1.ResourceList {
-	return v1.ResourceList{}
+func (cm *containerManagerStub) SystemCgroupsLimit() v1.ResourceMap {
+	return v1.ResourceMap{}
 }
 
 func (cm *containerManagerStub) GetNodeConfig() NodeConfig {
@@ -72,15 +72,15 @@ func (cm *containerManagerStub) Status() Status {
 	return Status{}
 }
 
-func (cm *containerManagerStub) GetNodeAllocatableReservation() v1.ResourceList {
+func (cm *containerManagerStub) GetNodeAllocatableReservation() v1.ResourceMap {
 	return nil
 }
 
-func (cm *containerManagerStub) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceList {
+func (cm *containerManagerStub) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap {
 	if !localStorageCapacityIsolation {
-		return v1.ResourceList{}
+		return v1.ResourceMap{}
 	}
-	c := v1.ResourceList{
+	c := v1.ResourceMap{
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(
 			int64(0),
 			resource.BinarySI),
@@ -92,7 +92,7 @@ func (cm *containerManagerStub) GetPluginRegistrationHandler() cache.PluginHandl
 	return nil
 }
 
-func (cm *containerManagerStub) GetDevicePluginResourceCapacity() (v1.ResourceList, v1.ResourceList, []string) {
+func (cm *containerManagerStub) GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
 	return cm.extendedPluginResources, cm.extendedPluginResources, []string{}
 }
 
@@ -152,7 +152,7 @@ func (cm *containerManagerStub) GetAllocatableMemory() []*podresourcesapi.Contai
 	return nil
 }
 
-func (cm *containerManagerStub) GetNodeAllocatableAbsolute() v1.ResourceList {
+func (cm *containerManagerStub) GetNodeAllocatableAbsolute() v1.ResourceMap {
 	return nil
 }
 
@@ -176,7 +176,7 @@ func NewStubContainerManagerWithExtendedResource(shouldResetExtendedResourceCapa
 	return &containerManagerStub{shouldResetExtendedResourceCapacity: shouldResetExtendedResourceCapacity}
 }
 
-func NewStubContainerManagerWithDevicePluginResource(extendedPluginResources v1.ResourceList) ContainerManager {
+func NewStubContainerManagerWithDevicePluginResource(extendedPluginResources v1.ResourceMap) ContainerManager {
 	return &containerManagerStub{
 		shouldResetExtendedResourceCapacity: false,
 		extendedPluginResources:             extendedPluginResources,

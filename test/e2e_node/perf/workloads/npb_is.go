@@ -44,11 +44,11 @@ func (w npbISWorkload) PodSpec() v1.PodSpec {
 		Name:  fmt.Sprintf("%s-ctn", w.Name()),
 		Image: imageutils.GetE2EImage(imageutils.NodePerfNpbIs),
 		Resources: v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("15000m"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("48Gi"),
 			},
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("15000m"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("48Gi"),
 			},

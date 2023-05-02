@@ -657,7 +657,7 @@ func CreatePausePod(cs clientset.Interface, p *v1.Pod) (*v1.Pod, error) {
 // resources and returns its pointer and error status. The resource list can be
 // nil.
 func CreatePausePodWithResource(cs clientset.Interface, podName string,
-	nsName string, res *v1.ResourceList) (*v1.Pod, error) {
+	nsName string, res *v1.ResourceMap) (*v1.Pod, error) {
 	var conf PausePodConfig
 	if res == nil {
 		conf = PausePodConfig{

@@ -120,7 +120,7 @@ func fakePodWithPVC(name, pvcName, namespace string) (*v1.Pod, *v1.PersistentVol
 				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("5Gi"),
 				},
 			},

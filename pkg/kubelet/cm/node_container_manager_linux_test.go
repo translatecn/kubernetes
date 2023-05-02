@@ -31,10 +31,10 @@ import (
 func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 	memoryEvictionThreshold := resource.MustParse("100Mi")
 	cpuMemCases := []struct {
-		kubeReserved   v1.ResourceList
-		systemReserved v1.ResourceList
-		expected       v1.ResourceList
-		capacity       v1.ResourceList
+		kubeReserved   v1.ResourceMap
+		systemReserved v1.ResourceMap
+		expected       v1.ResourceMap
+		capacity       v1.ResourceMap
 		hardThreshold  evictionapi.ThresholdValue
 	}{
 		{
@@ -63,8 +63,8 @@ func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 		},
 
 		{
-			kubeReserved:   v1.ResourceList{},
-			systemReserved: v1.ResourceList{},
+			kubeReserved:   v1.ResourceMap{},
+			systemReserved: v1.ResourceMap{},
 			capacity:       getResourceList("10", "10Gi"),
 			expected:       getResourceList("", ""),
 		},
@@ -115,9 +115,9 @@ func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 
 	ephemeralStorageEvictionThreshold := resource.MustParse("100Mi")
 	ephemeralStorageTestCases := []struct {
-		kubeReserved  v1.ResourceList
-		expected      v1.ResourceList
-		capacity      v1.ResourceList
+		kubeReserved  v1.ResourceMap
+		expected      v1.ResourceMap
+		capacity      v1.ResourceMap
 		hardThreshold evictionapi.ThresholdValue
 	}{
 		{
@@ -143,7 +143,7 @@ func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 		},
 
 		{
-			kubeReserved: v1.ResourceList{},
+			kubeReserved: v1.ResourceMap{},
 			capacity:     getEphemeralStorageResourceList("10Gi"),
 			expected:     getEphemeralStorageResourceList(""),
 		},
@@ -176,10 +176,10 @@ func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 func TestNodeAllocatableForEnforcement(t *testing.T) {
 	memoryEvictionThreshold := resource.MustParse("100Mi")
 	testCases := []struct {
-		kubeReserved   v1.ResourceList
-		systemReserved v1.ResourceList
-		capacity       v1.ResourceList
-		expected       v1.ResourceList
+		kubeReserved   v1.ResourceMap
+		systemReserved v1.ResourceMap
+		capacity       v1.ResourceMap
+		expected       v1.ResourceMap
 		hardThreshold  evictionapi.ThresholdValue
 	}{
 		{
@@ -208,8 +208,8 @@ func TestNodeAllocatableForEnforcement(t *testing.T) {
 		},
 
 		{
-			kubeReserved:   v1.ResourceList{},
-			systemReserved: v1.ResourceList{},
+			kubeReserved:   v1.ResourceMap{},
+			systemReserved: v1.ResourceMap{},
 			capacity:       getResourceList("10", "10Gi"),
 			expected:       getResourceList("10", "10Gi"),
 		},
@@ -263,9 +263,9 @@ func TestNodeAllocatableInputValidation(t *testing.T) {
 	memoryEvictionThreshold := resource.MustParse("100Mi")
 	highMemoryEvictionThreshold := resource.MustParse("2Gi")
 	cpuMemTestCases := []struct {
-		kubeReserved         v1.ResourceList
-		systemReserved       v1.ResourceList
-		capacity             v1.ResourceList
+		kubeReserved         v1.ResourceMap
+		systemReserved       v1.ResourceMap
+		capacity             v1.ResourceMap
 		hardThreshold        evictionapi.ThresholdValue
 		invalidConfiguration bool
 	}{
@@ -291,8 +291,8 @@ func TestNodeAllocatableInputValidation(t *testing.T) {
 			capacity: getResourceList("10", "10Gi"),
 		},
 		{
-			kubeReserved:   v1.ResourceList{},
-			systemReserved: v1.ResourceList{},
+			kubeReserved:   v1.ResourceMap{},
+			systemReserved: v1.ResourceMap{},
 			capacity:       getResourceList("10", "10Gi"),
 		},
 		{
@@ -348,8 +348,8 @@ func TestNodeAllocatableInputValidation(t *testing.T) {
 
 	ephemeralStorageEvictionThreshold := resource.MustParse("100Mi")
 	ephemeralStorageTestCases := []struct {
-		kubeReserved         v1.ResourceList
-		capacity             v1.ResourceList
+		kubeReserved         v1.ResourceMap
+		capacity             v1.ResourceMap
 		hardThreshold        evictionapi.ThresholdValue
 		invalidConfiguration bool
 	}{
@@ -392,10 +392,10 @@ func TestNodeAllocatableInputValidation(t *testing.T) {
 	}
 }
 
-// getEphemeralStorageResourceList returns a ResourceList with the
+// getEphemeralStorageResourceList returns a ResourceMap with the
 // specified ephemeral storage resource values
-func getEphemeralStorageResourceList(storage string) v1.ResourceList {
-	res := v1.ResourceList{}
+func getEphemeralStorageResourceList(storage string) v1.ResourceMap {
+	res := v1.ResourceMap{}
 	if storage != "" {
 		res[v1.ResourceEphemeralStorage] = resource.MustParse(storage)
 	}

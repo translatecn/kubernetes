@@ -110,7 +110,7 @@ func (c *podResourceCollector) CollectWithStability(ch chan<- metrics.Metric) {
 	if err != nil {
 		return
 	}
-	reuseReqs, reuseLimits := make(v1.ResourceList, 4), make(v1.ResourceList, 4)
+	reuseReqs, reuseLimits := make(v1.ResourceMap, 4), make(v1.ResourceMap, 4)
 	for _, p := range pods {
 		reqs, limits, terminal := podRequestsAndLimitsByLifecycle(p, reuseReqs, reuseLimits)
 		if terminal {
@@ -119,7 +119,7 @@ func (c *podResourceCollector) CollectWithStability(ch chan<- metrics.Metric) {
 		}
 		for _, t := range []struct {
 			desc  resourceLifecycleDescriptors
-			total v1.ResourceList
+			total v1.ResourceMap
 		}{
 			{
 				desc:  podResourceDesc.requests,
@@ -183,7 +183,7 @@ func recordMetricWithUnit(
 // a requests and limits list to the function, which will be cleared before use.
 // This method is the same as v1resource.PodRequestsAndLimits but avoids allocating in several
 // scenarios for efficiency.
-func podRequestsAndLimitsByLifecycle(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceList) (reqs, limits v1.ResourceList, terminal bool) {
+func podRequestsAndLimitsByLifecycle(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceMap) (reqs, limits v1.ResourceMap, terminal bool) {
 	switch {
 	case len(pod.Spec.NodeName) == 0:
 		// unscheduled pods cannot be terminal

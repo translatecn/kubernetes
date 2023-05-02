@@ -38,7 +38,7 @@ type UsageStatsOptions struct {
 // UsageStats is result of measuring observed resource use in the system
 type UsageStats struct {
 	// Used maps resource to quantity used
-	Used corev1.ResourceList
+	Used corev1.ResourceMap
 }
 
 // Evaluator knows how to evaluate quota usage for a particular group resource
@@ -59,7 +59,7 @@ type Evaluator interface {
 	// MatchingResources takes the input specified list of resources and returns the set of resources evaluator matches.
 	MatchingResources(input []corev1.ResourceName) []corev1.ResourceName
 	// Usage returns the resource usage for the specified object
-	Usage(item runtime.Object) (corev1.ResourceList, error)
+	Usage(item runtime.Object) (corev1.ResourceMap, error)
 	// UsageStats calculates latest observed usage stats for all objects
 	UsageStats(options UsageStatsOptions) (UsageStats, error)
 }

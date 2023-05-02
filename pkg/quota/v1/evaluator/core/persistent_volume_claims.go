@@ -143,8 +143,8 @@ func (p *pvcEvaluator) MatchingResources(items []corev1.ResourceName) []corev1.R
 }
 
 // Usage knows how to measure usage associated with item.
-func (p *pvcEvaluator) Usage(item runtime.Object) (corev1.ResourceList, error) {
-	result := corev1.ResourceList{}
+func (p *pvcEvaluator) Usage(item runtime.Object) (corev1.ResourceMap, error) {
+	result := corev1.ResourceMap{}
 	pvc, err := toExternalPersistentVolumeClaimOrError(item)
 	if err != nil {
 		return result, err

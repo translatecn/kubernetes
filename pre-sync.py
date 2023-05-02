@@ -30,3 +30,4 @@ for _item in catch_dir(f'./staging/src/{item}', 2):
     shutil.copytree(f'./staging/src/{_item}', f'./vendor/{_item}')
 
 os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
+os.system("sudo rm -rf vendor _output")

@@ -859,8 +859,8 @@ func (adc *attachDetachController) GetHostIP() (net.IP, error) {
 	return nil, fmt.Errorf("GetHostIP() not supported by Attach/Detach controller's VolumeHost implementation")
 }
 
-func (adc *attachDetachController) GetNodeAllocatable() (v1.ResourceList, error) {
-	return v1.ResourceList{}, nil
+func (adc *attachDetachController) GetNodeAllocatable() (v1.ResourceMap, error) {
+	return v1.ResourceMap{}, nil
 }
 
 func (adc *attachDetachController) GetAttachedVolumesFromNodeStatus() (map[v1.UniqueVolumeName]string, error) {

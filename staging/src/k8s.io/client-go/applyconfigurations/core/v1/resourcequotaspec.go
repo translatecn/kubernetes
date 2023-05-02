@@ -25,8 +25,8 @@ import (
 // ResourceQuotaSpecApplyConfiguration represents an declarative configuration of the ResourceQuotaSpec type for use
 // with apply.
 type ResourceQuotaSpecApplyConfiguration struct {
-	Hard          *v1.ResourceList                 `json:"hard,omitempty"`
-	Scopes        []v1.ResourceQuotaScope          `json:"scopes,omitempty"`
+	Hard          *v1.ResourceMap         `json:"hard,omitempty"`
+	Scopes        []v1.ResourceQuotaScope `json:"scopes,omitempty"`
 	ScopeSelector *ScopeSelectorApplyConfiguration `json:"scopeSelector,omitempty"`
 }
 
@@ -39,7 +39,7 @@ func ResourceQuotaSpec() *ResourceQuotaSpecApplyConfiguration {
 // WithHard sets the Hard field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Hard field is set to the value of the last call.
-func (b *ResourceQuotaSpecApplyConfiguration) WithHard(value v1.ResourceList) *ResourceQuotaSpecApplyConfiguration {
+func (b *ResourceQuotaSpecApplyConfiguration) WithHard(value v1.ResourceMap) *ResourceQuotaSpecApplyConfiguration {
 	b.Hard = &value
 	return b
 }

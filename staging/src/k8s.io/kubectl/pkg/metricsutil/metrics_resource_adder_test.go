@@ -43,7 +43,7 @@ func getResourceQuantity(t *testing.T, quantityStr string) resource.Quantity {
 func addContainerMetricsToPodMetrics(t *testing.T, podMetrics *metrics.PodMetrics, cpuUsage, memUsage string) {
 	t.Helper()
 	containerMetrics := metrics.ContainerMetrics{
-		Usage: corev1.ResourceList{},
+		Usage: corev1.ResourceMap{},
 	}
 
 	containerMetrics.Usage["cpu"] = getResourceQuantity(t, cpuUsage)

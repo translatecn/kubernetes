@@ -39,11 +39,7 @@ type Manager interface {
 	// the device plugin to provide runtime settings to use the device
 	// (environment variables, mount points and device files).
 	Allocate(pod *v1.Pod, container *v1.Container) error
-
-	// UpdatePluginResources updates node resources based on devices already
-	// allocated to pods. The node object is provided for the device manager to
-	// update the node capacity to reflect the currently available devices.
-	UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error
+	UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error // 用于更新节点资源
 
 	// Stop stops the manager.
 	Stop() error
@@ -55,7 +51,7 @@ type Manager interface {
 
 	// GetCapacity returns the amount of available device plugin resource capacity, resource allocatable
 	// and inactive device plugin resources previously registered on the node.
-	GetCapacity() (v1.ResourceList, v1.ResourceList, []string)
+	GetCapacity() (v1.ResourceMap, v1.ResourceMap, []string)
 	GetWatcherHandler() cache.PluginHandler
 
 	// GetDevices returns information about the devices assigned to pods and containers
@@ -64,7 +60,7 @@ type Manager interface {
 	// GetAllocatableDevices returns information about all the devices known to the manager
 	GetAllocatableDevices() ResourceDeviceInstances
 
-	ShouldResetExtendedResourceCapacity() bool // 根据检查点文件的可用性返回扩展资源是否应该重置.检查点文件的缺失强烈表明节点已被重新创建.
+	ShouldResetExtendedResourceCapacity() bool // 根据检查点文件 的可用性返回扩展资源是否应该重置.检查点文件的缺失 强烈表明节点已被重新创建.
 
 	// TopologyManager HintProvider provider indicates the Device Manager implements the Topology Manager Interface
 	// and is consulted to make Topology aware resource alignments

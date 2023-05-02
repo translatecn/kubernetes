@@ -56,7 +56,7 @@ func makeTestPV(name string, sizeGig int, driverName, volID string) *api.Persist
 		},
 		Spec: api.PersistentVolumeSpec{
 			AccessModes: []api.PersistentVolumeAccessMode{api.ReadWriteOnce},
-			Capacity: api.ResourceList{
+			Capacity: api.ResourceMap{
 				api.ResourceName(api.ResourceStorage): resource.MustParse(
 					fmt.Sprintf("%dGi", sizeGig),
 				),

@@ -422,7 +422,7 @@ type VolumeHost interface {
 	GetHostIP() (net.IP, error)
 
 	// Returns node allocatable.
-	GetNodeAllocatable() (v1.ResourceList, error)
+	GetNodeAllocatable() (v1.ResourceMap, error)
 
 	// Returns a function that returns a secret.
 	GetSecretFunc() func(namespace, name string) (*v1.Secret, error)

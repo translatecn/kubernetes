@@ -514,7 +514,7 @@ func GenericEphemeralVolumesEnabled(ctx context.Context, c clientset.Interface, 
 					StorageClassName: &storageClassName,
 					AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceStorage: resource.MustParse("1Gi"),
 						},
 					},

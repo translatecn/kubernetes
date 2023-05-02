@@ -6152,11 +6152,11 @@ func init() {
 	proto.RegisterType((*LifecycleHandler)(nil), "k8s.io.api.core.v1.LifecycleHandler")
 	proto.RegisterType((*LimitRange)(nil), "k8s.io.api.core.v1.LimitRange")
 	proto.RegisterType((*LimitRangeItem)(nil), "k8s.io.api.core.v1.LimitRangeItem")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.LimitRangeItem.DefaultEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.LimitRangeItem.DefaultRequestEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.LimitRangeItem.MaxEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.LimitRangeItem.MaxLimitRequestRatioEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.LimitRangeItem.MinEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.LimitRangeItem.DefaultEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.LimitRangeItem.DefaultRequestEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.LimitRangeItem.MaxEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.LimitRangeItem.MaxLimitRequestRatioEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.LimitRangeItem.MinEntry")
 	proto.RegisterType((*LimitRangeList)(nil), "k8s.io.api.core.v1.LimitRangeList")
 	proto.RegisterType((*LimitRangeSpec)(nil), "k8s.io.api.core.v1.LimitRangeSpec")
 	proto.RegisterType((*List)(nil), "k8s.io.api.core.v1.List")
@@ -6180,14 +6180,14 @@ func init() {
 	proto.RegisterType((*NodeList)(nil), "k8s.io.api.core.v1.NodeList")
 	proto.RegisterType((*NodeProxyOptions)(nil), "k8s.io.api.core.v1.NodeProxyOptions")
 	proto.RegisterType((*NodeResources)(nil), "k8s.io.api.core.v1.NodeResources")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.NodeResources.CapacityEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.NodeResources.CapacityEntry")
 	proto.RegisterType((*NodeSelector)(nil), "k8s.io.api.core.v1.NodeSelector")
 	proto.RegisterType((*NodeSelectorRequirement)(nil), "k8s.io.api.core.v1.NodeSelectorRequirement")
 	proto.RegisterType((*NodeSelectorTerm)(nil), "k8s.io.api.core.v1.NodeSelectorTerm")
 	proto.RegisterType((*NodeSpec)(nil), "k8s.io.api.core.v1.NodeSpec")
 	proto.RegisterType((*NodeStatus)(nil), "k8s.io.api.core.v1.NodeStatus")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.NodeStatus.AllocatableEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.NodeStatus.CapacityEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.NodeStatus.AllocatableEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.NodeStatus.CapacityEntry")
 	proto.RegisterType((*NodeSystemInfo)(nil), "k8s.io.api.core.v1.NodeSystemInfo")
 	proto.RegisterType((*ObjectFieldSelector)(nil), "k8s.io.api.core.v1.ObjectFieldSelector")
 	proto.RegisterType((*ObjectReference)(nil), "k8s.io.api.core.v1.ObjectReference")
@@ -6197,14 +6197,14 @@ func init() {
 	proto.RegisterType((*PersistentVolumeClaimList)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimList")
 	proto.RegisterType((*PersistentVolumeClaimSpec)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimSpec")
 	proto.RegisterType((*PersistentVolumeClaimStatus)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimStatus")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimStatus.AllocatedResourcesEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimStatus.CapacityEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimStatus.AllocatedResourcesEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimStatus.CapacityEntry")
 	proto.RegisterType((*PersistentVolumeClaimTemplate)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimTemplate")
 	proto.RegisterType((*PersistentVolumeClaimVolumeSource)(nil), "k8s.io.api.core.v1.PersistentVolumeClaimVolumeSource")
 	proto.RegisterType((*PersistentVolumeList)(nil), "k8s.io.api.core.v1.PersistentVolumeList")
 	proto.RegisterType((*PersistentVolumeSource)(nil), "k8s.io.api.core.v1.PersistentVolumeSource")
 	proto.RegisterType((*PersistentVolumeSpec)(nil), "k8s.io.api.core.v1.PersistentVolumeSpec")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.PersistentVolumeSpec.CapacityEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.PersistentVolumeSpec.CapacityEntry")
 	proto.RegisterType((*PersistentVolumeStatus)(nil), "k8s.io.api.core.v1.PersistentVolumeStatus")
 	proto.RegisterType((*PhotonPersistentDiskVolumeSource)(nil), "k8s.io.api.core.v1.PhotonPersistentDiskVolumeSource")
 	proto.RegisterType((*Pod)(nil), "k8s.io.api.core.v1.Pod")
@@ -6229,7 +6229,7 @@ func init() {
 	proto.RegisterType((*PodSignature)(nil), "k8s.io.api.core.v1.PodSignature")
 	proto.RegisterType((*PodSpec)(nil), "k8s.io.api.core.v1.PodSpec")
 	proto.RegisterMapType((map[string]string)(nil), "k8s.io.api.core.v1.PodSpec.NodeSelectorEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.PodSpec.OverheadEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.PodSpec.OverheadEntry")
 	proto.RegisterType((*PodStatus)(nil), "k8s.io.api.core.v1.PodStatus")
 	proto.RegisterType((*PodStatusResult)(nil), "k8s.io.api.core.v1.PodStatusResult")
 	proto.RegisterType((*PodTemplate)(nil), "k8s.io.api.core.v1.PodTemplate")
@@ -6258,13 +6258,13 @@ func init() {
 	proto.RegisterType((*ResourceQuota)(nil), "k8s.io.api.core.v1.ResourceQuota")
 	proto.RegisterType((*ResourceQuotaList)(nil), "k8s.io.api.core.v1.ResourceQuotaList")
 	proto.RegisterType((*ResourceQuotaSpec)(nil), "k8s.io.api.core.v1.ResourceQuotaSpec")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.ResourceQuotaSpec.HardEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.ResourceQuotaSpec.HardEntry")
 	proto.RegisterType((*ResourceQuotaStatus)(nil), "k8s.io.api.core.v1.ResourceQuotaStatus")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.ResourceQuotaStatus.HardEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.ResourceQuotaStatus.UsedEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.ResourceQuotaStatus.HardEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.ResourceQuotaStatus.UsedEntry")
 	proto.RegisterType((*ResourceRequirements)(nil), "k8s.io.api.core.v1.ResourceRequirements")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.ResourceRequirements.LimitsEntry")
-	proto.RegisterMapType((ResourceList)(nil), "k8s.io.api.core.v1.ResourceRequirements.RequestsEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.ResourceRequirements.LimitsEntry")
+	proto.RegisterMapType((ResourceMap)(nil), "k8s.io.api.core.v1.ResourceRequirements.RequestsEntry")
 	proto.RegisterType((*SELinuxOptions)(nil), "k8s.io.api.core.v1.SELinuxOptions")
 	proto.RegisterType((*ScaleIOPersistentVolumeSource)(nil), "k8s.io.api.core.v1.ScaleIOPersistentVolumeSource")
 	proto.RegisterType((*ScaleIOVolumeSource)(nil), "k8s.io.api.core.v1.ScaleIOVolumeSource")
@@ -26103,7 +26103,7 @@ func (this *LimitRangeItem) String() string {
 		keysForMax = append(keysForMax, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForMax)
-	mapStringForMax := "ResourceList{"
+	mapStringForMax := "ResourceMap{"
 	for _, k := range keysForMax {
 		mapStringForMax += fmt.Sprintf("%v: %v,", k, this.Max[ResourceName(k)])
 	}
@@ -26113,7 +26113,7 @@ func (this *LimitRangeItem) String() string {
 		keysForMin = append(keysForMin, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForMin)
-	mapStringForMin := "ResourceList{"
+	mapStringForMin := "ResourceMap{"
 	for _, k := range keysForMin {
 		mapStringForMin += fmt.Sprintf("%v: %v,", k, this.Min[ResourceName(k)])
 	}
@@ -26123,7 +26123,7 @@ func (this *LimitRangeItem) String() string {
 		keysForDefault = append(keysForDefault, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForDefault)
-	mapStringForDefault := "ResourceList{"
+	mapStringForDefault := "ResourceMap{"
 	for _, k := range keysForDefault {
 		mapStringForDefault += fmt.Sprintf("%v: %v,", k, this.Default[ResourceName(k)])
 	}
@@ -26133,7 +26133,7 @@ func (this *LimitRangeItem) String() string {
 		keysForDefaultRequest = append(keysForDefaultRequest, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForDefaultRequest)
-	mapStringForDefaultRequest := "ResourceList{"
+	mapStringForDefaultRequest := "ResourceMap{"
 	for _, k := range keysForDefaultRequest {
 		mapStringForDefaultRequest += fmt.Sprintf("%v: %v,", k, this.DefaultRequest[ResourceName(k)])
 	}
@@ -26143,7 +26143,7 @@ func (this *LimitRangeItem) String() string {
 		keysForMaxLimitRequestRatio = append(keysForMaxLimitRequestRatio, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForMaxLimitRequestRatio)
-	mapStringForMaxLimitRequestRatio := "ResourceList{"
+	mapStringForMaxLimitRequestRatio := "ResourceMap{"
 	for _, k := range keysForMaxLimitRequestRatio {
 		mapStringForMaxLimitRequestRatio += fmt.Sprintf("%v: %v,", k, this.MaxLimitRequestRatio[ResourceName(k)])
 	}
@@ -26461,7 +26461,7 @@ func (this *NodeResources) String() string {
 		keysForCapacity = append(keysForCapacity, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForCapacity)
-	mapStringForCapacity := "ResourceList{"
+	mapStringForCapacity := "ResourceMap{"
 	for _, k := range keysForCapacity {
 		mapStringForCapacity += fmt.Sprintf("%v: %v,", k, this.Capacity[ResourceName(k)])
 	}
@@ -26570,7 +26570,7 @@ func (this *NodeStatus) String() string {
 		keysForCapacity = append(keysForCapacity, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForCapacity)
-	mapStringForCapacity := "ResourceList{"
+	mapStringForCapacity := "ResourceMap{"
 	for _, k := range keysForCapacity {
 		mapStringForCapacity += fmt.Sprintf("%v: %v,", k, this.Capacity[ResourceName(k)])
 	}
@@ -26580,7 +26580,7 @@ func (this *NodeStatus) String() string {
 		keysForAllocatable = append(keysForAllocatable, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForAllocatable)
-	mapStringForAllocatable := "ResourceList{"
+	mapStringForAllocatable := "ResourceMap{"
 	for _, k := range keysForAllocatable {
 		mapStringForAllocatable += fmt.Sprintf("%v: %v,", k, this.Allocatable[ResourceName(k)])
 	}
@@ -26733,7 +26733,7 @@ func (this *PersistentVolumeClaimStatus) String() string {
 		keysForCapacity = append(keysForCapacity, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForCapacity)
-	mapStringForCapacity := "ResourceList{"
+	mapStringForCapacity := "ResourceMap{"
 	for _, k := range keysForCapacity {
 		mapStringForCapacity += fmt.Sprintf("%v: %v,", k, this.Capacity[ResourceName(k)])
 	}
@@ -26743,7 +26743,7 @@ func (this *PersistentVolumeClaimStatus) String() string {
 		keysForAllocatedResources = append(keysForAllocatedResources, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForAllocatedResources)
-	mapStringForAllocatedResources := "ResourceList{"
+	mapStringForAllocatedResources := "ResourceMap{"
 	for _, k := range keysForAllocatedResources {
 		mapStringForAllocatedResources += fmt.Sprintf("%v: %v,", k, this.AllocatedResources[ResourceName(k)])
 	}
@@ -26837,7 +26837,7 @@ func (this *PersistentVolumeSpec) String() string {
 		keysForCapacity = append(keysForCapacity, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForCapacity)
-	mapStringForCapacity := "ResourceList{"
+	mapStringForCapacity := "ResourceMap{"
 	for _, k := range keysForCapacity {
 		mapStringForCapacity += fmt.Sprintf("%v: %v,", k, this.Capacity[ResourceName(k)])
 	}
@@ -27231,7 +27231,7 @@ func (this *PodSpec) String() string {
 		keysForOverhead = append(keysForOverhead, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForOverhead)
-	mapStringForOverhead := "ResourceList{"
+	mapStringForOverhead := "ResourceMap{"
 	for _, k := range keysForOverhead {
 		mapStringForOverhead += fmt.Sprintf("%v: %v,", k, this.Overhead[ResourceName(k)])
 	}
@@ -27684,7 +27684,7 @@ func (this *ResourceQuotaSpec) String() string {
 		keysForHard = append(keysForHard, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForHard)
-	mapStringForHard := "ResourceList{"
+	mapStringForHard := "ResourceMap{"
 	for _, k := range keysForHard {
 		mapStringForHard += fmt.Sprintf("%v: %v,", k, this.Hard[ResourceName(k)])
 	}
@@ -27706,7 +27706,7 @@ func (this *ResourceQuotaStatus) String() string {
 		keysForHard = append(keysForHard, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForHard)
-	mapStringForHard := "ResourceList{"
+	mapStringForHard := "ResourceMap{"
 	for _, k := range keysForHard {
 		mapStringForHard += fmt.Sprintf("%v: %v,", k, this.Hard[ResourceName(k)])
 	}
@@ -27716,7 +27716,7 @@ func (this *ResourceQuotaStatus) String() string {
 		keysForUsed = append(keysForUsed, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForUsed)
-	mapStringForUsed := "ResourceList{"
+	mapStringForUsed := "ResourceMap{"
 	for _, k := range keysForUsed {
 		mapStringForUsed += fmt.Sprintf("%v: %v,", k, this.Used[ResourceName(k)])
 	}
@@ -27742,7 +27742,7 @@ func (this *ResourceRequirements) String() string {
 		keysForLimits = append(keysForLimits, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForLimits)
-	mapStringForLimits := "ResourceList{"
+	mapStringForLimits := "ResourceMap{"
 	for _, k := range keysForLimits {
 		mapStringForLimits += fmt.Sprintf("%v: %v,", k, this.Limits[ResourceName(k)])
 	}
@@ -27752,7 +27752,7 @@ func (this *ResourceRequirements) String() string {
 		keysForRequests = append(keysForRequests, string(k))
 	}
 	github_com_gogo_protobuf_sortkeys.Strings(keysForRequests)
-	mapStringForRequests := "ResourceList{"
+	mapStringForRequests := "ResourceMap{"
 	for _, k := range keysForRequests {
 		mapStringForRequests += fmt.Sprintf("%v: %v,", k, this.Requests[ResourceName(k)])
 	}
@@ -42248,7 +42248,7 @@ func (m *LimitRangeItem) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Max == nil {
-				m.Max = make(ResourceList)
+				m.Max = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -42377,7 +42377,7 @@ func (m *LimitRangeItem) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Min == nil {
-				m.Min = make(ResourceList)
+				m.Min = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -42506,7 +42506,7 @@ func (m *LimitRangeItem) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Default == nil {
-				m.Default = make(ResourceList)
+				m.Default = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -42635,7 +42635,7 @@ func (m *LimitRangeItem) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.DefaultRequest == nil {
-				m.DefaultRequest = make(ResourceList)
+				m.DefaultRequest = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -42764,7 +42764,7 @@ func (m *LimitRangeItem) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.MaxLimitRequestRatio == nil {
-				m.MaxLimitRequestRatio = make(ResourceList)
+				m.MaxLimitRequestRatio = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -45684,7 +45684,7 @@ func (m *NodeResources) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Capacity == nil {
-				m.Capacity = make(ResourceList)
+				m.Capacity = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -46479,7 +46479,7 @@ func (m *NodeStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Capacity == nil {
-				m.Capacity = make(ResourceList)
+				m.Capacity = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -46608,7 +46608,7 @@ func (m *NodeStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Allocatable == nil {
-				m.Allocatable = make(ResourceList)
+				m.Allocatable = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -48891,7 +48891,7 @@ func (m *PersistentVolumeClaimStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Capacity == nil {
-				m.Capacity = make(ResourceList)
+				m.Capacity = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -49054,7 +49054,7 @@ func (m *PersistentVolumeClaimStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.AllocatedResources == nil {
-				m.AllocatedResources = make(ResourceList)
+				m.AllocatedResources = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -50443,7 +50443,7 @@ func (m *PersistentVolumeSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Capacity == nil {
-				m.Capacity = make(ResourceList)
+				m.Capacity = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -55086,7 +55086,7 @@ func (m *PodSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Overhead == nil {
-				m.Overhead = make(ResourceList)
+				m.Overhead = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -59931,7 +59931,7 @@ func (m *ResourceQuotaSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Hard == nil {
-				m.Hard = make(ResourceList)
+				m.Hard = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -60178,7 +60178,7 @@ func (m *ResourceQuotaStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Hard == nil {
-				m.Hard = make(ResourceList)
+				m.Hard = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -60307,7 +60307,7 @@ func (m *ResourceQuotaStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Used == nil {
-				m.Used = make(ResourceList)
+				m.Used = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -60486,7 +60486,7 @@ func (m *ResourceRequirements) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Limits == nil {
-				m.Limits = make(ResourceList)
+				m.Limits = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}
@@ -60615,7 +60615,7 @@ func (m *ResourceRequirements) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Requests == nil {
-				m.Requests = make(ResourceList)
+				m.Requests = make(ResourceMap)
 			}
 			var mapkey ResourceName
 			mapvalue := &resource.Quantity{}

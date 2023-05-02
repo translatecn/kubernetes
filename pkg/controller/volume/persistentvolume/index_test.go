@@ -39,7 +39,7 @@ func makePVC(size string, modfn func(*v1.PersistentVolumeClaim)) *v1.PersistentV
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadOnlyMany, v1.ReadWriteOnce},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse(size),
 				},
 			},
@@ -62,7 +62,7 @@ func makeVolumeModePVC(size string, mode *v1.PersistentVolumeMode, modfn func(*v
 			VolumeMode:  mode,
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse(size),
 				},
 			},
@@ -205,7 +205,7 @@ func TestMatchingWithBoundVolumes(t *testing.T) {
 			Name: "gce001",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -227,7 +227,7 @@ func TestMatchingWithBoundVolumes(t *testing.T) {
 			Name: "gce002",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -252,7 +252,7 @@ func TestMatchingWithBoundVolumes(t *testing.T) {
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadOnlyMany, v1.ReadWriteOnce},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G"),
 				},
 			},
@@ -335,7 +335,7 @@ func TestFindingVolumeWithDifferentAccessModes(t *testing.T) {
 	gce := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "001", Name: "gce"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{GCEPersistentDisk: &v1.GCEPersistentDiskVolumeSource{}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -351,7 +351,7 @@ func TestFindingVolumeWithDifferentAccessModes(t *testing.T) {
 	ebs := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "002", Name: "ebs"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{AWSElasticBlockStore: &v1.AWSElasticBlockStoreVolumeSource{}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -366,7 +366,7 @@ func TestFindingVolumeWithDifferentAccessModes(t *testing.T) {
 	nfs := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{UID: "003", Name: "nfs"},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{NFS: &v1.NFSVolumeSource{}},
 			AccessModes: []v1.PersistentVolumeAccessMode{
 				v1.ReadWriteOnce,
@@ -387,7 +387,7 @@ func TestFindingVolumeWithDifferentAccessModes(t *testing.T) {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-			Resources:   v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")}},
+			Resources:   v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")}},
 			VolumeMode:  &fs,
 		},
 	}
@@ -476,7 +476,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "gce003",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -498,7 +498,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "gce004",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("20G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -522,7 +522,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "nfs002",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("5G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -545,7 +545,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "gce001",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -569,7 +569,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "nfs003",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -592,7 +592,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "gce002",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("5G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -614,7 +614,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "nfs001",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -640,7 +640,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				},
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("20000G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -664,7 +664,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				},
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("10000G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -686,7 +686,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "gce0024",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("100G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -708,7 +708,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "gce0025",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("50G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -730,7 +730,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "local001",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("200E"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -754,7 +754,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "local002",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("800E"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -778,7 +778,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity001",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("100G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -802,7 +802,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity002",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("150G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -826,7 +826,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity003",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("100G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -851,7 +851,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity003",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("200G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -875,7 +875,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity004-pending",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("200G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -899,7 +899,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity004-failed",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("200G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -923,7 +923,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity004-released",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("200G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -947,7 +947,7 @@ func createTestVolumes() []*v1.PersistentVolume {
 				Name: "affinity004-empty",
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("200G"),
 				},
 				PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -973,7 +973,7 @@ func testVolume(name, size string) *v1.PersistentVolume {
 			Annotations: map[string]string{},
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse(size)},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse(size)},
 			PersistentVolumeSource: v1.PersistentVolumeSource{HostPath: &v1.HostPathVolumeSource{}},
 			AccessModes:            []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			VolumeMode:             &fs,
@@ -993,7 +993,7 @@ func createVolumeModeBlockTestVolume() *v1.PersistentVolume {
 			Name: "block",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -1019,7 +1019,7 @@ func createVolumeModeFilesystemTestVolume() *v1.PersistentVolume {
 			Name: "block",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -1043,7 +1043,7 @@ func createVolumeModeNilTestVolume() *v1.PersistentVolume {
 			Name: "nil-mode",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -1215,7 +1215,7 @@ func TestStorageObjectInUseProtectionFiltering(t *testing.T) {
 			Annotations: map[string]string{},
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity:               v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")},
+			Capacity:               v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")},
 			PersistentVolumeSource: v1.PersistentVolumeSource{HostPath: &v1.HostPathVolumeSource{}},
 			AccessModes:            []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			VolumeMode:             &fs,
@@ -1236,7 +1236,7 @@ func TestStorageObjectInUseProtectionFiltering(t *testing.T) {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-			Resources:   v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")}},
+			Resources:   v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")}},
 			VolumeMode:  &fs,
 		},
 	}
@@ -1318,7 +1318,7 @@ func TestFindingPreboundVolumes(t *testing.T) {
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-			Resources:   v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1Gi")}},
+			Resources:   v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1Gi")}},
 			VolumeMode:  &fs,
 		},
 	}

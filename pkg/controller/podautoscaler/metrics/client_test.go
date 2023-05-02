@@ -104,7 +104,7 @@ func (tc *restClientTestCase) prepareTestClient(t *testing.T) (*metricsfake.Clie
 				for containerName, cpu := range containers {
 					cm := metricsapi.ContainerMetrics{
 						Name: containerName,
-						Usage: v1.ResourceList{
+						Usage: v1.ResourceMap{
 							v1.ResourceCPU: *resource.NewMilliQuantity(
 								cpu,
 								resource.DecimalSI),

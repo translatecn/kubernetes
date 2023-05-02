@@ -115,7 +115,7 @@ func TestNodeAuthorizer(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "mypvc"},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadOnlyMany},
-			Resources:   corev1.ResourceRequirements{Requests: corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1")}},
+			Resources:   corev1.ResourceRequirements{Requests: corev1.ResourceMap{corev1.ResourceStorage: resource.MustParse("1")}},
 		},
 	}, metav1.CreateOptions{}); err != nil {
 		t.Fatal(err)
@@ -125,7 +125,7 @@ func TestNodeAuthorizer(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "mypv"},
 		Spec: corev1.PersistentVolumeSpec{
 			AccessModes:            []corev1.PersistentVolumeAccessMode{corev1.ReadOnlyMany},
-			Capacity:               corev1.ResourceList{corev1.ResourceStorage: resource.MustParse("1")},
+			Capacity:               corev1.ResourceMap{corev1.ResourceStorage: resource.MustParse("1")},
 			ClaimRef:               &corev1.ObjectReference{Namespace: "ns", Name: "mypvc"},
 			PersistentVolumeSource: corev1.PersistentVolumeSource{AzureFile: &corev1.AzureFilePersistentVolumeSource{ShareName: "default", SecretName: "mypvsecret"}},
 		},

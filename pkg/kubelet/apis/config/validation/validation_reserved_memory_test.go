@@ -42,7 +42,7 @@ func TestValidateReservedMemoryConfiguration(t *testing.T) {
 				ReservedMemory: []kubeletconfig.MemoryReservation{
 					{
 						NumaNode: 0,
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceMemory: *resource.NewQuantity(128, resource.DecimalSI),
 						},
 					},
@@ -56,13 +56,13 @@ func TestValidateReservedMemoryConfiguration(t *testing.T) {
 				ReservedMemory: []kubeletconfig.MemoryReservation{
 					{
 						NumaNode: 0,
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceMemory: *resource.NewQuantity(128, resource.DecimalSI),
 						},
 					},
 					{
 						NumaNode: 0,
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceMemory: *resource.NewQuantity(64, resource.DecimalSI),
 						},
 					},
@@ -76,7 +76,7 @@ func TestValidateReservedMemoryConfiguration(t *testing.T) {
 				ReservedMemory: []kubeletconfig.MemoryReservation{
 					{
 						NumaNode: 0,
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							"blabla": *resource.NewQuantity(128, resource.DecimalSI),
 						},
 					},
@@ -90,7 +90,7 @@ func TestValidateReservedMemoryConfiguration(t *testing.T) {
 				ReservedMemory: []kubeletconfig.MemoryReservation{
 					{
 						NumaNode: 0,
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceMemory: *resource.NewQuantity(0, resource.DecimalSI),
 						},
 					},

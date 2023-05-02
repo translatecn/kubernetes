@@ -142,8 +142,8 @@ func TestGetPodQOS(t *testing.T) {
 	}
 }
 
-func getResourceList(cpu, memory string) v1.ResourceList {
-	res := v1.ResourceList{}
+func getResourceList(cpu, memory string) v1.ResourceMap {
+	res := v1.ResourceMap{}
 	if cpu != "" {
 		res[v1.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -153,19 +153,19 @@ func getResourceList(cpu, memory string) v1.ResourceList {
 	return res
 }
 
-func addResource(rName, value string, rl v1.ResourceList) v1.ResourceList {
+func addResource(rName, value string, rl v1.ResourceMap) v1.ResourceMap {
 	rl[v1.ResourceName(rName)] = resource.MustParse(value)
 	return rl
 }
 
-func getResourceRequirements(requests, limits v1.ResourceList) v1.ResourceRequirements {
+func getResourceRequirements(requests, limits v1.ResourceMap) v1.ResourceRequirements {
 	res := v1.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits
 	return res
 }
 
-func newContainer(name string, requests v1.ResourceList, limits v1.ResourceList) v1.Container {
+func newContainer(name string, requests v1.ResourceMap, limits v1.ResourceMap) v1.Container {
 	return v1.Container{
 		Name:      name,
 		Resources: getResourceRequirements(requests, limits),

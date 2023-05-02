@@ -30,7 +30,7 @@ func addDefaultingFuncs(scheme *runtime.Scheme) error {
 	return RegisterDefaults(scheme)
 }
 
-func SetDefaults_ResourceList(obj *v1.ResourceList) {
+func SetDefaults_ResourceList(obj *v1.ResourceMap) {
 	for key, val := range *obj {
 		// TODO(#18538): We round up resource values to milli scale to maintain API compatibility.
 		// In the future, we should instead reject values that need rounding.
@@ -149,7 +149,7 @@ func SetDefaults_Pod(obj *v1.Pod) {
 		// set requests to limits if requests are not specified, but limits are
 		if obj.Spec.Containers[i].Resources.Limits != nil {
 			if obj.Spec.Containers[i].Resources.Requests == nil {
-				obj.Spec.Containers[i].Resources.Requests = make(v1.ResourceList)
+				obj.Spec.Containers[i].Resources.Requests = make(v1.ResourceMap)
 			}
 			for key, value := range obj.Spec.Containers[i].Resources.Limits {
 				if _, exists := obj.Spec.Containers[i].Resources.Requests[key]; !exists {
@@ -161,7 +161,7 @@ func SetDefaults_Pod(obj *v1.Pod) {
 	for i := range obj.Spec.InitContainers {
 		if obj.Spec.InitContainers[i].Resources.Limits != nil {
 			if obj.Spec.InitContainers[i].Resources.Requests == nil {
-				obj.Spec.InitContainers[i].Resources.Requests = make(v1.ResourceList)
+				obj.Spec.InitContainers[i].Resources.Requests = make(v1.ResourceMap)
 			}
 			for key, value := range obj.Spec.InitContainers[i].Resources.Limits {
 				if _, exists := obj.Spec.InitContainers[i].Resources.Requests[key]; !exists {
@@ -344,7 +344,7 @@ func SetDefaults_NamespaceStatus(obj *v1.NamespaceStatus) {
 }
 func SetDefaults_NodeStatus(obj *v1.NodeStatus) {
 	if obj.Allocatable == nil && obj.Capacity != nil {
-		obj.Allocatable = make(v1.ResourceList, len(obj.Capacity))
+		obj.Allocatable = make(v1.ResourceMap, len(obj.Capacity))
 		for key, value := range obj.Capacity {
 			obj.Allocatable[key] = value.DeepCopy()
 		}
@@ -361,10 +361,10 @@ func SetDefaults_LimitRangeItem(obj *v1.LimitRangeItem) {
 	if obj.Type == v1.LimitTypeContainer {
 
 		if obj.Default == nil {
-			obj.Default = make(v1.ResourceList)
+			obj.Default = make(v1.ResourceMap)
 		}
 		if obj.DefaultRequest == nil {
-			obj.DefaultRequest = make(v1.ResourceList)
+			obj.DefaultRequest = make(v1.ResourceMap)
 		}
 
 		// If a default limit is unspecified, but the max is specified, default the limit to the max

@@ -45,8 +45,8 @@ import (
 	"k8s.io/kubernetes/pkg/quota/v1/install"
 )
 
-func getResourceList(cpu, memory string) v1.ResourceList {
-	res := v1.ResourceList{}
+func getResourceList(cpu, memory string) v1.ResourceMap {
+	res := v1.ResourceMap{}
 	if cpu != "" {
 		res[v1.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -56,7 +56,7 @@ func getResourceList(cpu, memory string) v1.ResourceList {
 	return res
 }
 
-func getResourceRequirements(requests, limits v1.ResourceList) v1.ResourceRequirements {
+func getResourceRequirements(requests, limits v1.ResourceMap) v1.ResourceRequirements {
 	res := v1.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits
@@ -236,7 +236,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -245,12 +245,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("0"),
 					v1.ResourceMemory: resource.MustParse("0"),
 					v1.ResourcePods:   resource.MustParse("0"),
@@ -266,7 +266,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -275,12 +275,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("0"),
 					v1.ResourceMemory: resource.MustParse("0"),
 					v1.ResourcePods:   resource.MustParse("2"),
@@ -296,7 +296,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -311,12 +311,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("0"),
 					v1.ResourceMemory: resource.MustParse("0"),
 					v1.ResourcePods:   resource.MustParse("0"),
@@ -332,7 +332,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -347,12 +347,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("600m"),
 					v1.ResourceMemory: resource.MustParse("51Gi"),
 					v1.ResourcePods:   resource.MustParse("2"),
@@ -368,7 +368,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -385,12 +385,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("600m"),
 					v1.ResourceMemory: resource.MustParse("51Gi"),
 					v1.ResourcePods:   resource.MustParse("2"),
@@ -406,7 +406,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -423,12 +423,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("500m"),
 					v1.ResourceMemory: resource.MustParse("50Gi"),
 					v1.ResourcePods:   resource.MustParse("1"),
@@ -444,7 +444,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -461,12 +461,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("1Gi"),
 					v1.ResourcePods:   resource.MustParse("1"),
@@ -482,7 +482,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -499,12 +499,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("1Gi"),
 					v1.ResourcePods:   resource.MustParse("1"),
@@ -520,7 +520,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -537,12 +537,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("0"),
 					v1.ResourceMemory: resource.MustParse("0"),
 					v1.ResourcePods:   resource.MustParse("0"),
@@ -558,7 +558,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -575,12 +575,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("200m"),
 					v1.ResourceMemory: resource.MustParse("2Gi"),
 					v1.ResourcePods:   resource.MustParse("2"),
@@ -596,7 +596,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -612,12 +612,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("200m"),
 					v1.ResourceMemory: resource.MustParse("2Gi"),
 					v1.ResourcePods:   resource.MustParse("2"),
@@ -633,7 +633,7 @@ func TestSyncResourceQuota(t *testing.T) {
 			quota: v1.ResourceQuota{
 				ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "testing"},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("3"),
 						v1.ResourceMemory: resource.MustParse("100Gi"),
 						v1.ResourcePods:   resource.MustParse("5"),
@@ -641,12 +641,12 @@ func TestSyncResourceQuota(t *testing.T) {
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("3"),
 					v1.ResourceMemory: resource.MustParse("100Gi"),
 					v1.ResourcePods:   resource.MustParse("5"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("200m"),
 					v1.ResourceMemory: resource.MustParse("2Gi"),
 					v1.ResourcePods:   resource.MustParse("2"),
@@ -665,24 +665,24 @@ func TestSyncResourceQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("3"),
 					},
-					Used: v1.ResourceList{
+					Used: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("0"),
 					},
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("4"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("0"),
 				},
 			},
@@ -699,21 +699,21 @@ func TestSyncResourceQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("0"),
 					},
 				},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("4"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("0"),
 				},
 			},
@@ -728,14 +728,14 @@ func TestSyncResourceQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourcePods: resource.MustParse("1"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourcePods: resource.MustParse("1"),
 				},
 			},
@@ -752,7 +752,7 @@ func TestSyncResourceQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourcePods:       resource.MustParse("1"),
 						v1.ResourceConfigMaps: resource.MustParse("1"),
 					},
@@ -760,11 +760,11 @@ func TestSyncResourceQuota(t *testing.T) {
 				Status: v1.ResourceQuotaStatus{},
 			},
 			status: v1.ResourceQuotaStatus{
-				Hard: v1.ResourceList{
+				Hard: v1.ResourceMap{
 					v1.ResourcePods:       resource.MustParse("1"),
 					v1.ResourceConfigMaps: resource.MustParse("1"),
 				},
-				Used: v1.ResourceList{
+				Used: v1.ResourceMap{
 					v1.ResourceConfigMaps: resource.MustParse("0"),
 				},
 			},
@@ -861,7 +861,7 @@ func TestAddQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
@@ -876,12 +876,12 @@ func TestAddQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
@@ -896,12 +896,12 @@ func TestAddQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						"requests.example/foobars.example.com": resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						"requests.example/foobars.example.com": resource.MustParse("4"),
 					},
 				},
@@ -916,15 +916,15 @@ func TestAddQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("6"),
 					},
-					Used: v1.ResourceList{
+					Used: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("0"),
 					},
 				},
@@ -939,12 +939,12 @@ func TestAddQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						"foobars.example.com": resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						"foobars.example.com": resource.MustParse("4"),
 					},
 				},
@@ -959,15 +959,15 @@ func TestAddQuota(t *testing.T) {
 					Name:      "rq",
 				},
 				Spec: v1.ResourceQuotaSpec{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
 				},
 				Status: v1.ResourceQuotaStatus{
-					Hard: v1.ResourceList{
+					Hard: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("4"),
 					},
-					Used: v1.ResourceList{
+					Used: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse("0"),
 					},
 				},

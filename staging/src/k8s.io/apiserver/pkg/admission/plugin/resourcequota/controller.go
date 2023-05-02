@@ -366,7 +366,7 @@ func filterLimitedResourcesByGroupResource(input []resourcequotaapi.LimitedResou
 // limitedByDefault determines from the specified usage and limitedResources the set of resources names
 // that must be present in a covering quota.  It returns empty set if it was unable to determine if
 // a resource was not limited by default.
-func limitedByDefault(usage corev1.ResourceList, limitedResources []resourcequotaapi.LimitedResource) []corev1.ResourceName {
+func limitedByDefault(usage corev1.ResourceMap, limitedResources []resourcequotaapi.LimitedResource) []corev1.ResourceName {
 	result := []corev1.ResourceName{}
 	for _, limitedResource := range limitedResources {
 		for k, v := range usage {
@@ -687,7 +687,7 @@ func (e *quotaEvaluator) getWork() (string, []*admissionWaiter, bool) {
 
 // prettyPrint formats a resource list for usage in errors
 // it outputs resources sorted in increasing order
-func prettyPrint(item corev1.ResourceList) string {
+func prettyPrint(item corev1.ResourceMap) string {
 	parts := []string{}
 	keys := []string{}
 	for key := range item {

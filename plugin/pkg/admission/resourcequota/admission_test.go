@@ -143,8 +143,8 @@ func TestAdmissionIgnoresSubresources(t *testing.T) {
 	resourceQuota.Name = "quota"
 	resourceQuota.Namespace = "test"
 	resourceQuota.Status = corev1.ResourceQuotaStatus{
-		Hard: corev1.ResourceList{},
-		Used: corev1.ResourceList{},
+		Hard: corev1.ResourceMap{},
+		Used: corev1.ResourceMap{},
 	}
 	resourceQuota.Status.Hard[corev1.ResourceMemory] = resource.MustParse("2Gi")
 	resourceQuota.Status.Used[corev1.ResourceMemory] = resource.MustParse("1Gi")
@@ -176,12 +176,12 @@ func TestAdmitBelowQuotaLimit(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1"),
 				corev1.ResourceMemory: resource.MustParse("50Gi"),
 				corev1.ResourcePods:   resource.MustParse("3"),
@@ -225,12 +225,12 @@ func TestAdmitBelowQuotaLimit(t *testing.T) {
 	usage := decimatedActions[lastActionIndex].(testcore.UpdateAction).GetObject().(*corev1.ResourceQuota)
 	expectedUsage := corev1.ResourceQuota{
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1100m"),
 				corev1.ResourceMemory: resource.MustParse("52Gi"),
 				corev1.ResourcePods:   resource.MustParse("4"),
@@ -253,12 +253,12 @@ func TestAdmitDryRun(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1"),
 				corev1.ResourceMemory: resource.MustParse("50Gi"),
 				corev1.ResourcePods:   resource.MustParse("3"),
@@ -301,12 +301,12 @@ func TestAdmitHandlesOldObjects(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("10"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("10"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("10"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("0"),
@@ -369,12 +369,12 @@ func TestAdmitHandlesOldObjects(t *testing.T) {
 	// will remain on last reported value
 	expectedUsage := corev1.ResourceQuota{
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("10"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("10"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("10"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("1"),
@@ -395,11 +395,11 @@ func TestAdmitHandlesNegativePVCUpdates(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("3"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("100Gi"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("10Gi"),
 			},
@@ -447,11 +447,11 @@ func TestAdmitHandlesPVCUpdates(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("3"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("100Gi"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("10Gi"),
 			},
@@ -512,11 +512,11 @@ func TestAdmitHandlesPVCUpdates(t *testing.T) {
 	usage := decimatedActions[lastActionIndex].(testcore.UpdateAction).GetObject().(*corev1.ResourceQuota)
 	expectedUsage := corev1.ResourceQuota{
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("3"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("100Gi"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("15Gi"),
 			},
@@ -539,12 +539,12 @@ func TestAdmitHandlesCreatingUpdates(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("10"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("10"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("10"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("0"),
@@ -604,12 +604,12 @@ func TestAdmitHandlesCreatingUpdates(t *testing.T) {
 	usage := decimatedActions[lastActionIndex].(testcore.UpdateAction).GetObject().(*corev1.ResourceQuota)
 	expectedUsage := corev1.ResourceQuota{
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("10"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("10"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("10"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("2"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("1"),
@@ -631,12 +631,12 @@ func TestAdmitExceedQuotaLimit(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1"),
 				corev1.ResourceMemory: resource.MustParse("50Gi"),
 				corev1.ResourcePods:   resource.MustParse("3"),
@@ -669,13 +669,13 @@ func TestAdmitEnforceQuotaConstraints(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:          resource.MustParse("3"),
 				corev1.ResourceMemory:       resource.MustParse("100Gi"),
 				corev1.ResourceLimitsMemory: resource.MustParse("200Gi"),
 				corev1.ResourcePods:         resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:          resource.MustParse("1"),
 				corev1.ResourceMemory:       resource.MustParse("50Gi"),
 				corev1.ResourceLimitsMemory: resource.MustParse("100Gi"),
@@ -708,13 +708,13 @@ func TestAdmitPodInNamespaceWithoutQuota(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "other", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:          resource.MustParse("3"),
 				corev1.ResourceMemory:       resource.MustParse("100Gi"),
 				corev1.ResourceLimitsMemory: resource.MustParse("200Gi"),
 				corev1.ResourcePods:         resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:          resource.MustParse("1"),
 				corev1.ResourceMemory:       resource.MustParse("50Gi"),
 				corev1.ResourceLimitsMemory: resource.MustParse("100Gi"),
@@ -753,12 +753,12 @@ func TestAdmitBelowTerminatingQuotaLimit(t *testing.T) {
 			Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeNotTerminating},
 		},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1"),
 				corev1.ResourceMemory: resource.MustParse("50Gi"),
 				corev1.ResourcePods:   resource.MustParse("3"),
@@ -771,12 +771,12 @@ func TestAdmitBelowTerminatingQuotaLimit(t *testing.T) {
 			Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeTerminating},
 		},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1"),
 				corev1.ResourceMemory: resource.MustParse("50Gi"),
 				corev1.ResourcePods:   resource.MustParse("3"),
@@ -831,12 +831,12 @@ func TestAdmitBelowTerminatingQuotaLimit(t *testing.T) {
 
 	expectedUsage := corev1.ResourceQuota{
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("3"),
 				corev1.ResourceMemory: resource.MustParse("100Gi"),
 				corev1.ResourcePods:   resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("1100m"),
 				corev1.ResourceMemory: resource.MustParse("52Gi"),
 				corev1.ResourcePods:   resource.MustParse("4"),
@@ -862,10 +862,10 @@ func TestAdmitBelowBestEffortQuotaLimit(t *testing.T) {
 			Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeBestEffort},
 		},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("3"),
 			},
 		},
@@ -876,10 +876,10 @@ func TestAdmitBelowBestEffortQuotaLimit(t *testing.T) {
 			Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeNotBestEffort},
 		},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("3"),
 			},
 		},
@@ -924,10 +924,10 @@ func TestAdmitBelowBestEffortQuotaLimit(t *testing.T) {
 
 	expectedUsage := corev1.ResourceQuota{
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("4"),
 			},
 		},
@@ -964,10 +964,10 @@ func TestAdmitBestEffortQuotaLimitIgnoresBurstable(t *testing.T) {
 			Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeBestEffort},
 		},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("5"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("3"),
 			},
 		},
@@ -1003,10 +1003,10 @@ func TestAdmissionSetsMissingNamespace(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: namespace, ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("3"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePods: resource.MustParse("1"),
 			},
 		},
@@ -1043,11 +1043,11 @@ func TestAdmitRejectsNegativeUsage(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("3"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("100Gi"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourcePersistentVolumeClaims: resource.MustParse("1"),
 				corev1.ResourceRequestsStorage:        resource.MustParse("10Gi"),
 			},
@@ -1085,11 +1085,11 @@ func TestAdmitWhenUnrelatedResourceExceedsQuota(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceServices: resource.MustParse("3"),
 				corev1.ResourcePods:     resource.MustParse("4"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceServices: resource.MustParse("4"),
 				corev1.ResourcePods:     resource.MustParse("1"),
 			},
@@ -1181,10 +1181,10 @@ func TestAdmitLimitedResourceWithQuota(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceRequestsCPU: resource.MustParse("10"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceRequestsCPU: resource.MustParse("1"),
 			},
 		},
@@ -1225,10 +1225,10 @@ func TestAdmitLimitedResourceWithMultipleQuota(t *testing.T) {
 	resourceQuota1 := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota1", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceRequestsCPU: resource.MustParse("10"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceRequestsCPU: resource.MustParse("1"),
 			},
 		},
@@ -1236,10 +1236,10 @@ func TestAdmitLimitedResourceWithMultipleQuota(t *testing.T) {
 	resourceQuota2 := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota2", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceMemory: resource.MustParse("10Gi"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
 		},
@@ -1281,10 +1281,10 @@ func TestAdmitLimitedResourceWithQuotaThatDoesNotCover(t *testing.T) {
 	resourceQuota := &corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "quota", Namespace: "test", ResourceVersion: "124"},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceMemory: resource.MustParse("10Gi"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
 		},
@@ -1438,10 +1438,10 @@ func TestAdmitLimitedScopeWithCoverQuota(t *testing.T) {
 					Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeBestEffort},
 				},
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourcePods: resource.MustParse("5"),
 					},
-					Used: corev1.ResourceList{
+					Used: corev1.ResourceMap{
 						corev1.ResourcePods: resource.MustParse("3"),
 					},
 				},
@@ -1586,10 +1586,10 @@ func TestAdmitLimitedScopeWithCoverQuota(t *testing.T) {
 					Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeBestEffort},
 				},
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourcePods: resource.MustParse("5"),
 					},
-					Used: corev1.ResourceList{
+					Used: corev1.ResourceMap{
 						corev1.ResourcePods: resource.MustParse("3"),
 					},
 				},
@@ -1670,10 +1670,10 @@ func TestAdmitLimitedScopeWithCoverQuota(t *testing.T) {
 					Scopes: []corev1.ResourceQuotaScope{corev1.ResourceQuotaScopeBestEffort},
 				},
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourcePods: resource.MustParse("5"),
 					},
-					Used: corev1.ResourceList{
+					Used: corev1.ResourceMap{
 						corev1.ResourcePods: resource.MustParse("3"),
 					},
 				},
@@ -1739,10 +1739,10 @@ func TestAdmitLimitedScopeWithCoverQuota(t *testing.T) {
 					},
 				},
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("10Gi"),
 					},
-					Used: corev1.ResourceList{
+					Used: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 					},
 				},

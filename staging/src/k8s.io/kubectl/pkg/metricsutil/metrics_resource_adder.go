@@ -23,13 +23,13 @@ import (
 
 type ResourceAdder struct {
 	resources []corev1.ResourceName
-	total     corev1.ResourceList
+	total     corev1.ResourceMap
 }
 
 func NewResourceAdder(resources []corev1.ResourceName) *ResourceAdder {
 	return &ResourceAdder{
 		resources: resources,
-		total:     make(corev1.ResourceList),
+		total:     make(corev1.ResourceMap),
 	}
 }
 

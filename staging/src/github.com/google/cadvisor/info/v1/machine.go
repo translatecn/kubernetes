@@ -217,15 +217,9 @@ type MachineInfo struct {
 	// Filesystems on this machine.
 	Filesystems []FsInfo `json:"filesystems"`
 
-	// Disk map
-	DiskMap map[string]DiskInfo `json:"disk_map"`
-
-	// Network devices
-	NetworkDevices []NetInfo `json:"network_devices"`
-
-	// Machine Topology
-	// Describes cpu/memory layout and hierarchy.
-	Topology []Node `json:"topology"`
+	DiskMap        map[string]DiskInfo `json:"disk_map"`        // 磁盘分布
+	NetworkDevices []NetInfo           `json:"network_devices"` // 网络驱动
+	Topology       []Node              `json:"topology"`        // 机器信息拓扑，描述了cpu/memory 布局
 
 	// Cloud provider the machine belongs to.
 	CloudProvider CloudProvider `json:"cloud_provider"`

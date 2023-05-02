@@ -179,11 +179,11 @@ func makeGuaranteedCPUExclusiveSleeperPod(name string, cpus int) *v1.Pod {
 					Name:  name + "-cnt",
 					Image: busyboxImage,
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%d", cpus)),
 							v1.ResourceMemory: resource.MustParse("64Mi"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse(fmt.Sprintf("%d", cpus)),
 							v1.ResourceMemory: resource.MustParse("64Mi"),
 						},

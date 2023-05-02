@@ -59,7 +59,7 @@ type testMemoryManager struct {
 	expectedAddContainerError  error
 	updateError                error
 	removeContainerID          string
-	nodeAllocatableReservation v1.ResourceList
+	nodeAllocatableReservation v1.ResourceMap
 	policyName                 policyType
 	affinity                   topologymanager.Store
 	systemReservedMemory       []kubeletconfig.MemoryReservation
@@ -173,26 +173,26 @@ func TestValidateReservedMemory(t *testing.T) {
 	const msgNotEqual = "the total amount %q of type %q is not equal to the value %q determined by Node Allocatable feature"
 	testCases := []struct {
 		description                string
-		nodeAllocatableReservation v1.ResourceList
+		nodeAllocatableReservation v1.ResourceMap
 		machineInfo                *cadvisorapi.MachineInfo
 		systemReservedMemory       []kubeletconfig.MemoryReservation
 		expectedError              string
 	}{
 		{
 			"Node Allocatable not set, reserved not set",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{},
 			"",
 		},
 		{
 			"Node Allocatable set to zero, reserved set to zero",
-			v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(0, resource.DecimalSI)},
+			v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(0, resource.DecimalSI)},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(0, resource.DecimalSI),
 					},
 				},
@@ -201,12 +201,12 @@ func TestValidateReservedMemory(t *testing.T) {
 		},
 		{
 			"Node Allocatable not set (equal zero), reserved set",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 					},
 				},
@@ -215,19 +215,19 @@ func TestValidateReservedMemory(t *testing.T) {
 		},
 		{
 			"Node Allocatable set, reserved not set",
-			v1.ResourceList{hugepages2M: *resource.NewQuantity(5, resource.DecimalSI)},
+			v1.ResourceMap{hugepages2M: *resource.NewQuantity(5, resource.DecimalSI)},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{},
 			fmt.Sprintf(msgNotEqual, "0", hugepages2M, "5"),
 		},
 		{
 			"Reserved not equal to Node Allocatable",
-			v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(5, resource.DecimalSI)},
+			v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(5, resource.DecimalSI)},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 					},
 				},
@@ -236,18 +236,18 @@ func TestValidateReservedMemory(t *testing.T) {
 		},
 		{
 			"Reserved contains the NUMA node that does not exist under the machine",
-			v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(17, resource.DecimalSI)},
+			v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(17, resource.DecimalSI)},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 					},
 				},
 				{
 					NumaNode: 2,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(5, resource.DecimalSI),
 					},
 				},
@@ -256,14 +256,14 @@ func TestValidateReservedMemory(t *testing.T) {
 		},
 		{
 			"Reserved total equal to Node Allocatable",
-			v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(17, resource.DecimalSI),
+			v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(17, resource.DecimalSI),
 				hugepages2M: *resource.NewQuantity(77, resource.DecimalSI),
 				hugepages1G: *resource.NewQuantity(13, resource.DecimalSI)},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(70, resource.DecimalSI),
 						hugepages1G:       *resource.NewQuantity(13, resource.DecimalSI),
@@ -271,7 +271,7 @@ func TestValidateReservedMemory(t *testing.T) {
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(5, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(7, resource.DecimalSI),
 					},
@@ -281,14 +281,14 @@ func TestValidateReservedMemory(t *testing.T) {
 		},
 		{
 			"Reserved total hugapages-2M not equal to Node Allocatable",
-			v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(17, resource.DecimalSI),
+			v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(17, resource.DecimalSI),
 				hugepages2M: *resource.NewQuantity(14, resource.DecimalSI),
 				hugepages1G: *resource.NewQuantity(13, resource.DecimalSI)},
 			machineInfo,
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(70, resource.DecimalSI),
 						hugepages1G:       *resource.NewQuantity(13, resource.DecimalSI),
@@ -296,7 +296,7 @@ func TestValidateReservedMemory(t *testing.T) {
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(5, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(7, resource.DecimalSI),
 					},
@@ -346,7 +346,7 @@ func TestConvertPreReserved(t *testing.T) {
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(70, resource.DecimalSI),
 						hugepages1G:       *resource.NewQuantity(13, resource.DecimalSI),
@@ -368,7 +368,7 @@ func TestConvertPreReserved(t *testing.T) {
 			[]kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(12, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(70, resource.DecimalSI),
 						hugepages1G:       *resource.NewQuantity(13, resource.DecimalSI),
@@ -376,7 +376,7 @@ func TestConvertPreReserved(t *testing.T) {
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(5, resource.DecimalSI),
 						hugepages2M:       *resource.NewQuantity(7, resource.DecimalSI),
 					},
@@ -412,7 +412,7 @@ func TestGetSystemReservedMemory(t *testing.T) {
 	testCases := []testMemoryManager{
 		{
 			description:                "Should return empty map when reservation is not done",
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			systemReservedMemory:       []kubeletconfig.MemoryReservation{},
 			expectedReserved: systemReservedMemory{
 				0: {},
@@ -423,11 +423,11 @@ func TestGetSystemReservedMemory(t *testing.T) {
 		},
 		{
 			description:                "Should return error when Allocatable reservation is not equal to the reserved memory",
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			systemReservedMemory: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI),
 					},
 				},
@@ -438,17 +438,17 @@ func TestGetSystemReservedMemory(t *testing.T) {
 		},
 		{
 			description:                "Reserved should be equal to systemReservedMemory",
-			nodeAllocatableReservation: v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI)},
+			nodeAllocatableReservation: v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI)},
 			systemReservedMemory: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI),
 					},
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI),
 					},
 				},
@@ -1232,12 +1232,12 @@ func TestAddContainer(t *testing.T) {
 			expectedAllocateError:     nil,
 			expectedAddContainerError: nil,
 			podAllocate: getPod("fakePod1", "fakeContainer1", &v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("1000Mi"),
 					v1.ResourceMemory: resource.MustParse("12Gi"),
 					hugepages1Gi:      resource.MustParse("4Gi"),
 				},
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("1000Mi"),
 					v1.ResourceMemory: resource.MustParse("12Gi"),
 					hugepages1Gi:      resource.MustParse("4Gi"),
@@ -1355,12 +1355,12 @@ func TestAddContainer(t *testing.T) {
 			expectedAllocateError:     fmt.Errorf("[memorymanager] failed to get the default NUMA affinity, no NUMA nodes with enough memory is available"),
 			expectedAddContainerError: nil,
 			podAllocate: getPod("fakePod2", "fakeContainer2", &v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("1000Mi"),
 					v1.ResourceMemory: resource.MustParse("12Gi"),
 					hugepages1Gi:      resource.MustParse("4Gi"),
 				},
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("1000Mi"),
 					v1.ResourceMemory: resource.MustParse("12Gi"),
 					hugepages1Gi:      resource.MustParse("4Gi"),
@@ -1911,15 +1911,15 @@ func TestNewManager(t *testing.T) {
 			description:                "Successful creation of Memory Manager instance",
 			policyName:                 policyTypeStatic,
 			machineInfo:                machineInfo,
-			nodeAllocatableReservation: v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI)},
+			nodeAllocatableReservation: v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI)},
 			systemReservedMemory: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits:   v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI)},
+					Limits:   v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI)},
 				},
 				{
 					NumaNode: 1,
-					Limits:   v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI)},
+					Limits:   v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI)},
 				},
 			},
 			affinity:         topologymanager.NewFakeManager(),
@@ -1930,17 +1930,17 @@ func TestNewManager(t *testing.T) {
 			description:                "Should return an error when systemReservedMemory (configured with kubelet flag) does not comply with Node Allocatable feature values",
 			policyName:                 policyTypeStatic,
 			machineInfo:                machineInfo,
-			nodeAllocatableReservation: v1.ResourceList{v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI)},
+			nodeAllocatableReservation: v1.ResourceMap{v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI)},
 			systemReservedMemory: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(gb, resource.BinarySI),
 					},
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: *resource.NewQuantity(2*gb, resource.BinarySI),
 					},
 				},
@@ -1953,7 +1953,7 @@ func TestNewManager(t *testing.T) {
 			description:                "Should return an error when memory reserved for system is empty (systemReservedMemory)",
 			policyName:                 policyTypeStatic,
 			machineInfo:                machineInfo,
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			systemReservedMemory:       []kubeletconfig.MemoryReservation{},
 			affinity:                   topologymanager.NewFakeManager(),
 			expectedError:              fmt.Errorf("[memorymanager] you should specify the system reserved memory"),
@@ -1963,7 +1963,7 @@ func TestNewManager(t *testing.T) {
 			description:                "Should return an error when policy name is not correct",
 			policyName:                 "fake",
 			machineInfo:                machineInfo,
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			systemReservedMemory:       []kubeletconfig.MemoryReservation{},
 			affinity:                   topologymanager.NewFakeManager(),
 			expectedError:              fmt.Errorf("unknown policy: \"fake\""),
@@ -1973,7 +1973,7 @@ func TestNewManager(t *testing.T) {
 			description:                "Should create manager with \"none\" policy",
 			policyName:                 policyTypeNone,
 			machineInfo:                machineInfo,
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			systemReservedMemory:       []kubeletconfig.MemoryReservation{},
 			affinity:                   topologymanager.NewFakeManager(),
 			expectedError:              nil,
@@ -2401,12 +2401,12 @@ func TestAllocateAndAddPodWithInitContainers(t *testing.T) {
 					{
 						Name: "container1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
@@ -2418,12 +2418,12 @@ func TestAllocateAndAddPodWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("7Gi"),
 								hugepages1Gi:      resource.MustParse("5Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("7Gi"),
 								hugepages1Gi:      resource.MustParse("5Gi"),

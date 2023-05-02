@@ -25,7 +25,7 @@ import (
 // OverheadApplyConfiguration represents an declarative configuration of the Overhead type for use
 // with apply.
 type OverheadApplyConfiguration struct {
-	PodFixed *v1.ResourceList `json:"podFixed,omitempty"`
+	PodFixed *v1.ResourceMap `json:"podFixed,omitempty"`
 }
 
 // OverheadApplyConfiguration constructs an declarative configuration of the Overhead type for use with
@@ -37,7 +37,7 @@ func Overhead() *OverheadApplyConfiguration {
 // WithPodFixed sets the PodFixed field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PodFixed field is set to the value of the last call.
-func (b *OverheadApplyConfiguration) WithPodFixed(value v1.ResourceList) *OverheadApplyConfiguration {
+func (b *OverheadApplyConfiguration) WithPodFixed(value v1.ResourceMap) *OverheadApplyConfiguration {
 	b.PodFixed = &value
 	return b
 }

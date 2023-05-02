@@ -157,7 +157,7 @@ func NewFit(plArgs runtime.Object, h framework.Handle, fts feature.Features) (fr
 //	    Memory: 1G
 //
 // Result: CPU: 3, Memory: 3G
-func computePodResourceRequest(pod *v1.Pod) *preFilterState {
+func computePodResourceRequest(pod *v1.Pod) *preFilterState { // ✅
 	result := &preFilterState{}
 	for _, container := range pod.Spec.Containers {
 		result.Add(container.Resources.Requests)
@@ -246,6 +246,7 @@ type InsufficientResource struct {
 }
 
 // Fits checks if node have enough resources to host the pod.
+// 检查节点是否还有足够的资源
 func Fits(pod *v1.Pod, nodeInfo *framework.NodeInfo) []InsufficientResource {
 	return fitsRequest(computePodResourceRequest(pod), nodeInfo, nil, nil)
 }

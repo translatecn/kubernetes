@@ -392,7 +392,7 @@ func TestNodeBuilder(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "node1", Namespace: "should-not-have", ResourceVersion: "10"},
 		Spec:       v1.NodeSpec{},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("1000m"),
 				v1.ResourceMemory: resource.MustParse("1Mi"),
 			},

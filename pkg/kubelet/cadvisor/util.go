@@ -32,8 +32,8 @@ const (
 )
 
 // CapacityFromMachineInfo returns the capacity of the resources from the machine info.
-func CapacityFromMachineInfo(info *cadvisorapi.MachineInfo) v1.ResourceList {
-	c := v1.ResourceList{
+func CapacityFromMachineInfo(info *cadvisorapi.MachineInfo) v1.ResourceMap {
+	c := v1.ResourceMap{
 		v1.ResourceCPU: *resource.NewMilliQuantity(
 			int64(info.NumCores*1000),
 			resource.DecimalSI),
@@ -54,8 +54,8 @@ func CapacityFromMachineInfo(info *cadvisorapi.MachineInfo) v1.ResourceList {
 }
 
 // EphemeralStorageCapacityFromFsInfo returns the capacity of the ephemeral storage from the FsInfo.
-func EphemeralStorageCapacityFromFsInfo(info cadvisorapi2.FsInfo) v1.ResourceList {
-	c := v1.ResourceList{
+func EphemeralStorageCapacityFromFsInfo(info cadvisorapi2.FsInfo) v1.ResourceMap {
+	c := v1.ResourceMap{
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(
 			int64(info.Capacity),
 			resource.BinarySI),

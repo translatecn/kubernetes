@@ -95,7 +95,7 @@ func testStackdriverAcceleratorMonitoring(f *framework.Framework) {
 					Command: []string{"/bin/sh", "-c"},
 					Args:    []string{"nvidia-smi && sleep infinity"},
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							e2egpu.NVIDIAGPUResourceName: *resource.NewQuantity(1, resource.DecimalSI),
 						},
 					},

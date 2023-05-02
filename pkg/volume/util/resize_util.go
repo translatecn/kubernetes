@@ -157,7 +157,7 @@ func MarkControllerReisizeInProgress(pvc *v1.PersistentVolumeClaim, resizerName 
 	newPVC := pvc.DeepCopy()
 	newPVC = MergeResizeConditionOnPVC(newPVC, conditions)
 	newPVC.Status.ResizeStatus = &controllerExpansionInProgress
-	newPVC.Status.AllocatedResources = v1.ResourceList{v1.ResourceStorage: newSize}
+	newPVC.Status.AllocatedResources = v1.ResourceMap{v1.ResourceStorage: newSize}
 	newPVC = setResizer(newPVC, resizerName)
 	return PatchPVCStatus(pvc /*oldPVC*/, newPVC, kubeClient)
 }

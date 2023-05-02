@@ -147,11 +147,11 @@ func makePod(podUID, containerName, cpuRequest, cpuLimit string) *v1.Pod {
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse(cpuRequest),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse(cpuLimit),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 						},
@@ -183,11 +183,11 @@ func makeMultiContainerPod(initCPUs, appCPUs []struct{ request, limit string }) 
 		pod.Spec.InitContainers = append(pod.Spec.InitContainers, v1.Container{
 			Name: "initContainer-" + strconv.Itoa(i),
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse(cpu.request),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse(cpu.limit),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 				},
@@ -199,11 +199,11 @@ func makeMultiContainerPod(initCPUs, appCPUs []struct{ request, limit string }) 
 		pod.Spec.Containers = append(pod.Spec.Containers, v1.Container{
 			Name: "appContainer-" + strconv.Itoa(i),
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse(cpu.request),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse(cpu.limit),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("1G"),
 				},
@@ -553,7 +553,7 @@ func TestCPUManagerGenerate(t *testing.T) {
 	testCases := []struct {
 		description                string
 		cpuPolicyName              string
-		nodeAllocatableReservation v1.ResourceList
+		nodeAllocatableReservation v1.ResourceMap
 		isTopologyBroken           bool
 		expectedPolicy             string
 		expectedError              error
@@ -573,26 +573,26 @@ func TestCPUManagerGenerate(t *testing.T) {
 		{
 			description:                "static policy",
 			cpuPolicyName:              "static",
-			nodeAllocatableReservation: v1.ResourceList{v1.ResourceCPU: *resource.NewQuantity(3, resource.DecimalSI)},
+			nodeAllocatableReservation: v1.ResourceMap{v1.ResourceCPU: *resource.NewQuantity(3, resource.DecimalSI)},
 			expectedPolicy:             "static",
 		},
 		{
 			description:                "static policy - broken topology",
 			cpuPolicyName:              "static",
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			isTopologyBroken:           true,
 			expectedError:              fmt.Errorf("could not detect number of cpus"),
 		},
 		{
 			description:                "static policy - broken reservation",
 			cpuPolicyName:              "static",
-			nodeAllocatableReservation: v1.ResourceList{},
+			nodeAllocatableReservation: v1.ResourceMap{},
 			expectedError:              fmt.Errorf("unable to determine reserved CPU resources for static policy"),
 		},
 		{
 			description:                "static policy - no CPU resources",
 			cpuPolicyName:              "static",
-			nodeAllocatableReservation: v1.ResourceList{v1.ResourceCPU: *resource.NewQuantity(0, resource.DecimalSI)},
+			nodeAllocatableReservation: v1.ResourceMap{v1.ResourceCPU: *resource.NewQuantity(0, resource.DecimalSI)},
 			expectedError:              fmt.Errorf("the static policy requires systemreserved.cpu + kubereserved.cpu to be greater than zero"),
 		},
 	}
@@ -1348,7 +1348,7 @@ func TestCPUManagerHandlePolicyOptions(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.description, func(t *testing.T) {
 			machineInfo := &mockedMachineInfo
-			nodeAllocatableReservation := v1.ResourceList{}
+			nodeAllocatableReservation := v1.ResourceMap{}
 			sDir, err := os.MkdirTemp("", "cpu_manager_test")
 			if err != nil {
 				t.Errorf("cannot create state file: %s", err.Error())

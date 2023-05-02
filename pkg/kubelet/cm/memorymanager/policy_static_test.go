@@ -41,24 +41,24 @@ const (
 
 var (
 	requirementsGuaranteed = &v1.ResourceRequirements{
-		Limits: v1.ResourceList{
+		Limits: v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse("1000Mi"),
 			v1.ResourceMemory: resource.MustParse("1Gi"),
 			hugepages1Gi:      resource.MustParse("1Gi"),
 		},
-		Requests: v1.ResourceList{
+		Requests: v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse("1000Mi"),
 			v1.ResourceMemory: resource.MustParse("1Gi"),
 			hugepages1Gi:      resource.MustParse("1Gi"),
 		},
 	}
 	requirementsBurstable = &v1.ResourceRequirements{
-		Limits: v1.ResourceList{
+		Limits: v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse("1000Mi"),
 			v1.ResourceMemory: resource.MustParse("2Gi"),
 			hugepages1Gi:      resource.MustParse("2Gi"),
 		},
-		Requests: v1.ResourceList{
+		Requests: v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse("1000Mi"),
 			v1.ResourceMemory: resource.MustParse("1Gi"),
 			hugepages1Gi:      resource.MustParse("1Gi"),
@@ -1905,12 +1905,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("3Gi"),
 								hugepages1Gi:      resource.MustParse("3Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("3Gi"),
 								hugepages1Gi:      resource.MustParse("3Gi"),
@@ -1920,12 +1920,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
@@ -1937,12 +1937,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("1Gi"),
 								hugepages1Gi:      resource.MustParse("1Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("1Gi"),
 								hugepages1Gi:      resource.MustParse("1Gi"),
@@ -1952,12 +1952,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("2Gi"),
 								hugepages1Gi:      resource.MustParse("2Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("2Gi"),
 								hugepages1Gi:      resource.MustParse("2Gi"),
@@ -2077,12 +2077,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("2Gi"),
 								hugepages1Gi:      resource.MustParse("2Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("2Gi"),
 								hugepages1Gi:      resource.MustParse("2Gi"),
@@ -2092,12 +2092,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("1Gi"),
 								hugepages1Gi:      resource.MustParse("1Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("1Gi"),
 								hugepages1Gi:      resource.MustParse("1Gi"),
@@ -2109,12 +2109,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
@@ -2124,12 +2124,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("3Gi"),
 								hugepages1Gi:      resource.MustParse("3Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("3Gi"),
 								hugepages1Gi:      resource.MustParse("3Gi"),
@@ -2249,12 +2249,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
@@ -2264,12 +2264,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("3Gi"),
 								hugepages1Gi:      resource.MustParse("3Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("3Gi"),
 								hugepages1Gi:      resource.MustParse("3Gi"),
@@ -2281,12 +2281,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("7Gi"),
 								hugepages1Gi:      resource.MustParse("7Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("7Gi"),
 								hugepages1Gi:      resource.MustParse("7Gi"),
@@ -2296,12 +2296,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
@@ -2422,12 +2422,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("5Gi"),
 								hugepages1Gi:      resource.MustParse("5Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("5Gi"),
 								hugepages1Gi:      resource.MustParse("5Gi"),
@@ -2437,12 +2437,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "container2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("2Gi"),
 								hugepages1Gi:      resource.MustParse("2Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("2Gi"),
 								hugepages1Gi:      resource.MustParse("2Gi"),
@@ -2454,12 +2454,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer1",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("7Gi"),
 								hugepages1Gi:      resource.MustParse("7Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("7Gi"),
 								hugepages1Gi:      resource.MustParse("7Gi"),
@@ -2469,12 +2469,12 @@ func TestStaticPolicyAllocateWithInitContainers(t *testing.T) {
 					{
 						Name: "initContainer2",
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
 							},
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000Mi"),
 								v1.ResourceMemory: resource.MustParse("4Gi"),
 								hugepages1Gi:      resource.MustParse("4Gi"),
@@ -3112,12 +3112,12 @@ func TestStaticPolicyGetTopologyHints(t *testing.T) {
 			pod: getPod("pod2",
 				"container2",
 				&v1.ResourceRequirements{
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("1000Mi"),
 						v1.ResourceMemory: resource.MustParse("1Gi"),
 						hugepages2M:       resource.MustParse("16Mi"),
 					},
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("1000Mi"),
 						v1.ResourceMemory: resource.MustParse("1Gi"),
 						hugepages2M:       resource.MustParse("16Mi"),

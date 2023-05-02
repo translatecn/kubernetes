@@ -211,10 +211,8 @@ type KubeletConfiguration struct { // --config
 	CPUManagerReconcilePeriod metav1.Duration
 	// MemoryManagerPolicy is the name of the policy to use.
 	// Requires the MemoryManager feature gate to be enabled.
-	MemoryManagerPolicy string
-	// TopologyManagerPolicy is the name of the policy to use.
-	// Policies other than "none" require the TopologyManager feature gate to be enabled.
-	TopologyManagerPolicy string
+	MemoryManagerPolicy   string
+	TopologyManagerPolicy string // 策略名称，除了 "none" 之外的策略需要启用 TopologyManager 功能门控。一般都开启
 	// TopologyManagerScope represents the scope of topology hint generation
 	// that topology manager requests and hint providers generate.
 	// "pod" scope requires the TopologyManager feature gate to be enabled.
@@ -588,7 +586,7 @@ type ExecEnvVar struct {
 // MemoryReservation specifies the memory reservation of different types for each NUMA node
 type MemoryReservation struct {
 	NumaNode int32
-	Limits   v1.ResourceList
+	Limits   v1.ResourceMap
 }
 
 // ShutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based on their associated priority class value

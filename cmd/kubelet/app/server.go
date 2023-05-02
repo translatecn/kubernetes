@@ -1251,12 +1251,12 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 }
 
 // parseResourceList parses the given configuration map into an API
-// ResourceList or returns an error.
-func parseResourceList(m map[string]string) (v1.ResourceList, error) {
+// ResourceMap or returns an error.
+func parseResourceList(m map[string]string) (v1.ResourceMap, error) {
 	if len(m) == 0 {
 		return nil, nil
 	}
-	rl := make(v1.ResourceList)
+	rl := make(v1.ResourceMap)
 	for k, v := range m {
 		switch v1.ResourceName(k) {
 		// CPU, memory, local storage, and PID resources are supported.

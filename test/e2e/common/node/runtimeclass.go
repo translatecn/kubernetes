@@ -128,7 +128,7 @@ var _ = SIGDescribe("RuntimeClass", func() {
 	*/
 	framework.ConformanceIt("should schedule a Pod requesting a RuntimeClass and initialize its Overhead [NodeConformance]", func() {
 		rcName := createRuntimeClass(f, "preconfigured-handler", e2enode.PreconfiguredRuntimeClassHandler, &nodev1.Overhead{
-			PodFixed: v1.ResourceList{
+			PodFixed: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10m"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("1Mi"),
 			},

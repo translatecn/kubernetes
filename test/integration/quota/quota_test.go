@@ -125,7 +125,7 @@ func TestQuota(t *testing.T) {
 			Namespace: ns.Name,
 		},
 		Spec: v1.ResourceQuotaSpec{
-			Hard: v1.ResourceList{
+			Hard: v1.ResourceMap{
 				v1.ResourcePods: resource.MustParse("1000"),
 			},
 		},
@@ -171,7 +171,7 @@ func waitForQuota(t *testing.T, quota *v1.ResourceQuota, clientset *clientset.Cl
 }
 
 // waitForUsedResourceQuota polls a ResourceQuota status for an expected used value
-func waitForUsedResourceQuota(t *testing.T, c clientset.Interface, ns, quotaName string, used v1.ResourceList) {
+func waitForUsedResourceQuota(t *testing.T, c clientset.Interface, ns, quotaName string, used v1.ResourceMap) {
 	err := wait.Poll(1*time.Second, resourceQuotaTimeout, func() (bool, error) {
 		resourceQuota, err := c.CoreV1().ResourceQuotas(ns).Get(context.TODO(), quotaName, metav1.GetOptions{})
 		if err != nil {
@@ -370,7 +370,7 @@ plugins:
 			Namespace: ns.Name,
 		},
 		Spec: v1.ResourceQuotaSpec{
-			Hard: v1.ResourceList{
+			Hard: v1.ResourceMap{
 				v1.ResourcePods:               resource.MustParse("1000"),
 				v1.ResourceName("count/pods"): resource.MustParse("1000"),
 			},
@@ -477,7 +477,7 @@ plugins:
 			Namespace: ns.Name,
 		},
 		Spec: v1.ResourceQuotaSpec{
-			Hard: v1.ResourceList{
+			Hard: v1.ResourceMap{
 				v1.ResourceServices:              resource.MustParse("4"),
 				v1.ResourceServicesNodePorts:     resource.MustParse("2"),
 				v1.ResourceServicesLoadBalancers: resource.MustParse("2"),
@@ -502,7 +502,7 @@ plugins:
 	}
 
 	// wait for ResourceQuota status to be updated before proceeding, otherwise the test will race with resource quota controller
-	expectedQuotaUsed := v1.ResourceList{
+	expectedQuotaUsed := v1.ResourceMap{
 		v1.ResourceServices:              resource.MustParse("2"),
 		v1.ResourceServicesNodePorts:     resource.MustParse("2"),
 		v1.ResourceServicesLoadBalancers: resource.MustParse("1"),
@@ -521,7 +521,7 @@ plugins:
 	}
 
 	// wait for ResourceQuota status to be updated before proceeding, otherwise the test will race with resource quota controller
-	expectedQuotaUsed = v1.ResourceList{
+	expectedQuotaUsed = v1.ResourceMap{
 		v1.ResourceServices:              resource.MustParse("3"),
 		v1.ResourceServicesNodePorts:     resource.MustParse("2"),
 		v1.ResourceServicesLoadBalancers: resource.MustParse("2"),
@@ -540,7 +540,7 @@ plugins:
 	}
 
 	// wait for ResourceQuota status to be updated before proceeding, otherwise the test will race with resource quota controller
-	expectedQuotaUsed = v1.ResourceList{
+	expectedQuotaUsed = v1.ResourceMap{
 		v1.ResourceServices:              resource.MustParse("4"),
 		v1.ResourceServicesNodePorts:     resource.MustParse("2"),
 		v1.ResourceServicesLoadBalancers: resource.MustParse("2"),

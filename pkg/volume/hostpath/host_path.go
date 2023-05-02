@@ -308,7 +308,7 @@ func (r *hostPathProvisioner) Provision(selectedNode *v1.Node, allowedTopologies
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeReclaimPolicy: r.options.PersistentVolumeReclaimPolicy,
 			AccessModes:                   r.options.PVC.Spec.AccessModes,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): capacity,
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{

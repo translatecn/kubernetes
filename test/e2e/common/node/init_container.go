@@ -282,7 +282,7 @@ var _ = SIGDescribe("InitContainer [NodeConformance]", func() {
 						Name:  "run1",
 						Image: imageutils.GetPauseImageName(),
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU: *resource.NewMilliQuantity(100, resource.DecimalSI),
 							},
 						},
@@ -362,7 +362,7 @@ var _ = SIGDescribe("InitContainer [NodeConformance]", func() {
 						Name:  "run1",
 						Image: imageutils.GetPauseImageName(),
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU: *resource.NewMilliQuantity(100, resource.DecimalSI),
 							},
 						},
@@ -487,7 +487,7 @@ var _ = SIGDescribe("InitContainer [NodeConformance]", func() {
 						Image:   imageutils.GetE2EImage(imageutils.BusyBox),
 						Command: []string{"/bin/true"},
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU: *resource.NewMilliQuantity(100, resource.DecimalSI),
 							},
 						},

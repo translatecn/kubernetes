@@ -39,11 +39,11 @@ func TestApplyPlatformSpecificContainerConfig(t *testing.T) {
 	containerConfig := &runtimeapi.ContainerConfig{}
 
 	resources := v1.ResourceRequirements{
-		Requests: v1.ResourceList{
+		Requests: v1.ResourceMap{
 			v1.ResourceMemory: resource.MustParse("128Mi"),
 			v1.ResourceCPU:    resource.MustParse("1"),
 		},
-		Limits: v1.ResourceList{
+		Limits: v1.ResourceMap{
 			v1.ResourceMemory: resource.MustParse("256Mi"),
 			v1.ResourceCPU:    resource.MustParse("3"),
 		},

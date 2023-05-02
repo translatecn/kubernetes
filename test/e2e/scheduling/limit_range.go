@@ -64,7 +64,7 @@ var _ = SIGDescribe("LimitRange", func() {
 		max := getResourceList("500m", "500Mi", "500Gi")
 		defaultLimit := getResourceList("500m", "500Mi", "500Gi")
 		defaultRequest := getResourceList("100m", "200Mi", "200Gi")
-		maxLimitRequestRatio := v1.ResourceList{}
+		maxLimitRequestRatio := v1.ResourceMap{}
 		value := strconv.Itoa(time.Now().Nanosecond()) + string(uuid.NewUUID())
 		limitRange := newLimitRange("limit-range", value, v1.LimitTypeContainer,
 			min, max,
@@ -122,7 +122,7 @@ var _ = SIGDescribe("LimitRange", func() {
 		framework.ExpectNoError(err)
 
 		ginkgo.By("Creating a Pod with no resource requirements")
-		pod := newTestPod("pod-no-resources", v1.ResourceList{}, v1.ResourceList{})
+		pod := newTestPod("pod-no-resources", v1.ResourceMap{}, v1.ResourceMap{})
 		pod, err = f.ClientSet.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), pod, metav1.CreateOptions{})
 		framework.ExpectNoError(err)
 
@@ -160,12 +160,12 @@ var _ = SIGDescribe("LimitRange", func() {
 		}
 
 		ginkgo.By("Failing to create a Pod with less than min resources")
-		pod = newTestPod(podName, getResourceList("10m", "50Mi", "50Gi"), v1.ResourceList{})
+		pod = newTestPod(podName, getResourceList("10m", "50Mi", "50Gi"), v1.ResourceMap{})
 		_, err = f.ClientSet.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), pod, metav1.CreateOptions{})
 		framework.ExpectError(err)
 
 		ginkgo.By("Failing to create a Pod with more than max resources")
-		pod = newTestPod(podName, getResourceList("600m", "600Mi", "600Gi"), v1.ResourceList{})
+		pod = newTestPod(podName, getResourceList("600m", "600Mi", "600Gi"), v1.ResourceMap{})
 		_, err = f.ClientSet.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), pod, metav1.CreateOptions{})
 		framework.ExpectError(err)
 
@@ -184,12 +184,12 @@ var _ = SIGDescribe("LimitRange", func() {
 		framework.ExpectNoError(err)
 
 		ginkgo.By("Creating a Pod with less than former min resources")
-		pod = newTestPod(podName, getResourceList("10m", "50Mi", "50Gi"), v1.ResourceList{})
+		pod = newTestPod(podName, getResourceList("10m", "50Mi", "50Gi"), v1.ResourceMap{})
 		_, err = f.ClientSet.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), pod, metav1.CreateOptions{})
 		framework.ExpectNoError(err)
 
 		ginkgo.By("Failing to create a Pod with more than max resources")
-		pod = newTestPod(podName, getResourceList("600m", "600Mi", "600Gi"), v1.ResourceList{})
+		pod = newTestPod(podName, getResourceList("600m", "600Mi", "600Gi"), v1.ResourceMap{})
 		_, err = f.ClientSet.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), pod, metav1.CreateOptions{})
 		framework.ExpectError(err)
 
@@ -221,7 +221,7 @@ var _ = SIGDescribe("LimitRange", func() {
 		framework.ExpectNoError(err)
 
 		ginkgo.By("Creating a Pod with more than former max resources")
-		pod = newTestPod(podName+"2", getResourceList("600m", "600Mi", "600Gi"), v1.ResourceList{})
+		pod = newTestPod(podName+"2", getResourceList("600m", "600Mi", "600Gi"), v1.ResourceMap{})
 		_, err = f.ClientSet.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), pod, metav1.CreateOptions{})
 		framework.ExpectNoError(err)
 	})
@@ -248,7 +248,7 @@ var _ = SIGDescribe("LimitRange", func() {
 		max := getResourceList("500m", "500Mi", "500Gi")
 		defaultLimit := getResourceList("500m", "500Mi", "500Gi")
 		defaultRequest := getResourceList("100m", "200Mi", "200Gi")
-		maxLimitRequestRatio := v1.ResourceList{}
+		maxLimitRequestRatio := v1.ResourceMap{}
 
 		limitRange := &v1.LimitRange{
 			ObjectMeta: metav1.ObjectMeta{
@@ -349,7 +349,7 @@ func equalResourceRequirement(expected v1.ResourceRequirements, actual v1.Resour
 	return err
 }
 
-func equalResourceList(expected v1.ResourceList, actual v1.ResourceList) error {
+func equalResourceList(expected v1.ResourceMap, actual v1.ResourceMap) error {
 	for k, v := range expected {
 		if actualValue, found := actual[k]; !found || (v.Cmp(actualValue) != 0) {
 			return fmt.Errorf("resource %v expected %v actual %v", k, v.String(), actualValue.String())
@@ -363,8 +363,8 @@ func equalResourceList(expected v1.ResourceList, actual v1.ResourceList) error {
 	return nil
 }
 
-func getResourceList(cpu, memory string, ephemeralStorage string) v1.ResourceList {
-	res := v1.ResourceList{}
+func getResourceList(cpu, memory string, ephemeralStorage string) v1.ResourceMap {
+	res := v1.ResourceMap{}
 	if cpu != "" {
 		res[v1.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -381,7 +381,7 @@ func getResourceList(cpu, memory string, ephemeralStorage string) v1.ResourceLis
 func newLimitRange(name, value string, limitType v1.LimitType,
 	min, max,
 	defaultLimit, defaultRequest,
-	maxLimitRequestRatio v1.ResourceList) *v1.LimitRange {
+	maxLimitRequestRatio v1.ResourceMap) *v1.LimitRange {
 	return &v1.LimitRange{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -405,7 +405,7 @@ func newLimitRange(name, value string, limitType v1.LimitType,
 }
 
 // newTestPod returns a pod that has the specified requests and limits
-func newTestPod(name string, requests v1.ResourceList, limits v1.ResourceList) *v1.Pod {
+func newTestPod(name string, requests v1.ResourceMap, limits v1.ResourceMap) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,

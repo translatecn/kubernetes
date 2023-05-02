@@ -29,15 +29,13 @@ import (
 // resources that we give to cluster addon pods (#10653). But they are pretty arbitrary.
 // As described in #11713, we use request instead of limit to deal with resource requirements.
 const (
-	// DefaultMilliCPURequest defines default milli cpu request number.
-	DefaultMilliCPURequest int64 = 100 // 0.1 core
-	// DefaultMemoryRequest defines default memory request size.
-	DefaultMemoryRequest int64 = 200 * 1024 * 1024 // 200 MB
+	DefaultMilliCPURequest int64 = 100               // 0.1 core
+	DefaultMemoryRequest   int64 = 200 * 1024 * 1024 // 200 MB
 )
 
 // GetNonzeroRequests returns the default cpu and memory resource request if none is found or
 // what is provided on the request.
-func GetNonzeroRequests(requests *v1.ResourceList) (int64, int64) {
+func GetNonzeroRequests(requests *v1.ResourceMap) (int64, int64) {
 	return GetRequestForResource(v1.ResourceCPU, requests, true),
 		GetRequestForResource(v1.ResourceMemory, requests, true)
 }
@@ -45,7 +43,7 @@ func GetNonzeroRequests(requests *v1.ResourceList) (int64, int64) {
 // GetRequestForResource returns the requested values unless nonZero is true and there is no defined request
 // for CPU and memory.
 // If nonZero is true and the resource has no defined request for CPU or memory, it returns a default value.
-func GetRequestForResource(resource v1.ResourceName, requests *v1.ResourceList, nonZero bool) int64 {
+func GetRequestForResource(resource v1.ResourceName, requests *v1.ResourceMap, nonZero bool) int64 {
 	if requests == nil {
 		return 0
 	}

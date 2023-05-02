@@ -2614,15 +2614,15 @@ type TopologySelectorLabelRequirement struct {
 	Values []string
 }
 
-// Affinity is a group of affinity scheduling rules.
+// Affinity 是一组亲和性调度规则。
 type Affinity struct {
-	// Describes node affinity scheduling rules for the pod.
+	// 描述pod的节点亲和性调度规则
 	// +optional
 	NodeAffinity *NodeAffinity
-	// Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).
+	// 描述pod关联调度规则(例如，将此pod与其他pod一起放置在相同的节点、区域等)。
 	// +optional
 	PodAffinity *PodAffinity
-	// Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).
+	// 描述pod反亲和调度规则(例如，避免将此pod与其他pod放在相同的节点、区域等)。
 	// +optional
 	PodAntiAffinity *PodAntiAffinity
 }
@@ -2714,26 +2714,18 @@ type WeightedPodAffinityTerm struct {
 // the label with key <topologyKey> matches that of any node on which
 // a pod of the set of pods is running.
 type PodAffinityTerm struct {
-	// A label query over a set of resources, in this case pods.
+	// 对一组资源(在本例中是pod)的标签查询
 	// +optional
 	LabelSelector *metav1.LabelSelector
-	// namespaces specifies a static list of namespace names that the term applies to.
-	// The term is applied to the union of the namespaces listed in this field
-	// and the ones selected by namespaceSelector.
-	// null or empty namespaces list and null namespaceSelector means "this pod's namespace".
+	// Namespaces指定该术语适用的名称空间名称的静态列表。
+	// 该术语适用于此字段中列出的名称空间和由namespaceSelector选择的名称空间的联合。
+	// null或空的namespaces list和null namespaceSelector表示“这个pod的命名空间”。
 	// +optional
 	Namespaces []string
-	// This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching
-	// the labelSelector in the specified namespaces, where co-located is defined as running on a node
-	// whose value of the label with key topologyKey matches that of any node on which any of the
-	// selected pods is running.
-	// Empty topologyKey is not allowed.
+	// 该pod应该与指定名称空间中匹配labelSelector的pod共存(亲和)或不共存(反亲和)，其中共存被定义为运行在一个节点上，
+	// 其带有键topologyKey的标签值与运行所选pod的任何节点的标签值匹配。topologyKey不允许为空。
 	TopologyKey string
-	// A label query over the set of namespaces that the term applies to.
-	// The term is applied to the union of the namespaces selected by this field
-	// and the ones listed in the namespaces field.
-	// null selector and null or empty namespaces list means "this pod's namespace".
-	// An empty selector ({}) matches all namespaces.
+	// 名称空间选择器
 	// +optional
 	NamespaceSelector *metav1.LabelSelector
 }

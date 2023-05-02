@@ -42,7 +42,7 @@ var (
 
 func makeResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) v1.NodeResources {
 	return v1.NodeResources{
-		Capacity: v1.ResourceList{
+		Capacity: v1.ResourceMap{
 			v1.ResourceCPU:              *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 			v1.ResourceMemory:           *resource.NewQuantity(memory, resource.BinarySI),
 			v1.ResourcePods:             *resource.NewQuantity(pods, resource.DecimalSI),
@@ -53,8 +53,8 @@ func makeResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) 
 	}
 }
 
-func makeAllocatableResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) v1.ResourceList {
-	return v1.ResourceList{
+func makeAllocatableResources(milliCPU, memory, pods, extendedA, storage, hugePageA int64) v1.ResourceMap {
+	return v1.ResourceMap{
 		v1.ResourceCPU:              *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 		v1.ResourceMemory:           *resource.NewQuantity(memory, resource.BinarySI),
 		v1.ResourcePods:             *resource.NewQuantity(pods, resource.DecimalSI),
@@ -67,7 +67,7 @@ func makeAllocatableResources(milliCPU, memory, pods, extendedA, storage, hugePa
 func newResourcePod(usage ...framework.Resource) *v1.Pod {
 	var containers []v1.Container
 	for _, req := range usage {
-		rl := v1.ResourceList{
+		rl := v1.ResourceMap{
 			v1.ResourceCPU:              *resource.NewMilliQuantity(req.MilliCPU, resource.DecimalSI),
 			v1.ResourceMemory:           *resource.NewQuantity(req.Memory, resource.BinarySI),
 			v1.ResourcePods:             *resource.NewQuantity(int64(req.AllowedPodNumber), resource.BinarySI),
@@ -96,7 +96,7 @@ func newResourceInitPod(pod *v1.Pod, usage ...framework.Resource) *v1.Pod {
 	return pod
 }
 
-func newResourceOverheadPod(pod *v1.Pod, overhead v1.ResourceList) *v1.Pod {
+func newResourceOverheadPod(pod *v1.Pod, overhead v1.ResourceMap) *v1.Pod {
 	pod.Spec.Overhead = overhead
 	return pod
 }
@@ -415,7 +415,7 @@ func TestEnoughRequests(t *testing.T) {
 		{
 			pod: newResourceOverheadPod(
 				newResourcePod(framework.Resource{MilliCPU: 1, Memory: 1}),
-				v1.ResourceList{v1.ResourceCPU: resource.MustParse("3m"), v1.ResourceMemory: resource.MustParse("13")},
+				v1.ResourceMap{v1.ResourceCPU: resource.MustParse("3m"), v1.ResourceMemory: resource.MustParse("13")},
 			),
 			nodeInfo:                  framework.NewNodeInfo(newResourcePod(framework.Resource{MilliCPU: 5, Memory: 5})),
 			name:                      "resources + pod overhead fits",
@@ -424,7 +424,7 @@ func TestEnoughRequests(t *testing.T) {
 		{
 			pod: newResourceOverheadPod(
 				newResourcePod(framework.Resource{MilliCPU: 1, Memory: 1}),
-				v1.ResourceList{v1.ResourceCPU: resource.MustParse("1m"), v1.ResourceMemory: resource.MustParse("15")},
+				v1.ResourceMap{v1.ResourceCPU: resource.MustParse("1m"), v1.ResourceMemory: resource.MustParse("15")},
 			),
 			nodeInfo:   framework.NewNodeInfo(newResourcePod(framework.Resource{MilliCPU: 5, Memory: 5})),
 			name:       "requests + overhead does not fit for memory",
@@ -557,7 +557,7 @@ func TestNotEnoughRequests(t *testing.T) {
 	}
 	for _, test := range notEnoughPodsTests {
 		t.Run(test.name, func(t *testing.T) {
-			node := v1.Node{Status: v1.NodeStatus{Capacity: v1.ResourceList{}, Allocatable: makeAllocatableResources(10, 20, 1, 0, 0, 0)}}
+			node := v1.Node{Status: v1.NodeStatus{Capacity: v1.ResourceMap{}, Allocatable: makeAllocatableResources(10, 20, 1, 0, 0, 0)}}
 			test.nodeInfo.SetNode(&node)
 
 			p, err := NewFit(&config.NodeResourcesFitArgs{ScoringStrategy: defaultScoringStrategy}, nil, plfeature.Features{})

@@ -228,7 +228,7 @@ func run(cmd *cobra.Command, config *hollowNodeConfig) error {
 
 		var containerManager cm.ContainerManager
 		if config.ExtendedResources != nil {
-			extendedResources := v1.ResourceList{}
+			extendedResources := v1.ResourceMap{}
 			for k, v := range config.ExtendedResources {
 				extendedResources[v1.ResourceName(k)] = resource.MustParse(v)
 			}

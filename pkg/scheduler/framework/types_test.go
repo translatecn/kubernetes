@@ -33,7 +33,7 @@ import (
 func TestNewResource(t *testing.T) {
 	tests := []struct {
 		name         string
-		resourceList v1.ResourceList
+		resourceList v1.ResourceMap
 		expected     *Resource
 	}{
 		{
@@ -158,7 +158,7 @@ func TestResourceAddScalar(t *testing.T) {
 func TestSetMaxResource(t *testing.T) {
 	tests := []struct {
 		resource     *Resource
-		resourceList v1.ResourceList
+		resourceList v1.ResourceMap
 		expected     *Resource
 	}{
 		{
@@ -212,9 +212,9 @@ type testingMode interface {
 }
 
 func makeBasePod(t testingMode, nodeName, objName, cpu, mem, extended string, ports []v1.ContainerPort, volumes []v1.Volume) *v1.Pod {
-	req := v1.ResourceList{}
+	req := v1.ResourceMap{}
 	if cpu != "" {
-		req = v1.ResourceList{
+		req = v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse(cpu),
 			v1.ResourceMemory: resource.MustParse(mem),
 		}
@@ -289,7 +289,7 @@ func TestNewNodeInfo(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    resource.MustParse("100m"),
 										v1.ResourceMemory: resource.MustParse("500"),
 									},
@@ -318,7 +318,7 @@ func TestNewNodeInfo(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    resource.MustParse("200m"),
 										v1.ResourceMemory: resource.MustParse("1Ki"),
 									},
@@ -382,7 +382,7 @@ func TestNodeInfoClone(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("100m"),
 												v1.ResourceMemory: resource.MustParse("500"),
 											},
@@ -411,7 +411,7 @@ func TestNodeInfoClone(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("200m"),
 												v1.ResourceMemory: resource.MustParse("1Ki"),
 											},
@@ -456,7 +456,7 @@ func TestNodeInfoClone(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("100m"),
 												v1.ResourceMemory: resource.MustParse("500"),
 											},
@@ -485,7 +485,7 @@ func TestNodeInfoClone(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("200m"),
 												v1.ResourceMemory: resource.MustParse("1Ki"),
 											},
@@ -534,7 +534,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 				Containers: []v1.Container{
 					{
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("100m"),
 								v1.ResourceMemory: resource.MustParse("500"),
 							},
@@ -549,7 +549,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 					},
 				},
 				NodeName: nodeName,
-				Overhead: v1.ResourceList{
+				Overhead: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("500m"),
 				},
 				Volumes: []v1.Volume{
@@ -573,7 +573,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 				Containers: []v1.Container{
 					{
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU: resource.MustParse("200m"),
 							},
 						},
@@ -587,7 +587,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 					},
 				},
 				NodeName: nodeName,
-				Overhead: v1.ResourceList{
+				Overhead: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("500m"),
 					v1.ResourceMemory: resource.MustParse("500"),
 				},
@@ -612,7 +612,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 				Containers: []v1.Container{
 					{
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU: resource.MustParse("200m"),
 							},
 						},
@@ -628,7 +628,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 				InitContainers: []v1.Container{
 					{
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("500m"),
 								v1.ResourceMemory: resource.MustParse("200Mi"),
 							},
@@ -636,7 +636,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 					},
 				},
 				NodeName: nodeName,
-				Overhead: v1.ResourceList{
+				Overhead: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("500m"),
 					v1.ResourceMemory: resource.MustParse("500"),
 				},
@@ -694,7 +694,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    resource.MustParse("100m"),
 										v1.ResourceMemory: resource.MustParse("500"),
 									},
@@ -709,7 +709,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 							},
 						},
 						NodeName: nodeName,
-						Overhead: v1.ResourceList{
+						Overhead: v1.ResourceMap{
 							v1.ResourceCPU: resource.MustParse("500m"),
 						},
 						Volumes: []v1.Volume{
@@ -735,7 +735,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU: resource.MustParse("200m"),
 									},
 								},
@@ -749,7 +749,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 							},
 						},
 						NodeName: nodeName,
-						Overhead: v1.ResourceList{
+						Overhead: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse("500m"),
 							v1.ResourceMemory: resource.MustParse("500"),
 						},
@@ -776,7 +776,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU: resource.MustParse("200m"),
 									},
 								},
@@ -792,7 +792,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 						InitContainers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    resource.MustParse("500m"),
 										v1.ResourceMemory: resource.MustParse("200Mi"),
 									},
@@ -800,7 +800,7 @@ func TestNodeInfoAddPod(t *testing.T) {
 							},
 						},
 						NodeName: nodeName,
-						Overhead: v1.ResourceList{
+						Overhead: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse("500m"),
 							v1.ResourceMemory: resource.MustParse("500"),
 						},
@@ -846,7 +846,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 
 	// add pod Overhead
 	for _, pod := range pods {
-		pod.Spec.Overhead = v1.ResourceList{
+		pod.Spec.Overhead = v1.ResourceMap{
 			v1.ResourceCPU:    resource.MustParse("500m"),
 			v1.ResourceMemory: resource.MustParse("500"),
 		}
@@ -902,7 +902,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("100m"),
 												v1.ResourceMemory: resource.MustParse("500"),
 											},
@@ -917,7 +917,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 									},
 								},
 								NodeName: nodeName,
-								Overhead: v1.ResourceList{
+								Overhead: v1.ResourceMap{
 									v1.ResourceCPU:    resource.MustParse("500m"),
 									v1.ResourceMemory: resource.MustParse("500"),
 								},
@@ -944,7 +944,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("200m"),
 												v1.ResourceMemory: resource.MustParse("1Ki"),
 											},
@@ -959,7 +959,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 									},
 								},
 								NodeName: nodeName,
-								Overhead: v1.ResourceList{
+								Overhead: v1.ResourceMap{
 									v1.ResourceCPU:    resource.MustParse("500m"),
 									v1.ResourceMemory: resource.MustParse("500"),
 								},
@@ -980,7 +980,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceCPU:    resource.MustParse("100m"),
 									v1.ResourceMemory: resource.MustParse("500"),
 								},
@@ -995,7 +995,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 						},
 					},
 					NodeName: nodeName,
-					Overhead: v1.ResourceList{
+					Overhead: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("500m"),
 						v1.ResourceMemory: resource.MustParse("500"),
 					},
@@ -1052,7 +1052,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 								Containers: []v1.Container{
 									{
 										Resources: v1.ResourceRequirements{
-											Requests: v1.ResourceList{
+											Requests: v1.ResourceMap{
 												v1.ResourceCPU:    resource.MustParse("200m"),
 												v1.ResourceMemory: resource.MustParse("1Ki"),
 											},
@@ -1067,7 +1067,7 @@ func TestNodeInfoRemovePod(t *testing.T) {
 									},
 								},
 								NodeName: nodeName,
-								Overhead: v1.ResourceList{
+								Overhead: v1.ResourceMap{
 									v1.ResourceCPU:    resource.MustParse("500m"),
 									v1.ResourceMemory: resource.MustParse("500"),
 								},

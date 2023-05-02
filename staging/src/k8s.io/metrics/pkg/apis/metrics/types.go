@@ -41,7 +41,7 @@ type NodeMetrics struct {
 	Window    metav1.Duration
 
 	// The memory usage is the memory working set.
-	Usage corev1.ResourceList
+	Usage corev1.ResourceMap
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -97,5 +97,5 @@ type ContainerMetrics struct {
 	// Container name corresponding to the one from pod.spec.containers.
 	Name string
 	// The memory usage is the memory working set.
-	Usage corev1.ResourceList
+	Usage corev1.ResourceMap
 }

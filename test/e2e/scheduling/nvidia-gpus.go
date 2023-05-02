@@ -69,7 +69,7 @@ func makeCudaAdditionDevicePluginTestPod() *v1.Pod {
 					Name:  "vector-addition-cuda8",
 					Image: imageutils.GetE2EImage(imageutils.CudaVectorAdd),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							gpuResourceName: *resource.NewQuantity(1, resource.DecimalSI),
 						},
 					},
@@ -78,7 +78,7 @@ func makeCudaAdditionDevicePluginTestPod() *v1.Pod {
 					Name:  "vector-addition-cuda10",
 					Image: imageutils.GetE2EImage(imageutils.CudaVectorAdd2),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							gpuResourceName: *resource.NewQuantity(1, resource.DecimalSI),
 						},
 					},
@@ -275,7 +275,7 @@ func StartJob(f *framework.Framework, completions int32) {
 				Image:   imageutils.GetE2EImage(imageutils.CudaVectorAdd),
 				Command: []string{"/bin/sh", "-c", "./vectorAdd && sleep 60"},
 				Resources: v1.ResourceRequirements{
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						gpuResourceName: *resource.NewQuantity(1, resource.DecimalSI),
 					},
 				},

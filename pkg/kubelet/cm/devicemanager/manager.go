@@ -76,13 +76,9 @@ type ManagerImpl struct {
 	healthyDevices map[string]sets.String
 
 	// unhealthyDevices contains all of the unhealthy devices and their exported device IDs.
-	unhealthyDevices map[string]sets.String
-
-	// allocatedDevices contains allocated deviceIds, keyed by resourceName.
-	allocatedDevices map[string]sets.String
-
-	// podDevices contains pod to allocated device mapping.
-	podDevices        *podDevices
+	unhealthyDevices  map[string]sets.String
+	allocatedDevices  map[string]sets.String // 可分配的资源  ，key:resourceName
+	podDevices        *podDevices            // 包含pod到已分配设备的映射。
 	checkpointManager checkpointmanager.CheckpointManager
 
 	// List of NUMA Nodes available on the underlying machine
@@ -334,15 +330,14 @@ func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
 	return nil
 }
 
-// UpdatePluginResources updates node resources based on devices already allocated to pods.
+// UpdatePluginResources 基于已经分配给pod的设备信息 更新节点资源。
 func (m *ManagerImpl) UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error {
 	pod := attrs.Pod
 
-	// quick return if no pluginResources requested
 	if !m.podDevices.hasPod(string(pod.UID)) {
 		return nil
 	}
-
+	// 刚创建时，不会走
 	m.sanitizeNodeAllocatable(node)
 	return nil
 }
@@ -372,10 +367,10 @@ func (m *ManagerImpl) markResourceUnhealthy(resourceName string) {
 // cm.UpdatePluginResource() run during predicate Admit guarantees we adjust nodeinfo
 // capacity for already allocated pods so that they can continue to run. However, new pods
 // requiring device plugin resources will not be scheduled till device plugin re-registers.
-func (m *ManagerImpl) GetCapacity() (v1.ResourceList, v1.ResourceList, []string) {
+func (m *ManagerImpl) GetCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
 	needsUpdateCheckpoint := false
-	var capacity = v1.ResourceList{}
-	var allocatable = v1.ResourceList{}
+	var capacity = v1.ResourceMap{}
+	var allocatable = v1.ResourceMap{}
 	deletedResources := sets.NewString()
 	m.mutex.Lock()
 	for resourceName, devices := range m.healthyDevices {
@@ -951,13 +946,12 @@ func (m *ManagerImpl) callGetPreferredAllocationIfAvailable(podUID, contName, re
 	return sets.NewString(), nil
 }
 
-// sanitizeNodeAllocatable scans through allocatedDevices in the device manager
-// and if necessary, updates allocatableResource in nodeInfo to at least equal to
-// the allocated capacity. This allows pods that have already been scheduled on
-// the node to pass GeneralPredicates admission checking even upon device plugin failure.
+// sanitizeNodeAllocatable在设备管理器中扫描allocatedDevices，
+// 如果有必要，更新nodeInfo中的allocatableResource，使其至少等于已分配的容量。
+// 这允许已经在节点上调度的pod即使在设备插件失败时也能通过GeneralPredicates准入检查。
 func (m *ManagerImpl) sanitizeNodeAllocatable(node *schedulerframework.NodeInfo) {
 	var newAllocatableResource *schedulerframework.Resource
-	allocatableResource := node.Allocatable
+	allocatableResource := node.Allocatable // 表示节点可用于调度的资源。
 	if allocatableResource.ScalarResources == nil {
 		allocatableResource.ScalarResources = make(map[v1.ResourceName]int64)
 	}

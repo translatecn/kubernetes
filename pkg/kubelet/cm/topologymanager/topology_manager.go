@@ -68,8 +68,7 @@ type Manager interface {
 }
 
 type manager struct {
-	//Topology Manager Scope
-	scope Scope
+	scope Scope // 拓扑管理器范围
 }
 
 // HintProvider is an interface for components that want to collaborate to

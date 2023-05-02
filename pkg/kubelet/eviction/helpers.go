@@ -351,7 +351,7 @@ func localVolumeNames(pod *v1.Pod) []string {
 }
 
 // containerUsage 聚合指定统计信息的容器磁盘使用量和 inode 消耗.
-func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1.ResourceList {
+func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1.ResourceMap {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
 	for _, container := range podStats.Containers {
@@ -364,14 +364,14 @@ func containerUsage(podStats statsapi.PodStats, statsToMeasure []fsStatsType) v1
 			inodes.Add(*inodeUsage(container.Logs))
 		}
 	}
-	return v1.ResourceList{
+	return v1.ResourceMap{
 		v1.ResourceEphemeralStorage: disk,
 		resourceInodes:              inodes,
 	}
 }
 
 // podDiskUsage 聚合指定统计信息的 pod 磁盘使用量和 inode 消耗.
-func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsStatsType) (v1.ResourceList, error) {
+func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsStatsType) (v1.ResourceMap, error) {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
 
@@ -385,14 +385,14 @@ func podDiskUsage(podStats statsapi.PodStats, pod *v1.Pod, statsToMeasure []fsSt
 		disk.Add(podLocalVolumeUsageList[v1.ResourceEphemeralStorage])
 		inodes.Add(podLocalVolumeUsageList[resourceInodes])
 	}
-	return v1.ResourceList{
+	return v1.ResourceMap{
 		v1.ResourceEphemeralStorage: disk,
 		resourceInodes:              inodes,
 	}, nil
 }
 
 // podLocalVolumeUsage 聚合要度量的指定统计数据的pod本地卷、磁盘使用情况和inode消耗.
-func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.ResourceList {
+func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.ResourceMap {
 	disk := resource.Quantity{Format: resource.BinarySI}
 	inodes := resource.Quantity{Format: resource.DecimalSI}
 	for _, volumeName := range volumeNames {
@@ -404,7 +404,7 @@ func podLocalVolumeUsage(volumeNames []string, podStats statsapi.PodStats) v1.Re
 			}
 		}
 	}
-	return v1.ResourceList{
+	return v1.ResourceMap{
 		v1.ResourceEphemeralStorage: disk,
 		resourceInodes:              inodes,
 	}

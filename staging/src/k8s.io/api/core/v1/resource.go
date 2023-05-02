@@ -26,32 +26,32 @@ func (rn ResourceName) String() string {
 }
 
 // Cpu returns the Cpu limit if specified.
-func (rl *ResourceList) Cpu() *resource.Quantity {
+func (rl *ResourceMap) Cpu() *resource.Quantity {
 	return rl.Name(ResourceCPU, resource.DecimalSI)
 }
 
 // Memory returns the Memory limit if specified.
-func (rl *ResourceList) Memory() *resource.Quantity {
+func (rl *ResourceMap) Memory() *resource.Quantity {
 	return rl.Name(ResourceMemory, resource.BinarySI)
 }
 
 // Storage returns the Storage limit if specified.
-func (rl *ResourceList) Storage() *resource.Quantity {
+func (rl *ResourceMap) Storage() *resource.Quantity {
 	return rl.Name(ResourceStorage, resource.BinarySI)
 }
 
 // Pods returns the list of pods
-func (rl *ResourceList) Pods() *resource.Quantity {
+func (rl *ResourceMap) Pods() *resource.Quantity {
 	return rl.Name(ResourcePods, resource.DecimalSI)
 }
 
 // StorageEphemeral returns the list of ephemeral storage volumes, if any
-func (rl *ResourceList) StorageEphemeral() *resource.Quantity {
+func (rl *ResourceMap) StorageEphemeral() *resource.Quantity {
 	return rl.Name(ResourceEphemeralStorage, resource.BinarySI)
 }
 
 // Name returns the resource with name if specified, otherwise it returns a nil quantity with default format.
-func (rl *ResourceList) Name(name ResourceName, defaultFormat resource.Format) *resource.Quantity {
+func (rl *ResourceMap) Name(name ResourceName, defaultFormat resource.Format) *resource.Quantity {
 	if val, ok := (*rl)[name]; ok {
 		return &val
 	}

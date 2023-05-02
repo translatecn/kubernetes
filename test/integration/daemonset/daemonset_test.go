@@ -210,8 +210,8 @@ func updateStrategies() []*apps.DaemonSetUpdateStrategy {
 	return []*apps.DaemonSetUpdateStrategy{newOnDeleteStrategy(), newRollbackStrategy()}
 }
 
-func allocatableResources(memory, cpu string) v1.ResourceList {
-	return v1.ResourceList{
+func allocatableResources(memory, cpu string) v1.ResourceMap {
+	return v1.ResourceMap{
 		v1.ResourceMemory: resource.MustParse(memory),
 		v1.ResourceCPU:    resource.MustParse(cpu),
 		v1.ResourcePods:   resource.MustParse("100"),
@@ -226,7 +226,7 @@ func resourcePodSpec(nodeName, memory, cpu string) v1.PodSpec {
 				Name:  "foo",
 				Image: "bar",
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceMemory: resource.MustParse(memory),
 						v1.ResourceCPU:    resource.MustParse(cpu),
 					},
@@ -250,7 +250,7 @@ func newNode(name string, label map[string]string) *v1.Node {
 		},
 		Status: v1.NodeStatus{
 			Conditions:  []v1.NodeCondition{{Type: v1.NodeReady, Status: v1.ConditionTrue}},
-			Allocatable: v1.ResourceList{v1.ResourcePods: resource.MustParse("100")},
+			Allocatable: v1.ResourceMap{v1.ResourcePods: resource.MustParse("100")},
 		},
 	}
 }

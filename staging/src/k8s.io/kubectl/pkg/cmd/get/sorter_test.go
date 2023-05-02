@@ -54,8 +54,8 @@ func createPodSpecResource(t *testing.T, memReq, memLimit, cpuReq, cpuLimit stri
 		Containers: []corev1.Container{
 			{
 				Resources: corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{},
-					Limits:   corev1.ResourceList{},
+					Requests: corev1.ResourceMap{},
+					Limits:   corev1.ResourceMap{},
 				},
 			},
 		},

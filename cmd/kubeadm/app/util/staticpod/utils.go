@@ -86,7 +86,7 @@ func ComponentPod(container v1.Container, volumes map[string]v1.Volume, annotati
 // ComponentResources returns the v1.ResourceRequirements object needed for allocating a specified amount of the CPU
 func ComponentResources(cpu string) v1.ResourceRequirements {
 	return v1.ResourceRequirements{
-		Requests: v1.ResourceList{
+		Requests: v1.ResourceMap{
 			v1.ResourceName(v1.ResourceCPU): resource.MustParse(cpu),
 		},
 	}

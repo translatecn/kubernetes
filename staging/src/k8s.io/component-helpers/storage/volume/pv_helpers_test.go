@@ -271,7 +271,7 @@ func makeTestPersistentVolumeClaim(name string, size string, accessMode []v1.Per
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: accessMode,
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse(size),
 				},
 			},
@@ -297,7 +297,7 @@ func makeTestVolume(uid types.UID, name string, capacity string, available bool,
 			Name: name,
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse(capacity),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{

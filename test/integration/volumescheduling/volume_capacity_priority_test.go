@@ -298,7 +298,7 @@ func setPVNodeAffinity(pv *v1.PersistentVolume, keyValues map[string][]string) *
 
 func setPVCapacity(pv *v1.PersistentVolume, capacity resource.Quantity) *v1.PersistentVolume {
 	if pv.Spec.Capacity == nil {
-		pv.Spec.Capacity = make(v1.ResourceList)
+		pv.Spec.Capacity = make(v1.ResourceMap)
 	}
 	pv.Spec.Capacity[v1.ResourceName(v1.ResourceStorage)] = capacity
 	return pv
@@ -306,7 +306,7 @@ func setPVCapacity(pv *v1.PersistentVolume, capacity resource.Quantity) *v1.Pers
 
 func setPVCRequestStorage(pvc *v1.PersistentVolumeClaim, request resource.Quantity) *v1.PersistentVolumeClaim {
 	pvc.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
+		Requests: v1.ResourceMap{
 			v1.ResourceName(v1.ResourceStorage): request,
 		},
 	}

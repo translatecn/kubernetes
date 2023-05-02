@@ -70,7 +70,7 @@ func TestUnschedulableNodes(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "node-scheduling-test-node"},
 		Spec:       v1.NodeSpec{Unschedulable: false},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods: *resource.NewQuantity(32, resource.DecimalSI),
 			},
 			Conditions: []v1.NodeCondition{goodCondition},
@@ -198,7 +198,7 @@ func TestMultipleSchedulers(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "node-multi-scheduler-test-node"},
 		Spec:       v1.NodeSpec{Unschedulable: false},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods: *resource.NewQuantity(32, resource.DecimalSI),
 			},
 		},
@@ -291,7 +291,7 @@ func TestMultipleSchedulingProfiles(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "node-multi-scheduler-test-node"},
 		Spec:       v1.NodeSpec{Unschedulable: false},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods: *resource.NewQuantity(32, resource.DecimalSI),
 			},
 		},
@@ -364,7 +364,7 @@ func TestAllocatable(t *testing.T) {
 
 	// 3. create resource pod which requires less than Capacity
 	podName := "pod-test-allocatable"
-	podRes := &v1.ResourceList{
+	podRes := &v1.ResourceMap{
 		v1.ResourceCPU:    *resource.NewMilliQuantity(20, resource.DecimalSI),
 		v1.ResourceMemory: *resource.NewQuantity(20, resource.BinarySI),
 	}
@@ -383,12 +383,12 @@ func TestAllocatable(t *testing.T) {
 
 	// 5. Change the node status to allocatable aware, note that Allocatable is less than Pod's requirement
 	allocNode.Status = v1.NodeStatus{
-		Capacity: v1.ResourceList{
+		Capacity: v1.ResourceMap{
 			v1.ResourcePods:   *resource.NewQuantity(32, resource.DecimalSI),
 			v1.ResourceCPU:    *resource.NewMilliQuantity(30, resource.DecimalSI),
 			v1.ResourceMemory: *resource.NewQuantity(30, resource.BinarySI),
 		},
-		Allocatable: v1.ResourceList{
+		Allocatable: v1.ResourceMap{
 			v1.ResourcePods:   *resource.NewQuantity(32, resource.DecimalSI),
 			v1.ResourceCPU:    *resource.NewMilliQuantity(10, resource.DecimalSI),
 			v1.ResourceMemory: *resource.NewQuantity(10, resource.BinarySI),
@@ -426,7 +426,7 @@ func TestSchedulerInformers(t *testing.T) {
 	defer testutils.CleanupTest(t, testCtx)
 	cs := testCtx.ClientSet
 
-	defaultPodRes := &v1.ResourceRequirements{Requests: v1.ResourceList{
+	defaultPodRes := &v1.ResourceRequirements{Requests: v1.ResourceMap{
 		v1.ResourceCPU:    *resource.NewMilliQuantity(200, resource.DecimalSI),
 		v1.ResourceMemory: *resource.NewQuantity(200, resource.BinarySI)},
 	}
@@ -530,7 +530,7 @@ func TestNodeEvents(t *testing.T) {
 	defer testCtx.ClientSet.CoreV1().Nodes().DeleteCollection(context.TODO(), metav1.DeleteOptions{}, metav1.ListOptions{})
 
 	// 1.1 create pod1
-	pod1, err := createPausePodWithResource(testCtx.ClientSet, "pod1", testCtx.NS.Name, &v1.ResourceList{
+	pod1, err := createPausePodWithResource(testCtx.ClientSet, "pod1", testCtx.NS.Name, &v1.ResourceMap{
 		v1.ResourceCPU: *resource.NewMilliQuantity(80, resource.DecimalSI),
 	})
 	if err != nil {
@@ -556,7 +556,7 @@ func TestNodeEvents(t *testing.T) {
 	}
 
 	// 2. create pod2
-	pod2, err := createPausePodWithResource(testCtx.ClientSet, "pod2", testCtx.NS.Name, &v1.ResourceList{
+	pod2, err := createPausePodWithResource(testCtx.ClientSet, "pod2", testCtx.NS.Name, &v1.ResourceMap{
 		v1.ResourceCPU: *resource.NewMilliQuantity(40, resource.DecimalSI),
 	})
 	if err != nil {

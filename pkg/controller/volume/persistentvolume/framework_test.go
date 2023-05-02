@@ -256,7 +256,7 @@ func newVolume(name, capacity, boundToClaimUID, boundToClaimName string, phase v
 			ResourceVersion: "1",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse(capacity),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -307,7 +307,7 @@ func newExternalProvisionedVolume(name, capacity, boundToClaimUID, boundToClaimN
 			Finalizers:      finalizers,
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse(capacity),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{
@@ -402,7 +402,7 @@ func withClaimVolumeMode(mode *v1.PersistentVolumeMode, claims []*v1.PersistentV
 // array to given value and returns the array.  Meant to be used to compose
 // claims specified inline in a test.
 func withExpectedCapacity(capacity string, claims []*v1.PersistentVolumeClaim) []*v1.PersistentVolumeClaim {
-	claims[0].Status.Capacity = v1.ResourceList{
+	claims[0].Status.Capacity = v1.ResourceMap{
 		v1.ResourceName(v1.ResourceStorage): resource.MustParse(capacity),
 	}
 
@@ -458,7 +458,7 @@ func newClaim(name, claimUID, capacity, boundToVolume string, phase v1.Persisten
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce, v1.ReadOnlyMany},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse(capacity),
 				},
 			},
@@ -1016,7 +1016,7 @@ func (plugin *mockVolumePlugin) Provision(selectedNode *v1.Node, allowedTopologi
 				Name: plugin.provisionOptions.PVName,
 			},
 			Spec: v1.PersistentVolumeSpec{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): capacity,
 				},
 				AccessModes:                   accessModes,

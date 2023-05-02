@@ -154,7 +154,7 @@ func ClearNominatedNodeName(ctx context.Context, cs kubernetes.Interface, pods .
 	return utilerrors.NewAggregate(errs)
 }
 
-// IsScalarResourceName validates the resource for Extended, Hugepages, Native and AttachableVolume resources
+// IsScalarResourceName 验证是否是  扩展、大页、本机和可连接卷资源的 资源
 func IsScalarResourceName(name v1.ResourceName) bool {
 	return v1helper.IsExtendedResourceName(name) || v1helper.IsHugePageResourceName(name) ||
 		v1helper.IsPrefixedNativeResource(name) || v1helper.IsAttachableVolumeResourceName(name)

@@ -89,8 +89,7 @@ type VolumeSource struct {
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md
 	// +optional
 	Glusterfs *GlusterfsVolumeSource `json:"glusterfs,omitempty" protobuf:"bytes,9,opt,name=glusterfs"`
-	// persistentVolumeClaimVolumeSource represents a reference to a
-	// PersistentVolumeClaim in the same namespace.
+	// pvc信息
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
 	PersistentVolumeClaim *PersistentVolumeClaimVolumeSource `json:"persistentVolumeClaim,omitempty" protobuf:"bytes,10,opt,name=persistentVolumeClaim"`
@@ -178,16 +177,11 @@ type VolumeSource struct {
 	Ephemeral *EphemeralVolumeSource `json:"ephemeral,omitempty" protobuf:"bytes,29,opt,name=ephemeral"`
 }
 
-// PersistentVolumeClaimVolumeSource references the user's PVC in the same namespace.
-// This volume finds the bound PV and mounts that volume for the pod. A
-// PersistentVolumeClaimVolumeSource is, essentially, a wrapper around another
-// type of volume that is owned by someone else (the system).
 type PersistentVolumeClaimVolumeSource struct {
-	// claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume.
+	// pvc的名称，将使用该名称创建volume
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	ClaimName string `json:"claimName" protobuf:"bytes,1,opt,name=claimName"`
-	// readOnly Will force the ReadOnly setting in VolumeMounts.
-	// Default false.
+	// 在volume 挂载时设置read only
 	// +optional
 	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"`
 }
@@ -320,7 +314,7 @@ type PersistentVolumeSpec struct {
 	// capacity is the description of the persistent volume's resources and capacity.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
 	// +optional
-	Capacity ResourceList `json:"capacity,omitempty" protobuf:"bytes,1,rep,name=capacity,casttype=ResourceList,castkey=ResourceName"`
+	Capacity ResourceMap `json:"capacity,omitempty" protobuf:"bytes,1,rep,name=capacity,casttype=ResourceMap,castkey=ResourceName"`
 	// persistentVolumeSource is the actual volume backing the persistent volume.
 	PersistentVolumeSource `json:",inline" protobuf:"bytes,2,opt,name=persistentVolumeSource"`
 	// accessModes contains all ways the volume can be mounted.
@@ -603,7 +597,7 @@ type PersistentVolumeClaimStatus struct {
 	AccessModes []PersistentVolumeAccessMode `json:"accessModes,omitempty" protobuf:"bytes,2,rep,name=accessModes,casttype=PersistentVolumeAccessMode"`
 	// capacity represents the actual resources of the underlying volume.
 	// +optional
-	Capacity ResourceList `json:"capacity,omitempty" protobuf:"bytes,3,rep,name=capacity,casttype=ResourceList,castkey=ResourceName"`
+	Capacity ResourceMap `json:"capacity,omitempty" protobuf:"bytes,3,rep,name=capacity,casttype=ResourceMap,castkey=ResourceName"`
 	// conditions is the current Condition of persistent volume claim. If underlying persistent volume is being
 	// resized then the Condition will be set to 'ResizeStarted'.
 	// +optional
@@ -620,7 +614,7 @@ type PersistentVolumeClaimStatus struct {
 	// This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
 	// +featureGate=RecoverVolumeExpansionFailure
 	// +optional
-	AllocatedResources ResourceList `json:"allocatedResources,omitempty" protobuf:"bytes,5,rep,name=allocatedResources,casttype=ResourceList,castkey=ResourceName"`
+	AllocatedResources ResourceMap `json:"allocatedResources,omitempty" protobuf:"bytes,5,rep,name=allocatedResources,casttype=ResourceMap,castkey=ResourceName"`
 	// resizeStatus stores status of resize operation.
 	// ResizeStatus is not set by default but when expansion is complete resizeStatus is set to empty
 	// string by resize controller or kubelet.
@@ -2294,16 +2288,14 @@ type Capabilities struct {
 
 // ResourceRequirements describes the compute resource requirements.
 type ResourceRequirements struct {
-	// Limits describes the maximum amount of compute resources allowed.
+	// 所需资源的上限
 	// More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	// +optional
-	Limits ResourceList `json:"limits,omitempty" protobuf:"bytes,1,rep,name=limits,casttype=ResourceList,castkey=ResourceName"`
-	// Requests describes the minimum amount of compute resources required.
-	// If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
-	// otherwise to an implementation-defined value.
+	Limits ResourceMap `json:"limits,omitempty" protobuf:"bytes,1,rep,name=limits,casttype=ResourceMap,castkey=ResourceName"`
+	// 所有资源的最小值
 	// More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	// +optional
-	Requests ResourceList `json:"requests,omitempty" protobuf:"bytes,2,rep,name=requests,casttype=ResourceList,castkey=ResourceName"`
+	Requests ResourceMap `json:"requests,omitempty" protobuf:"bytes,2,rep,name=requests,casttype=ResourceMap,castkey=ResourceName"`
 	// Claims lists the names of resources, defined in spec.resourceClaims,
 	// that are used by this container.
 	//
@@ -2852,20 +2844,20 @@ type TopologySelectorLabelRequirement struct {
 	Values []string `json:"values" protobuf:"bytes,2,rep,name=values"`
 }
 
-// Affinity is a group of affinity scheduling rules.
+// Affinity 是一组亲和性调度规则。
 type Affinity struct {
-	// Describes node affinity scheduling rules for the pod.
+	// 描述pod的节点亲和性调度规则。
 	// +optional
 	NodeAffinity *NodeAffinity `json:"nodeAffinity,omitempty" protobuf:"bytes,1,opt,name=nodeAffinity"`
-	// Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).
+	// 描述pod关联调度规则(例如，将此pod与其他pod一起放置在相同的节点、区域等)。
 	// +optional
 	PodAffinity *PodAffinity `json:"podAffinity,omitempty" protobuf:"bytes,2,opt,name=podAffinity"`
-	// Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).
+	// 描述pod反亲和调度规则(例如，避免将此pod与其他pod放在相同的节点、区域等)。
 	// +optional
 	PodAntiAffinity *PodAntiAffinity `json:"podAntiAffinity,omitempty" protobuf:"bytes,3,opt,name=podAntiAffinity"`
 }
 
-// PodAffinity affinity is a group of inter pod affinity scheduling rules.
+// PodAffinity pod 亲和性调度规则
 type PodAffinity struct {
 	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
 	// If the affinity requirements specified by this field are not met at
@@ -2900,7 +2892,7 @@ type PodAffinity struct {
 	PreferredDuringSchedulingIgnoredDuringExecution []WeightedPodAffinityTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,2,rep,name=preferredDuringSchedulingIgnoredDuringExecution"`
 }
 
-// PodAntiAffinity anti affinity is a group of inter pod anti affinity scheduling rules.
+// PodAntiAffinity pod 反亲和性调度规则
 type PodAntiAffinity struct {
 	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
 	// If the anti-affinity requirements specified by this field are not met at
@@ -2935,12 +2927,9 @@ type PodAntiAffinity struct {
 	PreferredDuringSchedulingIgnoredDuringExecution []WeightedPodAffinityTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,2,rep,name=preferredDuringSchedulingIgnoredDuringExecution"`
 }
 
-// WeightedPodAffinityTerm The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)
+// WeightedPodAffinityTerm 用于指定 Pod 亲和性条件的权重
 type WeightedPodAffinityTerm struct {
-	// weight associated with matching the corresponding podAffinityTerm,
-	// in the range 1-100.
-	Weight int32 `json:"weight" protobuf:"varint,1,opt,name=weight"`
-	// Required. A pod affinity term, associated with the corresponding weight.
+	Weight          int32           `json:"weight" protobuf:"varint,1,opt,name=weight"` // 权重  1-100
 	PodAffinityTerm PodAffinityTerm `json:"podAffinityTerm" protobuf:"bytes,2,opt,name=podAffinityTerm"`
 }
 
@@ -2950,8 +2939,10 @@ type WeightedPodAffinityTerm struct {
 // where co-located is defined as running on a node whose value of
 // the label with key <topologyKey> matches that of any node on which
 // a pod of the set of pods is running
+
+// PodAffinityTerm 定义一组pod(即相对于给定的命名空间匹配labelSelector的pod)，该pod应该与之共存(亲和)或不共存(反亲和)，其中共存定义为运行在一个节点上，
 type PodAffinityTerm struct {
-	// A label query over a set of resources, in this case pods.
+	// 对一组资源(在本例中是pod)的标签查询。
 	// +optional
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" protobuf:"bytes,1,opt,name=labelSelector"`
 	// namespaces specifies a static list of namespace names that the term applies to.
@@ -2975,33 +2966,14 @@ type PodAffinityTerm struct {
 	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector,omitempty" protobuf:"bytes,4,opt,name=namespaceSelector"`
 }
 
-// NodeAffinity affinity is a group of node affinity scheduling rules.
+// NodeAffinity 节点亲和性调度规则
 type NodeAffinity struct {
-	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
-	// If the affinity requirements specified by this field are not met at
-	// scheduling time, the pod will not be scheduled onto the node.
-	// If the affinity requirements specified by this field cease to be met
-	// at some point during pod execution (e.g. due to an update), the system
-	// will try to eventually evict the pod from its node.
-	// +optional
-	// RequiredDuringSchedulingRequiredDuringExecution *NodeSelector `json:"requiredDuringSchedulingRequiredDuringExecution,omitempty"`
-
-	// If the affinity requirements specified by this field are not met at
-	// scheduling time, the pod will not be scheduled onto the node.
-	// If the affinity requirements specified by this field cease to be met
-	// at some point during pod execution (e.g. due to an update), the system
-	// may or may not try to eventually evict the pod from its node.
+	// 调度时需要，执行时忽略。
+	// 如果在调度时不满足指定的亲和性要求，则不会将该pod调度到该节点。
+	// 在pod执行期间的某个时刻，亲和性不在满足。系统 可能会也可能不会  尝试最终从其节点中退出pod。
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution *NodeSelector `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,1,opt,name=requiredDuringSchedulingIgnoredDuringExecution"`
-	// The scheduler will prefer to schedule pods to nodes that satisfy
-	// the affinity expressions specified by this field, but it may choose
-	// a node that violates one or more of the expressions. The node that is
-	// most preferred is the one with the greatest sum of weights, i.e.
-	// for each node that meets all of the scheduling requirements (resource
-	// request, requiredDuringScheduling affinity expressions, etc.),
-	// compute a sum by iterating through the elements of this field and adding
-	// "weight" to the sum if the node matches the corresponding matchExpressions; the
-	// node(s) with the highest sum are the most preferred.
+	// 调度时首选，执行时忽略；优选 调度策略，用于挑选合适的节点
 	// +optional
 	PreferredDuringSchedulingIgnoredDuringExecution []PreferredSchedulingTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,2,rep,name=preferredDuringSchedulingIgnoredDuringExecution"`
 }
@@ -3046,16 +3018,8 @@ const (
 	// Like TaintEffectNoSchedule, but the scheduler tries not to schedule
 	// new pods onto the node, rather than prohibiting new pods from scheduling
 	// onto the node entirely. Enforced by the scheduler.
-	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule"
-	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
-	// Like TaintEffectNoSchedule, but additionally do not allow pods submitted to
-	// Kubelet without going through the scheduler to start.
-	// Enforced by Kubelet and the scheduler.
-	// TaintEffectNoScheduleNoAdmit TaintEffect = "NoScheduleNoAdmit"
-
-	// Evict any already-running pods that do not tolerate the taint.
-	// Currently enforced by NodeController.
-	TaintEffectNoExecute TaintEffect = "NoExecute"
+	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule" //
+	TaintEffectNoExecute        TaintEffect = "NoExecute"        // 如果某个 Pod 不能容忍节点的污点，则需要将其驱逐出节点。这个过程由 NodeController 实现。
 )
 
 // Toleration The pod this Toleration is attached to tolerates any taint that matches
@@ -3286,12 +3250,13 @@ type PodSpec struct {
 	// +optional
 	PreemptionPolicy *PreemptionPolicy `json:"preemptionPolicy,omitempty" protobuf:"bytes,31,opt,name=preemptionPolicy"`
 	// Overhead 表示与运行给定RuntimeClass的pod相关的资源开销.
+	// 提供一种机制来计算特定于给定运行时解决方案的 pod 开销
 	// 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销.
 	// RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求.
 	// 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零.
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md
 	// +optional
-	Overhead ResourceList `json:"overhead,omitempty" protobuf:"bytes,32,opt,name=overhead"`
+	Overhead ResourceMap `json:"overhead,omitempty" protobuf:"bytes,32,opt,name=overhead"`
 	// TopologySpreadConstraints describes how a group of pods ought to spread across topology
 	// domains. Scheduler will schedule pods in a way which abides by the constraints.
 	// All topologySpreadConstraints are ANDed.
@@ -3309,8 +3274,7 @@ type PodSpec struct {
 	// Default to false.
 	// +optional
 	SetHostnameAsFQDN *bool `json:"setHostnameAsFQDN,omitempty" protobuf:"varint,35,opt,name=setHostnameAsFQDN"`
-	// Specifies the OS of the containers in the pod.
-	// Some pod and container fields are restricted if this is set.
+	// 指定pod中容器的操作系统。
 	//
 	// If the OS field is set to linux, the following fields must be unset:
 	// -securityContext.windowsOptions
@@ -3433,9 +3397,9 @@ const (
 	Windows OSName = "windows"
 )
 
-// PodOS defines the OS parameters of a pod.
+// PodOS 定义pod的操作系统参数。
 type PodOS struct {
-	// Name is the name of the operating system. The currently supported values are linux and windows.
+	// 操作系统名称 :linux、windows
 	// Additional value may be defined in future and can be one of:
 	// https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration
 	// Clients should expect to handle additional values and treat unrecognized values in this field as os: null
@@ -3722,12 +3686,9 @@ const (
 type PodQOSClass string
 
 const (
-	// PodQOSGuaranteed is the Guaranteed qos class.
-	PodQOSGuaranteed PodQOSClass = "Guaranteed"
-	// PodQOSBurstable is the Burstable qos class.
-	PodQOSBurstable PodQOSClass = "Burstable"
-	// PodQOSBestEffort is the BestEffort qos class.
-	PodQOSBestEffort PodQOSClass = "BestEffort"
+	PodQOSGuaranteed PodQOSClass = "Guaranteed" // 保证型
+	PodQOSBurstable  PodQOSClass = "Burstable"  // 突发流量型
+	PodQOSBestEffort PodQOSClass = "BestEffort" // 最大努力型
 )
 
 // PodDNSConfig defines the DNS parameters of a pod in addition to
@@ -5118,11 +5079,10 @@ type NodeStatus struct {
 	// Capacity represents the total resources of a node.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
 	// +optional
-	Capacity ResourceList `json:"capacity,omitempty" protobuf:"bytes,1,rep,name=capacity,casttype=ResourceList,castkey=ResourceName"`
-	// Allocatable represents the resources of a node that are available for scheduling.
-	// Defaults to Capacity.
+	Capacity ResourceMap `json:"capacity,omitempty" protobuf:"bytes,1,rep,name=capacity,casttype=ResourceMap,castkey=ResourceName"`
+	// 表示节点可用于调度的资源。
 	// +optional
-	Allocatable ResourceList `json:"allocatable,omitempty" protobuf:"bytes,2,rep,name=allocatable,casttype=ResourceList,castkey=ResourceName"`
+	Allocatable ResourceMap `json:"allocatable,omitempty" protobuf:"bytes,2,rep,name=allocatable,casttype=ResourceMap,castkey=ResourceName"`
 	// NodePhase is the recently observed lifecycle phase of the node.
 	// More info: https://kubernetes.io/docs/concepts/nodes/node/#phase
 	// The field is never populated, and now is deprecated.
@@ -5318,7 +5278,7 @@ type NodeAddress struct {
 	Address string `json:"address" protobuf:"bytes,2,opt,name=address"`
 }
 
-// ResourceName is the name identifying various resources in a ResourceList.
+// ResourceName is the name identifying various resources in a ResourceMap.
 type ResourceName string
 
 // Resource names must be not more than 63 characters, consisting of upper- or lower-case alphanumeric characters,
@@ -5326,6 +5286,9 @@ type ResourceName string
 // The default convention, matching that for annotations, is to use lower-case names, with dashes, rather than
 // camel case, separating compound words.
 // Fully-qualified resource typenames are constructed from a DNS-style subdomain, followed by a slash `/` and a name.
+// storage：指的是持久化存储资源，例如使用 PV（Persistent Volume）和 PVC（Persistent Volume Claim）来提供的存储资源。存储在 PV 中的数据可以在 Pod 重启或迁移后仍然保留，因此适合用于需要长期保存数据的应用程序。
+//
+// ephemeral-storage：指的是临时存储资源，例如 Pod 中的空间。存储在 ephemeral-storage 中的数据不会在 Pod 重启或迁移后保留，因此适合用于临时存储数据的应用程序。
 const (
 	ResourceCPU              ResourceName = "cpu"               // CPU 核心数  (500m = .5 cores)
 	ResourceMemory           ResourceName = "memory"            // 内存大小 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
@@ -5339,8 +5302,8 @@ const (
 	ResourceAttachableVolumesPrefix = "attachable-volumes-" // Name prefix for storage resource limits
 )
 
-// ResourceList is a set of (resource name, quantity) pairs.
-type ResourceList map[ResourceName]resource.Quantity
+// ResourceMap is a set of (resource name, quantity) pairs.
+type ResourceMap map[ResourceName]resource.Quantity
 
 // +genclient
 // +genclient:nonNamespaced
@@ -5937,19 +5900,19 @@ type LimitRangeItem struct {
 	Type LimitType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=LimitType"`
 	// Max usage constraints on this kind by resource name.
 	// +optional
-	Max ResourceList `json:"max,omitempty" protobuf:"bytes,2,rep,name=max,casttype=ResourceList,castkey=ResourceName"`
+	Max ResourceMap `json:"max,omitempty" protobuf:"bytes,2,rep,name=max,casttype=ResourceMap,castkey=ResourceName"`
 	// Min usage constraints on this kind by resource name.
 	// +optional
-	Min ResourceList `json:"min,omitempty" protobuf:"bytes,3,rep,name=min,casttype=ResourceList,castkey=ResourceName"`
+	Min ResourceMap `json:"min,omitempty" protobuf:"bytes,3,rep,name=min,casttype=ResourceMap,castkey=ResourceName"`
 	// Default resource requirement limit value by resource name if resource limit is omitted.
 	// +optional
-	Default ResourceList `json:"default,omitempty" protobuf:"bytes,4,rep,name=default,casttype=ResourceList,castkey=ResourceName"`
+	Default ResourceMap `json:"default,omitempty" protobuf:"bytes,4,rep,name=default,casttype=ResourceMap,castkey=ResourceName"`
 	// DefaultRequest is the default resource requirement request value by resource name if resource request is omitted.
 	// +optional
-	DefaultRequest ResourceList `json:"defaultRequest,omitempty" protobuf:"bytes,5,rep,name=defaultRequest,casttype=ResourceList,castkey=ResourceName"`
+	DefaultRequest ResourceMap `json:"defaultRequest,omitempty" protobuf:"bytes,5,rep,name=defaultRequest,casttype=ResourceMap,castkey=ResourceName"`
 	// MaxLimitRequestRatio if specified, the named resource must have a request and limit that are both non-zero where limit divided by request is less than or equal to the enumerated value; this represents the max burst for the named resource.
 	// +optional
-	MaxLimitRequestRatio ResourceList `json:"maxLimitRequestRatio,omitempty" protobuf:"bytes,6,rep,name=maxLimitRequestRatio,casttype=ResourceList,castkey=ResourceName"`
+	MaxLimitRequestRatio ResourceMap `json:"maxLimitRequestRatio,omitempty" protobuf:"bytes,6,rep,name=maxLimitRequestRatio,casttype=ResourceMap,castkey=ResourceName"`
 }
 
 // LimitRangeSpec defines a min/max usage limit for resources that match on kind.
@@ -6059,7 +6022,7 @@ type ResourceQuotaSpec struct {
 	// hard is the set of desired hard limits for each named resource.
 	// More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
 	// +optional
-	Hard ResourceList `json:"hard,omitempty" protobuf:"bytes,1,rep,name=hard,casttype=ResourceList,castkey=ResourceName"`
+	Hard ResourceMap `json:"hard,omitempty" protobuf:"bytes,1,rep,name=hard,casttype=ResourceMap,castkey=ResourceName"`
 	// A collection of filters that must match each object tracked by a quota.
 	// If not specified, the quota matches all objects.
 	// +optional
@@ -6113,10 +6076,10 @@ type ResourceQuotaStatus struct {
 	// Hard is the set of enforced hard limits for each named resource.
 	// More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
 	// +optional
-	Hard ResourceList `json:"hard,omitempty" protobuf:"bytes,1,rep,name=hard,casttype=ResourceList,castkey=ResourceName"`
+	Hard ResourceMap `json:"hard,omitempty" protobuf:"bytes,1,rep,name=hard,casttype=ResourceMap,castkey=ResourceName"`
 	// Used is the current observed total usage of the resource in the namespace.
 	// +optional
-	Used ResourceList `json:"used,omitempty" protobuf:"bytes,2,rep,name=used,casttype=ResourceList,castkey=ResourceName"`
+	Used ResourceMap `json:"used,omitempty" protobuf:"bytes,2,rep,name=used,casttype=ResourceMap,castkey=ResourceName"`
 }
 
 // +genclient
@@ -6631,7 +6594,7 @@ type Sysctl struct {
 // see https://kubernetes.io/docs/concepts/architecture/nodes/#capacity for more details.
 type NodeResources struct {
 	// Capacity represents the available resources of a node
-	Capacity ResourceList `protobuf:"bytes,1,rep,name=capacity,casttype=ResourceList,castkey=ResourceName"`
+	Capacity ResourceMap `protobuf:"bytes,1,rep,name=capacity,casttype=ResourceMap,castkey=ResourceName"`
 }
 
 const (

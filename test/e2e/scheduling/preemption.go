@@ -128,7 +128,7 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 		schedule the high priority pod.
 	*/
 	framework.ConformanceIt("validates basic preemption works", func() {
-		var podRes v1.ResourceList
+		var podRes v1.ResourceMap
 
 		// Create two pods per node that uses a lot of the node's resources.
 		ginkgo.By("Create pods that use 4/5 of node resources.")
@@ -145,7 +145,7 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 
 			for j := 0; j < 2; j++ {
 				// Request 2 of the available resources for the victim pods
-				podRes = v1.ResourceList{}
+				podRes = v1.ResourceMap{}
 				podRes[testExtendedResource] = resource.MustParse("2")
 
 				// make the first pod low priority and the rest medium priority.
@@ -222,7 +222,7 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 		schedule the critical pod.
 	*/
 	framework.ConformanceIt("validates lower priority pod preemption by critical pod", func() {
-		var podRes v1.ResourceList
+		var podRes v1.ResourceMap
 
 		ginkgo.By("Create pods that use 4/5 of node resources.")
 		pods := make([]*v1.Pod, 0, len(nodeList.Items))
@@ -236,7 +236,7 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 
 			for j := 0; j < 2; j++ {
 				// Request 2 of the available resources for the victim pods
-				podRes = v1.ResourceList{}
+				podRes = v1.ResourceMap{}
 				podRes[testExtendedResource] = resource.MustParse("2")
 
 				// make the first pod low priority and the rest medium priority.
@@ -325,7 +325,7 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 	// 3. See if the pod with lower priority is preempted and has the pod disruption condition
 	// 4. Remove the finalizer so that the pod can be deleted by GC
 	ginkgo.It("validates pod disruption condition is added to the preempted pod", func() {
-		podRes := v1.ResourceList{testExtendedResource: resource.MustParse("1")}
+		podRes := v1.ResourceMap{testExtendedResource: resource.MustParse("1")}
 
 		ginkgo.By("Select a node to run the lower and higher priority pods")
 		framework.ExpectNotEqual(len(nodeList.Items), 0, "We need at least one node for the test to run")
@@ -457,8 +457,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 				PriorityClassName: highPriorityClassName,
 				Affinity:          nodeAffinity,
 				Resources: &v1.ResourceRequirements{
-					Requests: v1.ResourceList{fakeRes: resource.MustParse("9")},
-					Limits:   v1.ResourceList{fakeRes: resource.MustParse("9")},
+					Requests: v1.ResourceMap{fakeRes: resource.MustParse("9")},
+					Limits:   v1.ResourceMap{fakeRes: resource.MustParse("9")},
 				},
 			}
 			lowPodCfg := pausePodConfig{
@@ -467,8 +467,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 				PriorityClassName: lowPriorityClassName,
 				Affinity:          nodeAffinity,
 				Resources: &v1.ResourceRequirements{
-					Requests: v1.ResourceList{fakeRes: resource.MustParse("3")},
-					Limits:   v1.ResourceList{fakeRes: resource.MustParse("3")},
+					Requests: v1.ResourceMap{fakeRes: resource.MustParse("3")},
+					Limits:   v1.ResourceMap{fakeRes: resource.MustParse("3")},
 				},
 			}
 
@@ -488,8 +488,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 				PriorityClassName: mediumPriorityClassName,
 				Affinity:          nodeAffinity,
 				Resources: &v1.ResourceRequirements{
-					Requests: v1.ResourceList{fakeRes: resource.MustParse("3")},
-					Limits:   v1.ResourceList{fakeRes: resource.MustParse("3")},
+					Requests: v1.ResourceMap{fakeRes: resource.MustParse("3")},
+					Limits:   v1.ResourceMap{fakeRes: resource.MustParse("3")},
 				},
 				TopologySpreadConstraints: []v1.TopologySpreadConstraint{
 					{
@@ -666,8 +666,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 						PriorityClassName: "p1",
 						NodeSelector:      map[string]string{"kubernetes.io/hostname": nodeHostNameLabel},
 						Resources: &v1.ResourceRequirements{
-							Requests: v1.ResourceList{fakecpu: resource.MustParse("200")},
-							Limits:   v1.ResourceList{fakecpu: resource.MustParse("200")},
+							Requests: v1.ResourceMap{fakecpu: resource.MustParse("200")},
+							Limits:   v1.ResourceMap{fakecpu: resource.MustParse("200")},
 						},
 					},
 				},
@@ -680,8 +680,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 						PriorityClassName: "p2",
 						NodeSelector:      map[string]string{"kubernetes.io/hostname": nodeHostNameLabel},
 						Resources: &v1.ResourceRequirements{
-							Requests: v1.ResourceList{fakecpu: resource.MustParse("300")},
-							Limits:   v1.ResourceList{fakecpu: resource.MustParse("300")},
+							Requests: v1.ResourceMap{fakecpu: resource.MustParse("300")},
+							Limits:   v1.ResourceMap{fakecpu: resource.MustParse("300")},
 						},
 					},
 				},
@@ -694,8 +694,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 						PriorityClassName: "p3",
 						NodeSelector:      map[string]string{"kubernetes.io/hostname": nodeHostNameLabel},
 						Resources: &v1.ResourceRequirements{
-							Requests: v1.ResourceList{fakecpu: resource.MustParse("450")},
-							Limits:   v1.ResourceList{fakecpu: resource.MustParse("450")},
+							Requests: v1.ResourceMap{fakecpu: resource.MustParse("450")},
+							Limits:   v1.ResourceMap{fakecpu: resource.MustParse("450")},
 						},
 					},
 				},
@@ -716,8 +716,8 @@ var _ = SIGDescribe("SchedulerPreemption [Serial]", func() {
 				PriorityClassName: "p4",
 				NodeSelector:      map[string]string{"kubernetes.io/hostname": nodeHostNameLabel},
 				Resources: &v1.ResourceRequirements{
-					Requests: v1.ResourceList{fakecpu: resource.MustParse("500")},
-					Limits:   v1.ResourceList{fakecpu: resource.MustParse("500")},
+					Requests: v1.ResourceMap{fakecpu: resource.MustParse("500")},
+					Limits:   v1.ResourceMap{fakecpu: resource.MustParse("500")},
 				},
 			}
 			preemptorPod := createPod(f, preemptorPodConf)

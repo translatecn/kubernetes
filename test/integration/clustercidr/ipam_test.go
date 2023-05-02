@@ -188,7 +188,7 @@ func makeNode(name string, labels map[string]string) *v1.Node {
 			Labels: labels,
 		},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods:   *resource.NewQuantity(110, resource.DecimalSI),
 				v1.ResourceCPU:    resource.MustParse("4"),
 				v1.ResourceMemory: resource.MustParse("32Gi"),

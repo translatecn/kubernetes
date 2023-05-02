@@ -769,7 +769,7 @@ func TestHandlePortConflicts(t *testing.T) {
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: string(kl.nodeName)},
 			Status: v1.NodeStatus{
-				Allocatable: v1.ResourceList{
+				Allocatable: v1.ResourceMap{
 					v1.ResourcePods: *resource.NewQuantity(110, resource.DecimalSI),
 				},
 			},
@@ -819,7 +819,7 @@ func TestHandleHostNameConflicts(t *testing.T) {
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: "127.0.0.1"},
 			Status: v1.NodeStatus{
-				Allocatable: v1.ResourceList{
+				Allocatable: v1.ResourceMap{
 					v1.ResourcePods: *resource.NewQuantity(110, resource.DecimalSI),
 				},
 			},
@@ -861,7 +861,7 @@ func TestHandleNodeSelector(t *testing.T) {
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: testKubeletHostname, Labels: map[string]string{"key": "B"}},
 			Status: v1.NodeStatus{
-				Allocatable: v1.ResourceList{
+				Allocatable: v1.ResourceMap{
 					v1.ResourcePods: *resource.NewQuantity(110, resource.DecimalSI),
 				},
 			},
@@ -931,7 +931,7 @@ func TestHandleNodeSelectorBasedOnOS(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{Name: testKubeletHostname, Labels: test.nodeLabels},
 					Status: v1.NodeStatus{
-						Allocatable: v1.ResourceList{
+						Allocatable: v1.ResourceMap{
 							v1.ResourcePods: *resource.NewQuantity(110, resource.DecimalSI),
 						},
 					},
@@ -966,7 +966,7 @@ func TestHandleMemExceeded(t *testing.T) {
 	kl := testKubelet.kubelet
 	nodes := []*v1.Node{
 		{ObjectMeta: metav1.ObjectMeta{Name: testKubeletHostname},
-			Status: v1.NodeStatus{Capacity: v1.ResourceList{}, Allocatable: v1.ResourceList{
+			Status: v1.NodeStatus{Capacity: v1.ResourceMap{}, Allocatable: v1.ResourceMap{
 				v1.ResourceCPU:    *resource.NewMilliQuantity(10, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(100, resource.BinarySI),
 				v1.ResourcePods:   *resource.NewQuantity(40, resource.DecimalSI),
@@ -986,7 +986,7 @@ func TestHandleMemExceeded(t *testing.T) {
 
 	spec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceMemory: resource.MustParse("90"),
 			},
 		}}},
@@ -1031,7 +1031,7 @@ func TestHandlePluginResources(t *testing.T) {
 	allowedPodQuantity := *resource.NewQuantity(int64(10), resource.DecimalSI)
 	nodes := []*v1.Node{
 		{ObjectMeta: metav1.ObjectMeta{Name: testKubeletHostname},
-			Status: v1.NodeStatus{Capacity: v1.ResourceList{}, Allocatable: v1.ResourceList{
+			Status: v1.NodeStatus{Capacity: v1.ResourceMap{}, Allocatable: v1.ResourceMap{
 				adjustedResource: resourceQuantity1,
 				emptyResource:    resourceQuantity0,
 				v1.ResourcePods:  allowedPodQuantity,
@@ -1086,10 +1086,10 @@ func TestHandlePluginResources(t *testing.T) {
 	// adjusts node.allocatableResource for this resource to a sufficient value.
 	fittingPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				adjustedResource: resourceQuantity2,
 			},
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				adjustedResource: resourceQuantity2,
 			},
 		}}},
@@ -1098,10 +1098,10 @@ func TestHandlePluginResources(t *testing.T) {
 	// not pass PredicateAdmit.
 	emptyPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				emptyResource: resourceQuantity2,
 			},
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				emptyResource: resourceQuantity2,
 			},
 		}}},
@@ -1113,10 +1113,10 @@ func TestHandlePluginResources(t *testing.T) {
 	// device plugin, such as cluster-level resources.
 	missingPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				missingResource: resourceQuantity2,
 			},
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				missingResource: resourceQuantity2,
 			},
 		}}},
@@ -1124,10 +1124,10 @@ func TestHandlePluginResources(t *testing.T) {
 	// pod requiring failedResource will fail with the resource failed to be allocated.
 	failedPodSpec := v1.PodSpec{NodeName: string(kl.nodeName),
 		Containers: []v1.Container{{Resources: v1.ResourceRequirements{
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				failedResource: resourceQuantity1,
 			},
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				failedResource: resourceQuantity1,
 			},
 		}}},
@@ -2400,7 +2400,7 @@ func TestHandlePodAdditionsInvokesPodAdmitHandlers(t *testing.T) {
 		{
 			ObjectMeta: metav1.ObjectMeta{Name: string(kl.nodeName)},
 			Status: v1.NodeStatus{
-				Allocatable: v1.ResourceList{
+				Allocatable: v1.ResourceMap{
 					v1.ResourcePods: *resource.NewQuantity(110, resource.DecimalSI),
 				},
 			},

@@ -101,7 +101,7 @@ func MilliCPUToShares(milliCPU int64) uint64 {
 
 // HugePageLimits converts the API representation to a map
 // from huge page size (in bytes) to huge page limit (in bytes).
-func HugePageLimits(resourceList v1.ResourceList) map[int64]int64 {
+func HugePageLimits(resourceList v1.ResourceMap) map[int64]int64 {
 	hugePageLimits := map[int64]int64{}
 	for k, v := range resourceList {
 		if v1helper.IsHugePageResourceName(k) {

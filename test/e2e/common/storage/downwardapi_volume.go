@@ -332,11 +332,11 @@ func downwardAPIVolumeBaseContainers(name, filePath string) []v1.Container {
 			Image: imageutils.GetE2EImage(imageutils.Agnhost),
 			Args:  []string{"mounttest", "--file_content=" + filePath},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("250m"),
 					v1.ResourceMemory: resource.MustParse("32Mi"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("1250m"),
 					v1.ResourceMemory: resource.MustParse("64Mi"),
 				},

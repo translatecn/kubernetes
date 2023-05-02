@@ -121,7 +121,7 @@ func overrideAllocatableMemoryTest(f *framework.Framework, allocatablePods int) 
 						Name:  podName,
 						Image: imageutils.GetPauseImageName(),
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceMemory: status.Allocatable[v1.ResourceMemory],
 							},
 						},
@@ -147,7 +147,7 @@ func overrideAllocatableMemoryTest(f *framework.Framework, allocatablePods int) 
 					Name:  podName,
 					Image: imageutils.GetPauseImageName(),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceMemory: *resource.NewQuantity(1024*1024*1024, resource.BinarySI),
 						},
 					},

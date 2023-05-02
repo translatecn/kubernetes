@@ -94,7 +94,7 @@
                 "$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime"
               }
             ],
-            "description": "acquireTime is a time when the current lease was acquired."
+            "description": "acquireTime是获取当前租约的时间."
           },
           "holderIdentity": {
             "description": "当前租约持有者的标识.",
@@ -106,7 +106,7 @@
             "type": "integer"
           },
           "leaseTransitions": {
-            "description": "leaseTransitions is the number of transitions of a lease between holders.",
+            "description": "leaseTransitions 是承租人之间的租赁转换次数。",
             "format": "int32",
             "type": "integer"
           },
@@ -116,7 +116,7 @@
                 "$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime"
               }
             ],
-            "description": "renewTime is a time when the current holder of a lease has last updated the lease."
+            "description": "renewTime 当前租约持有者最近一次更新租约的时间"
           }
         },
         "type": "object"

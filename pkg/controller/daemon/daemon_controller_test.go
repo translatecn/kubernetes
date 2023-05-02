@@ -153,7 +153,7 @@ func newNode(name string, label map[string]string) *v1.Node {
 			Conditions: []v1.NodeCondition{
 				{Type: v1.NodeReady, Status: v1.ConditionTrue},
 			},
-			Allocatable: v1.ResourceList{
+			Allocatable: v1.ResourceMap{
 				v1.ResourcePods: resource.MustParse("100"),
 			},
 		},
@@ -1052,8 +1052,8 @@ func resourcePodSpecWithoutNodeName(memory, cpu string) v1.PodSpec {
 	}
 }
 
-func allocatableResources(memory, cpu string) v1.ResourceList {
-	return v1.ResourceList{
+func allocatableResources(memory, cpu string) v1.ResourceMap {
+	return v1.ResourceMap{
 		v1.ResourceMemory: resource.MustParse(memory),
 		v1.ResourceCPU:    resource.MustParse(cpu),
 		v1.ResourcePods:   resource.MustParse("100"),

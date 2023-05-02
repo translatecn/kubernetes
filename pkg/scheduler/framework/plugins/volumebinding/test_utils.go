@@ -91,7 +91,7 @@ func (pvb pvBuilder) withVersion(version string) pvBuilder {
 }
 
 func (pvb pvBuilder) withCapacity(capacity resource.Quantity) pvBuilder {
-	pvb.PersistentVolume.Spec.Capacity = v1.ResourceList{
+	pvb.PersistentVolume.Spec.Capacity = v1.ResourceMap{
 		v1.ResourceName(v1.ResourceStorage): capacity,
 	}
 	return pvb
@@ -128,7 +128,7 @@ func (pvcb pvcBuilder) withBoundPV(pvName string) pvcBuilder {
 
 func (pvcb pvcBuilder) withRequestStorage(request resource.Quantity) pvcBuilder {
 	pvcb.PersistentVolumeClaim.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
+		Requests: v1.ResourceMap{
 			v1.ResourceName(v1.ResourceStorage): request,
 		},
 	}

@@ -334,7 +334,7 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 						{
 							Name: "container1",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceCPU: *resource.NewMilliQuantity(reportedCPURequest.MilliValue()/2, resource.DecimalSI),
 								},
 							},
@@ -342,7 +342,7 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 						{
 							Name: "container2",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceCPU: *resource.NewMilliQuantity(reportedCPURequest.MilliValue()/2, resource.DecimalSI),
 								},
 							},
@@ -512,7 +512,7 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 				Containers: []metricsapi.ContainerMetrics{
 					{
 						Name: "container1",
-						Usage: v1.ResourceList{
+						Usage: v1.ResourceMap{
 							v1.ResourceCPU: *resource.NewMilliQuantity(
 								int64(cpu/2),
 								resource.DecimalSI),
@@ -523,7 +523,7 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 					},
 					{
 						Name: "container2",
-						Usage: v1.ResourceList{
+						Usage: v1.ResourceMap{
 							v1.ResourceCPU: *resource.NewMilliQuantity(
 								int64(cpu/2),
 								resource.DecimalSI),
@@ -4397,7 +4397,7 @@ func TestMultipleHPAs(t *testing.T) {
 					{
 						Name: "container1",
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU: *resource.NewMilliQuantity(cpuRequest.MilliValue()/2, resource.DecimalSI),
 							},
 						},
@@ -4405,7 +4405,7 @@ func TestMultipleHPAs(t *testing.T) {
 					{
 						Name: "container2",
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU: *resource.NewMilliQuantity(cpuRequest.MilliValue()/2, resource.DecimalSI),
 							},
 						},
@@ -4442,7 +4442,7 @@ func TestMultipleHPAs(t *testing.T) {
 			Containers: []metricsapi.ContainerMetrics{
 				{
 					Name: "container1",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewMilliQuantity(
 							int64(200),
 							resource.DecimalSI),
@@ -4453,7 +4453,7 @@ func TestMultipleHPAs(t *testing.T) {
 				},
 				{
 					Name: "container2",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewMilliQuantity(
 							int64(300),
 							resource.DecimalSI),

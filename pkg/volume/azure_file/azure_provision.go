@@ -258,7 +258,7 @@ func (a *azureFileProvisioner) Provision(selectedNode *v1.Node, allowedTopologie
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeReclaimPolicy: a.options.PersistentVolumeReclaimPolicy,
 			AccessModes:                   a.options.PVC.Spec.AccessModes,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse(fmt.Sprintf("%dGi", fileShareSize)),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{

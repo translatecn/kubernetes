@@ -176,7 +176,7 @@ func isHugePageAvailable(hugepagesSize int) bool {
 	return true
 }
 
-func getHugepagesTestPod(f *framework.Framework, limits v1.ResourceList, mounts []v1.VolumeMount, volumes []v1.Volume) *v1.Pod {
+func getHugepagesTestPod(f *framework.Framework, limits v1.ResourceMap, mounts []v1.VolumeMount, volumes []v1.Volume) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "hugepages-",
@@ -253,7 +253,7 @@ var _ = SIGDescribe("HugePages [Serial] [Feature:HugePages][NodeSpecialFeature:H
 	ginkgo.When("start the pod", func() {
 		var (
 			testpod   *v1.Pod
-			limits    v1.ResourceList
+			limits    v1.ResourceMap
 			mounts    []v1.VolumeMount
 			volumes   []v1.Volume
 			hugepages map[string]int
@@ -375,7 +375,7 @@ var _ = SIGDescribe("HugePages [Serial] [Feature:HugePages][NodeSpecialFeature:H
 		ginkgo.Context("with the resources requests that contain only one hugepages resource ", func() {
 			ginkgo.Context("with the backward compatible API", func() {
 				ginkgo.BeforeEach(func() {
-					limits = v1.ResourceList{
+					limits = v1.ResourceMap{
 						v1.ResourceCPU:           resource.MustParse("10m"),
 						v1.ResourceMemory:        resource.MustParse("100Mi"),
 						hugepagesResourceName2Mi: resource.MustParse("6Mi"),
@@ -404,7 +404,7 @@ var _ = SIGDescribe("HugePages [Serial] [Feature:HugePages][NodeSpecialFeature:H
 
 			ginkgo.Context("with the new API", func() {
 				ginkgo.BeforeEach(func() {
-					limits = v1.ResourceList{
+					limits = v1.ResourceMap{
 						v1.ResourceCPU:           resource.MustParse("10m"),
 						v1.ResourceMemory:        resource.MustParse("100Mi"),
 						hugepagesResourceName2Mi: resource.MustParse("6Mi"),
@@ -442,7 +442,7 @@ var _ = SIGDescribe("HugePages [Serial] [Feature:HugePages][NodeSpecialFeature:H
 					hugepagesResourceName2Mi: 5,
 					hugepagesResourceName1Gi: 1,
 				}
-				limits = v1.ResourceList{
+				limits = v1.ResourceMap{
 					v1.ResourceCPU:           resource.MustParse("10m"),
 					v1.ResourceMemory:        resource.MustParse("100Mi"),
 					hugepagesResourceName2Mi: resource.MustParse("6Mi"),

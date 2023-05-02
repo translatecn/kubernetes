@@ -566,7 +566,7 @@ func TestSetNodes(t *testing.T) {
 					Type:   v1.NodeReady,
 					Status: node.ready,
 				}}
-				allocatable := v1.ResourceList{
+				allocatable := v1.ResourceMap{
 					v1.ResourceCPU: node.cpu,
 				}
 				nodes = append(nodes, &v1.Node{

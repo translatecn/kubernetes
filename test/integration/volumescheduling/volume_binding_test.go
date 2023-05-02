@@ -1175,7 +1175,7 @@ func makePV(name, scName, pvcName, ns, node string) *v1.PersistentVolume {
 			Annotations: map[string]string{},
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("5Gi"),
 			},
 			AccessModes: []v1.PersistentVolumeAccessMode{
@@ -1226,7 +1226,7 @@ func makePVC(name, ns string, scName *string, volumeName string) *v1.PersistentV
 				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("5Gi"),
 				},
 			},
@@ -1281,7 +1281,7 @@ func makeNode(index int) *v1.Node {
 		},
 		Spec: v1.NodeSpec{Unschedulable: false},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods: *resource.NewQuantity(podLimit, resource.DecimalSI),
 			},
 			Conditions: []v1.NodeCondition{

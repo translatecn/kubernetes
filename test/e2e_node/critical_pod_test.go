@@ -50,17 +50,17 @@ var _ = SIGDescribe("CriticalPod [Serial] [Disruptive] [NodeFeature:CriticalPod]
 			node := getNodeName(f)
 			// Define test pods
 			nonCriticalGuaranteed := getTestPod(false, guaranteedPodName, v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("100Mi"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("100Mi"),
 				},
 			}, node)
 			nonCriticalBurstable := getTestPod(false, burstablePodName, v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("100Mi"),
 				},
@@ -101,13 +101,13 @@ var _ = SIGDescribe("CriticalPod [Serial] [Disruptive] [NodeFeature:CriticalPod]
 	})
 })
 
-func getNodeCPUAndMemoryCapacity(f *framework.Framework) v1.ResourceList {
+func getNodeCPUAndMemoryCapacity(f *framework.Framework) v1.ResourceMap {
 	nodeList, err := f.ClientSet.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	framework.ExpectNoError(err)
 	// Assuming that there is only one node, because this is a node e2e test.
 	framework.ExpectEqual(len(nodeList.Items), 1)
 	capacity := nodeList.Items[0].Status.Allocatable
-	return v1.ResourceList{
+	return v1.ResourceMap{
 		v1.ResourceCPU:    capacity[v1.ResourceCPU],
 		v1.ResourceMemory: capacity[v1.ResourceMemory],
 	}

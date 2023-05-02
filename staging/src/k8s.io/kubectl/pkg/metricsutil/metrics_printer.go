@@ -40,8 +40,8 @@ var (
 
 type ResourceMetricsInfo struct {
 	Name      string
-	Metrics   v1.ResourceList
-	Available v1.ResourceList
+	Metrics   v1.ResourceMap
+	Available v1.ResourceMap
 }
 
 type TopCmdPrinter struct {
@@ -52,7 +52,7 @@ func NewTopCmdPrinter(out io.Writer) *TopCmdPrinter {
 	return &TopCmdPrinter{out: out}
 }
 
-func (printer *TopCmdPrinter) PrintNodeMetrics(metrics []metricsapi.NodeMetrics, availableResources map[string]v1.ResourceList, noHeaders bool, sortBy string) error {
+func (printer *TopCmdPrinter) PrintNodeMetrics(metrics []metricsapi.NodeMetrics, availableResources map[string]v1.ResourceMap, noHeaders bool, sortBy string) error {
 	if len(metrics) == 0 {
 		return nil
 	}
@@ -64,7 +64,7 @@ func (printer *TopCmdPrinter) PrintNodeMetrics(metrics []metricsapi.NodeMetrics,
 	if !noHeaders {
 		printColumnNames(w, NodeColumns)
 	}
-	var usage v1.ResourceList
+	var usage v1.ResourceMap
 	for _, m := range metrics {
 		m.Usage.DeepCopyInto(&usage)
 		printMetricsLine(w, &ResourceMetricsInfo{
@@ -140,7 +140,7 @@ func printSinglePodMetrics(out io.Writer, m *metricsapi.PodMetrics, withNamespac
 	printMetricsLine(out, &ResourceMetricsInfo{
 		Name:      m.Name,
 		Metrics:   podMetrics,
-		Available: v1.ResourceList{},
+		Available: v1.ResourceMap{},
 	})
 }
 
@@ -153,13 +153,13 @@ func printSinglePodContainerMetrics(out io.Writer, m *metricsapi.PodMetrics, wit
 		printMetricsLine(out, &ResourceMetricsInfo{
 			Name:      c.Name,
 			Metrics:   c.Usage,
-			Available: v1.ResourceList{},
+			Available: v1.ResourceMap{},
 		})
 	}
 }
 
-func getPodMetrics(m *metricsapi.PodMetrics) v1.ResourceList {
-	podMetrics := make(v1.ResourceList)
+func getPodMetrics(m *metricsapi.PodMetrics) v1.ResourceMap {
+	podMetrics := make(v1.ResourceMap)
 	for _, res := range MeasuredResources {
 		podMetrics[res], _ = resource.ParseQuantity("0")
 	}
@@ -217,7 +217,7 @@ func printSingleResourceUsage(out io.Writer, resourceType v1.ResourceName, quant
 	}
 }
 
-func printPodResourcesSum(out io.Writer, total v1.ResourceList, columnWidth int) {
+func printPodResourcesSum(out io.Writer, total v1.ResourceMap, columnWidth int) {
 	for i := 0; i < columnWidth-2; i++ {
 		printValue(out, "")
 	}
@@ -230,7 +230,7 @@ func printPodResourcesSum(out io.Writer, total v1.ResourceList, columnWidth int)
 	printMetricsLine(out, &ResourceMetricsInfo{
 		Name:      "",
 		Metrics:   total,
-		Available: v1.ResourceList{},
+		Available: v1.ResourceMap{},
 	})
 
 }

@@ -3678,7 +3678,7 @@ func describeNode(node *corev1.Node, nodeNonTerminatedPodsList *corev1.PodList, 
 			w.Write(LEVEL_1, "%s:\t%s\n", address.Type, address.Address)
 		}
 
-		printResourceList := func(resourceList corev1.ResourceList) {
+		printResourceList := func(resourceList corev1.ResourceMap) {
 			resources := make([]corev1.ResourceName, 0, len(resourceList))
 			for resource := range resourceList {
 				resources = append(resources, resource)
@@ -5365,7 +5365,7 @@ func (list SortableResourceNames) Less(i, j int) bool {
 }
 
 // SortedResourceNames returns the sorted resource names of a resource list.
-func SortedResourceNames(list corev1.ResourceList) []corev1.ResourceName {
+func SortedResourceNames(list corev1.ResourceMap) []corev1.ResourceName {
 	resources := make([]corev1.ResourceName, 0, len(list))
 	for res := range list {
 		resources = append(resources, res)

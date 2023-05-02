@@ -92,7 +92,7 @@ func RegisterConversions(s *runtime.Scheme) error {
 
 func autoConvert_v1beta1_ContainerMetrics_To_metrics_ContainerMetrics(in *ContainerMetrics, out *metrics.ContainerMetrics, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Usage = *(*v1.ResourceList)(unsafe.Pointer(&in.Usage))
+	out.Usage = *(*v1.ResourceMap)(unsafe.Pointer(&in.Usage))
 	return nil
 }
 
@@ -103,7 +103,7 @@ func Convert_v1beta1_ContainerMetrics_To_metrics_ContainerMetrics(in *ContainerM
 
 func autoConvert_metrics_ContainerMetrics_To_v1beta1_ContainerMetrics(in *metrics.ContainerMetrics, out *ContainerMetrics, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Usage = *(*v1.ResourceList)(unsafe.Pointer(&in.Usage))
+	out.Usage = *(*v1.ResourceMap)(unsafe.Pointer(&in.Usage))
 	return nil
 }
 
@@ -116,7 +116,7 @@ func autoConvert_v1beta1_NodeMetrics_To_metrics_NodeMetrics(in *NodeMetrics, out
 	out.ObjectMeta = in.ObjectMeta
 	out.Timestamp = in.Timestamp
 	out.Window = in.Window
-	out.Usage = *(*v1.ResourceList)(unsafe.Pointer(&in.Usage))
+	out.Usage = *(*v1.ResourceMap)(unsafe.Pointer(&in.Usage))
 	return nil
 }
 
@@ -129,7 +129,7 @@ func autoConvert_metrics_NodeMetrics_To_v1beta1_NodeMetrics(in *metrics.NodeMetr
 	out.ObjectMeta = in.ObjectMeta
 	out.Timestamp = in.Timestamp
 	out.Window = in.Window
-	out.Usage = *(*v1.ResourceList)(unsafe.Pointer(&in.Usage))
+	out.Usage = *(*v1.ResourceMap)(unsafe.Pointer(&in.Usage))
 	return nil
 }
 

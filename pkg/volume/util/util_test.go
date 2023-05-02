@@ -124,7 +124,7 @@ spec:
 func TestCalculateTimeoutForVolume(t *testing.T) {
 	pv := &v1.PersistentVolume{
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("500M"),
 			},
 		},

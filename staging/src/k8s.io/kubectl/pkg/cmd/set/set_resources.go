@@ -235,14 +235,14 @@ func (o *SetResourcesOptions) Run() error {
 			if len(containers) != 0 {
 				for i := range containers {
 					if len(o.Limits) != 0 && len(containers[i].Resources.Limits) == 0 {
-						containers[i].Resources.Limits = make(v1.ResourceList)
+						containers[i].Resources.Limits = make(v1.ResourceMap)
 					}
 					for key, value := range o.ResourceRequirements.Limits {
 						containers[i].Resources.Limits[key] = value
 					}
 
 					if len(o.Requests) != 0 && len(containers[i].Resources.Requests) == 0 {
-						containers[i].Resources.Requests = make(v1.ResourceList)
+						containers[i].Resources.Requests = make(v1.ResourceMap)
 					}
 					for key, value := range o.ResourceRequirements.Requests {
 						containers[i].Resources.Requests[key] = value

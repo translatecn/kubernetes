@@ -34,10 +34,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// getResourceList returns a ResourceList with the
+// getResourceList returns a ResourceMap with the
 // specified cpu and memory resource values
-func getResourceList(cpu, memory string) v1.ResourceList {
-	res := v1.ResourceList{}
+func getResourceList(cpu, memory string) v1.ResourceMap {
+	res := v1.ResourceMap{}
 	if cpu != "" {
 		res[v1.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -48,7 +48,7 @@ func getResourceList(cpu, memory string) v1.ResourceList {
 }
 
 // getResourceRequirements returns a ResourceRequirements object
-func getResourceRequirements(requests, limits v1.ResourceList) v1.ResourceRequirements {
+func getResourceRequirements(requests, limits v1.ResourceMap) v1.ResourceRequirements {
 	res := v1.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits

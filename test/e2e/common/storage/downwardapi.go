@@ -116,10 +116,10 @@ func testDownwardAPIForEphemeralStorage(f *framework.Framework, podName string, 
 					Image:   imageutils.GetE2EImage(imageutils.BusyBox),
 					Command: []string{"sh", "-c", "env"},
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceEphemeralStorage: resource.MustParse("32Mi"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceEphemeralStorage: resource.MustParse("64Mi"),
 						},
 					},

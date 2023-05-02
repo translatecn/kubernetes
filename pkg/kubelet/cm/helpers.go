@@ -22,11 +22,11 @@ import (
 )
 
 // hardEvictionReservation 返回一个资源列表,其中包含基于硬回收阈值的资源保留.
-func hardEvictionReservation(thresholds []evictionapi.Threshold, capacity v1.ResourceList) v1.ResourceList {
+func hardEvictionReservation(thresholds []evictionapi.Threshold, capacity v1.ResourceMap) v1.ResourceMap {
 	if len(thresholds) == 0 {
 		return nil
 	}
-	ret := v1.ResourceList{}
+	ret := v1.ResourceMap{}
 	for _, threshold := range thresholds {
 		if threshold.Operator != evictionapi.OpLessThan {
 			continue

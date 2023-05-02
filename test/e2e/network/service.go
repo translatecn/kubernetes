@@ -2424,7 +2424,7 @@ var _ = common.SIGDescribe("Services", func() {
 		evictedPod.Spec.Containers[0].Command = []string{"/bin/sh", "-c", "sleep 10; dd if=/dev/zero of=file bs=1M count=10; sleep 10000"}
 		evictedPod.Spec.Containers[0].Name = "evicted-pod"
 		evictedPod.Spec.Containers[0].Resources = v1.ResourceRequirements{
-			Limits: v1.ResourceList{"ephemeral-storage": resource.MustParse("5Mi")},
+			Limits: v1.ResourceMap{"ephemeral-storage": resource.MustParse("5Mi")},
 		}
 		e2epod.NewPodClient(f).Create(evictedPod)
 		err = e2epod.WaitForPodTerminatedInNamespace(f.ClientSet, evictedPod.Name, "Evicted", f.Namespace.Name)

@@ -70,7 +70,7 @@ type RuntimeClass struct {
 type Overhead struct {
 	// PodFixed represents the fixed resource overhead associated with running a pod.
 	// +optional
-	PodFixed corev1.ResourceList `json:"podFixed,omitempty" protobuf:"bytes,1,opt,name=podFixed,casttype=k8s.io/api/core/v1.ResourceList,castkey=k8s.io/api/core/v1.ResourceName,castvalue=k8s.io/apimachinery/pkg/api/resource.Quantity"`
+	PodFixed corev1.ResourceMap `json:"podFixed,omitempty" protobuf:"bytes,1,opt,name=podFixed,casttype=k8s.io/api/core/v1.ResourceMap,castkey=k8s.io/api/core/v1.ResourceName,castvalue=k8s.io/apimachinery/pkg/api/resource.Quantity"`
 }
 
 // Scheduling specifies the scheduling constraints for nodes supporting a

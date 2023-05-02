@@ -156,7 +156,7 @@ func createEphemeralVolumeSource(scName string, volMode v1.PersistentVolumeMode,
 					AccessModes:      accessModes,
 					VolumeMode:       &volMode,
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceStorage: resource.MustParse(claimSize),
 						},
 					},

@@ -297,7 +297,7 @@ func TestTaintBasedEvictions(t *testing.T) {
 			// Run the controller
 			go nc.Run(testCtx.Ctx)
 
-			nodeRes := v1.ResourceList{
+			nodeRes := v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("4000m"),
 				v1.ResourceMemory: resource.MustParse("16Gi"),
 				v1.ResourcePods:   resource.MustParse("110"),

@@ -60,11 +60,11 @@ var balancePodLabel = map[string]string{"podname": "priority-balanced-memory"}
 var crioMinMemLimit = 12 * 1024 * 1024
 
 var podRequestedResource = &v1.ResourceRequirements{
-	Limits: v1.ResourceList{
+	Limits: v1.ResourceMap{
 		v1.ResourceMemory: resource.MustParse("100Mi"),
 		v1.ResourceCPU:    resource.MustParse("100m"),
 	},
-	Requests: v1.ResourceList{
+	Requests: v1.ResourceMap{
 		v1.ResourceMemory: resource.MustParse("100Mi"),
 		v1.ResourceCPU:    resource.MustParse("100m"),
 	},
@@ -426,7 +426,7 @@ func createBalancedPodForNodes(f *framework.Framework, cs clientset.Interface, n
 		}
 		cpuAllocatableMil := cpuAllocatable.MilliValue()
 
-		needCreateResource := v1.ResourceList{}
+		needCreateResource := v1.ResourceMap{}
 		cpuFraction := cpuFractionMap[node.Name]
 		memFraction := memFractionMap[node.Name]
 		needCreateResource[v1.ResourceCPU] = *resource.NewMilliQuantity(int64((ratio-cpuFraction)*float64(cpuAllocatableMil)), resource.DecimalSI)

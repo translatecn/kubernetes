@@ -30,21 +30,21 @@ import (
 // containers of the pod. Pod overhead is added to the
 // total container resource requests and to the total container limits which have a
 // non-zero quantity.
-func PodRequestsAndLimits(pod *v1.Pod) (reqs, limits v1.ResourceList) {
+func PodRequestsAndLimits(pod *v1.Pod) (reqs, limits v1.ResourceMap) {
 	return PodRequestsAndLimitsReuse(pod, nil, nil)
 }
 
 // PodRequestsAndLimitsWithoutOverhead will create a dictionary of all defined resources summed up for all
 // containers of the pod.
-func PodRequestsAndLimitsWithoutOverhead(pod *v1.Pod) (reqs, limits v1.ResourceList) {
-	reqs = make(v1.ResourceList, 4)
-	limits = make(v1.ResourceList, 4)
+func PodRequestsAndLimitsWithoutOverhead(pod *v1.Pod) (reqs, limits v1.ResourceMap) {
+	reqs = make(v1.ResourceMap, 4)
+	limits = make(v1.ResourceMap, 4)
 	podRequestsAndLimitsWithoutOverhead(pod, reqs, limits)
 
 	return reqs, limits
 }
 
-func podRequestsAndLimitsWithoutOverhead(pod *v1.Pod, reqs, limits v1.ResourceList) {
+func podRequestsAndLimitsWithoutOverhead(pod *v1.Pod, reqs, limits v1.ResourceMap) {
 	for _, container := range pod.Spec.Containers {
 		addResourceList(reqs, container.Resources.Requests)
 		addResourceList(limits, container.Resources.Limits)
@@ -61,7 +61,7 @@ func podRequestsAndLimitsWithoutOverhead(pod *v1.Pod, reqs, limits v1.ResourceLi
 // total container resource requests and to the total container limits which have a
 // non-zero quantity. The caller may avoid allocations of resource lists by passing
 // a requests and limits list to the function, which will be cleared before use.
-func PodRequestsAndLimitsReuse(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceList) (reqs, limits v1.ResourceList) {
+func PodRequestsAndLimitsReuse(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceMap) (reqs, limits v1.ResourceMap) {
 	// attempt to reuse the maps if passed, or allocate otherwise
 	reqs, limits = reuseOrClearResourceList(reuseReqs), reuseOrClearResourceList(reuseLimits)
 
@@ -85,9 +85,9 @@ func PodRequestsAndLimitsReuse(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceLi
 
 // reuseOrClearResourceList is a helper for avoiding excessive allocations of
 // resource lists within the inner loop of resource calculations.
-func reuseOrClearResourceList(reuse v1.ResourceList) v1.ResourceList {
+func reuseOrClearResourceList(reuse v1.ResourceMap) v1.ResourceMap {
 	if reuse == nil {
-		return make(v1.ResourceList, 4)
+		return make(v1.ResourceMap, 4)
 	}
 	for k := range reuse {
 		delete(reuse, k)
@@ -96,7 +96,7 @@ func reuseOrClearResourceList(reuse v1.ResourceList) v1.ResourceList {
 }
 
 // addResourceList adds the resources in newList to list.
-func addResourceList(list, newList v1.ResourceList) {
+func addResourceList(list, newList v1.ResourceMap) {
 	for name, quantity := range newList {
 		if value, ok := list[name]; !ok {
 			list[name] = quantity.DeepCopy()
@@ -108,7 +108,7 @@ func addResourceList(list, newList v1.ResourceList) {
 }
 
 // maxResourceList sets list to the greater of list/newList for every resource in newList
-func maxResourceList(list, newList v1.ResourceList) {
+func maxResourceList(list, newList v1.ResourceMap) {
 	for name, quantity := range newList {
 		if value, ok := list[name]; !ok || quantity.Cmp(value) > 0 {
 			list[name] = quantity.DeepCopy()
@@ -180,7 +180,7 @@ func ExtractResourceValueByContainerName(fs *v1.ResourceFieldSelector, pod *v1.P
 
 // ExtractResourceValueByContainerNameAndNodeAllocatable extracts the value of a resource
 // by providing container name and node allocatable
-func ExtractResourceValueByContainerNameAndNodeAllocatable(fs *v1.ResourceFieldSelector, pod *v1.Pod, containerName string, nodeAllocatable v1.ResourceList) (string, error) {
+func ExtractResourceValueByContainerNameAndNodeAllocatable(fs *v1.ResourceFieldSelector, pod *v1.Pod, containerName string, nodeAllocatable v1.ResourceMap) (string, error) {
 	realContainer, err := findContainerInPod(pod, containerName)
 	if err != nil {
 		return "", err
@@ -280,9 +280,9 @@ func findContainerInPod(pod *v1.Pod, containerName string) (*v1.Container, error
 // MergeContainerResourceLimits checks if a limit is applied for
 // the container, and if not, it sets the limit to the passed resource list.
 func MergeContainerResourceLimits(container *v1.Container,
-	allocatable v1.ResourceList) {
+	allocatable v1.ResourceMap) {
 	if container.Resources.Limits == nil {
-		container.Resources.Limits = make(v1.ResourceList)
+		container.Resources.Limits = make(v1.ResourceMap)
 	}
 	// NOTE: we exclude hugepages-* resources because hugepages are never overcommitted.
 	// This means that the container always has a limit specified.

@@ -58,18 +58,18 @@ func TestApplySandboxResources(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceMemory: resource.MustParse("128Mi"),
 									v1.ResourceCPU:    resource.MustParse("2"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceMemory: resource.MustParse("256Mi"),
 									v1.ResourceCPU:    resource.MustParse("4"),
 								},
 							},
 						},
 					},
-					Overhead: v1.ResourceList{
+					Overhead: v1.ResourceMap{
 						v1.ResourceMemory: resource.MustParse("128Mi"),
 						v1.ResourceCPU:    resource.MustParse("1"),
 					},
@@ -100,10 +100,10 @@ func TestApplySandboxResources(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceMemory: resource.MustParse("128Mi"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceMemory: resource.MustParse("256Mi"),
 								},
 							},

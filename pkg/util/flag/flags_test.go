@@ -186,7 +186,7 @@ func TestReservedMemoryVar(t *testing.T) {
 			expectVal: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: memory1Gi,
 					},
 				},
@@ -198,7 +198,7 @@ func TestReservedMemoryVar(t *testing.T) {
 			expectVal: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory:        memory1Gi,
 						resourceNameHugepages1Gi: memory1Gi,
 					},
@@ -211,14 +211,14 @@ func TestReservedMemoryVar(t *testing.T) {
 			expectVal: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory:        memory1Gi,
 						resourceNameHugepages1Gi: memory1Gi,
 					},
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: memory1Gi,
 					},
 				},
@@ -230,14 +230,14 @@ func TestReservedMemoryVar(t *testing.T) {
 			expectVal: []kubeletconfig.MemoryReservation{
 				{
 					NumaNode: 0,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory:        memory1Gi,
 						resourceNameHugepages1Gi: memory1Gi,
 					},
 				},
 				{
 					NumaNode: 1,
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: memory1Gi,
 					},
 				},

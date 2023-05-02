@@ -31,7 +31,7 @@ func (in *ContainerMetrics) DeepCopyInto(out *ContainerMetrics) {
 	*out = *in
 	if in.Usage != nil {
 		in, out := &in.Usage, &out.Usage
-		*out = make(v1.ResourceList, len(*in))
+		*out = make(v1.ResourceMap, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val.DeepCopy()
 		}
@@ -58,7 +58,7 @@ func (in *NodeMetrics) DeepCopyInto(out *NodeMetrics) {
 	out.Window = in.Window
 	if in.Usage != nil {
 		in, out := &in.Usage, &out.Usage
-		*out = make(v1.ResourceList, len(*in))
+		*out = make(v1.ResourceMap, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val.DeepCopy()
 		}

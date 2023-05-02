@@ -40,7 +40,7 @@ func (AWSElasticBlockStoreVolumeSource) SwaggerDoc() map[string]string {
 }
 
 var map_Affinity = map[string]string{
-	"":                "Affinity is a group of affinity scheduling rules.",
+	"":                "Affinity 是一组亲和性调度规则。",
 	"nodeAffinity":    "Describes node affinity scheduling rules for the pod.",
 	"podAffinity":     "Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).",
 	"podAntiAffinity": "Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).",

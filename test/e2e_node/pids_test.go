@@ -100,7 +100,7 @@ func runPodPidsLimitTests(f *framework.Framework) {
 						Image: imageutils.GetPauseImageName(),
 						Name:  "container" + string(uuid.NewUUID()),
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceName("cpu"):    resource.MustParse("10m"),
 								v1.ResourceName("memory"): resource.MustParse("100Mi"),
 							},

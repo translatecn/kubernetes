@@ -74,7 +74,7 @@ func makeMemoryManagerContainers(ctnCmd string, ctnAttributes []memoryManagerCtn
 			Name:  ctnAttr.ctnName,
 			Image: busyboxImage,
 			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse(ctnAttr.cpus),
 					v1.ResourceMemory: resource.MustParse(ctnAttr.memory),
 				},
@@ -261,7 +261,7 @@ var _ = SIGDescribe("Memory Manager [Disruptive] [Serial] [Feature:MemoryManager
 		systemReservedMemory: []kubeletconfig.MemoryReservation{
 			{
 				NumaNode: 0,
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					resourceMemory: memoryQuantity,
 				},
 			},

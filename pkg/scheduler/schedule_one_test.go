@@ -783,10 +783,10 @@ func TestSchedulerFailedSchedulingReasons(t *testing.T) {
 	// Design the baseline for the pods, and we will make nodes that don't fit it later.
 	var cpu = int64(4)
 	var mem = int64(500)
-	podWithTooBigResourceRequests := podWithResources("bar", "", v1.ResourceList{
+	podWithTooBigResourceRequests := podWithResources("bar", "", v1.ResourceMap{
 		v1.ResourceCPU:    *(resource.NewQuantity(cpu, resource.DecimalSI)),
 		v1.ResourceMemory: *(resource.NewQuantity(mem, resource.DecimalSI)),
-	}, v1.ResourceList{
+	}, v1.ResourceMap{
 		v1.ResourceCPU:    *(resource.NewQuantity(cpu, resource.DecimalSI)),
 		v1.ResourceMemory: *(resource.NewQuantity(mem, resource.DecimalSI)),
 	})
@@ -799,12 +799,12 @@ func TestSchedulerFailedSchedulingReasons(t *testing.T) {
 		node := v1.Node{
 			ObjectMeta: metav1.ObjectMeta{Name: uid, UID: types.UID(uid)},
 			Status: v1.NodeStatus{
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceCPU:    *(resource.NewQuantity(cpu/2, resource.DecimalSI)),
 					v1.ResourceMemory: *(resource.NewQuantity(mem/5, resource.DecimalSI)),
 					v1.ResourcePods:   *(resource.NewQuantity(10, resource.DecimalSI)),
 				},
-				Allocatable: v1.ResourceList{
+				Allocatable: v1.ResourceMap{
 					v1.ResourceCPU:    *(resource.NewQuantity(cpu/2, resource.DecimalSI)),
 					v1.ResourceMemory: *(resource.NewQuantity(mem/5, resource.DecimalSI)),
 					v1.ResourcePods:   *(resource.NewQuantity(10, resource.DecimalSI)),
@@ -2224,7 +2224,7 @@ func TestZeroRequest(t *testing.T) {
 		Containers: []v1.Container{
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse(
 							strconv.FormatInt(schedutil.DefaultMilliCPURequest, 10) + "m"),
 						v1.ResourceMemory: resource.MustParse(
@@ -2241,7 +2241,7 @@ func TestZeroRequest(t *testing.T) {
 		Containers: []v1.Container{
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU: resource.MustParse(
 							strconv.FormatInt(schedutil.DefaultMilliCPURequest*3, 10) + "m"),
 						v1.ResourceMemory: resource.MustParse(
@@ -2558,7 +2558,7 @@ func podWithPort(id, desiredHost string, port int) *v1.Pod {
 	return pod
 }
 
-func podWithResources(id, desiredHost string, limits v1.ResourceList, requests v1.ResourceList) *v1.Pod {
+func podWithResources(id, desiredHost string, limits v1.ResourceMap, requests v1.ResourceMap) *v1.Pod {
 	pod := podWithID(id, desiredHost)
 	pod.Spec.Containers = []v1.Container{
 		{Name: "ctr", Resources: v1.ResourceRequirements{Limits: limits, Requests: requests}},
@@ -2595,12 +2595,12 @@ func makeNode(node string, milliCPU, memory int64) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: node},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceCPU:    *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(memory, resource.BinarySI),
 				"pods":            *resource.NewQuantity(100, resource.DecimalSI),
 			},
-			Allocatable: v1.ResourceList{
+			Allocatable: v1.ResourceMap{
 
 				v1.ResourceCPU:    *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(memory, resource.BinarySI),

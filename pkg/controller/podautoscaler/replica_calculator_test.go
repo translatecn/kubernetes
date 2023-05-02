@@ -161,12 +161,12 @@ func (tc *replicaCalcTestCase) prepareTestClientSet() *fake.Clientset {
 
 			if tc.resource != nil && i < len(tc.resource.requests) {
 				pod.Spec.Containers[0].Resources = v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						tc.resource.name: tc.resource.requests[i],
 					},
 				}
 				pod.Spec.Containers[1].Resources = v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						tc.resource.name: tc.resource.requests[i],
 					},
 				}
@@ -205,7 +205,7 @@ func (tc *replicaCalcTestCase) prepareTestMetricsClient() *metricsfake.Clientset
 				for i, m := range resValue {
 					podMetric.Containers[i] = metricsapi.ContainerMetrics{
 						Name: fmt.Sprintf("container%v", i+1),
-						Usage: v1.ResourceList{
+						Usage: v1.ResourceMap{
 							tc.resource.name: *resource.NewMilliQuantity(m, resource.DecimalSI),
 						},
 					}

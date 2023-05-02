@@ -375,7 +375,7 @@ func DoTestPodScheduling(ns *v1.Namespace, t *testing.T, cs clientset.Interface)
 	node := &v1.Node{
 		Spec: v1.NodeSpec{Unschedulable: false},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourcePods: *resource.NewQuantity(32, resource.DecimalSI),
 			},
 			Conditions: []v1.NodeCondition{goodCondition},
@@ -397,7 +397,7 @@ func DoTestPodScheduling(ns *v1.Namespace, t *testing.T, cs clientset.Interface)
 					Name:  "container",
 					Image: imageutils.GetPauseImageName(),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							extendedResourceName: *resource.NewQuantity(1, resource.DecimalSI),
 						},
 					},

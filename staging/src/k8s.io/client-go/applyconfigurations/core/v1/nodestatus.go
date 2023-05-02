@@ -25,9 +25,9 @@ import (
 // NodeStatusApplyConfiguration represents an declarative configuration of the NodeStatus type for use
 // with apply.
 type NodeStatusApplyConfiguration struct {
-	Capacity        *v1.ResourceList                       `json:"capacity,omitempty"`
-	Allocatable     *v1.ResourceList                       `json:"allocatable,omitempty"`
-	Phase           *v1.NodePhase                          `json:"phase,omitempty"`
+	Capacity        *v1.ResourceMap `json:"capacity,omitempty"`
+	Allocatable     *v1.ResourceMap `json:"allocatable,omitempty"`
+	Phase           *v1.NodePhase   `json:"phase,omitempty"`
 	Conditions      []NodeConditionApplyConfiguration      `json:"conditions,omitempty"`
 	Addresses       []NodeAddressApplyConfiguration        `json:"addresses,omitempty"`
 	DaemonEndpoints *NodeDaemonEndpointsApplyConfiguration `json:"daemonEndpoints,omitempty"`
@@ -47,7 +47,7 @@ func NodeStatus() *NodeStatusApplyConfiguration {
 // WithCapacity sets the Capacity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Capacity field is set to the value of the last call.
-func (b *NodeStatusApplyConfiguration) WithCapacity(value v1.ResourceList) *NodeStatusApplyConfiguration {
+func (b *NodeStatusApplyConfiguration) WithCapacity(value v1.ResourceMap) *NodeStatusApplyConfiguration {
 	b.Capacity = &value
 	return b
 }
@@ -55,7 +55,7 @@ func (b *NodeStatusApplyConfiguration) WithCapacity(value v1.ResourceList) *Node
 // WithAllocatable sets the Allocatable field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Allocatable field is set to the value of the last call.
-func (b *NodeStatusApplyConfiguration) WithAllocatable(value v1.ResourceList) *NodeStatusApplyConfiguration {
+func (b *NodeStatusApplyConfiguration) WithAllocatable(value v1.ResourceMap) *NodeStatusApplyConfiguration {
 	b.Allocatable = &value
 	return b
 }

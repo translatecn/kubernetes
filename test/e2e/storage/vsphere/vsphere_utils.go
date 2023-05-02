@@ -184,7 +184,7 @@ func getVSpherePersistentVolumeClaimSpec(namespace string, labels map[string]str
 				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("2Gi"),
 				},
 			},
@@ -253,7 +253,7 @@ func getVSphereClaimSpecWithStorageClass(ns string, diskSize string, storageclas
 				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse(diskSize),
 				},
 			},

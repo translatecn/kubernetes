@@ -2,14 +2,13 @@
   "components": {
     "schemas": {
       "io.k8s.api.core.v1.EventSource": {
-        "description": "EventSource contains information for an event.",
         "properties": {
           "component": {
-            "description": "Component from which the event is generated.",
+            "description": "事件源名称",
             "type": "string"
           },
           "host": {
-            "description": "Node name on which the event is generated.",
+            "description": "事件源的IP",
             "type": "string"
           }
         },

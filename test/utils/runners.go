@@ -673,7 +673,7 @@ func (config *RCConfig) applyTo(template *v1.PodTemplateSpec) {
 		c.Ports = append(c.Ports, v1.ContainerPort{Name: k, ContainerPort: int32(v), HostPort: int32(v)})
 	}
 	if config.CpuLimit > 0 || config.MemLimit > 0 || config.GpuLimit > 0 {
-		template.Spec.Containers[0].Resources.Limits = v1.ResourceList{}
+		template.Spec.Containers[0].Resources.Limits = v1.ResourceMap{}
 	}
 	if config.CpuLimit > 0 {
 		template.Spec.Containers[0].Resources.Limits[v1.ResourceCPU] = *resource.NewMilliQuantity(config.CpuLimit, resource.DecimalSI)
@@ -682,7 +682,7 @@ func (config *RCConfig) applyTo(template *v1.PodTemplateSpec) {
 		template.Spec.Containers[0].Resources.Limits[v1.ResourceMemory] = *resource.NewQuantity(config.MemLimit, resource.DecimalSI)
 	}
 	if config.CpuRequest > 0 || config.MemRequest > 0 {
-		template.Spec.Containers[0].Resources.Requests = v1.ResourceList{}
+		template.Spec.Containers[0].Resources.Requests = v1.ResourceMap{}
 	}
 	if config.CpuRequest > 0 {
 		template.Spec.Containers[0].Resources.Requests[v1.ResourceCPU] = *resource.NewMilliQuantity(config.CpuRequest, resource.DecimalSI)
@@ -1322,11 +1322,11 @@ func MakePodSpec() v1.PodSpec {
 			Image: "registry.k8s.io/pause:3.9",
 			Ports: []v1.ContainerPort{{ContainerPort: 80}},
 			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("500Mi"),
 				},
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("500Mi"),
 				},
@@ -1492,7 +1492,7 @@ func makeUnboundPersistentVolumeClaim(storageClass string) *v1.PersistentVolumeC
 			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadOnlyMany},
 			StorageClassName: &storageClass,
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("1Gi"),
 				},
 			},

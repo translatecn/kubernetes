@@ -152,7 +152,7 @@ func TestCreatePVCPatch(t *testing.T) {
 	})
 	pvc1.SetResourceVersion("10")
 	pvc2 := pvc1.DeepCopy()
-	pvc2.Status.Capacity = v1.ResourceList{
+	pvc2.Status.Capacity = v1.ResourceMap{
 		v1.ResourceName("size"): resource.MustParse("10G"),
 	}
 	patchBytes, err := createPVCPatch(pvc1, pvc2, true /* addResourceVersionCheck */)
@@ -183,7 +183,7 @@ func getPVC(conditions []v1.PersistentVolumeClaimCondition) *v1.PersistentVolume
 				v1.ReadOnlyMany,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("2Gi"),
 				},
 			},
@@ -191,7 +191,7 @@ func getPVC(conditions []v1.PersistentVolumeClaimCondition) *v1.PersistentVolume
 		Status: v1.PersistentVolumeClaimStatus{
 			Phase:      v1.ClaimBound,
 			Conditions: conditions,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceStorage: resource.MustParse("2Gi"),
 			},
 		},

@@ -72,7 +72,7 @@ func DoTestStorageClasses(t *testing.T, client clientset.Interface, ns *v1.Names
 			Namespace: ns.Name,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
-			Resources:        v1.ResourceRequirements{Requests: v1.ResourceList{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")}},
+			Resources:        v1.ResourceRequirements{Requests: v1.ResourceMap{v1.ResourceName(v1.ResourceStorage): resource.MustParse("1G")}},
 			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			StorageClassName: &classGold,
 		},

@@ -176,7 +176,7 @@ func (c *ContainerWrapper) ContainerPort(ports []v1.ContainerPort) *ContainerWra
 
 // Resources sets the container resources to the given resource map.
 func (c *ContainerWrapper) Resources(resMap map[v1.ResourceName]string) *ContainerWrapper {
-	res := v1.ResourceList{}
+	res := v1.ResourceMap{}
 	for k, v := range resMap {
 		res[k] = resource.MustParse(v)
 	}
@@ -636,8 +636,8 @@ func (p *PodWrapper) PreemptionPolicy(policy v1.PreemptionPolicy) *PodWrapper {
 	return p
 }
 
-// Overhead sets the give ResourceList to the inner pod
-func (p *PodWrapper) Overhead(rl v1.ResourceList) *PodWrapper {
+// Overhead sets the give ResourceMap to the inner pod
+func (p *PodWrapper) Overhead(rl v1.ResourceMap) *PodWrapper {
 	p.Spec.Overhead = rl
 	return p
 }
@@ -681,7 +681,7 @@ func (n *NodeWrapper) Label(k, v string) *NodeWrapper {
 // Each entry in `resources` corresponds to a resource name and its quantity.
 // By default, the capacity and allocatable number of pods are set to 32.
 func (n *NodeWrapper) Capacity(resources map[v1.ResourceName]string) *NodeWrapper {
-	res := v1.ResourceList{
+	res := v1.ResourceMap{
 		v1.ResourcePods: resource.MustParse("32"),
 	}
 	for name, value := range resources {
@@ -787,7 +787,7 @@ func (p *PersistentVolumeWrapper) AccessModes(accessModes []v1.PersistentVolumeA
 }
 
 // Capacity sets `capacity` as the resource list of the inner PersistentVolume.
-func (p *PersistentVolumeWrapper) Capacity(capacity v1.ResourceList) *PersistentVolumeWrapper {
+func (p *PersistentVolumeWrapper) Capacity(capacity v1.ResourceMap) *PersistentVolumeWrapper {
 	p.PersistentVolume.Spec.Capacity = capacity
 	return p
 }

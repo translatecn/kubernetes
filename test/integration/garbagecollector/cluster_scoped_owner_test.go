@@ -79,7 +79,7 @@ func TestClusterScopedOwners(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "pv-valid"},
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeSource: v1.PersistentVolumeSource{HostPath: &v1.HostPathVolumeSource{Path: "/foo"}},
-			Capacity:               v1.ResourceList{v1.ResourceStorage: resource.MustParse("1Gi")},
+			Capacity:               v1.ResourceMap{v1.ResourceStorage: resource.MustParse("1Gi")},
 			AccessModes:            []v1.PersistentVolumeAccessMode{v1.ReadWriteMany},
 		},
 	}, metav1.CreateOptions{})

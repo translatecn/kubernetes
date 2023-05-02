@@ -129,7 +129,7 @@ func newCPUBurnPods(numPods int, image imageutils.Config, cpuLimit string, memor
 						Image: image.GetE2EImage(),
 						Name:  podName,
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceMemory: memLimitQuantity,
 								v1.ResourceCPU:    cpuLimitQuantity,
 							},

@@ -35,7 +35,7 @@ var (
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU): resource.MustParse("10"),
 						},
 					},
@@ -49,10 +49,10 @@ var (
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU): resource.MustParse("0"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
 					},
@@ -66,7 +66,7 @@ var (
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("0"),
 						},
 					},
@@ -90,11 +90,11 @@ var (
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5m"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5m"),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
@@ -109,11 +109,11 @@ var (
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse(strconv.FormatInt(standardMemoryAmount/2, 10)),
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5m"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
 					},
@@ -127,7 +127,7 @@ var (
 			Containers: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse(strconv.FormatInt(standardMemoryAmount-1, 10)),
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5m"),
 						},

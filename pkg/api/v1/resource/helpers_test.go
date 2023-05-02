@@ -30,7 +30,7 @@ func TestResourceHelpers(t *testing.T) {
 	cpuLimit := resource.MustParse("10")
 	memoryLimit := resource.MustParse("10G")
 	resourceSpec := v1.ResourceRequirements{
-		Limits: v1.ResourceList{
+		Limits: v1.ResourceMap{
 			v1.ResourceCPU:    cpuLimit,
 			v1.ResourceMemory: memoryLimit,
 		},
@@ -42,7 +42,7 @@ func TestResourceHelpers(t *testing.T) {
 		t.Errorf("expected memorylimit %v, got %v", memoryLimit, res)
 	}
 	resourceSpec = v1.ResourceRequirements{
-		Limits: v1.ResourceList{
+		Limits: v1.ResourceMap{
 			v1.ResourceMemory: memoryLimit,
 		},
 	}
@@ -55,7 +55,7 @@ func TestResourceHelpers(t *testing.T) {
 }
 
 func TestDefaultResourceHelpers(t *testing.T) {
-	resourceList := v1.ResourceList{}
+	resourceList := v1.ResourceMap{}
 	if resourceList.Cpu().Format != resource.DecimalSI {
 		t.Errorf("expected %v, actual %v", resource.DecimalSI, resourceList.Cpu().Format)
 	}
@@ -271,43 +271,43 @@ func TestPodRequestsAndLimits(t *testing.T) {
 	cases := []struct {
 		pod              *v1.Pod
 		cName            string
-		expectedRequests v1.ResourceList
-		expectedLimits   v1.ResourceList
+		expectedRequests v1.ResourceMap
+		expectedLimits   v1.ResourceMap
 	}{
 		{
 			cName:            "just-limit-no-overhead",
 			pod:              getPod("foo", podResources{cpuLimit: "9"}),
-			expectedRequests: v1.ResourceList{},
-			expectedLimits: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{},
+			expectedLimits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU): resource.MustParse("9"),
 			},
 		},
 		{
 			cName: "just-overhead",
 			pod:   getPod("foo", podResources{cpuOverhead: "5", memoryOverhead: "5"}),
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("5"),
 			},
-			expectedLimits: v1.ResourceList{},
+			expectedLimits: v1.ResourceMap{},
 		},
 		{
 			cName: "req-and-overhead",
 			pod:   getPod("foo", podResources{cpuRequest: "1", memoryRequest: "10", cpuOverhead: "5", memoryOverhead: "5"}),
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("6"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("15"),
 			},
-			expectedLimits: v1.ResourceList{},
+			expectedLimits: v1.ResourceMap{},
 		},
 		{
 			cName: "all-req-lim-and-overhead",
 			pod:   getPod("foo", podResources{cpuRequest: "1", cpuLimit: "2", memoryRequest: "10", memoryLimit: "12", cpuOverhead: "5", memoryOverhead: "5"}),
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("6"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("15"),
 			},
-			expectedLimits: v1.ResourceList{
+			expectedLimits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("7"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("17"),
 			},
@@ -315,11 +315,11 @@ func TestPodRequestsAndLimits(t *testing.T) {
 		{
 			cName: "req-some-lim-and-overhead",
 			pod:   getPod("foo", podResources{cpuRequest: "1", cpuLimit: "2", memoryRequest: "10", cpuOverhead: "5", memoryOverhead: "5"}),
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("6"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("15"),
 			},
-			expectedLimits: v1.ResourceList{
+			expectedLimits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU): resource.MustParse("7"),
 			},
 		},
@@ -341,8 +341,8 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 	cases := []struct {
 		pod              *v1.Pod
 		name             string
-		expectedRequests v1.ResourceList
-		expectedLimits   v1.ResourceList
+		expectedRequests v1.ResourceMap
+		expectedLimits   v1.ResourceMap
 	}{
 		{
 			name: "two container no overhead - should just be sum of containers",
@@ -352,11 +352,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "foobar",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("5"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("10"),
 								},
@@ -365,11 +365,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "foobar2",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("4"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("12"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("8"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("24"),
 								},
@@ -378,11 +378,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 					},
 				},
 			},
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("17"),
 			},
-			expectedLimits: v1.ResourceList{
+			expectedLimits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("34"),
 			},
@@ -391,7 +391,7 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 			name: "two container with overhead - shouldn't consider overhead",
 			pod: &v1.Pod{
 				Spec: v1.PodSpec{
-					Overhead: v1.ResourceList{
+					Overhead: v1.ResourceMap{
 						v1.ResourceName(v1.ResourceCPU):    resource.MustParse("3"),
 						v1.ResourceName(v1.ResourceMemory): resource.MustParse("8"),
 					},
@@ -399,11 +399,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "foobar",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("5"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("10"),
 								},
@@ -412,11 +412,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "foobar2",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("4"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("12"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("8"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("24"),
 								},
@@ -425,11 +425,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 					},
 				},
 			},
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("5"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("17"),
 			},
-			expectedLimits: v1.ResourceList{
+			expectedLimits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("34"),
 			},
@@ -438,7 +438,7 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 			name: "two container with overhead, massive init - should just be the largest init",
 			pod: &v1.Pod{
 				Spec: v1.PodSpec{
-					Overhead: v1.ResourceList{
+					Overhead: v1.ResourceMap{
 						v1.ResourceName(v1.ResourceCPU):    resource.MustParse("3"),
 						v1.ResourceName(v1.ResourceMemory): resource.MustParse("8"),
 					},
@@ -446,11 +446,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "foobar",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("5"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("2"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("10"),
 								},
@@ -459,11 +459,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "foobar2",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("4"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("12"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("8"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("24"),
 								},
@@ -474,11 +474,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "small-init",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("5"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("1"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("5"),
 								},
@@ -487,11 +487,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 						{
 							Name: "big-init",
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("40"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("120"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName(v1.ResourceCPU):    resource.MustParse("80"),
 									v1.ResourceName(v1.ResourceMemory): resource.MustParse("240"),
 								},
@@ -500,11 +500,11 @@ func TestPodRequestsAndLimitsWithoutOverhead(t *testing.T) {
 					},
 				},
 			},
-			expectedRequests: v1.ResourceList{
+			expectedRequests: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("40"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("120"),
 			},
-			expectedLimits: v1.ResourceList{
+			expectedLimits: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("80"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("240"),
 			},
@@ -529,11 +529,11 @@ type podResources struct {
 
 func getPod(cname string, resources podResources) *v1.Pod {
 	r := v1.ResourceRequirements{
-		Limits:   make(v1.ResourceList),
-		Requests: make(v1.ResourceList),
+		Limits:   make(v1.ResourceMap),
+		Requests: make(v1.ResourceMap),
 	}
 
-	overhead := make(v1.ResourceList)
+	overhead := make(v1.ResourceMap)
 
 	if resources.cpuLimit != "" {
 		r.Limits[v1.ResourceCPU] = resource.MustParse(resources.cpuLimit)

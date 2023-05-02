@@ -263,7 +263,7 @@ var _ = SIGDescribe("LocalStorageCapacityIsolationMemoryBackedVolumeEviction [Sl
 		sizeLimit := resource.MustParse("100Mi")
 		useOverLimit := 200 /* Mb */
 		useUnderLimit := 80 /* Mb */
-		containerLimit := v1.ResourceList{v1.ResourceEphemeralStorage: sizeLimit}
+		containerLimit := v1.ResourceMap{v1.ResourceEphemeralStorage: sizeLimit}
 
 		runEvictionTest(f, evictionTestTimeout, noPressure, noStarvedResource, logDiskMetrics, []podEvictSpec{
 			{
@@ -301,7 +301,7 @@ var _ = SIGDescribe("LocalStorageCapacityIsolationEviction [Slow] [Serial] [Disr
 		sizeLimit := resource.MustParse("100Mi")
 		useOverLimit := 101 /* Mb */
 		useUnderLimit := 99 /* Mb */
-		containerLimit := v1.ResourceList{v1.ResourceEphemeralStorage: sizeLimit}
+		containerLimit := v1.ResourceMap{v1.ResourceEphemeralStorage: sizeLimit}
 
 		runEvictionTest(f, evictionTestTimeout, noPressure, noStarvedResource, logDiskMetrics, []podEvictSpec{
 			{
@@ -383,10 +383,10 @@ var _ = SIGDescribe("PriorityMemoryEvictionOrdering [Slow] [Serial] [Disruptive]
 			{
 				evictionPriority: 0,
 				pod: getMemhogPod("guaranteed-pod", "guaranteed-pod", v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceMemory: resource.MustParse("300Mi"),
 					},
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceMemory: resource.MustParse("300Mi"),
 					},
 				}),
@@ -442,10 +442,10 @@ var _ = SIGDescribe("PriorityLocalStorageEvictionOrdering [Slow] [Serial] [Disru
 				evictionPriority: 0,
 				// Only require 99% accuracy (297/300 Mb) because on some OS distributions, the file itself (excluding contents), consumes disk space.
 				pod: diskConsumingPod("guaranteed-disk", 297 /* Mb */, nil, v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceEphemeralStorage: resource.MustParse("300Mi"),
 					},
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceEphemeralStorage: resource.MustParse("300Mi"),
 					},
 				}),

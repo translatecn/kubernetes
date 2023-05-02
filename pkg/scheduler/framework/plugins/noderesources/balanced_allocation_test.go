@@ -37,7 +37,7 @@ func TestNodeResourcesBalancedAllocation(t *testing.T) {
 		Containers: []v1.Container{
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("1000m"),
 						v1.ResourceMemory: resource.MustParse("2000"),
 					},
@@ -45,7 +45,7 @@ func TestNodeResourcesBalancedAllocation(t *testing.T) {
 			},
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("2000m"),
 						v1.ResourceMemory: resource.MustParse("3000"),
 						"nvidia.com/gpu":  resource.MustParse("3"),
@@ -68,7 +68,7 @@ func TestNodeResourcesBalancedAllocation(t *testing.T) {
 		Containers: []v1.Container{
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("1000m"),
 						v1.ResourceMemory: resource.MustParse("0"),
 					},
@@ -76,7 +76,7 @@ func TestNodeResourcesBalancedAllocation(t *testing.T) {
 			},
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("2000m"),
 						v1.ResourceMemory: resource.MustParse("0"),
 					},
@@ -91,7 +91,7 @@ func TestNodeResourcesBalancedAllocation(t *testing.T) {
 		Containers: []v1.Container{
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("1000m"),
 						v1.ResourceMemory: resource.MustParse("2000"),
 					},
@@ -99,7 +99,7 @@ func TestNodeResourcesBalancedAllocation(t *testing.T) {
 			},
 			{
 				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU:    resource.MustParse("2000m"),
 						v1.ResourceMemory: resource.MustParse("3000"),
 					},

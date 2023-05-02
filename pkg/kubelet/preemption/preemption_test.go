@@ -409,52 +409,52 @@ func TestAdmissionRequirementsSubtract(t *testing.T) {
 func getTestPods() map[string]*v1.Pod {
 	allPods := map[string]*v1.Pod{
 		tinyBurstable: getPodWithResources(tinyBurstable, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("1m"),
 				v1.ResourceMemory: resource.MustParse("1Mi"),
 			},
 		}),
 		bestEffort: getPodWithResources(bestEffort, v1.ResourceRequirements{}),
 		clusterCritical: getPodWithResources(clusterCritical, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("100Mi"),
 			},
 		}),
 		nodeCritical: getPodWithResources(nodeCritical, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("100Mi"),
 			},
 		}),
 		burstable: getPodWithResources(burstable, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("100Mi"),
 			},
 		}),
 		guaranteed: getPodWithResources(guaranteed, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("100Mi"),
 			},
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("100Mi"),
 			},
 		}),
 		highRequestBurstable: getPodWithResources(highRequestBurstable, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("300m"),
 				v1.ResourceMemory: resource.MustParse("300Mi"),
 			},
 		}),
 		highRequestGuaranteed: getPodWithResources(highRequestGuaranteed, v1.ResourceRequirements{
-			Requests: v1.ResourceList{
+			Requests: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("300m"),
 				v1.ResourceMemory: resource.MustParse("300Mi"),
 			},
-			Limits: v1.ResourceList{
+			Limits: v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("300m"),
 				v1.ResourceMemory: resource.MustParse("300Mi"),
 			},

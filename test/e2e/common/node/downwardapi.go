@@ -329,11 +329,11 @@ var _ = SIGDescribe("Downward API [Serial] [Disruptive] [NodeFeature:DownwardAPI
 							Image:   imageutils.GetE2EImage(imageutils.BusyBox),
 							Command: []string{"sh", "-c", "env"},
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":           resource.MustParse("10m"),
 									"hugepages-2Mi": resource.MustParse("0Mi"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"hugepages-2Mi": resource.MustParse("0Mi"),
 								},
 							},
@@ -399,11 +399,11 @@ func testDownwardAPI(f *framework.Framework, podName string, env []v1.EnvVar, ex
 					Image:   imageutils.GetE2EImage(imageutils.BusyBox),
 					Command: []string{"sh", "-c", "env"},
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse("250m"),
 							v1.ResourceMemory: resource.MustParse("32Mi"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse("1250m"),
 							v1.ResourceMemory: resource.MustParse("64Mi"),
 						},

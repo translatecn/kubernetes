@@ -442,8 +442,8 @@ func (expc *expandController) GetHostIP() (net.IP, error) {
 	return nil, fmt.Errorf("GetHostIP not supported by expand controller's VolumeHost implementation")
 }
 
-func (expc *expandController) GetNodeAllocatable() (v1.ResourceList, error) {
-	return v1.ResourceList{}, nil
+func (expc *expandController) GetNodeAllocatable() (v1.ResourceMap, error) {
+	return v1.ResourceMap{}, nil
 }
 
 func (expc *expandController) GetSecretFunc() func(namespace, name string) (*v1.Secret, error) {

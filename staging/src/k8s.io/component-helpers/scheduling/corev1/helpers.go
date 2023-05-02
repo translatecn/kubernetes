@@ -75,8 +75,13 @@ type taintsFilterFunc func(*v1.Taint) bool
 // all the filtered taints, and returns the first taint without a toleration
 // Returns true if there is an untolerated taint
 // Returns false if all taints are tolerated
-func FindMatchingUntoleratedTaint(taints []v1.Taint, tolerations []v1.Toleration, inclusionFilter taintsFilterFunc) (v1.Taint, bool) {
-	filteredTaints := getFilteredTaints(taints, inclusionFilter)
+// FindMatchingUntoleratedTaint 检查给定的容忍度是否允许所有过滤的污点，并返回不包含容忍度的第一个污点。如果存在不可容忍的污点，则返回true
+func FindMatchingUntoleratedTaint(
+	taints []v1.Taint,
+	tolerations []v1.Toleration,
+	inclusionFilter taintsFilterFunc,
+) (v1.Taint, bool) {
+	filteredTaints := getFilteredTaints(taints, inclusionFilter) // 过滤之后的污点
 	for _, taint := range filteredTaints {
 		if !TolerationsTolerateTaint(tolerations, &taint) {
 			return taint, true

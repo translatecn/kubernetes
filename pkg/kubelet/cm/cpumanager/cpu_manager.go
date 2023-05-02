@@ -106,7 +106,7 @@ type manager struct {
 	podStatusProvider          status.PodStatusProvider  // 获取 pod 状态和容器 ID 的接口.
 	containerMap               containermap.ContainerMap // 提供从 (pod, container) 到容器 ID 的映射.
 	topology                   *topology.CPUTopology     // 管理 CPU 拓扑信息的接口.
-	nodeAllocatableReservation v1.ResourceList           // 记录节点可分配的资源.
+	nodeAllocatableReservation v1.ResourceMap            // 记录节点可分配的资源.
 	sourcesReady               config.SourcesReady       // kubelet 配置源的就绪状态.
 	stateFileDirectory         string                    // 检查点状态文件的目录.
 	allocatableCPUs            cpuset.CPUSet             // 保存系统上在线的 CPU 集合.
@@ -121,7 +121,7 @@ func (s *sourcesReadyStub) AddSource(source string) {}
 func (s *sourcesReadyStub) AllReady() bool          { return true }
 
 // NewManager creates new cpu manager based on provided policy
-func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconcilePeriod time.Duration, machineInfo *cadvisorapi.MachineInfo, specificCPUs cpuset.CPUSet, nodeAllocatableReservation v1.ResourceList, stateFileDirectory string, affinity topologymanager.Store) (Manager, error) {
+func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconcilePeriod time.Duration, machineInfo *cadvisorapi.MachineInfo, specificCPUs cpuset.CPUSet, nodeAllocatableReservation v1.ResourceMap, stateFileDirectory string, affinity topologymanager.Store) (Manager, error) {
 	var topo *topology.CPUTopology
 	var policy Policy
 	var err error

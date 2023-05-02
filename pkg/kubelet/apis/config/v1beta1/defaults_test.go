@@ -481,7 +481,7 @@ func TestSetDefaultsKubeletConfiguration(t *testing.T) {
 				ReservedMemory: []v1beta1.MemoryReservation{
 					{
 						NumaNode: 1,
-						Limits:   v1.ResourceList{v1.ResourceMemory: resource.MustParse("1Gi")},
+						Limits:   v1.ResourceMap{v1.ResourceMemory: resource.MustParse("1Gi")},
 					},
 				},
 				EnableProfilingHandler:        utilpointer.Bool(true),
@@ -625,7 +625,7 @@ func TestSetDefaultsKubeletConfiguration(t *testing.T) {
 				ReservedMemory: []v1beta1.MemoryReservation{
 					{
 						NumaNode: 1,
-						Limits:   v1.ResourceList{v1.ResourceMemory: resource.MustParse("1Gi")},
+						Limits:   v1.ResourceMap{v1.ResourceMemory: resource.MustParse("1Gi")},
 					},
 				},
 				EnableProfilingHandler:        utilpointer.Bool(true),

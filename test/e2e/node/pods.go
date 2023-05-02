@@ -175,11 +175,11 @@ var _ = SIGDescribe("Pods Extended", func() {
 							Image: imageutils.GetE2EImage(imageutils.Agnhost),
 							Args:  []string{"pause"},
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceCPU:    resource.MustParse("100m"),
 									v1.ResourceMemory: resource.MustParse("100Mi"),
 								},
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceCPU:    resource.MustParse("100m"),
 									v1.ResourceMemory: resource.MustParse("100Mi"),
 								},
@@ -318,7 +318,7 @@ var _ = SIGDescribe("Pods Extended", func() {
 								"/bin/sh", "-c", "sleep 10; dd if=/dev/zero of=file bs=1M count=10; sleep 10000",
 							},
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"ephemeral-storage": resource.MustParse("5Mi"),
 								},
 							}},
@@ -541,7 +541,7 @@ func (s podFastDeleteScenario) Pod(worker, attempt int) *v1.Pod {
 							"/bin/false",
 						},
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("5m"),
 								v1.ResourceMemory: resource.MustParse("10Mi"),
 							},
@@ -556,7 +556,7 @@ func (s podFastDeleteScenario) Pod(worker, attempt int) *v1.Pod {
 							"/bin/true",
 						},
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("5m"),
 								v1.ResourceMemory: resource.MustParse("10Mi"),
 							},
@@ -585,7 +585,7 @@ func (s podFastDeleteScenario) Pod(worker, attempt int) *v1.Pod {
 						"/bin/false",
 					},
 					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceCPU:    resource.MustParse("5m"),
 							v1.ResourceMemory: resource.MustParse("10Mi"),
 						},

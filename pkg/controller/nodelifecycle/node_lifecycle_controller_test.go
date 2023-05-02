@@ -1587,7 +1587,7 @@ func TestMonitorNodeHealthUpdateStatus(t *testing.T) {
 									LastTransitionTime: metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC),
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -1608,7 +1608,7 @@ func TestMonitorNodeHealthUpdateStatus(t *testing.T) {
 						LastTransitionTime: metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC),
 					},
 				},
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -1654,7 +1654,7 @@ func TestMonitorNodeHealthUpdateStatus(t *testing.T) {
 								LastTransitionTime: metav1.Time{Time: metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC).Add(time.Hour)},
 							},
 						},
-						Capacity: v1.ResourceList{
+						Capacity: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
@@ -1683,7 +1683,7 @@ func TestMonitorNodeHealthUpdateStatus(t *testing.T) {
 									LastTransitionTime: fakeNow,
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -1986,7 +1986,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 									LastTransitionTime: fakeNow,
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -2014,7 +2014,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 						LastTransitionTime: fakeNow,
 					},
 				},
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -2041,7 +2041,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 								LastTransitionTime: fakeNow,
 							},
 						},
-						Capacity: v1.ResourceList{
+						Capacity: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
@@ -2076,7 +2076,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 									LastTransitionTime: fakeNow,
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -2104,7 +2104,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 						LastTransitionTime: fakeNow,
 					},
 				},
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -2131,7 +2131,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 								LastTransitionTime: fakeNow,
 							},
 						},
-						Capacity: v1.ResourceList{
+						Capacity: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
@@ -2160,7 +2160,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 									LastTransitionTime: fakeNow,
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -2182,7 +2182,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 						LastTransitionTime: fakeNow,
 					},
 				},
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -2229,7 +2229,7 @@ func TestMonitorNodeHealthUpdateNodeAndPodStatusWithLease(t *testing.T) {
 								LastTransitionTime: metav1.Time{Time: fakeNow.Add(time.Hour)},
 							},
 						},
-						Capacity: v1.ResourceList{
+						Capacity: v1.ResourceMap{
 							v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 							v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 						},
@@ -2346,7 +2346,7 @@ func TestMonitorNodeHealthMarkPodsNotReady(t *testing.T) {
 									LastTransitionTime: fakeNow,
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -2377,7 +2377,7 @@ func TestMonitorNodeHealthMarkPodsNotReady(t *testing.T) {
 									LastTransitionTime: metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC),
 								},
 							},
-							Capacity: v1.ResourceList{
+							Capacity: v1.ResourceMap{
 								v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 								v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 							},
@@ -2397,7 +2397,7 @@ func TestMonitorNodeHealthMarkPodsNotReady(t *testing.T) {
 						LastTransitionTime: metav1.Date(2015, 1, 1, 12, 0, 0, 0, time.UTC),
 					},
 				},
-				Capacity: v1.ResourceList{
+				Capacity: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 					v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 				},

@@ -1662,7 +1662,7 @@ func TestReconcileTopology(t *testing.T) {
 						Type:   corev1.NodeReady,
 						Status: corev1.ConditionTrue,
 					}},
-					Allocatable: corev1.ResourceList{"cpu": resource.MustParse("100m")},
+					Allocatable: corev1.ResourceMap{"cpu": resource.MustParse("100m")},
 				},
 			}
 			nodesByName[node.Name] = node

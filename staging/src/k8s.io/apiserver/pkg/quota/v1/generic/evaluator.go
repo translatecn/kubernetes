@@ -137,7 +137,7 @@ type ListFuncByNamespace func(namespace string) ([]runtime.Object, error)
 type MatchesScopeFunc func(scope corev1.ScopedResourceSelectorRequirement, object runtime.Object) (bool, error)
 
 // UsageFunc knows how to measure usage associated with an object
-type UsageFunc func(object runtime.Object) (corev1.ResourceList, error)
+type UsageFunc func(object runtime.Object) (corev1.ResourceMap, error)
 
 // MatchingResourceNamesFunc is a function that returns the list of resources matched
 type MatchingResourceNamesFunc func(input []corev1.ResourceName) []corev1.ResourceName
@@ -187,7 +187,7 @@ func CalculateUsageStats(options quota.UsageStatsOptions,
 	scopeFunc MatchesScopeFunc,
 	usageFunc UsageFunc) (quota.UsageStats, error) {
 	// default each tracked resource to zero
-	result := quota.UsageStats{Used: corev1.ResourceList{}}
+	result := quota.UsageStats{Used: corev1.ResourceMap{}}
 	for _, resourceName := range options.Resources {
 		result.Used[resourceName] = resource.Quantity{Format: resource.DecimalSI}
 	}
@@ -276,9 +276,9 @@ func (o *objectCountEvaluator) UncoveredQuotaScopes(limitedScopes []corev1.Scope
 }
 
 // Usage returns the resource usage for the specified object
-func (o *objectCountEvaluator) Usage(object runtime.Object) (corev1.ResourceList, error) {
+func (o *objectCountEvaluator) Usage(object runtime.Object) (corev1.ResourceMap, error) {
 	quantity := resource.NewQuantity(1, resource.DecimalSI)
-	resourceList := corev1.ResourceList{}
+	resourceList := corev1.ResourceMap{}
 	for _, resourceName := range o.resourceNames {
 		resourceList[resourceName] = *quantity
 	}

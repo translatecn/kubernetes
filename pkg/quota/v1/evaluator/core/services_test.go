@@ -54,7 +54,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 	evaluator := NewServiceEvaluator(nil)
 	testCases := map[string]struct {
 		service *api.Service
-		usage   corev1.ResourceList
+		usage   corev1.ResourceMap
 	}{
 		"loadbalancer": {
 			service: &api.Service{
@@ -62,7 +62,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					Type: api.ServiceTypeLoadBalancer,
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServicesNodePorts:     resource.MustParse("0"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServices:              resource.MustParse("1"),
@@ -80,7 +80,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					},
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServicesNodePorts:     resource.MustParse("1"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServices:              resource.MustParse("1"),
@@ -101,7 +101,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					},
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServicesNodePorts:     resource.MustParse("2"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
 				corev1.ResourceServices:              resource.MustParse("1"),
@@ -114,7 +114,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					Type: api.ServiceTypeClusterIP,
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("0"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("0"),
@@ -132,7 +132,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					},
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("1"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("0"),
@@ -153,7 +153,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					},
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("2"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("0"),
@@ -175,7 +175,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					AllocateLoadBalancerNodePorts: utilpointer.BoolPtr(false),
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("0"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
@@ -199,7 +199,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					AllocateLoadBalancerNodePorts: nil,
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("2"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
@@ -221,7 +221,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					AllocateLoadBalancerNodePorts: utilpointer.BoolPtr(true),
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("2"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),
@@ -245,7 +245,7 @@ func TestServiceEvaluatorUsage(t *testing.T) {
 					AllocateLoadBalancerNodePorts: utilpointer.BoolPtr(false),
 				},
 			},
-			usage: corev1.ResourceList{
+			usage: corev1.ResourceMap{
 				corev1.ResourceServices:              resource.MustParse("1"),
 				corev1.ResourceServicesNodePorts:     resource.MustParse("2"),
 				corev1.ResourceServicesLoadBalancers: resource.MustParse("1"),

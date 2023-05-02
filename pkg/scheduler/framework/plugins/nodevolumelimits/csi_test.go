@@ -620,7 +620,7 @@ func getNodeWithPodAndVolumeLimits(limitSource string, pods []*v1.Pod, limit int
 	node := &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: "node-for-max-pd-test-1"},
 		Status: v1.NodeStatus{
-			Allocatable: v1.ResourceList{},
+			Allocatable: v1.ResourceMap{},
 		},
 	}
 	var csiNode *storagev1.CSINode

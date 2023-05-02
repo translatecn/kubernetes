@@ -420,7 +420,7 @@ func (c *portworxVolumeProvisioner) Provision(selectedNode *v1.Node, allowedTopo
 		Spec: v1.PersistentVolumeSpec{
 			PersistentVolumeReclaimPolicy: c.options.PersistentVolumeReclaimPolicy,
 			AccessModes:                   c.options.PVC.Spec.AccessModes,
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse(fmt.Sprintf("%dGi", sizeGiB)),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{

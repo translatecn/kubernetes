@@ -332,11 +332,11 @@ func (rq *Controller) syncResourceQuota(ctx context.Context, resourceQuota *v1.R
 	// if this is our first sync, it will be dirty by default, since we need track usage
 	dirty := statusLimitsDirty || resourceQuota.Status.Hard == nil || resourceQuota.Status.Used == nil
 
-	used := v1.ResourceList{}
+	used := v1.ResourceMap{}
 	if resourceQuota.Status.Used != nil {
-		used = quota.Add(v1.ResourceList{}, resourceQuota.Status.Used)
+		used = quota.Add(v1.ResourceMap{}, resourceQuota.Status.Used)
 	}
-	hardLimits := quota.Add(v1.ResourceList{}, resourceQuota.Spec.Hard)
+	hardLimits := quota.Add(v1.ResourceMap{}, resourceQuota.Spec.Hard)
 
 	var errs []error
 

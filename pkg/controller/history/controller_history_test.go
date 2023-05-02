@@ -1680,7 +1680,7 @@ func newStatefulSet(replicas int, name string, uid types.UID, labels map[string]
 					ObjectMeta: metav1.ObjectMeta{Name: "datadir"},
 					Spec: v1.PersistentVolumeClaimSpec{
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceStorage: *resource.NewQuantity(1, resource.BinarySI),
 							},
 						},

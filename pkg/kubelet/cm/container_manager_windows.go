@@ -52,7 +52,7 @@ import (
 
 type containerManagerImpl struct {
 	// Capacity of this node.
-	capacity v1.ResourceList
+	capacity v1.ResourceMap
 	// Interface for cadvisor.
 	cadvisorInterface cadvisor.Interface
 	// Config of this node.
@@ -124,8 +124,8 @@ func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.I
 	return cm, nil
 }
 
-func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceList {
-	return v1.ResourceList{}
+func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceMap {
+	return v1.ResourceMap{}
 }
 
 func (cm *containerManagerImpl) GetNodeConfig() NodeConfig {
@@ -148,9 +148,9 @@ func (cm *containerManagerImpl) Status() Status {
 	return Status{}
 }
 
-func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList {
+func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceMap {
 	evictionReservation := hardEvictionReservation(cm.nodeConfig.HardEvictionThresholds, cm.capacity)
-	result := make(v1.ResourceList)
+	result := make(v1.ResourceMap)
 	for k := range cm.capacity {
 		value := resource.NewQuantity(0, resource.DecimalSI)
 		if cm.nodeConfig.SystemReserved != nil {
@@ -169,7 +169,7 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList 
 	return result
 }
 
-func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceList {
+func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap {
 	return cm.capacity
 }
 
@@ -177,7 +177,7 @@ func (cm *containerManagerImpl) GetPluginRegistrationHandler() cache.PluginHandl
 	return cm.deviceManager.GetWatcherHandler()
 }
 
-func (cm *containerManagerImpl) GetDevicePluginResourceCapacity() (v1.ResourceList, v1.ResourceList, []string) {
+func (cm *containerManagerImpl) GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
 	return cm.deviceManager.GetCapacity()
 }
 
@@ -250,7 +250,7 @@ func (cm *containerManagerImpl) GetAllocatableMemory() []*podresourcesapi.Contai
 	return nil
 }
 
-func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceList {
+func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceMap {
 	return nil
 }
 

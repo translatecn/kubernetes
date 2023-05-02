@@ -48,9 +48,11 @@ type predicateAdmitHandler struct {
 
 var _ PodAdmitHandler = &predicateAdmitHandler{}
 
-// NewPredicateAdmitHandler returns a PodAdmitHandler which is used to evaluates
-// if a pod can be admitted from the perspective of predicates.
-func NewPredicateAdmitHandler(getNodeAnyWayFunc getNodeAnyWayFuncType, admissionFailureHandler AdmissionFailureHandler, pluginResourceUpdateFunc pluginResourceUpdateFuncType) PodAdmitHandler {
+func NewPredicateAdmitHandler(
+	getNodeAnyWayFunc getNodeAnyWayFuncType,
+	admissionFailureHandler AdmissionFailureHandler,
+	pluginResourceUpdateFunc pluginResourceUpdateFuncType,
+) PodAdmitHandler {
 	return &predicateAdmitHandler{
 		getNodeAnyWayFunc,
 		pluginResourceUpdateFunc,
@@ -58,7 +60,7 @@ func NewPredicateAdmitHandler(getNodeAnyWayFunc getNodeAnyWayFuncType, admission
 	}
 }
 
-func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult {
+func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult { // ✅
 	node, err := w.getNodeAnyWayFunc()
 	if err != nil {
 		klog.ErrorS(err, "Cannot get Node info")
@@ -72,8 +74,8 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 	pods := attrs.OtherPods
 	nodeInfo := schedulerframework.NewNodeInfo(pods...)
 	nodeInfo.SetNode(node)
-	// ensure the node has enough plugin resources for that required in pods
-	if err = w.pluginResourceUpdateFunc(nodeInfo, attrs); err != nil {
+	// 确保节点有足够的资源来满足pod的需求
+	if err = w.pluginResourceUpdateFunc(nodeInfo, attrs); err != nil { // 更新deviceManager上的资源信息
 		message := fmt.Sprintf("Update plugin resources failed due to %v, which is unexpected.", err)
 		klog.InfoS("Failed to admit pod", "pod", klog.KObj(admitPod), "message", message)
 		return PodAdmitResult{
@@ -83,24 +85,18 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 		}
 	}
 
-	// Remove the requests of the extended resources that are missing in the
-	// node info. This is required to support cluster-level resources, which
-	// are extended resources unknown to nodes.
-	//
-	// Caveat: If a pod was manually bound to a node (e.g., static pod) where a
-	// node-level extended resource it requires is not found, then kubelet will
-	// not fail admission while it should. This issue will be addressed with
-	// the Resource Class API in the future.
+	// 删除节点信息中缺少的扩展资源请求。这是支持集群级资源所必需的，这些资源是节点未知的扩展资源。
 	podWithoutMissingExtendedResources := removeMissingExtendedResources(admitPod, nodeInfo)
 
-	reasons := generalFilter(podWithoutMissingExtendedResources, nodeInfo)
+	reasons := generalFilter(podWithoutMissingExtendedResources, nodeInfo) // 资源、污点 的检查
 	fit := len(reasons) == 0
 	if !fit {
-		reasons, err = w.admissionFailureHandler.HandleAdmissionFailure(admitPod, reasons)
+		// 尝试判断 准入失败 是不是误判
+		reasons, err = w.admissionFailureHandler.HandleAdmissionFailure(admitPod, reasons) // ✅
 		fit = len(reasons) == 0 && err == nil
 		if err != nil {
 			message := fmt.Sprintf("Unexpected error while attempting to recover from admission failure: %v", err)
-			klog.InfoS("Failed to admit pod, unexpected error while attempting to recover from admission failure", "pod", klog.KObj(admitPod), "err", err)
+			klog.InfoS("尝试从拒绝 Pod 的错误中恢复时出现了意外错误。", "pod", klog.KObj(admitPod), "err", err)
 			return PodAdmitResult{
 				Admit:   fit,
 				Reason:  "UnexpectedAdmissionError",
@@ -109,11 +105,12 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 		}
 	}
 	if !fit {
+		// 仍然有不满足需求的资源
 		var reason string
 		var message string
 		if len(reasons) == 0 {
-			message = fmt.Sprint("GeneralPredicates failed due to unknown reason, which is unexpected.")
-			klog.InfoS("Failed to admit pod: GeneralPredicates failed due to unknown reason, which is unexpected", "pod", klog.KObj(admitPod))
+			message = fmt.Sprint("由于未知原因导致GeneralPredicates失败，这是意外的。")
+			klog.InfoS("未能承认pod:由于未知原因导致GeneralPredicates失败，这是意外的", "pod", klog.KObj(admitPod))
 			return PodAdmitResult{
 				Admit:   fit,
 				Reason:  "UnknownReason",
@@ -142,19 +139,21 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 			Message: message,
 		}
 	}
-	if rejectPodAdmissionBasedOnOSSelector(admitPod, node) {
+
+	// 资源满足
+
+	if rejectPodAdmissionBasedOnOSSelector(admitPod, node) { // 判断 os 是否符合
 		return PodAdmitResult{
 			Admit:   false,
 			Reason:  "PodOSSelectorNodeLabelDoesNotMatch",
 			Message: "Failed to admit pod as the `kubernetes.io/os` label doesn't match node label",
 		}
 	}
-	// By this time, node labels should have been synced, this helps in identifying the pod with the usage.
 	if rejectPodAdmissionBasedOnOSField(admitPod) {
 		return PodAdmitResult{
 			Admit:   false,
 			Reason:  "PodOSNotSupported",
-			Message: "Failed to admit pod as the OS field doesn't match node OS",
+			Message: "评估pod失败，因为OS字段与节点OS不匹配",
 		}
 	}
 	return PodAdmitResult{
@@ -181,7 +180,7 @@ func rejectPodAdmissionBasedOnOSSelector(pod *v1.Pod, node *v1.Node) bool {
 		return true
 	}
 	return false
-}
+} // ✅
 
 // rejectPodAdmissionBasedOnOSField rejects pods if their OS field doesn't match runtime.GOOS.
 // TODO: Relax this restriction when we start supporting LCOW in kubernetes where podOS may not match
@@ -201,7 +200,7 @@ func removeMissingExtendedResources(pod *v1.Pod, nodeInfo *schedulerframework.No
 		// We only handle requests in Requests but not Limits because the
 		// PodFitsResources predicate, to which the result pod will be passed,
 		// does not use Limits.
-		podCopy.Spec.Containers[i].Resources.Requests = make(v1.ResourceList)
+		podCopy.Spec.Containers[i].Resources.Requests = make(v1.ResourceMap) // 清空
 		for rName, rQuant := range c.Resources.Requests {
 			if v1helper.IsExtendedResourceName(rName) {
 				if _, found := nodeInfo.Allocatable.ScalarResources[rName]; !found {
@@ -214,21 +213,21 @@ func removeMissingExtendedResources(pod *v1.Pod, nodeInfo *schedulerframework.No
 	return podCopy
 }
 
-// InsufficientResourceError is an error type that indicates what kind of resource limit is
-// hit and caused the unfitting failure.
+// InsufficientResourceError 因为资源不足导致的 admit 失败
 type InsufficientResourceError struct {
-	ResourceName v1.ResourceName
+	ResourceName v1.ResourceName // 资源名称
 	Requested    int64
 	Used         int64
 	Capacity     int64
 }
+
+var _ PredicateFailureReason = &InsufficientResourceError{}
 
 func (e *InsufficientResourceError) Error() string {
 	return fmt.Sprintf("Node didn't have enough resource: %s, requested: %d, used: %d, capacity: %d",
 		e.ResourceName, e.Requested, e.Used, e.Capacity)
 }
 
-// PredicateFailureReason interface represents the failure reason of a predicate.
 type PredicateFailureReason interface {
 	GetReason() string
 }
@@ -238,7 +237,7 @@ func (e *InsufficientResourceError) GetReason() string {
 	return fmt.Sprintf("Insufficient %v", e.ResourceName)
 }
 
-// GetInsufficientAmount returns the amount of the insufficient resource of the error.
+// GetInsufficientAmount 返回错误中资源不足的数量。
 func (e *InsufficientResourceError) GetInsufficientAmount() int64 {
 	return e.Requested - (e.Capacity - e.Used)
 }
@@ -258,9 +257,9 @@ func (e *PredicateFailureError) GetReason() string {
 	return e.PredicateDesc
 }
 
-// generalFilter checks a group of filterings that the kubelet cares about.
+// 检查kubelet关心的一组过滤器。
 func generalFilter(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) []PredicateFailureReason {
-	admissionResults := scheduler.AdmissionCheck(pod, nodeInfo, true)
+	admissionResults := scheduler.AdmissionCheck(pod, nodeInfo, true) // 对 noderesources/nodeport/nodeAffinity/nodename 做一些检查  ✅
 	var reasons []PredicateFailureReason
 	for _, r := range admissionResults {
 		if r.InsufficientResource != nil {
@@ -277,6 +276,7 @@ func generalFilter(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) []Predica
 
 	// Check taint/toleration except for static pods
 	if !types.IsStaticPod(pod) {
+		// 普通pod
 		_, isUntolerated := corev1.FindMatchingUntoleratedTaint(nodeInfo.Node().Spec.Taints, pod.Spec.Tolerations, func(t *v1.Taint) bool {
 			// Kubelet is only interested in the NoExecute taint.
 			return t.Effect == v1.TaintEffectNoExecute

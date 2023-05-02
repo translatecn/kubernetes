@@ -864,11 +864,11 @@ func TestSetDefaultReplicationControllerInitContainers(t *testing.T) {
 									Name:  "fun",
 									Image: "alpine",
 									Resources: v1.ResourceRequirements{
-										Limits: v1.ResourceList{
+										Limits: v1.ResourceMap{
 											v1.ResourceCPU:    resource.MustParse("100m"),
 											v1.ResourceMemory: resource.MustParse("100Mi"),
 										},
-										Requests: v1.ResourceList{
+										Requests: v1.ResourceMap{
 											v1.ResourceCPU:    resource.MustParse("100m"),
 											v1.ResourceMemory: resource.MustParse("100Mi"),
 										},
@@ -882,11 +882,11 @@ func TestSetDefaultReplicationControllerInitContainers(t *testing.T) {
 			expected: []v1.Container{
 				{
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceCPU:    cpu,
 							v1.ResourceMemory: mem,
 						},
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceCPU:    cpu,
 							v1.ResourceMemory: mem,
 						},
@@ -1509,18 +1509,18 @@ func TestSetDefaultPodSpecHostNetwork(t *testing.T) {
 }
 
 func TestSetDefaultNodeStatusAllocatable(t *testing.T) {
-	capacity := v1.ResourceList{
+	capacity := v1.ResourceMap{
 		v1.ResourceCPU:    resource.MustParse("1000m"),
 		v1.ResourceMemory: resource.MustParse("10G"),
 	}
-	allocatable := v1.ResourceList{
+	allocatable := v1.ResourceMap{
 		v1.ResourceCPU:    resource.MustParse("500m"),
 		v1.ResourceMemory: resource.MustParse("5G"),
 	}
 	tests := []struct {
-		capacity            v1.ResourceList
-		allocatable         v1.ResourceList
-		expectedAllocatable v1.ResourceList
+		capacity            v1.ResourceMap
+		allocatable         v1.ResourceMap
+		expectedAllocatable v1.ResourceMap
 	}{{ // Everything set, no defaulting.
 		capacity:            capacity,
 		allocatable:         allocatable,
@@ -1539,18 +1539,18 @@ func TestSetDefaultNodeStatusAllocatable(t *testing.T) {
 		expectedAllocatable: nil,
 	}}
 
-	copyResourceList := func(rl v1.ResourceList) v1.ResourceList {
+	copyResourceList := func(rl v1.ResourceMap) v1.ResourceMap {
 		if rl == nil {
 			return nil
 		}
-		copy := make(v1.ResourceList, len(rl))
+		copy := make(v1.ResourceMap, len(rl))
 		for k, v := range rl {
 			copy[k] = v.DeepCopy()
 		}
 		return copy
 	}
 
-	resourceListsEqual := func(a v1.ResourceList, b v1.ResourceList) bool {
+	resourceListsEqual := func(a v1.ResourceMap, b v1.ResourceMap) bool {
 		if len(a) != len(b) {
 			return false
 		}
@@ -1615,10 +1615,10 @@ func TestSetMinimumScalePod(t *testing.T) {
 	s.Containers = []v1.Container{
 		{
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("1n"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("2n"),
 				},
 			},
@@ -1627,10 +1627,10 @@ func TestSetMinimumScalePod(t *testing.T) {
 	s.InitContainers = []v1.Container{
 		{
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("1n"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("2n"),
 				},
 			},
@@ -1655,10 +1655,10 @@ func TestSetDefaultRequestsPod(t *testing.T) {
 	s.Containers = []v1.Container{
 		{
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("0"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("1Gi"),
 				},
@@ -1668,10 +1668,10 @@ func TestSetDefaultRequestsPod(t *testing.T) {
 	s.InitContainers = []v1.Container{
 		{
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("0"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse("100m"),
 					v1.ResourceMemory: resource.MustParse("1Gi"),
 				},
@@ -1722,7 +1722,7 @@ func TestDefaultRequestIsNotSetForReplicationController(t *testing.T) {
 	s.Containers = []v1.Container{
 		{
 			Resources: v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("100m"),
 				},
 			},
@@ -1758,14 +1758,14 @@ func TestSetDefaultLimitRangeItem(t *testing.T) {
 		Spec: v1.LimitRangeSpec{
 			Limits: []v1.LimitRangeItem{{
 				Type: v1.LimitTypeContainer,
-				Max: v1.ResourceList{
+				Max: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("100m"),
 				},
-				Min: v1.ResourceList{
+				Min: v1.ResourceMap{
 					v1.ResourceMemory: resource.MustParse("100Mi"),
 				},
-				Default:        v1.ResourceList{},
-				DefaultRequest: v1.ResourceList{},
+				Default:        v1.ResourceMap{},
+				DefaultRequest: v1.ResourceMap{},
 			}},
 		},
 	}

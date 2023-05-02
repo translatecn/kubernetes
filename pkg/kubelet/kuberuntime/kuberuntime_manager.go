@@ -155,7 +155,7 @@ type kubeGenericRuntimeManager struct {
 	memorySwapBehavior string
 
 	//Function to get node allocatable resources
-	getNodeAllocatable func() v1.ResourceList
+	getNodeAllocatable func() v1.ResourceMap
 
 	// Memory throttling factor for MemoryQoS
 	memoryThrottlingFactor float64
@@ -195,7 +195,7 @@ func NewKubeGenericRuntimeManager(
 	runtimeClassManager *runtimeclass.Manager,
 	seccompDefault bool,
 	memorySwapBehavior string,
-	getNodeAllocatable func() v1.ResourceList,
+	getNodeAllocatable func() v1.ResourceMap,
 	memoryThrottlingFactor float64,
 	podPullingTimeRecorder images.ImagePodPullingTimeRecorder,
 ) (KubeGenericRuntime, error) {

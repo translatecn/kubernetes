@@ -291,14 +291,11 @@ var (
 		},
 		[]string{"eviction_signal"},
 	)
-	// Preemptions is a Counter that tracks the cumulative number of pod preemptions initiated by the kubelet.
-	// Broken down by preemption signal. A preemption is only recorded for one resource, the sum of all signals
-	// is the number of preemptions on the given node.
 	Preemptions = metrics.NewCounterVec(
 		&metrics.CounterOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PreemptionsKey,
-			Help:           "Cumulative number of pod preemptions by preemption resource",
+			Help:           "pod 抢占数(抢占资源)",
 			StabilityLevel: metrics.ALPHA,
 		},
 		[]string{"preemption_signal"},

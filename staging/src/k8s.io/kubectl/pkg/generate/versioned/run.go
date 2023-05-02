@@ -129,14 +129,14 @@ func getEnvs(genericParams map[string]interface{}) ([]v1.EnvVar, error) {
 }
 
 // populateResourceListV1 takes strings of form <resourceName1>=<value1>,<resourceName1>=<value2>
-// and returns ResourceList.
-func populateResourceListV1(spec string) (v1.ResourceList, error) {
+// and returns ResourceMap.
+func populateResourceListV1(spec string) (v1.ResourceMap, error) {
 	// empty input gets a nil response to preserve generator test expected behaviors
 	if spec == "" {
 		return nil, nil
 	}
 
-	result := v1.ResourceList{}
+	result := v1.ResourceMap{}
 	resourceStatements := strings.Split(spec, ",")
 	for _, resourceStatement := range resourceStatements {
 		parts := strings.Split(resourceStatement, "=")

@@ -1125,7 +1125,7 @@ func newLocalClaimWithName(config *localTestConfig, name string) *v1.PersistentV
 				v1.ReadWriteOnce,
 			},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse(testRequestSize),
 				},
 			},

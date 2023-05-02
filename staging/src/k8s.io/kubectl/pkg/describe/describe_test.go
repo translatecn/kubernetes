@@ -629,16 +629,16 @@ func TestDescribeLimitRange(t *testing.T) {
 	}
 }
 
-func getStorageResourceList(storage string) corev1.ResourceList {
-	res := corev1.ResourceList{}
+func getStorageResourceList(storage string) corev1.ResourceMap {
+	res := corev1.ResourceMap{}
 	if storage != "" {
 		res[corev1.ResourceStorage] = resource.MustParse(storage)
 	}
 	return res
 }
 
-func getResourceList(cpu, memory string) corev1.ResourceList {
-	res := corev1.ResourceList{}
+func getResourceList(cpu, memory string) corev1.ResourceMap {
+	res := corev1.ResourceMap{}
 	if cpu != "" {
 		res[corev1.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -1089,7 +1089,7 @@ func TestDescribeContainers(t *testing.T) {
 				Name:  "test",
 				Image: "image",
 				Resources: corev1.ResourceRequirements{
-					Limits: corev1.ResourceList{
+					Limits: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):     resource.MustParse("1000"),
 						corev1.ResourceName(corev1.ResourceMemory):  resource.MustParse("4G"),
 						corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("20G"),
@@ -1109,7 +1109,7 @@ func TestDescribeContainers(t *testing.T) {
 				Name:  "test",
 				Image: "image",
 				Resources: corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{
+					Requests: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):     resource.MustParse("1000"),
 						corev1.ResourceName(corev1.ResourceMemory):  resource.MustParse("4G"),
 						corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("20G"),
@@ -1301,7 +1301,7 @@ func TestGetPodsTotalRequests(t *testing.T) {
 							Containers: []corev1.Container{
 								{
 									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
+										Requests: corev1.ResourceMap{
 											corev1.ResourceName(corev1.ResourceCPU):     resource.MustParse("1"),
 											corev1.ResourceName(corev1.ResourceMemory):  resource.MustParse("300Mi"),
 											corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("1G"),
@@ -1310,7 +1310,7 @@ func TestGetPodsTotalRequests(t *testing.T) {
 								},
 								{
 									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
+										Requests: corev1.ResourceMap{
 											corev1.ResourceName(corev1.ResourceCPU):     resource.MustParse("90m"),
 											corev1.ResourceName(corev1.ResourceMemory):  resource.MustParse("120Mi"),
 											corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("200M"),
@@ -1325,7 +1325,7 @@ func TestGetPodsTotalRequests(t *testing.T) {
 							Containers: []corev1.Container{
 								{
 									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
+										Requests: corev1.ResourceMap{
 											corev1.ResourceName(corev1.ResourceCPU):     resource.MustParse("60m"),
 											corev1.ResourceName(corev1.ResourceMemory):  resource.MustParse("43Mi"),
 											corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("500M"),
@@ -1334,7 +1334,7 @@ func TestGetPodsTotalRequests(t *testing.T) {
 								},
 								{
 									Resources: corev1.ResourceRequirements{
-										Requests: corev1.ResourceList{
+										Requests: corev1.ResourceMap{
 											corev1.ResourceName(corev1.ResourceCPU):     resource.MustParse("34m"),
 											corev1.ResourceName(corev1.ResourceMemory):  resource.MustParse("83Mi"),
 											corev1.ResourceName(corev1.ResourceStorage): resource.MustParse("700M"),
@@ -4471,7 +4471,7 @@ func TestDescribeResourceQuota(t *testing.T) {
 			Namespace: "foo",
 		},
 		Status: corev1.ResourceQuotaStatus{
-			Hard: corev1.ResourceList{
+			Hard: corev1.ResourceMap{
 				corev1.ResourceName(corev1.ResourceCPU):            resource.MustParse("1"),
 				corev1.ResourceName(corev1.ResourceLimitsCPU):      resource.MustParse("2"),
 				corev1.ResourceName(corev1.ResourceLimitsMemory):   resource.MustParse("2G"),
@@ -4479,7 +4479,7 @@ func TestDescribeResourceQuota(t *testing.T) {
 				corev1.ResourceName(corev1.ResourceRequestsCPU):    resource.MustParse("1"),
 				corev1.ResourceName(corev1.ResourceRequestsMemory): resource.MustParse("1G"),
 			},
-			Used: corev1.ResourceList{
+			Used: corev1.ResourceMap{
 				corev1.ResourceName(corev1.ResourceCPU):            resource.MustParse("0"),
 				corev1.ResourceName(corev1.ResourceLimitsCPU):      resource.MustParse("0"),
 				corev1.ResourceName(corev1.ResourceLimitsMemory):   resource.MustParse("0G"),
@@ -5061,8 +5061,8 @@ Events:              <none>` + "\n"
 	}
 
 }
-func getHugePageResourceList(pageSize, value string) corev1.ResourceList {
-	res := corev1.ResourceList{}
+func getHugePageResourceList(pageSize, value string) corev1.ResourceMap {
+	res := corev1.ResourceMap{}
 	if pageSize != "" && value != "" {
 		res[corev1.ResourceName(corev1.ResourceHugePagesPrefix+pageSize)] = resource.MustParse(value)
 	}
@@ -5071,8 +5071,8 @@ func getHugePageResourceList(pageSize, value string) corev1.ResourceList {
 
 // mergeResourceLists will merge resoure lists. When two lists have the same resourece, the value from
 // the last list will be present in the result
-func mergeResourceLists(resourceLists ...corev1.ResourceList) corev1.ResourceList {
-	result := corev1.ResourceList{}
+func mergeResourceLists(resourceLists ...corev1.ResourceMap) corev1.ResourceMap {
+	result := corev1.ResourceMap{}
 	for _, rl := range resourceLists {
 		for resource, quantity := range rl {
 			result[resource] = quantity

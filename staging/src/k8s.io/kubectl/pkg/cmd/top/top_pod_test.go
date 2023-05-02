@@ -407,7 +407,7 @@ func testV1beta1PodMetricsData() []metricsv1beta1api.PodMetrics {
 			Containers: []metricsv1beta1api.ContainerMetrics{
 				{
 					Name: "container1-1",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU:     *resource.NewMilliQuantity(1, resource.DecimalSI),
 						v1.ResourceMemory:  *resource.NewQuantity(2*(1024*1024), resource.DecimalSI),
 						v1.ResourceStorage: *resource.NewQuantity(3*(1024*1024), resource.DecimalSI),
@@ -415,7 +415,7 @@ func testV1beta1PodMetricsData() []metricsv1beta1api.PodMetrics {
 				},
 				{
 					Name: "container1-2",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU:     *resource.NewMilliQuantity(4, resource.DecimalSI),
 						v1.ResourceMemory:  *resource.NewQuantity(5*(1024*1024), resource.DecimalSI),
 						v1.ResourceStorage: *resource.NewQuantity(6*(1024*1024), resource.DecimalSI),
@@ -429,7 +429,7 @@ func testV1beta1PodMetricsData() []metricsv1beta1api.PodMetrics {
 			Containers: []metricsv1beta1api.ContainerMetrics{
 				{
 					Name: "container2-1",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU:     *resource.NewMilliQuantity(7, resource.DecimalSI),
 						v1.ResourceMemory:  *resource.NewQuantity(8*(1024*1024), resource.DecimalSI),
 						v1.ResourceStorage: *resource.NewQuantity(9*(1024*1024), resource.DecimalSI),
@@ -437,7 +437,7 @@ func testV1beta1PodMetricsData() []metricsv1beta1api.PodMetrics {
 				},
 				{
 					Name: "container2-2",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU:     *resource.NewMilliQuantity(10, resource.DecimalSI),
 						v1.ResourceMemory:  *resource.NewQuantity(11*(1024*1024), resource.DecimalSI),
 						v1.ResourceStorage: *resource.NewQuantity(12*(1024*1024), resource.DecimalSI),
@@ -445,7 +445,7 @@ func testV1beta1PodMetricsData() []metricsv1beta1api.PodMetrics {
 				},
 				{
 					Name: "container2-3",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU:     *resource.NewMilliQuantity(13, resource.DecimalSI),
 						v1.ResourceMemory:  *resource.NewQuantity(14*(1024*1024), resource.DecimalSI),
 						v1.ResourceStorage: *resource.NewQuantity(15*(1024*1024), resource.DecimalSI),
@@ -459,7 +459,7 @@ func testV1beta1PodMetricsData() []metricsv1beta1api.PodMetrics {
 			Containers: []metricsv1beta1api.ContainerMetrics{
 				{
 					Name: "container3-1",
-					Usage: v1.ResourceList{
+					Usage: v1.ResourceMap{
 						v1.ResourceCPU:     *resource.NewMilliQuantity(7, resource.DecimalSI),
 						v1.ResourceMemory:  *resource.NewQuantity(8*(1024*1024), resource.DecimalSI),
 						v1.ResourceStorage: *resource.NewQuantity(9*(1024*1024), resource.DecimalSI),

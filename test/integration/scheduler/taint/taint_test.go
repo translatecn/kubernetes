@@ -41,7 +41,7 @@ var (
 	waitForPodUnschedulable = testutils.WaitForPodUnschedulable
 )
 
-func newPod(nsName, name string, req, limit v1.ResourceList) *v1.Pod {
+func newPod(nsName, name string, req, limit v1.ResourceMap) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -119,13 +119,13 @@ func TestTaintNodeByCondition(t *testing.T) {
 	// -------------------------------------------
 	// Test TaintNodeByCondition feature.
 	// -------------------------------------------
-	nodeRes := v1.ResourceList{
+	nodeRes := v1.ResourceMap{
 		v1.ResourceCPU:    resource.MustParse("4000m"),
 		v1.ResourceMemory: resource.MustParse("16Gi"),
 		v1.ResourcePods:   resource.MustParse("110"),
 	}
 
-	podRes := v1.ResourceList{
+	podRes := v1.ResourceMap{
 		v1.ResourceCPU:    resource.MustParse("100m"),
 		v1.ResourceMemory: resource.MustParse("100Mi"),
 	}

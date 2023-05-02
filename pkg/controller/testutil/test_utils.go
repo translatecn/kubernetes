@@ -480,7 +480,7 @@ func NewNode(name string) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Status: v1.NodeStatus{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceCPU):    resource.MustParse("10"),
 				v1.ResourceName(v1.ResourceMemory): resource.MustParse("10G"),
 			},

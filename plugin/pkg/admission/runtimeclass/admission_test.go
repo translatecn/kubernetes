@@ -93,7 +93,7 @@ func TestSetOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("100m"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("1"),
 					},
@@ -109,7 +109,7 @@ func TestSetOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("100m"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("1"),
 					},
@@ -125,7 +125,7 @@ func TestSetOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("10"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("10G"),
 					},
@@ -141,7 +141,7 @@ func TestSetOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("100m"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("1"),
 					},
@@ -463,7 +463,7 @@ func TestValidate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("10"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("10G"),
 					},
@@ -478,7 +478,7 @@ func TestValidate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("100m"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("1"),
 					},
@@ -518,7 +518,7 @@ func TestValidateOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("100m"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("1"),
 					},
@@ -548,7 +548,7 @@ func TestValidateOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("10"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("10G"),
 					},
@@ -563,7 +563,7 @@ func TestValidateOverhead(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 				Handler:    "bar",
 				Overhead: &nodev1.Overhead{
-					PodFixed: corev1.ResourceList{
+					PodFixed: corev1.ResourceMap{
 						corev1.ResourceName(corev1.ResourceCPU):    resource.MustParse("100m"),
 						corev1.ResourceName(corev1.ResourceMemory): resource.MustParse("1"),
 					},

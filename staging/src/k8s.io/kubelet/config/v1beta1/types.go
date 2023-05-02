@@ -892,8 +892,8 @@ type SerializedNodeConfigSource struct {
 
 // MemoryReservation specifies the memory reservation of different types for each NUMA node
 type MemoryReservation struct {
-	NumaNode int32           `json:"numaNode"`
-	Limits   v1.ResourceList `json:"limits"`
+	NumaNode int32          `json:"numaNode"`
+	Limits   v1.ResourceMap `json:"limits"`
 }
 
 // ShutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based on their associated priority class value

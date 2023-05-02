@@ -30,15 +30,15 @@ import (
 )
 
 func TestPrettyPrint(t *testing.T) {
-	toResourceList := func(resources map[corev1.ResourceName]string) corev1.ResourceList {
-		resourceList := corev1.ResourceList{}
+	toResourceList := func(resources map[corev1.ResourceName]string) corev1.ResourceMap {
+		resourceList := corev1.ResourceMap{}
 		for key, value := range resources {
 			resourceList[key] = resource.MustParse(value)
 		}
 		return resourceList
 	}
 	testCases := []struct {
-		input    corev1.ResourceList
+		input    corev1.ResourceMap
 		expected string
 	}{
 		{
@@ -76,17 +76,17 @@ func TestHasUsageStats(t *testing.T) {
 		expected bool
 	}{
 		"empty": {
-			a:        corev1.ResourceQuota{Status: corev1.ResourceQuotaStatus{Hard: corev1.ResourceList{}}},
+			a:        corev1.ResourceQuota{Status: corev1.ResourceQuotaStatus{Hard: corev1.ResourceMap{}}},
 			relevant: []corev1.ResourceName{corev1.ResourceMemory},
 			expected: true,
 		},
 		"hard-only": {
 			a: corev1.ResourceQuota{
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 					},
-					Used: corev1.ResourceList{},
+					Used: corev1.ResourceMap{},
 				},
 			},
 			relevant: []corev1.ResourceName{corev1.ResourceMemory},
@@ -95,10 +95,10 @@ func TestHasUsageStats(t *testing.T) {
 		"hard-used": {
 			a: corev1.ResourceQuota{
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 					},
-					Used: corev1.ResourceList{
+					Used: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("500Mi"),
 					},
 				},
@@ -109,11 +109,11 @@ func TestHasUsageStats(t *testing.T) {
 		"hard-used-relevant": {
 			a: corev1.ResourceQuota{
 				Status: corev1.ResourceQuotaStatus{
-					Hard: corev1.ResourceList{
+					Hard: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 						corev1.ResourcePods:   resource.MustParse("1"),
 					},
-					Used: corev1.ResourceList{
+					Used: corev1.ResourceMap{
 						corev1.ResourceMemory: resource.MustParse("500Mi"),
 					},
 				},

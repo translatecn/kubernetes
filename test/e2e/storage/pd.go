@@ -606,7 +606,7 @@ func testPDPod(diskNames []string, targetNode types.NodeName, readOnly bool, num
 			containers[i].VolumeMounts[k].Name = fmt.Sprintf("testpd%v", k+1)
 			containers[i].VolumeMounts[k].MountPath = fmt.Sprintf("/testpd%v", k+1)
 		}
-		containers[i].Resources.Limits = v1.ResourceList{}
+		containers[i].Resources.Limits = v1.ResourceMap{}
 		containers[i].Resources.Limits[v1.ResourceCPU] = *resource.NewQuantity(int64(0), resource.DecimalSI)
 	}
 

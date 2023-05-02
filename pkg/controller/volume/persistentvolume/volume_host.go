@@ -95,8 +95,8 @@ func (ctrl *PersistentVolumeController) GetHostIP() (net.IP, error) {
 	return nil, fmt.Errorf("PersistentVolumeController.GetHostIP() is not implemented")
 }
 
-func (ctrl *PersistentVolumeController) GetNodeAllocatable() (v1.ResourceList, error) {
-	return v1.ResourceList{}, nil
+func (ctrl *PersistentVolumeController) GetNodeAllocatable() (v1.ResourceMap, error) {
+	return v1.ResourceMap{}, nil
 }
 
 func (ctrl *PersistentVolumeController) GetAttachedVolumesFromNodeStatus() (map[v1.UniqueVolumeName]string, error) {

@@ -174,10 +174,10 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 					Name:   "",
 					Labels: map[string]string{"name": ""},
 					Resources: &v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStoragePerPod, "DecimalSI"),
 						},
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStoragePerPod, "DecimalSI"),
 						},
 					},
@@ -188,10 +188,10 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 			Name:   podName,
 			Labels: map[string]string{"name": "additional"},
 			Resources: &v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStoragePerPod, "DecimalSI"),
 				},
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStoragePerPod, "DecimalSI"),
 				},
 			},
@@ -244,7 +244,7 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: handler},
 				Handler:    handler,
 				Overhead: &nodev1.Overhead{
-					PodFixed: v1.ResourceList{
+					PodFixed: v1.ResourceMap{
 						beardsecond: resource.MustParse("250"),
 					},
 				},
@@ -284,8 +284,8 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 			fillerPod := createPausePod(f, pausePodConfig{
 				Name: "filler-pod-" + string(uuid.NewUUID()),
 				Resources: &v1.ResourceRequirements{
-					Requests: v1.ResourceList{beardsecond: resource.MustParse("700")},
-					Limits:   v1.ResourceList{beardsecond: resource.MustParse("700")},
+					Requests: v1.ResourceMap{beardsecond: resource.MustParse("700")},
+					Limits:   v1.ResourceMap{beardsecond: resource.MustParse("700")},
 				},
 			})
 
@@ -303,7 +303,7 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 				Name:                podName,
 				Labels:              map[string]string{"name": "additional"},
 				Resources: &v1.ResourceRequirements{
-					Limits: v1.ResourceList{beardsecond: resource.MustParse("200")},
+					Limits: v1.ResourceMap{beardsecond: resource.MustParse("200")},
 				},
 			}
 
@@ -382,10 +382,10 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 			fillerPods = append(fillerPods, createPausePod(f, pausePodConfig{
 				Name: "filler-pod-" + string(uuid.NewUUID()),
 				Resources: &v1.ResourceRequirements{
-					Limits: v1.ResourceList{
+					Limits: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewMilliQuantity(requestedCPU, "DecimalSI"),
 					},
-					Requests: v1.ResourceList{
+					Requests: v1.ResourceMap{
 						v1.ResourceCPU: *resource.NewMilliQuantity(requestedCPU, "DecimalSI"),
 					},
 				},
@@ -421,10 +421,10 @@ var _ = SIGDescribe("SchedulerPredicates [Serial]", func() {
 			Name:   podName,
 			Labels: map[string]string{"name": "additional"},
 			Resources: &v1.ResourceRequirements{
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU: *resource.NewMilliQuantity(nodeMaxAllocatable*5/10, "DecimalSI"),
 				},
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU: *resource.NewMilliQuantity(nodeMaxAllocatable*5/10, "DecimalSI"),
 				},
 			},

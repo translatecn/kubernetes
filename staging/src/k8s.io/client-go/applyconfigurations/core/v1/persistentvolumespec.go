@@ -25,7 +25,7 @@ import (
 // PersistentVolumeSpecApplyConfiguration represents an declarative configuration of the PersistentVolumeSpec type for use
 // with apply.
 type PersistentVolumeSpecApplyConfiguration struct {
-	Capacity                                 *v1.ResourceList `json:"capacity,omitempty"`
+	Capacity                                 *v1.ResourceMap `json:"capacity,omitempty"`
 	PersistentVolumeSourceApplyConfiguration `json:",inline"`
 	AccessModes                              []v1.PersistentVolumeAccessMode       `json:"accessModes,omitempty"`
 	ClaimRef                                 *ObjectReferenceApplyConfiguration    `json:"claimRef,omitempty"`
@@ -45,7 +45,7 @@ func PersistentVolumeSpec() *PersistentVolumeSpecApplyConfiguration {
 // WithCapacity sets the Capacity field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Capacity field is set to the value of the last call.
-func (b *PersistentVolumeSpecApplyConfiguration) WithCapacity(value v1.ResourceList) *PersistentVolumeSpecApplyConfiguration {
+func (b *PersistentVolumeSpecApplyConfiguration) WithCapacity(value v1.ResourceMap) *PersistentVolumeSpecApplyConfiguration {
 	b.Capacity = &value
 	return b
 }

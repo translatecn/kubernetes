@@ -597,7 +597,7 @@ var _ = SIGDescribe("Job", func() {
 		job := e2ejob.NewTestJob("succeed", "all-succeed", v1.RestartPolicyNever, largeParallelism, largeCompletions, nil, int32(backoff))
 		for i := range job.Spec.Template.Spec.Containers {
 			job.Spec.Template.Spec.Containers[i].Resources = v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse(cpuRequest),
 				},
 			}

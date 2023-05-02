@@ -243,9 +243,9 @@ func MachineInfo(nodeName string, // ✅
 	maxPods int,
 	podsPerCore int,
 	machineInfoFunc func() (*cadvisorapiv1.MachineInfo, error), // typically Kubelet.GetCachedMachineInfo
-	capacityFunc func(localStorageCapacityIsolation bool) v1.ResourceList, // typically Kubelet.containerManager.GetCapacity
-	devicePluginResourceCapacityFunc func() (v1.ResourceList, v1.ResourceList, []string), // typically Kubelet.containerManager.GetDevicePluginResourceCapacity
-	nodeAllocatableReservationFunc func() v1.ResourceList, // typically Kubelet.containerManager.GetNodeAllocatableReservation
+	capacityFunc func(localStorageCapacityIsolation bool) v1.ResourceMap, // typically Kubelet.containerManager.GetCapacity
+	devicePluginResourceCapacityFunc func() (v1.ResourceMap, v1.ResourceMap, []string), // typically Kubelet.containerManager.GetDevicePluginResourceCapacity
+	nodeAllocatableReservationFunc func() v1.ResourceMap, // typically Kubelet.containerManager.GetNodeAllocatableReservation
 	recordEventFunc func(eventType, event, message string), // typically Kubelet.recordEvent
 	localStorageCapacityIsolation bool, // 启用本地临时存储隔离功能
 ) Setter {
@@ -253,11 +253,11 @@ func MachineInfo(nodeName string, // ✅
 		// Note: avoid blindly overwriting the capacity in case opaque
 		//       resources are being advertised.
 		if node.Status.Capacity == nil {
-			node.Status.Capacity = v1.ResourceList{}
+			node.Status.Capacity = v1.ResourceMap{}
 		}
 
-		var devicePluginAllocatable v1.ResourceList
-		var devicePluginCapacity v1.ResourceList
+		var devicePluginAllocatable v1.ResourceMap
+		var devicePluginCapacity v1.ResourceMap
 		var removedDevicePlugins []string
 
 		// TODO: Post NotReady if we cannot get MachineInfo from cAdvisor. This needs to start
@@ -329,7 +329,7 @@ func MachineInfo(nodeName string, // ✅
 
 		// Set Allocatable.
 		if node.Status.Allocatable == nil {
-			node.Status.Allocatable = make(v1.ResourceList)
+			node.Status.Allocatable = make(v1.ResourceMap)
 		}
 		// Remove extended resources from allocatable that are no longer
 		// present in capacity.
@@ -751,10 +751,10 @@ func VolumeLimits(volumePluginListFunc func() []volume.VolumePluginWithAttachLim
 ) Setter {
 	return func(ctx context.Context, node *v1.Node) error {
 		if node.Status.Capacity == nil {
-			node.Status.Capacity = v1.ResourceList{}
+			node.Status.Capacity = v1.ResourceMap{}
 		}
 		if node.Status.Allocatable == nil {
-			node.Status.Allocatable = v1.ResourceList{}
+			node.Status.Allocatable = v1.ResourceMap{}
 		}
 
 		pluginWithLimits := volumePluginListFunc()

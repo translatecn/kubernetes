@@ -198,8 +198,8 @@ func (f *fakeVolumeHost) GetHostIP() (net.IP, error) {
 	return nil, fmt.Errorf("GetHostIP() not implemented")
 }
 
-func (f *fakeVolumeHost) GetNodeAllocatable() (v1.ResourceList, error) {
-	return v1.ResourceList{}, nil
+func (f *fakeVolumeHost) GetNodeAllocatable() (v1.ResourceMap, error) {
+	return v1.ResourceMap{}, nil
 }
 
 func (f *fakeVolumeHost) GetSecretFunc() func(namespace, name string) (*v1.Secret, error) {

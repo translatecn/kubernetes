@@ -23,7 +23,7 @@ const (
 	FailedToCreateContainer = "Failed"
 	FailedToStartContainer  = "Failed"
 	KillingContainer        = "Killing"
-	PreemptContainer        = "Preempting"
+	PreemptContainer        = "Preempting" // 抢占pod
 	BackOffStartContainer   = "BackOff"
 	ExceededGracePeriod     = "ExceededGracePeriod"
 )

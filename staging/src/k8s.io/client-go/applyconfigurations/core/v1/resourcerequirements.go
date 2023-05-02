@@ -25,8 +25,8 @@ import (
 // ResourceRequirementsApplyConfiguration represents an declarative configuration of the ResourceRequirements type for use
 // with apply.
 type ResourceRequirementsApplyConfiguration struct {
-	Limits   *v1.ResourceList                  `json:"limits,omitempty"`
-	Requests *v1.ResourceList                  `json:"requests,omitempty"`
+	Limits   *v1.ResourceMap                   `json:"limits,omitempty"`
+	Requests *v1.ResourceMap                   `json:"requests,omitempty"`
 	Claims   []ResourceClaimApplyConfiguration `json:"claims,omitempty"`
 }
 
@@ -39,7 +39,7 @@ func ResourceRequirements() *ResourceRequirementsApplyConfiguration {
 // WithLimits sets the Limits field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Limits field is set to the value of the last call.
-func (b *ResourceRequirementsApplyConfiguration) WithLimits(value v1.ResourceList) *ResourceRequirementsApplyConfiguration {
+func (b *ResourceRequirementsApplyConfiguration) WithLimits(value v1.ResourceMap) *ResourceRequirementsApplyConfiguration {
 	b.Limits = &value
 	return b
 }
@@ -47,7 +47,7 @@ func (b *ResourceRequirementsApplyConfiguration) WithLimits(value v1.ResourceLis
 // WithRequests sets the Requests field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Requests field is set to the value of the last call.
-func (b *ResourceRequirementsApplyConfiguration) WithRequests(value v1.ResourceList) *ResourceRequirementsApplyConfiguration {
+func (b *ResourceRequirementsApplyConfiguration) WithRequests(value v1.ResourceMap) *ResourceRequirementsApplyConfiguration {
 	b.Requests = &value
 	return b
 }

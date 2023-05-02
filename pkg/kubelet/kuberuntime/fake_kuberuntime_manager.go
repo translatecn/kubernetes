@@ -139,8 +139,8 @@ func newFakeKubeRuntimeManager(runtimeService internalapi.RuntimeService, imageS
 		kubeRuntimeManager,
 		recorder)
 
-	kubeRuntimeManager.getNodeAllocatable = func() v1.ResourceList {
-		return v1.ResourceList{
+	kubeRuntimeManager.getNodeAllocatable = func() v1.ResourceMap {
+		return v1.ResourceMap{
 			v1.ResourceMemory: resource.MustParse(fakeNodeAllocatableMemory),
 			v1.ResourceCPU:    resource.MustParse(fakeNodeAllocatableCPU),
 		}

@@ -31,7 +31,7 @@ func (in *Overhead) DeepCopyInto(out *Overhead) {
 	*out = *in
 	if in.PodFixed != nil {
 		in, out := &in.PodFixed, &out.PodFixed
-		*out = make(corev1.ResourceList, len(*in))
+		*out = make(corev1.ResourceMap, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val.DeepCopy()
 		}

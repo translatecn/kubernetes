@@ -78,7 +78,7 @@ func TestVolumesInUseMetricCollection(t *testing.T) {
 		Spec: v1.PersistentVolumeClaimSpec{
 			AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadOnlyMany, v1.ReadWriteOnce},
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("2G"),
 				},
 			},
@@ -94,7 +94,7 @@ func TestVolumesInUseMetricCollection(t *testing.T) {
 			Name: "test-metric-pv-1",
 		},
 		Spec: v1.PersistentVolumeSpec{
-			Capacity: v1.ResourceList{
+			Capacity: v1.ResourceMap{
 				v1.ResourceName(v1.ResourceStorage): resource.MustParse("5G"),
 			},
 			PersistentVolumeSource: v1.PersistentVolumeSource{

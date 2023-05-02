@@ -170,7 +170,7 @@ func doTestPlugin(t *testing.T, config pluginTestConfig) {
 				Containers: []v1.Container{
 					{
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 							},
 						},
@@ -386,7 +386,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 								},
 							},
@@ -404,14 +404,14 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
 							},
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("4Gi"),
 								},
 							},
@@ -429,14 +429,14 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
 							},
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("4Gi"),
 								},
 							},
@@ -454,14 +454,14 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("2Gi"),
 								},
 							},
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("4Gi"),
 								},
 							},
@@ -479,14 +479,14 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
 							},
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 								},
 							},
@@ -510,7 +510,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
@@ -529,7 +529,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					InitContainers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 								},
@@ -537,7 +537,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 						},
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("4Gi"),
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("50Mi"),
 								},
@@ -556,7 +556,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
@@ -575,7 +575,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
@@ -594,7 +594,7 @@ func TestGetHugePagesMountOptions(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 								},
@@ -656,7 +656,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -682,7 +682,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -708,7 +708,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -734,7 +734,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -755,7 +755,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -781,7 +781,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 									},
 								},
@@ -807,7 +807,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -833,7 +833,7 @@ func TestSetupHugepages(t *testing.T) {
 						Containers: []v1.Container{
 							{
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceName("hugepages-2Mi"): resource.MustParse("100Mi"),
 									},
 								},
@@ -971,7 +971,7 @@ func TestCalculateEmptyDirMemorySize(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("memory"): resource.MustParse("10Gi"),
 								},
 							},
@@ -990,7 +990,7 @@ func TestCalculateEmptyDirMemorySize(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("memory"): resource.MustParse("10Gi"),
 								},
 							},
@@ -1009,7 +1009,7 @@ func TestCalculateEmptyDirMemorySize(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									v1.ResourceName("memory"): resource.MustParse("10Gi"),
 								},
 							},
@@ -1028,7 +1028,7 @@ func TestCalculateEmptyDirMemorySize(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									v1.ResourceName("memory"): resource.MustParse("10Gi"),
 								},
 							},

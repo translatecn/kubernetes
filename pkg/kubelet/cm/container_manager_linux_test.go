@@ -199,7 +199,7 @@ func TestGetCapacity(t *testing.T) {
 			name: "capacity property has ephemeral-storage",
 			cm: &containerManagerImpl{
 				cadvisorInterface: mockCadvisor,
-				capacity: v1.ResourceList{
+				capacity: v1.ResourceMap{
 					v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStorageFromCapacity, resource.BinarySI),
 				},
 			},
@@ -210,7 +210,7 @@ func TestGetCapacity(t *testing.T) {
 			name: "capacity property does not have ephemeral-storage",
 			cm: &containerManagerImpl{
 				cadvisorInterface: mockCadvisor,
-				capacity:          v1.ResourceList{},
+				capacity:          v1.ResourceMap{},
 			},
 			expectedResourceQuantity:   resource.NewQuantity(ephemeralStorageFromCadvisor, resource.BinarySI),
 			expectedNoEphemeralStorage: false,
@@ -219,7 +219,7 @@ func TestGetCapacity(t *testing.T) {
 			name: "capacity property does not have ephemeral-storage, error from rootfs",
 			cm: &containerManagerImpl{
 				cadvisorInterface: mockCadvisorError,
-				capacity:          v1.ResourceList{},
+				capacity:          v1.ResourceMap{},
 			},
 			expectedNoEphemeralStorage: true,
 		},
@@ -227,7 +227,7 @@ func TestGetCapacity(t *testing.T) {
 			name: "capacity property does not have ephemeral-storage, cadvisor interface is nil",
 			cm: &containerManagerImpl{
 				cadvisorInterface: nil,
-				capacity:          v1.ResourceList{},
+				capacity:          v1.ResourceMap{},
 			},
 			expectedNoEphemeralStorage: true,
 		},
@@ -235,7 +235,7 @@ func TestGetCapacity(t *testing.T) {
 			name: "capacity property has ephemeral-storage, but localStorageCapacityIsolation is disabled",
 			cm: &containerManagerImpl{
 				cadvisorInterface: mockCadvisor,
-				capacity: v1.ResourceList{
+				capacity: v1.ResourceMap{
 					v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStorageFromCapacity, resource.BinarySI),
 				},
 			},

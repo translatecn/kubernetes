@@ -43,7 +43,7 @@ const (
 )
 
 type QOSContainerManager interface {
-	Start(func() v1.ResourceList, ActivePodsFunc) error
+	Start(func() v1.ResourceMap, ActivePodsFunc) error
 	GetQOSContainersInfo() QOSContainersInfo
 	UpdateCgroups() error
 }
@@ -54,7 +54,7 @@ type qosContainerManagerImpl struct {
 	subsystems         *CgroupSubsystems
 	cgroupManager      CgroupManager
 	activePods         ActivePodsFunc
-	getNodeAllocatable func() v1.ResourceList
+	getNodeAllocatable func() v1.ResourceMap
 	cgroupRoot         CgroupName
 	qosReserved        map[v1.ResourceName]int64
 }
@@ -78,7 +78,7 @@ func (m *qosContainerManagerImpl) GetQOSContainersInfo() QOSContainersInfo {
 	return m.qosContainersInfo
 }
 
-func (m *qosContainerManagerImpl) Start(getNodeAllocatable func() v1.ResourceList, activePods ActivePodsFunc) error {
+func (m *qosContainerManagerImpl) Start(getNodeAllocatable func() v1.ResourceMap, activePods ActivePodsFunc) error {
 	cm := m.cgroupManager
 	rootContainer := m.cgroupRoot
 	if !cm.Exists(rootContainer) {
@@ -390,7 +390,7 @@ func (m *qosContainerManagerNoop) GetQOSContainersInfo() QOSContainersInfo {
 	return QOSContainersInfo{}
 }
 
-func (m *qosContainerManagerNoop) Start(_ func() v1.ResourceList, _ ActivePodsFunc) error {
+func (m *qosContainerManagerNoop) Start(_ func() v1.ResourceMap, _ ActivePodsFunc) error {
 	return nil
 }
 

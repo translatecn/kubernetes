@@ -410,7 +410,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.Affinity": {
-        "description": "Affinity is a group of affinity scheduling rules.",
+        "description": "Affinity 是一组亲和性调度规则。",
         "properties": {
           "nodeAffinity": {
             "allOf": [
@@ -418,7 +418,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.NodeAffinity"
               }
             ],
-            "description": "Describes node affinity scheduling rules for the pod."
+            "description": "描述pod的节点亲和性调度规则。"
           },
           "podAffinity": {
             "allOf": [
@@ -426,7 +426,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.PodAffinity"
               }
             ],
-            "description": "Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s))."
+            "description": "描述pod关联调度规则(例如，将此pod与其他pod一起放置在相同的节点、区域等)。"
           },
           "podAntiAffinity": {
             "allOf": [
@@ -434,7 +434,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.PodAntiAffinity"
               }
             ],
-            "description": "Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s))."
+            "description": "描述pod反亲和调度规则(例如，避免将此pod与其他pod放在相同的节点、区域等)。"
           }
         },
         "type": "object"
@@ -1811,10 +1811,10 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.NodeAffinity": {
-        "description": "NodeAffinity affinity is a group of node affinity scheduling rules.",
+        "description": "NodeAffinity 节点亲和性调度规则",
         "properties": {
           "preferredDuringSchedulingIgnoredDuringExecution": {
-            "description": "The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred.",
+            "description": "调度时首选，执行时忽略；优选 调度策略，用于挑选合适的节点",
             "items": {
               "allOf": [
                 {
@@ -1831,7 +1831,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.NodeSelector"
               }
             ],
-            "description": "If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to an update), the system may or may not try to eventually evict the pod from its node."
+            "description": "调度时需要，执行时忽略。 如果在调度时不满足指定的亲和性要求，则不会将该pod调度到该节点。 在pod执行期间的某个时刻，亲和性不在满足。系统 可能会也可能不会  尝试最终从其节点中退出pod。"
           }
         },
         "type": "object"
@@ -2094,7 +2094,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.PodAffinity": {
-        "description": "PodAffinity affinity is a group of inter pod affinity scheduling rules.",
+        "description": "PodAffinity pod 亲和性调度规则",
         "properties": {
           "preferredDuringSchedulingIgnoredDuringExecution": {
             "description": "The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.",
@@ -2124,7 +2124,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.PodAffinityTerm": {
-        "description": "PodAffinityTerm Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key <topologyKey> matches that of any node on which a pod of the set of pods is running",
+        "description": "PodAffinityTerm 定义一组pod(即相对于给定的命名空间匹配labelSelector的pod)，该pod应该与之共存(亲和)或不共存(反亲和)，其中共存定义为运行在一个节点上，",
         "properties": {
           "labelSelector": {
             "allOf": [
@@ -2132,7 +2132,7 @@
                 "$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector"
               }
             ],
-            "description": "A label query over a set of resources, in this case pods."
+            "description": "对一组资源(在本例中是pod)的标签查询。"
           },
           "namespaceSelector": {
             "allOf": [
@@ -2162,7 +2162,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.PodAntiAffinity": {
-        "description": "PodAntiAffinity anti affinity is a group of inter pod anti affinity scheduling rules.",
+        "description": "PodAntiAffinity pod 反亲和性调度规则",
         "properties": {
           "preferredDuringSchedulingIgnoredDuringExecution": {
             "description": "The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.",
@@ -2421,7 +2421,7 @@
             "type": "boolean"
           },
           "ephemeralContainers": {
-            "description": "List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.",
+            "description": "Ephemeral Containers 是在 Pod 中运行的临时容器列表。可以在现有的 Pod 中运行临时容器，以执行用户启动的操作，例如调试。 创建 Pod 时不能指定此列表，也不能通过更新 Pod 规范来修改此列表。要向现有 Pod 添加临时容器，请使用 Pod 的 ephemeralcontainers 子资源。\n\nEphemeral Containers 是 Kubernetes 1.16 中引入的新功能。它允许用户在运行中的 Pod 中添加临时容器，以便进行调试或其他任务。 与常规容器不同，临时容器不会在 Pod 的生命周期中一直存在，而是在任务完成后自动删除。因此，它们只能用于临时任务，而不能用于长期运行的服务。",
             "items": {
               "allOf": [
                 {
@@ -3887,7 +3887,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.WeightedPodAffinityTerm": {
-        "description": "WeightedPodAffinityTerm The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)",
+        "description": "WeightedPodAffinityTerm 用于指定 Pod 亲和性条件的权重",
         "properties": {
           "podAffinityTerm": {
             "allOf": [
@@ -3896,11 +3896,10 @@
               }
             ],
             "default": {},
-            "description": "Required. A pod affinity term, associated with the corresponding weight."
+            "description": "权重  1-100"
           },
           "weight": {
             "default": 0,
-            "description": "weight associated with matching the corresponding podAffinityTerm, in the range 1-100.",
             "format": "int32",
             "type": "integer"
           }

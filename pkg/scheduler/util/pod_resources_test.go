@@ -28,19 +28,19 @@ import (
 func TestGetNonZeroRequest(t *testing.T) {
 	tests := []struct {
 		name           string
-		requests       v1.ResourceList
+		requests       v1.ResourceMap
 		expectedCPU    int64
 		expectedMemory int64
 	}{
 		{
 			"cpu_and_memory_not_found",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			DefaultMilliCPURequest,
 			DefaultMemoryRequest,
 		},
 		{
 			"only_cpu_exist",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceCPU: resource.MustParse("200m"),
 			},
 			200,
@@ -48,7 +48,7 @@ func TestGetNonZeroRequest(t *testing.T) {
 		},
 		{
 			"only_memory_exist",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceMemory: resource.MustParse("400Mi"),
 			},
 			DefaultMilliCPURequest,
@@ -56,7 +56,7 @@ func TestGetNonZeroRequest(t *testing.T) {
 		},
 		{
 			"cpu_memory_exist",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceCPU:    resource.MustParse("200m"),
 				v1.ResourceMemory: resource.MustParse("400Mi"),
 			},
@@ -77,21 +77,21 @@ func TestGetNonZeroRequest(t *testing.T) {
 func TestGetRequestForResource(t *testing.T) {
 	tests := []struct {
 		name             string
-		requests         v1.ResourceList
+		requests         v1.ResourceMap
 		resource         v1.ResourceName
 		expectedQuantity int64
 		nonZero          bool
 	}{
 		{
 			"extended_resource_not_found",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			v1.ResourceName("intel.com/foo"),
 			0,
 			true,
 		},
 		{
 			"extended_resource_found",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceName("intel.com/foo"): resource.MustParse("4"),
 			},
 			v1.ResourceName("intel.com/foo"),
@@ -100,21 +100,21 @@ func TestGetRequestForResource(t *testing.T) {
 		},
 		{
 			"cpu_not_found",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			v1.ResourceCPU,
 			DefaultMilliCPURequest,
 			true,
 		},
 		{
 			"memory_not_found",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			v1.ResourceMemory,
 			DefaultMemoryRequest,
 			true,
 		},
 		{
 			"cpu_exist",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceCPU: resource.MustParse("200m"),
 			},
 			v1.ResourceCPU,
@@ -123,7 +123,7 @@ func TestGetRequestForResource(t *testing.T) {
 		},
 		{
 			"memory_exist",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceMemory: resource.MustParse("400Mi"),
 			},
 			v1.ResourceMemory,
@@ -132,7 +132,7 @@ func TestGetRequestForResource(t *testing.T) {
 		},
 		{
 			"ephemeralStorage_exist",
-			v1.ResourceList{
+			v1.ResourceMap{
 				v1.ResourceEphemeralStorage: resource.MustParse("400Mi"),
 			},
 			v1.ResourceEphemeralStorage,
@@ -141,21 +141,21 @@ func TestGetRequestForResource(t *testing.T) {
 		},
 		{
 			"ephemeralStorage_not_found",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			v1.ResourceEphemeralStorage,
 			0,
 			true,
 		},
 		{
 			"cpu_not_found, useRequested is true",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			v1.ResourceCPU,
 			0,
 			false,
 		},
 		{
 			"memory_not_found, useRequested is true",
-			v1.ResourceList{},
+			v1.ResourceMap{},
 			v1.ResourceMemory,
 			0,
 			false,

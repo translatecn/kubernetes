@@ -219,7 +219,7 @@ var _ = SIGDescribe("Restart [Serial] [Slow] [Disruptive]", func() {
 			for _, pod := range restartNeverPods {
 				pod.Spec.RestartPolicy = "Never"
 				pod.Spec.Containers[0].Command = []string{"echo", "hi"}
-				pod.Spec.Containers[0].Resources.Limits = v1.ResourceList{
+				pod.Spec.Containers[0].Resources.Limits = v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("950m"), // leave a little room for other workloads
 				}
 			}
@@ -235,7 +235,7 @@ var _ = SIGDescribe("Restart [Serial] [Slow] [Disruptive]", func() {
 			ginkgo.By(fmt.Sprintf("creating %d RestartAlways pods on node", podCountRestartAlways))
 			restartAlwaysPods := newTestPods(podCountRestartAlways, false, imageutils.GetPauseImageName(), "restart-kubelet-test")
 			for _, pod := range restartAlwaysPods {
-				pod.Spec.Containers[0].Resources.Limits = v1.ResourceList{
+				pod.Spec.Containers[0].Resources.Limits = v1.ResourceMap{
 					v1.ResourceCPU: resource.MustParse("1"),
 				}
 			}

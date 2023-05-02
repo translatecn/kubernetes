@@ -31,8 +31,8 @@ import (
 // containers of the pod. If pod overhead is non-nil, the pod overhead is added to the
 // total container resource requests and to the total container limits which have a
 // non-zero quantity.
-func PodRequestsAndLimits(pod *corev1.Pod) (reqs, limits corev1.ResourceList) {
-	reqs, limits = corev1.ResourceList{}, corev1.ResourceList{}
+func PodRequestsAndLimits(pod *corev1.Pod) (reqs, limits corev1.ResourceMap) {
+	reqs, limits = corev1.ResourceMap{}, corev1.ResourceMap{}
 	for _, container := range pod.Spec.Containers {
 		addResourceList(reqs, container.Resources.Requests)
 		addResourceList(limits, container.Resources.Limits)
@@ -58,7 +58,7 @@ func PodRequestsAndLimits(pod *corev1.Pod) (reqs, limits corev1.ResourceList) {
 }
 
 // addResourceList adds the resources in newList to list
-func addResourceList(list, new corev1.ResourceList) {
+func addResourceList(list, new corev1.ResourceMap) {
 	for name, quantity := range new {
 		if value, ok := list[name]; !ok {
 			list[name] = quantity.DeepCopy()
@@ -71,7 +71,7 @@ func addResourceList(list, new corev1.ResourceList) {
 
 // maxResourceList sets list to the greater of list/newList for every resource
 // either list
-func maxResourceList(list, new corev1.ResourceList) {
+func maxResourceList(list, new corev1.ResourceMap) {
 	for name, quantity := range new {
 		if value, ok := list[name]; !ok {
 			list[name] = quantity.DeepCopy()

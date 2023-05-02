@@ -26,43 +26,43 @@ import (
 
 func TestEquals(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
-		b        corev1.ResourceList
+		a        corev1.ResourceMap
+		b        corev1.ResourceMap
 		expected bool
 	}{
 		"isEqual": {
-			a:        corev1.ResourceList{},
-			b:        corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
+			b:        corev1.ResourceMap{},
 			expected: true,
 		},
 		"isEqualWithKeys": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("100m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
-			b: corev1.ResourceList{
+			b: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("100m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
 			expected: true,
 		},
 		"isNotEqualSameKeys": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("200m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
-			b: corev1.ResourceList{
+			b: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("100m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
 			expected: false,
 		},
 		"isNotEqualDiffKeys": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("100m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
-			b: corev1.ResourceList{
+			b: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("100m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 				corev1.ResourcePods:   resource.MustParse("1"),
@@ -79,32 +79,32 @@ func TestEquals(t *testing.T) {
 
 func TestLessThanOrEqual(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
-		b        corev1.ResourceList
+		a        corev1.ResourceMap
+		b        corev1.ResourceMap
 		expected bool
 		out      []corev1.ResourceName
 	}{
 		"isEmpty": {
-			a:        corev1.ResourceList{},
-			b:        corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
+			b:        corev1.ResourceMap{},
 			expected: true,
 			out:      []corev1.ResourceName{},
 		},
 		"isEqual": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 			expected: true,
 			out:      []corev1.ResourceName{},
 		},
 		"isLessThan": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("200m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("200m")},
 			expected: true,
 			out:      []corev1.ResourceName{},
 		},
 		"isGreaterThan": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("200m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("200m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 			expected: false,
 			out:      []corev1.ResourceName{corev1.ResourceCPU},
 		},
@@ -118,34 +118,34 @@ func TestLessThanOrEqual(t *testing.T) {
 
 func TestMax(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
-		b        corev1.ResourceList
-		expected corev1.ResourceList
+		a        corev1.ResourceMap
+		b        corev1.ResourceMap
+		expected corev1.ResourceMap
 	}{
 		"noKeys": {
-			a:        corev1.ResourceList{},
-			b:        corev1.ResourceList{},
-			expected: corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
+			b:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{},
 		},
 		"toEmpty": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 		},
 		"matching": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("150m")},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("150m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("150m")},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("150m")},
 		},
 		"matching(reverse)": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("150m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("150m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("150m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("150m")},
 		},
 		"matching-equal": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 		},
 	}
 	for testName, testCase := range testCases {
@@ -158,24 +158,24 @@ func TestMax(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
-		b        corev1.ResourceList
-		expected corev1.ResourceList
+		a        corev1.ResourceMap
+		b        corev1.ResourceMap
+		expected corev1.ResourceMap
 	}{
 		"noKeys": {
-			a:        corev1.ResourceList{},
-			b:        corev1.ResourceList{},
-			expected: corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
+			b:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{},
 		},
 		"toEmpty": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 		},
 		"matching": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("200m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("200m")},
 		},
 	}
 	for testName, testCase := range testCases {
@@ -188,29 +188,29 @@ func TestAdd(t *testing.T) {
 
 func TestSubtract(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
-		b        corev1.ResourceList
-		expected corev1.ResourceList
+		a        corev1.ResourceMap
+		b        corev1.ResourceMap
+		expected corev1.ResourceMap
 	}{
 		"noKeys": {
-			a:        corev1.ResourceList{},
-			b:        corev1.ResourceList{},
-			expected: corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
+			b:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{},
 		},
 		"value-empty": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			b:        corev1.ResourceList{},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			b:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 		},
 		"empty-value": {
-			a:        corev1.ResourceList{},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("-100m")},
+			a:        corev1.ResourceMap{},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("-100m")},
 		},
 		"value-value": {
-			a:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("200m")},
-			b:        corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
-			expected: corev1.ResourceList{corev1.ResourceCPU: resource.MustParse("100m")},
+			a:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("200m")},
+			b:        corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
+			expected: corev1.ResourceMap{corev1.ResourceCPU: resource.MustParse("100m")},
 		},
 	}
 	for testName, testCase := range testCases {
@@ -223,15 +223,15 @@ func TestSubtract(t *testing.T) {
 
 func TestResourceNames(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
+		a        corev1.ResourceMap
 		expected []corev1.ResourceName
 	}{
 		"empty": {
-			a:        corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
 			expected: []corev1.ResourceName{},
 		},
 		"values": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("100m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
@@ -297,22 +297,22 @@ func TestContainsPrefix(t *testing.T) {
 
 func TestIsZero(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
+		a        corev1.ResourceMap
 		expected bool
 	}{
 		"empty": {
-			a:        corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
 			expected: true,
 		},
 		"zero": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("0"),
 				corev1.ResourceMemory: resource.MustParse("0"),
 			},
 			expected: true,
 		},
 		"non-zero": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("200m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
@@ -328,36 +328,36 @@ func TestIsZero(t *testing.T) {
 
 func TestRemoveZeros(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
-		expected corev1.ResourceList
+		a        corev1.ResourceMap
+		expected corev1.ResourceMap
 	}{
 		"empty": {
-			a:        corev1.ResourceList{},
-			expected: corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
+			expected: corev1.ResourceMap{},
 		},
 		"all-zeros": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("0"),
 				corev1.ResourceMemory: resource.MustParse("0"),
 			},
-			expected: corev1.ResourceList{},
+			expected: corev1.ResourceMap{},
 		},
 		"some-zeros": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:     resource.MustParse("0"),
 				corev1.ResourceMemory:  resource.MustParse("0"),
 				corev1.ResourceStorage: resource.MustParse("100Gi"),
 			},
-			expected: corev1.ResourceList{
+			expected: corev1.ResourceMap{
 				corev1.ResourceStorage: resource.MustParse("100Gi"),
 			},
 		},
 		"non-zero": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("200m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
-			expected: corev1.ResourceList{
+			expected: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("200m"),
 				corev1.ResourceMemory: resource.MustParse("1Gi"),
 			},
@@ -372,22 +372,22 @@ func TestRemoveZeros(t *testing.T) {
 
 func TestIsNegative(t *testing.T) {
 	testCases := map[string]struct {
-		a        corev1.ResourceList
+		a        corev1.ResourceMap
 		expected []corev1.ResourceName
 	}{
 		"empty": {
-			a:        corev1.ResourceList{},
+			a:        corev1.ResourceMap{},
 			expected: []corev1.ResourceName{},
 		},
 		"some-negative": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("-10"),
 				corev1.ResourceMemory: resource.MustParse("0"),
 			},
 			expected: []corev1.ResourceName{corev1.ResourceCPU},
 		},
 		"all-negative": {
-			a: corev1.ResourceList{
+			a: corev1.ResourceMap{
 				corev1.ResourceCPU:    resource.MustParse("-200m"),
 				corev1.ResourceMemory: resource.MustParse("-1Gi"),
 			},

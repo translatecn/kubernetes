@@ -58,11 +58,11 @@ func makeCPUManagerPod(podName string, ctnAttributes []ctnAttribute) *v1.Pod {
 			Name:  ctnAttr.ctnName,
 			Image: busyboxImage,
 			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
+				Requests: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse(ctnAttr.cpuRequest),
 					v1.ResourceMemory: resource.MustParse("100Mi"),
 				},
-				Limits: v1.ResourceList{
+				Limits: v1.ResourceMap{
 					v1.ResourceCPU:    resource.MustParse(ctnAttr.cpuLimit),
 					v1.ResourceMemory: resource.MustParse("100Mi"),
 				},

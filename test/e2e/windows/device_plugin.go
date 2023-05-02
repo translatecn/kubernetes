@@ -101,7 +101,7 @@ var _ = SIGDescribe("[Feature:GPUDevicePlugin] Device Plugin", func() {
 		ginkgo.By("creating Windows testing Pod")
 		windowsPod := createTestPod(f, imageutils.GetE2EImage(imageutils.WindowsServer), windowsOS)
 		windowsPod.Spec.Containers[0].Args = []string{"powershell.exe", "Start-Sleep", "3600"}
-		windowsPod.Spec.Containers[0].Resources.Limits = v1.ResourceList{
+		windowsPod.Spec.Containers[0].Resources.Limits = v1.ResourceMap{
 			"microsoft.com/directx": resource.MustParse("1"),
 		}
 		windowsPod, err = cs.CoreV1().Pods(f.Namespace.Name).Create(context.TODO(), windowsPod, metav1.CreateOptions{})

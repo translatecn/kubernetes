@@ -134,7 +134,7 @@ func (cm *containerManagerImpl) enforceNodeAllocatableCgroups() error {
 }
 
 // enforceExistingCgroup updates the limits `rl` on existing cgroup `cName` using `cgroupManager` interface.
-func enforceExistingCgroup(cgroupManager CgroupManager, cName CgroupName, rl v1.ResourceList) error {
+func enforceExistingCgroup(cgroupManager CgroupManager, cName CgroupName, rl v1.ResourceMap) error {
 	rp := getCgroupConfig(rl)
 	if rp == nil {
 		return fmt.Errorf("%q cgroup is not configured properly", cName)
@@ -166,7 +166,7 @@ func enforceExistingCgroup(cgroupManager CgroupManager, cName CgroupName, rl v1.
 }
 
 // getCgroupConfig returns a ResourceConfig object that can be used to create or update cgroups via CgroupManager interface.
-func getCgroupConfig(rl v1.ResourceList) *ResourceConfig {
+func getCgroupConfig(rl v1.ResourceMap) *ResourceConfig {
 	// TODO(vishh): Set CPU Quota if necessary.
 	if rl == nil {
 		return nil
@@ -192,13 +192,13 @@ func getCgroupConfig(rl v1.ResourceList) *ResourceConfig {
 }
 
 // GetNodeAllocatableAbsolute 返回节点可分配资源的绝对值,主要用于强制执行.
-// 请注意,返回的资源列表中未包括节点上可用的所有资源.该函数返回 ResourceList 类型的结果.
-func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceList {
+// 请注意,返回的资源列表中未包括节点上可用的所有资源.该函数返回 ResourceMap 类型的结果.
+func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceMap {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.capacity)
 }
 
-func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.ResourceList) v1.ResourceList {
-	result := make(v1.ResourceList)
+func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.ResourceMap) v1.ResourceMap {
+	result := make(v1.ResourceMap)
 	for k, v := range capacity {
 		value := v.DeepCopy()
 		if cm.NodeConfig.SystemReserved != nil {
@@ -218,14 +218,14 @@ func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.Resou
 
 // getNodeAllocatableInternalAbsolute 类似于 getNodeAllocatableAbsolute,但它还包括内部资源（当前为进程 ID）.
 // 它旨在仅设置顶层 Cgroup.
-func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.ResourceList {
+func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.ResourceMap {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.internalCapacity)
 }
 
 // GetNodeAllocatableReservation // 返回一个资源列表,其中包含基于硬回收阈值的资源保留.
-func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceList {
+func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceMap {
 	evictionReservation := hardEvictionReservation(cm.HardEvictionThresholds, cm.capacity)
-	result := make(v1.ResourceList)
+	result := make(v1.ResourceMap)
 	for k := range cm.capacity {
 		value := resource.NewQuantity(0, resource.DecimalSI)
 		if cm.NodeConfig.SystemReserved != nil { // 系统预留

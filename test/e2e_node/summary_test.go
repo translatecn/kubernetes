@@ -355,7 +355,7 @@ func getSummaryTestPods(f *framework.Framework, numRestarts int32, names ...stri
 						},
 						Command: getRestartingContainerCommand("/test-empty-dir-mnt", 0, numRestarts, "echo 'some bytes' >/outside_the_volume.txt; ping -c 1 google.com; echo 'hello world' >> /test-empty-dir-mnt/file;"),
 						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								// Must set memory limit to get MemoryStats.AvailableBytes
 								v1.ResourceMemory: resource.MustParse("80M"),
 							},

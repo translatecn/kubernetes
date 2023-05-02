@@ -497,10 +497,8 @@ func preCheckForNode(nodeInfo *framework.NodeInfo) queue.PreEnqueueCheck {
 	}
 }
 
-// AdmissionCheck calls the filtering logic of noderesources/nodeport/nodeAffinity/nodename
-// and returns the failure reasons. It's used in kubelet(pkg/kubelet/lifecycle/predicate.go) and scheduler.
-// It returns the first failure if `includeAllFailures` is set to false; otherwise
-// returns all failures.
+// AdmissionCheck 调用 noderesources/nodeport/nodeAffinity/nodename 的过滤逻辑，返回失败原因。
+// 它用于kubelet(pkg/kubelet/lifecycle/predicate.go)和 scheduler。如果' includeAllFailures '设置为false，则返回第一个失败;否则返回所有失败。
 func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailures bool) []AdmissionResult {
 	var admissionResults []AdmissionResult
 	insufficientResources := noderesources.Fits(pod, nodeInfo)
@@ -513,7 +511,7 @@ func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailure
 		}
 	}
 
-	if matches, _ := corev1nodeaffinity.GetRequiredNodeAffinity(pod).Match(nodeInfo.Node()); !matches {
+	if matches, _ := corev1nodeaffinity.GetRequiredNodeAffinity(pod).Match(nodeInfo.Node()); !matches { // 节点亲和性
 		admissionResults = append(admissionResults, AdmissionResult{Name: nodeaffinity.Name, Reason: nodeaffinity.ErrReasonPod})
 		if !includeAllFailures {
 			return admissionResults
@@ -539,5 +537,5 @@ func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailure
 type AdmissionResult struct {
 	Name                 string
 	Reason               string
-	InsufficientResource *noderesources.InsufficientResource
+	InsufficientResource *noderesources.InsufficientResource // 资源不足
 }

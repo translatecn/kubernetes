@@ -712,7 +712,7 @@ func (m *MockEndpoint) isStopped() bool { return false }
 
 func (m *MockEndpoint) stopGracePeriodExpired() bool { return false }
 
-func makePod(limits v1.ResourceList) *v1.Pod {
+func makePod(limits v1.ResourceMap) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			UID: uuid.NewUUID(),
@@ -916,13 +916,13 @@ func TestPodContainerDeviceAllocation(t *testing.T) {
 	as.Nil(err)
 
 	testPods := []*v1.Pod{
-		makePod(v1.ResourceList{
+		makePod(v1.ResourceMap{
 			v1.ResourceName(res1.resourceName): res1.resourceQuantity,
 			v1.ResourceName("cpu"):             res1.resourceQuantity,
 			v1.ResourceName(res2.resourceName): res2.resourceQuantity}),
-		makePod(v1.ResourceList{
+		makePod(v1.ResourceMap{
 			v1.ResourceName(res1.resourceName): res2.resourceQuantity}),
-		makePod(v1.ResourceList{
+		makePod(v1.ResourceMap{
 			v1.ResourceName(res2.resourceName): res2.resourceQuantity}),
 	}
 	testCases := []struct {
@@ -1015,11 +1015,11 @@ func TestGetDeviceRunContainerOptions(t *testing.T) {
 	testManager, err := getTestManager(tmpDir, podsStub.getActivePods, testResources)
 	as.Nil(err)
 
-	pod1 := makePod(v1.ResourceList{
+	pod1 := makePod(v1.ResourceMap{
 		v1.ResourceName(res1.resourceName): res1.resourceQuantity,
 		v1.ResourceName(res2.resourceName): res2.resourceQuantity,
 	})
-	pod2 := makePod(v1.ResourceList{
+	pod2 := makePod(v1.ResourceMap{
 		v1.ResourceName(res2.resourceName): res2.resourceQuantity,
 	})
 
@@ -1086,7 +1086,7 @@ func TestInitContainerDeviceAllocation(t *testing.T) {
 				{
 					Name: string(uuid.NewUUID()),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(res1.resourceName): res2.resourceQuantity,
 						},
 					},
@@ -1094,7 +1094,7 @@ func TestInitContainerDeviceAllocation(t *testing.T) {
 				{
 					Name: string(uuid.NewUUID()),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(res1.resourceName): res1.resourceQuantity,
 						},
 					},
@@ -1104,7 +1104,7 @@ func TestInitContainerDeviceAllocation(t *testing.T) {
 				{
 					Name: string(uuid.NewUUID()),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(res1.resourceName): res2.resourceQuantity,
 							v1.ResourceName(res2.resourceName): res2.resourceQuantity,
 						},
@@ -1113,7 +1113,7 @@ func TestInitContainerDeviceAllocation(t *testing.T) {
 				{
 					Name: string(uuid.NewUUID()),
 					Resources: v1.ResourceRequirements{
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							v1.ResourceName(res1.resourceName): res2.resourceQuantity,
 							v1.ResourceName(res2.resourceName): res2.resourceQuantity,
 						},
@@ -1187,7 +1187,7 @@ func TestUpdatePluginResources(t *testing.T) {
 
 	cachedNode := &v1.Node{
 		Status: v1.NodeStatus{
-			Allocatable: v1.ResourceList{
+			Allocatable: v1.ResourceMap{
 				// has no resource1 and two of resource2
 				v1.ResourceName(resourceName2): *resource.NewQuantity(int64(2), resource.DecimalSI),
 			},
@@ -1234,7 +1234,7 @@ func TestDevicePreStartContainer(t *testing.T) {
 		},
 		opts: &pluginapi.DevicePluginOptions{PreStartRequired: true},
 	}
-	pod := makePod(v1.ResourceList{
+	pod := makePod(v1.ResourceMap{
 		v1.ResourceName(res1.resourceName): res1.resourceQuantity})
 	activePods := []*v1.Pod{}
 	activePods = append(activePods, pod)
@@ -1263,7 +1263,7 @@ func TestDevicePreStartContainer(t *testing.T) {
 	as.Equal(len(runContainerOpts.Mounts), len(expectedResp.Mounts))
 	as.Equal(len(runContainerOpts.Envs), len(expectedResp.Envs))
 
-	pod2 := makePod(v1.ResourceList{
+	pod2 := makePod(v1.ResourceMap{
 		v1.ResourceName(res1.resourceName): *resource.NewQuantity(int64(0), resource.DecimalSI)})
 	activePods = append(activePods, pod2)
 	podsStub.updateActivePods(activePods)

@@ -90,7 +90,7 @@ func expectFileValToEqual(filePath string, expectedValue, delta int64) error {
 	return nil
 }
 
-func getAllocatableLimits(cpu, memory, pids string, capacity v1.ResourceList) (*resource.Quantity, *resource.Quantity, *resource.Quantity) {
+func getAllocatableLimits(cpu, memory, pids string, capacity v1.ResourceMap) (*resource.Quantity, *resource.Quantity, *resource.Quantity) {
 	var allocatableCPU, allocatableMemory, allocatablePIDs *resource.Quantity
 	// Total cpu reservation is 200m.
 	for k, v := range capacity {

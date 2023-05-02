@@ -187,7 +187,7 @@ var _ = SIGDescribe("Container Manager Misc [Serial]", func() {
 								Image: imageutils.GetE2EImage(imageutils.Nginx),
 								Name:  podName,
 								Resources: v1.ResourceRequirements{
-									Limits: v1.ResourceList{
+									Limits: v1.ResourceMap{
 										v1.ResourceCPU:    resource.MustParse("100m"),
 										v1.ResourceMemory: resource.MustParse("50Mi"),
 									},
@@ -229,7 +229,7 @@ var _ = SIGDescribe("Container Manager Misc [Serial]", func() {
 								Args:  []string{"test-webserver"},
 								Name:  podName,
 								Resources: v1.ResourceRequirements{
-									Requests: v1.ResourceList{
+									Requests: v1.ResourceMap{
 										v1.ResourceCPU:    resource.MustParse("100m"),
 										v1.ResourceMemory: resource.MustParse("50Mi"),
 									},

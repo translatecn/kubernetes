@@ -148,11 +148,11 @@ func TestGetPodContainerName(t *testing.T) {
 					{
 						Name: "container",
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000m"),
 								v1.ResourceMemory: resource.MustParse("1G"),
 							},
-							Limits: v1.ResourceList{
+							Limits: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000m"),
 								v1.ResourceMemory: resource.MustParse("1G"),
 							},
@@ -172,7 +172,7 @@ func TestGetPodContainerName(t *testing.T) {
 					{
 						Name: "container",
 						Resources: v1.ResourceRequirements{
-							Requests: v1.ResourceList{
+							Requests: v1.ResourceMap{
 								v1.ResourceCPU:    resource.MustParse("1000m"),
 								v1.ResourceMemory: resource.MustParse("1G"),
 							},

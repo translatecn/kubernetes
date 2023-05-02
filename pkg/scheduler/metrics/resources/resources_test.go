@@ -54,11 +54,11 @@ func Test_podResourceCollector_Handler(t *testing.T) {
 				NodeName: "node-one",
 				InitContainers: []v1.Container{
 					{Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							"cpu":    resource.MustParse("2"),
 							"custom": resource.MustParse("3"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							"memory": resource.MustParse("1G"),
 							"custom": resource.MustParse("5"),
 						},
@@ -66,11 +66,11 @@ func Test_podResourceCollector_Handler(t *testing.T) {
 				},
 				Containers: []v1.Container{
 					{Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
+						Requests: v1.ResourceMap{
 							"cpu":    resource.MustParse("1"),
 							"custom": resource.MustParse("0"),
 						},
-						Limits: v1.ResourceList{
+						Limits: v1.ResourceMap{
 							"memory": resource.MustParse("2.5Gi"),
 							"custom": resource.MustParse("6"),
 						},
@@ -146,7 +146,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "foo"},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 				},
@@ -164,7 +164,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "foo"},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Limits: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Limits: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 				},
@@ -182,7 +182,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "foo-unscheduled-succeeded"},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 					// until node name is set, phase is ignored
@@ -193,7 +193,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						NodeName: "node-one",
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 					Status: v1.PodStatus{Phase: v1.PodSucceeded},
@@ -203,7 +203,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						NodeName: "node-one",
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 					Status: v1.PodStatus{Phase: v1.PodFailed},
@@ -213,7 +213,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						NodeName: "node-one",
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 					Status: v1.PodStatus{Phase: v1.PodUnknown},
@@ -223,10 +223,10 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						NodeName: "node-one",
 						InitContainers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 					Status: v1.PodStatus{
@@ -253,12 +253,12 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						InitContainers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":                    resource.MustParse("0"),
 									"custom":                 resource.MustParse("0"),
 									"test.com/custom-metric": resource.MustParse("0"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"cpu":                    resource.MustParse("0"),
 									"custom":                 resource.MustParse("0"),
 									"test.com/custom-metric": resource.MustParse("0"),
@@ -267,12 +267,12 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						},
 						Containers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":                    resource.MustParse("0"),
 									"custom":                 resource.MustParse("0"),
 									"test.com/custom-metric": resource.MustParse("0"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"cpu":                    resource.MustParse("0"),
 									"custom":                 resource.MustParse("0"),
 									"test.com/custom-metric": resource.MustParse("0"),
@@ -294,7 +294,7 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						Priority:      int32p(0),
 						NodeName:      "node-one",
 						Containers: []v1.Container{
-							{Resources: v1.ResourceRequirements{Requests: v1.ResourceList{"cpu": resource.MustParse("1")}}},
+							{Resources: v1.ResourceRequirements{Requests: v1.ResourceMap{"cpu": resource.MustParse("1")}}},
 						},
 					},
 				},
@@ -314,11 +314,11 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						NodeName: "node-one",
 						InitContainers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":    resource.MustParse("2"),
 									"custom": resource.MustParse("3"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"memory": resource.MustParse("1G"),
 									"custom": resource.MustParse("5"),
 								},
@@ -326,11 +326,11 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						},
 						Containers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":    resource.MustParse("1"),
 									"custom": resource.MustParse("0"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"memory": resource.MustParse("2G"),
 									"custom": resource.MustParse("6"),
 								},
@@ -364,11 +364,11 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						NodeName: "node-one",
 						InitContainers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":    resource.MustParse("2"),
 									"custom": resource.MustParse("3"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"memory": resource.MustParse("1G"),
 									"custom": resource.MustParse("5"),
 								},
@@ -376,11 +376,11 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						},
 						Containers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":    resource.MustParse("1"),
 									"custom": resource.MustParse("0"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"memory": resource.MustParse("2G"),
 									"custom": resource.MustParse("6"),
 								},
@@ -414,19 +414,19 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{"cpu": resource.MustParse("1")},
-								Limits:   v1.ResourceList{"cpu": resource.MustParse("2")},
+								Requests: v1.ResourceMap{"cpu": resource.MustParse("1")},
+								Limits:   v1.ResourceMap{"cpu": resource.MustParse("2")},
 							}},
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{"memory": resource.MustParse("1G")},
-								Limits:   v1.ResourceList{"memory": resource.MustParse("2G")},
+								Requests: v1.ResourceMap{"memory": resource.MustParse("1G")},
+								Limits:   v1.ResourceMap{"memory": resource.MustParse("2G")},
 							}},
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{"cpu": resource.MustParse("0.5")},
-								Limits:   v1.ResourceList{"cpu": resource.MustParse("1.25")},
+								Requests: v1.ResourceMap{"cpu": resource.MustParse("0.5")},
+								Limits:   v1.ResourceMap{"cpu": resource.MustParse("1.25")},
 							}},
 							{Resources: v1.ResourceRequirements{
-								Limits: v1.ResourceList{"memory": resource.MustParse("2G")},
+								Limits: v1.ResourceMap{"memory": resource.MustParse("2G")},
 							}},
 						},
 					},
@@ -449,18 +449,18 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "foo"},
 					Spec: v1.PodSpec{
-						Overhead: v1.ResourceList{
+						Overhead: v1.ResourceMap{
 							"cpu":    resource.MustParse("0.25"),
 							"memory": resource.MustParse("0.75G"),
 							"custom": resource.MustParse("0.5"),
 						},
 						InitContainers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":    resource.MustParse("2"),
 									"custom": resource.MustParse("3"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"memory": resource.MustParse("1G"),
 									"custom": resource.MustParse("5"),
 								},
@@ -468,11 +468,11 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 						},
 						Containers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"cpu":    resource.MustParse("1"),
 									"custom": resource.MustParse("0"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"memory": resource.MustParse("2G"),
 									"custom": resource.MustParse("6"),
 								},
@@ -501,11 +501,11 @@ func Test_podResourceCollector_CollectWithStability(t *testing.T) {
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
 							{Resources: v1.ResourceRequirements{
-								Requests: v1.ResourceList{
+								Requests: v1.ResourceMap{
 									"storage":           resource.MustParse("5"),
 									"ephemeral-storage": resource.MustParse("6"),
 								},
-								Limits: v1.ResourceList{
+								Limits: v1.ResourceMap{
 									"hugepages-x":            resource.MustParse("1"),
 									"hugepages-":             resource.MustParse("2"),
 									"attachable-volumes-aws": resource.MustParse("3"),
