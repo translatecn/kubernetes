@@ -131,8 +131,8 @@ var Funcs = func(codecs runtimeserializer.CodecFactory) []interface{} {
 				_ = q.String()
 				return q
 			}
-			q.Limits = make(core.ResourceList)
-			q.Requests = make(core.ResourceList)
+			q.Limits = make(core.ResourceMap)
+			q.Requests = make(core.ResourceMap)
 			cpuLimit := randomQuantity()
 			q.Limits[core.ResourceCPU] = cpuLimit.DeepCopy()
 			q.Requests[core.ResourceCPU] = cpuLimit.DeepCopy()
@@ -148,19 +148,19 @@ var Funcs = func(codecs runtimeserializer.CodecFactory) []interface{} {
 			c.Fuzz(&cpuLimit)
 
 			q.Type = core.LimitTypeContainer
-			q.Default = make(core.ResourceList)
+			q.Default = make(core.ResourceMap)
 			q.Default[core.ResourceCPU] = cpuLimit.DeepCopy()
 
-			q.DefaultRequest = make(core.ResourceList)
+			q.DefaultRequest = make(core.ResourceMap)
 			q.DefaultRequest[core.ResourceCPU] = cpuLimit.DeepCopy()
 
-			q.Max = make(core.ResourceList)
+			q.Max = make(core.ResourceMap)
 			q.Max[core.ResourceCPU] = cpuLimit.DeepCopy()
 
-			q.Min = make(core.ResourceList)
+			q.Min = make(core.ResourceMap)
 			q.Min[core.ResourceCPU] = cpuLimit.DeepCopy()
 
-			q.MaxLimitRequestRatio = make(core.ResourceList)
+			q.MaxLimitRequestRatio = make(core.ResourceMap)
 			q.MaxLimitRequestRatio[core.ResourceCPU] = resource.MustParse("10")
 		},
 		func(p *core.PullPolicy, c fuzz.Continue) {

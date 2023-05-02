@@ -51,24 +51,21 @@ func (e TopologyAffinityError) Type() string {
 	return ErrorTopologyAffinity
 }
 
-// Manager interface provides methods for Kubelet to manage pod topology hints
-// 用于管理节点的拓扑结构信息，以优化容器的调度和运行
+// Manager 用于管理节点的拓扑结构信息，用来优化容器中应用在高性能服务器上的性能
 type Manager interface {
 	// PodAdmitHandler is implemented by Manager
 	lifecycle.PodAdmitHandler
-	// AddHintProvider adds a hint provider to manager to indicate the hint provider
+	// AddHintProvider adds a hint provider to ScopeManager to indicate the hint provider
 	// wants to be consulted with when making topology hints
 	AddHintProvider(HintProvider)
 	// AddContainer adds pod to Manager for tracking
-	AddContainer(pod *v1.Pod, container *v1.Container, containerID string)
-	// RemoveContainer removes pod from Manager tracking
-	RemoveContainer(containerID string) error
-	// Store is the interface for storing pod topology hints
-	Store
+	AddContainer(pod *v1.Pod, container *v1.Container, containerID string) // 从manager 跟踪中添加pod
+	RemoveContainer(containerID string) error                              // 从manager 跟踪中移除pod
+	Store                                                                  // 存储pod拓扑提示
 }
 
-type manager struct {
-	scope Scope // 拓扑管理器范围
+type ScopeManager struct {
+	Scope Scope // 拓扑管理器范围
 }
 
 // HintProvider is an interface for components that want to collaborate to
@@ -78,10 +75,10 @@ type HintProvider interface {
 	// GetTopologyHints returns a map of resource names to a list of possible
 	// concrete resource allocations in terms of NUMA locality hints. Each hint
 	// is optionally marked "preferred" and indicates the set of NUMA nodes
-	// involved in the hypothetical allocation. The topology manager calls
+	// involved in the hypothetical allocation. The topology ScopeManager calls
 	// this function for each hint provider, and merges the hints to produce
 	// a consensus "best" hint. The hint providers may subsequently query the
-	// topology manager to influence actual resource assignment.
+	// topology ScopeManager to influence actual resource assignment.
 	GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]TopologyHint
 	// GetPodTopologyHints returns a map of resource names to a list of possible
 	// concrete resource allocations per Pod in terms of NUMA locality hints.
@@ -127,11 +124,10 @@ func (th *TopologyHint) LessThan(other TopologyHint) bool {
 	return th.NUMANodeAffinity.IsNarrowerThan(other.NUMANodeAffinity)
 }
 
-var _ Manager = &manager{}
+var _ Manager = &ScopeManager{}
 
-// NewManager creates a new TopologyManager based on provided policy and scope
 func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topologyScopeName string, topologyPolicyOptions map[string]string) (Manager, error) {
-	klog.InfoS("Creating topology manager with policy per scope", "topologyPolicyName", topologyPolicyName, "topologyScopeName", topologyScopeName)
+	klog.InfoS("Creating topology ScopeManager with policy per Scope", "topologyPolicyName", topologyPolicyName, "topologyScopeName", topologyScopeName)
 
 	opts, err := NewPolicyOptions(topologyPolicyOptions)
 	if err != nil {
@@ -168,47 +164,44 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 
 	var scope Scope
 	switch topologyScopeName {
-
 	case containerTopologyScope:
 		scope = NewContainerScope(policy)
-
 	case podTopologyScope:
 		scope = NewPodScope(policy)
-
 	default:
-		return nil, fmt.Errorf("unknown scope: \"%s\"", topologyScopeName)
+		return nil, fmt.Errorf("unknown Scope: \"%s\"", topologyScopeName)
 	}
 
-	manager := &manager{
-		scope: scope,
+	manager := &ScopeManager{
+		Scope: scope,
 	}
 
 	return manager, nil
 }
 
-func (m *manager) GetAffinity(podUID string, containerName string) TopologyHint {
-	return m.scope.GetAffinity(podUID, containerName)
+func (m *ScopeManager) GetAffinity(podUID string, containerName string) TopologyHint {
+	return m.Scope.GetAffinity(podUID, containerName)
 }
 
-func (m *manager) GetPolicy() Policy {
-	return m.scope.GetPolicy()
+func (m *ScopeManager) GetPolicy() Policy {
+	return m.Scope.GetPolicy()
 }
 
-func (m *manager) AddHintProvider(h HintProvider) {
-	m.scope.AddHintProvider(h)
+func (m *ScopeManager) AddHintProvider(h HintProvider) {
+	m.Scope.AddHintProvider(h)
 }
 
-func (m *manager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
-	m.scope.AddContainer(pod, container, containerID)
+func (m *ScopeManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
+	m.Scope.AddContainer(pod, container, containerID)
 }
 
-func (m *manager) RemoveContainer(containerID string) error {
-	return m.scope.RemoveContainer(containerID)
+func (m *ScopeManager) RemoveContainer(containerID string) error {
+	return m.Scope.RemoveContainer(containerID)
 }
 
-func (m *manager) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
+func (m *ScopeManager) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	klog.InfoS("Topology Admit Handler")
 	pod := attrs.Pod
 
-	return m.scope.Admit(pod)
+	return m.Scope.Admit(pod)
 }

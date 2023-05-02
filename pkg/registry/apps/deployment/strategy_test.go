@@ -219,11 +219,11 @@ func newDeploymentWithHugePageValue(resourceName api.ResourceName, value resourc
 						ImagePullPolicy:          api.PullNever,
 						TerminationMessagePolicy: api.TerminationMessageReadFile,
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{
+							Requests: api.ResourceMap{
 								api.ResourceName(api.ResourceCPU): resource.MustParse("10"),
 								api.ResourceName(resourceName):    value,
 							},
-							Limits: api.ResourceList{
+							Limits: api.ResourceMap{
 								api.ResourceName(api.ResourceCPU): resource.MustParse("10"),
 								api.ResourceName(resourceName):    value,
 							},

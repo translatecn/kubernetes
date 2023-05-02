@@ -45,8 +45,8 @@ func TestPodConstraintsFunc(t *testing.T) {
 					InitContainers: []api.Container{{
 						Name: "dummy",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -60,14 +60,14 @@ func TestPodConstraintsFunc(t *testing.T) {
 					InitContainers: []api.Container{{
 						Name: "foo",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}, {
 						Name: "bar",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -81,8 +81,8 @@ func TestPodConstraintsFunc(t *testing.T) {
 					Containers: []api.Container{{
 						Name: "dummy",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -96,14 +96,14 @@ func TestPodConstraintsFunc(t *testing.T) {
 					Containers: []api.Container{{
 						Name: "foo",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}, {
 						Name: "bar",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -159,8 +159,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					InitContainers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -178,8 +178,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					InitContainers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceMemory: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceMemory: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceMemory: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceMemory: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -197,8 +197,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					InitContainers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceEphemeralStorage: resource.MustParse("32Mi")},
-							Limits:   api.ResourceList{api.ResourceEphemeralStorage: resource.MustParse("64Mi")},
+							Requests: api.ResourceMap{api.ResourceEphemeralStorage: resource.MustParse("32Mi")},
+							Limits:   api.ResourceMap{api.ResourceEphemeralStorage: resource.MustParse("64Mi")},
 						},
 					}},
 				},
@@ -216,7 +216,7 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					InitContainers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceName(api.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("100Mi")},
+							Requests: api.ResourceMap{api.ResourceName(api.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("100Mi")},
 						},
 					}},
 				},
@@ -233,8 +233,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					InitContainers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
-							Limits:   api.ResourceList{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
+							Requests: api.ResourceMap{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
+							Limits:   api.ResourceMap{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
 						},
 					}},
 				},
@@ -250,8 +250,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceCPU: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceCPU: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceCPU: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceCPU: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -269,8 +269,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceMemory: resource.MustParse("1m")},
-							Limits:   api.ResourceList{api.ResourceMemory: resource.MustParse("2m")},
+							Requests: api.ResourceMap{api.ResourceMemory: resource.MustParse("1m")},
+							Limits:   api.ResourceMap{api.ResourceMemory: resource.MustParse("2m")},
 						},
 					}},
 				},
@@ -288,8 +288,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceEphemeralStorage: resource.MustParse("32Mi")},
-							Limits:   api.ResourceList{api.ResourceEphemeralStorage: resource.MustParse("64Mi")},
+							Requests: api.ResourceMap{api.ResourceEphemeralStorage: resource.MustParse("32Mi")},
+							Limits:   api.ResourceMap{api.ResourceEphemeralStorage: resource.MustParse("64Mi")},
 						},
 					}},
 				},
@@ -307,7 +307,7 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceName(api.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("100Mi")},
+							Requests: api.ResourceMap{api.ResourceName(api.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("100Mi")},
 						},
 					}},
 				},
@@ -324,8 +324,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
-							Limits:   api.ResourceList{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
+							Requests: api.ResourceMap{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
+							Limits:   api.ResourceMap{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
 						},
 					}},
 				},
@@ -341,8 +341,8 @@ func TestPodEvaluatorUsage(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
-							Limits:   api.ResourceList{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
+							Requests: api.ResourceMap{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
+							Limits:   api.ResourceMap{api.ResourceName("example.com/dongle"): resource.MustParse("3")},
 						},
 					}},
 				},
@@ -360,12 +360,12 @@ func TestPodEvaluatorUsage(t *testing.T) {
 					InitContainers: []api.Container{
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("4"),
 									api.ResourceMemory:                     resource.MustParse("100M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("4"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("8"),
 									api.ResourceMemory:                     resource.MustParse("200M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("4"),
@@ -374,12 +374,12 @@ func TestPodEvaluatorUsage(t *testing.T) {
 						},
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("1"),
 									api.ResourceMemory:                     resource.MustParse("50M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("2"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("2"),
 									api.ResourceMemory:                     resource.MustParse("100M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("2"),
@@ -390,12 +390,12 @@ func TestPodEvaluatorUsage(t *testing.T) {
 					Containers: []api.Container{
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("1"),
 									api.ResourceMemory:                     resource.MustParse("50M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("1"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("2"),
 									api.ResourceMemory:                     resource.MustParse("100M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("1"),
@@ -404,12 +404,12 @@ func TestPodEvaluatorUsage(t *testing.T) {
 						},
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("2"),
 									api.ResourceMemory:                     resource.MustParse("25M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("2"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU:                        resource.MustParse("5"),
 									api.ResourceMemory:                     resource.MustParse("50M"),
 									api.ResourceName("example.com/dongle"): resource.MustParse("2"),
@@ -445,11 +445,11 @@ func TestPodEvaluatorUsage(t *testing.T) {
 					Containers: []api.Container{
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU:    resource.MustParse("1"),
 									api.ResourceMemory: resource.MustParse("50M"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU:    resource.MustParse("2"),
 									api.ResourceMemory: resource.MustParse("100M"),
 								},
@@ -475,10 +475,10 @@ func TestPodEvaluatorUsage(t *testing.T) {
 					Containers: []api.Container{
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU: resource.MustParse("1"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU: resource.MustParse("2"),
 								},
 							},
@@ -497,16 +497,16 @@ func TestPodEvaluatorUsage(t *testing.T) {
 		"count pod overhead as usage": {
 			pod: &api.Pod{
 				Spec: api.PodSpec{
-					Overhead: api.ResourceList{
+					Overhead: api.ResourceMap{
 						api.ResourceCPU: resource.MustParse("1"),
 					},
 					Containers: []api.Container{
 						{
 							Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{
+								Requests: api.ResourceMap{
 									api.ResourceCPU: resource.MustParse("1"),
 								},
-								Limits: api.ResourceList{
+								Limits: api.ResourceMap{
 									api.ResourceCPU: resource.MustParse("2"),
 								},
 							},
@@ -570,12 +570,12 @@ func TestPodEvaluatorMatchingScopes(t *testing.T) {
 				Spec: api.PodSpec{
 					Containers: []api.Container{{
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{
+							Requests: api.ResourceMap{
 								api.ResourceCPU:                        resource.MustParse("1"),
 								api.ResourceMemory:                     resource.MustParse("50M"),
 								api.ResourceName("example.com/dongle"): resource.MustParse("1"),
 							},
-							Limits: api.ResourceList{
+							Limits: api.ResourceMap{
 								api.ResourceCPU:                        resource.MustParse("2"),
 								api.ResourceMemory:                     resource.MustParse("100M"),
 								api.ResourceName("example.com/dongle"): resource.MustParse("1"),

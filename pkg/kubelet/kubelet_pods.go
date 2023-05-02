@@ -80,7 +80,7 @@ const (
 
 // Get a list of pods that have data directories.
 func (kl *Kubelet) listPodsFromDisk() ([]types.UID, error) {
-	podInfos, err := os.ReadDir(kl.getPodsDir())
+	podInfos, err := os.ReadDir(kl.getPodsDir()) // "/var/lib/kubelet"
 	if err != nil {
 		return nil, err
 	}
@@ -1053,22 +1053,14 @@ func (kl *Kubelet) deleteOrphanedMirrorPods() {
 	}
 }
 
-// HandlePodCleanups performs a series of cleanup work, including terminating
-// pod workers, killing unwanted pods, and removing orphaned volumes/pod
-// directories. No config changes are sent to pod workers while this method
-// is executing which means no new pods can appear.
-// NOTE: This function is executed by the main sync loop, so it
-// should not contain any blocking calls.
+// HandlePodCleanups 清理 Pod 工作器、杀死不需要的 Pod，并删除孤立的卷和 Pod 目录.在执行此方法时不会向 Pod 工作器发送配置更改，这意味着不会出现新的 Pod。
 func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
-	// The kubelet lacks checkpointing, so we need to introspect the set of pods
-	// in the cgroup tree prior to inspecting the set of pods in our pod manager.
-	// this ensures our view of the cgroup tree does not mistakenly observe pods
-	// that are added after the fact...
+	// 由于 kubelet 缺乏检查点功能，因此我们需要在检查 pod 管理器中的 pod 集合之前 检查 cgroup 树中的 pod 集合。这可以确保我们的 cgroup 树视图不会错误地观察到事后添加的 pod。
 	var (
 		cgroupPods map[types.UID]cm.CgroupName
 		err        error
 	)
-	if kl.cgroupsPerQOS {
+	if kl.cgroupsPerQOS { // true
 		pcm := kl.containerManager.NewPodContainerManager()
 		cgroupPods, err = pcm.GetAllPodsFromCgroups()
 		if err != nil {
@@ -1076,19 +1068,15 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		}
 	}
 
-	allPods, mirrorPods := kl.podManager.GetPodsAndMirrorPods()
-	// Pod phase progresses monotonically. Once a pod has reached a final state,
-	// it should never leave regardless of the restart policy. The statuses
-	// of such pods should not be changed, and there is no need to sync them.
-	// TODO: the logic here does not handle two cases:
-	//   1. If the containers were removed immediately after they died, kubelet
-	//      may fail to generate correct statuses, let alone filtering correctly.
-	//   2. If kubelet restarted before writing the terminated status for a pod
-	//      to the apiserver, it could still restart the terminated pod (even
-	//      though the pod was not considered terminated by the apiserver).
-	// These two conditions could be alleviated by checkpointing kubelet.
+	allPods, mirrorPods := kl.podManager.GetPodsAndMirrorPods() // 读取缓存里的数据
+	//Pod 的阶段（phase）是单调递增的。一旦 Pod 达到了最终状态，无论重启策略如何，它都不应该离开这个状态。这些 Pod 的状态不应该被更改，也没有必要同步它们。
+	//但是，这段代码还存在两种情况无法处理：
+	//	1、如果容器在死亡后立即被删除，kubelet 可能无法生成正确的状态，更不用说正确地过滤了。
+	//	2、如果 kubelet 在将 Pod 的终止状态写入 API 服务器之前重新启动，它仍然可能重新启动已终止的 Pod（即使 API 服务器不认为该 Pod 已终止）。
+	//为了解决这些问题，需要使用检查点功能对 kubelet 进行检查点。检查点是一种保存应用程序状态的机制，可以在应用程序崩溃或重启后恢复状态。
+	//在 Kubernetes 中，检查点可以用于保存 kubelet 的状态，以便在 kubelet 崩溃或重启后恢复状态，并避免上述问题的发生。
 
-	// Stop the workers for terminated pods not in the config source
+	// 停止已终止 但不在配置源中的 Pod。
 	klog.V(3).InfoS("Clean up pod workers for terminated pods")
 	workingPods := kl.podWorkers.SyncKnownPods(allPods)
 
@@ -1097,14 +1085,9 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		allPodsByUID[pod.UID] = pod
 	}
 
-	// Identify the set of pods that have workers, which should be all pods
-	// from config that are not terminated, as well as any terminating pods
-	// that have already been removed from config. Pods that are terminating
-	// will be added to possiblyRunningPods, to prevent overly aggressive
-	// cleanup of pod cgroups.
-	runningPods := make(map[types.UID]sets.Empty)
-	possiblyRunningPods := make(map[types.UID]sets.Empty)
-	restartablePods := make(map[types.UID]sets.Empty)
+	runningPods := make(map[types.UID]sets.Empty)         // 正在运行的
+	possiblyRunningPods := make(map[types.UID]sets.Empty) // 可能正在运行的
+	restartablePods := make(map[types.UID]sets.Empty)     // 正在重建的
 	for uid, sync := range workingPods {
 		switch sync {
 		case SyncPod:
@@ -1117,12 +1100,11 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		}
 	}
 
-	// Stop probing pods that are not running
+	// 对没有运行的 pod 停止探测
 	klog.V(3).InfoS("Clean up probes for terminated pods")
-	kl.probeManager.CleanupPods(possiblyRunningPods)
+	kl.probeManager.CleanupPods(possiblyRunningPods) // ✅
 
-	// Terminate any pods that are observed in the runtime but not
-	// present in the list of known running pods from config.
+	// 终止 在runtime观察到但没有出现在已知运行中的列表中 pod
 	runningRuntimePods, err := kl.runtimeCache.GetPods(ctx)
 	if err != nil {
 		klog.ErrorS(err, "Error listing containers")
@@ -1154,12 +1136,10 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		}
 	}
 
-	// Remove orphaned pod statuses not in the total list of known config pods
 	klog.V(3).InfoS("Clean up orphaned pod statuses")
-	kl.removeOrphanedPodStatuses(allPods, mirrorPods)
-	// Note that we just killed the unwanted pods. This may not have reflected
-	// in the cache. We need to bypass the cache to get the latest set of
-	// running pods to clean up the volumes.
+	kl.removeOrphanedPodStatuses(allPods, mirrorPods) // 移除孤儿 pod status
+
+	// 注意，我们刚刚杀死了不需要的pod。这可能没有反映在缓存中。我们需要绕过缓存来获取最新的运行pod集来清理卷。
 	// TODO: Evaluate the performance impact of bypassing the runtime cache.
 	runningRuntimePods, err = kl.containerRuntime.GetPods(ctx, false)
 	if err != nil {
@@ -1169,7 +1149,7 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 
 	// Remove orphaned pod user namespace allocations (if any).
 	klog.V(3).InfoS("Clean up orphaned pod user namespace allocations")
-	if err = kl.usernsManager.CleanupOrphanedPodUsernsAllocations(allPods, runningRuntimePods); err != nil {
+	if err = kl.usernsManager.CleanupOrphanedPodUsernsAllocations(allPods, runningRuntimePods); err != nil { // ✅
 		klog.ErrorS(err, "Failed cleaning up orphaned pod user namespaces allocations")
 	}
 

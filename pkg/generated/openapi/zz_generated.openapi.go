@@ -20942,7 +20942,7 @@ func schema_k8sio_api_core_v1_NodeStatus(ref common.ReferenceCallback) common.Op
 					},
 					"allocatable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Allocatable represents the resources of a node that are available for scheduling. Defaults to Capacity.",
+							Description: "表示节点可用于调度的资源。",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -21681,12 +21681,11 @@ func schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref common.Refer
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PersistentVolumeClaimVolumeSource references the user's PVC in the same namespace. This volume finds the bound PV and mounts that volume for the pod. A PersistentVolumeClaimVolumeSource is, essentially, a wrapper around another type of volume that is owned by someone else (the system).",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"claimName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+							Description: "pvc的名称，将使用该名称创建volume More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -21694,7 +21693,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref common.Refer
 					},
 					"readOnly": {
 						SchemaProps: spec.SchemaProps{
-							Description: "readOnly Will force the ReadOnly setting in VolumeMounts. Default false.",
+							Description: "在volume 挂载时设置read only",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -22834,12 +22833,12 @@ func schema_k8sio_api_core_v1_PodOS(ref common.ReferenceCallback) common.OpenAPI
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodOS defines the OS parameters of a pod.",
+				Description: "PodOS 定义pod的操作系统参数。",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the operating system. The currently supported values are linux and windows. Additional value may be defined in future and can be one of: https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration Clients should expect to handle additional values and treat unrecognized values in this field as os: null",
+							Description: "操作系统名称 :linux、windows Additional value may be defined in future and can be one of: https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration Clients should expect to handle additional values and treat unrecognized values in this field as os: null",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -23454,7 +23453,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"overhead": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Overhead 表示与运行给定RuntimeClass的pod相关的资源开销. 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销. RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求. 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
+							Description: "Overhead 表示与运行给定RuntimeClass的pod相关的资源开销. 提供一种机制来计算特定于给定运行时解决方案的 pod 开销 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销. RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求. 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -23501,7 +23500,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"os": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the OS of the containers in the pod. Some pod and container fields are restricted if this is set.\n\nIf the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions\n\nIf the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup",
+							Description: "指定pod中容器的操作系统。\n\nIf the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions\n\nIf the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup",
 							Ref:         ref("k8s.io/api/core/v1.PodOS"),
 						},
 					},
@@ -25013,7 +25012,7 @@ func schema_k8sio_api_core_v1_ResourceRequirements(ref common.ReferenceCallback)
 				Properties: map[string]spec.Schema{
 					"limits": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+							Description: "所需资源的上限 More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -25028,7 +25027,7 @@ func schema_k8sio_api_core_v1_ResourceRequirements(ref common.ReferenceCallback)
 					},
 					"requests": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+							Description: "所有资源的最小值 More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -26683,7 +26682,7 @@ func schema_k8sio_api_core_v1_Taint(ref common.ReferenceCallback) common.OpenAPI
 					},
 					"effect": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required. The effect of the taint on pods that do not tolerate the taint. Valid effects are NoSchedule, PreferNoSchedule and NoExecute.\n\nPossible enum values:\n - `\"NoExecute\"` Evict any already-running pods that do not tolerate the taint. Currently enforced by NodeController.\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
+							Description: "Required. The effect of the taint on pods that do not tolerate the taint. Valid effects are NoSchedule, PreferNoSchedule and NoExecute.\n\nPossible enum values:\n - `\"NoExecute\"`\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26734,7 +26733,7 @@ func schema_k8sio_api_core_v1_Toleration(ref common.ReferenceCallback) common.Op
 					},
 					"effect": {
 						SchemaProps: spec.SchemaProps{
-							Description: "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\nPossible enum values:\n - `\"NoExecute\"` Evict any already-running pods that do not tolerate the taint. Currently enforced by NodeController.\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
+							Description: "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\nPossible enum values:\n - `\"NoExecute\"`\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"NoExecute", "NoSchedule", "PreferNoSchedule"}},
@@ -27066,7 +27065,7 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"persistentVolumeClaim": {
 						SchemaProps: spec.SchemaProps{
-							Description: "persistentVolumeClaimVolumeSource represents a reference to a PersistentVolumeClaim in the same namespace. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+							Description: "pvc信息 More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
 							Ref:         ref("k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource"),
 						},
 					},
@@ -27404,7 +27403,7 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"persistentVolumeClaim": {
 						SchemaProps: spec.SchemaProps{
-							Description: "persistentVolumeClaimVolumeSource represents a reference to a PersistentVolumeClaim in the same namespace. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+							Description: "pvc信息 More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
 							Ref:         ref("k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource"),
 						},
 					},
@@ -58145,7 +58144,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"podPidsLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "podPidsLimit is the maximum number of PIDs in any pod. Default: -1",
+							Description: "pod中pid的最大数目。Default: -1",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},

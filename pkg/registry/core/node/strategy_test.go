@@ -187,7 +187,7 @@ func TestValidateUpdate(t *testing.T) {
 				Name: "hugepage-change-values-from-0",
 			},
 			Status: api.NodeStatus{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceName("hugepages-2Mi"): resource.MustParse("0"),
 					api.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 				},
@@ -197,7 +197,7 @@ func TestValidateUpdate(t *testing.T) {
 				Name: "hugepage-change-values-from-0",
 			},
 			Status: api.NodeStatus{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceName("hugepages-2Mi"): resource.MustParse("2Gi"),
 					api.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 				},
@@ -208,7 +208,7 @@ func TestValidateUpdate(t *testing.T) {
 				Name: "hugepage-change-values",
 			},
 			Status: api.NodeStatus{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceName("hugepages-2Mi"): resource.MustParse("1Gi"),
 					api.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 				},
@@ -218,7 +218,7 @@ func TestValidateUpdate(t *testing.T) {
 				Name: "hugepage-change-values",
 			},
 			Status: api.NodeStatus{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceName("hugepages-2Mi"): resource.MustParse("2Gi"),
 					api.ResourceName("hugepages-1Gi"): resource.MustParse("2Gi"),
 				},
@@ -247,7 +247,7 @@ func TestValidate(t *testing.T) {
 				Name: "one-hugepage-size",
 			},
 			Status: api.NodeStatus{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceCPU:                   resource.MustParse("100"),
 					api.ResourceMemory:                resource.MustParse("10000"),
 					api.ResourceName("hugepages-2Mi"): resource.MustParse("0"),
@@ -260,7 +260,7 @@ func TestValidate(t *testing.T) {
 				Name: "multiple-hugepage-sizes",
 			},
 			Status: api.NodeStatus{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceCPU:                   resource.MustParse("100"),
 					api.ResourceMemory:                resource.MustParse("10000"),
 					api.ResourceName("hugepages-2Mi"): resource.MustParse("2Gi"),

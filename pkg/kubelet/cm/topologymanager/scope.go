@@ -38,7 +38,7 @@ type Scope interface {
 	Name() string
 	GetPolicy() Policy
 	Admit(pod *v1.Pod) lifecycle.PodAdmitResult
-	// AddHintProvider adds a hint provider to manager to indicate the hint provider
+	// AddHintProvider adds a hint provider to ScopeManager to indicate the hint provider
 	// wants to be consoluted with when making topology hints
 	AddHintProvider(h HintProvider)
 	// AddContainer adds pod to Manager for tracking
@@ -95,7 +95,7 @@ func (s *scope) AddHintProvider(h HintProvider) {
 	s.hintProviders = append(s.hintProviders, h)
 }
 
-// It would be better to implement this function in topologymanager instead of scope
+// It would be better to implement this function in topologymanager instead of Scope
 // but topologymanager do not track mapping anymore
 func (s *scope) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
 	s.mutex.Lock()
@@ -104,7 +104,7 @@ func (s *scope) AddContainer(pod *v1.Pod, container *v1.Container, containerID s
 	s.podMap.Add(string(pod.UID), container.Name, containerID)
 }
 
-// It would be better to implement this function in topologymanager instead of scope
+// It would be better to implement this function in topologymanager instead of Scope
 // but topologymanager do not track mapping anymore
 func (s *scope) RemoveContainer(containerID string) error {
 	s.mutex.Lock()

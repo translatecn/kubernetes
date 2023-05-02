@@ -1551,18 +1551,18 @@ func makeTestPVC(
 		Spec: api.PersistentVolumeClaimSpec{
 			VolumeName: "volume1",
 			Resources: api.ResourceRequirements{
-				Requests: api.ResourceList{
+				Requests: api.ResourceMap{
 					api.ResourceStorage: resource.MustParse("10G"),
 				},
 			},
 		},
 		Status: api.PersistentVolumeClaimStatus{
-			Capacity: api.ResourceList{
+			Capacity: api.ResourceMap{
 				api.ResourceStorage: resource.MustParse(allocatedResources),
 			},
 			Phase:        api.ClaimBound,
 			ResizeStatus: &resizeStatus,
-			AllocatedResources: api.ResourceList{
+			AllocatedResources: api.ResourceMap{
 				api.ResourceStorage: resource.MustParse(allocatedResources),
 			},
 		},

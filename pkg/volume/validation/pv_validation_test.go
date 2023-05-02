@@ -32,7 +32,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"volume with valid mount option for nfs": {
 			isExpectedFailure: false,
 			volume: testVolumeWithMountOption("good-nfs-mount-volume", "", "ro,nfsvers=3", api.PersistentVolumeSpec{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []api.PersistentVolumeAccessMode{api.ReadWriteOnce},
@@ -44,7 +44,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"volume with mount option for host path": {
 			isExpectedFailure: true,
 			volume: testVolumeWithMountOption("bad-hostpath-mount-volume", "", "ro,nfsvers=3", api.PersistentVolumeSpec{
-				Capacity: api.ResourceList{
+				Capacity: api.ResourceMap{
 					api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []api.PersistentVolumeAccessMode{api.ReadWriteOnce},

@@ -35,7 +35,7 @@ type containerStatusbyCreatedList []*kubecontainer.Status
 
 type podContainerDeletor struct {
 	worker           chan<- kubecontainer.ContainerID
-	containersToKeep int // dead 容器的保存数量
+	containersToKeep int // 表示需要保留的容器数量
 }
 
 func (a containerStatusbyCreatedList) Len() int      { return len(a) }

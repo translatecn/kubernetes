@@ -44,7 +44,7 @@ func TestRuntimeClassConversion(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: name},
 				Handler:    handler,
 				Overhead: &node.Overhead{
-					PodFixed: core.ResourceList{
+					PodFixed: core.ResourceMap{
 						core.ResourceCPU: resource.MustParse(cpuOverhead),
 					},
 				},

@@ -184,7 +184,7 @@ func TestResourceListConversion(t *testing.T) {
 
 	tests := []struct {
 		input    v1.ResourceMap
-		expected core.ResourceList
+		expected core.ResourceMap
 	}{
 		{ // No changes necessary.
 			input: v1.ResourceMap{
@@ -192,7 +192,7 @@ func TestResourceListConversion(t *testing.T) {
 				v1.ResourceCPU:     resource.MustParse("100m"),
 				v1.ResourceStorage: resource.MustParse("1G"),
 			},
-			expected: core.ResourceList{
+			expected: core.ResourceMap{
 				core.ResourceMemory:  resource.MustParse("30M"),
 				core.ResourceCPU:     resource.MustParse("100m"),
 				core.ResourceStorage: resource.MustParse("1G"),
@@ -203,7 +203,7 @@ func TestResourceListConversion(t *testing.T) {
 				v1.ResourceCPU:    resource.MustParse("3.000023m"),
 				v1.ResourceMemory: resource.MustParse("500.000050m"),
 			},
-			expected: core.ResourceList{
+			expected: core.ResourceMap{
 				core.ResourceCPU:    resource.MustParse("4m"),
 				core.ResourceMemory: resource.MustParse("501m"),
 			},
@@ -213,7 +213,7 @@ func TestResourceListConversion(t *testing.T) {
 				v1.ResourceCPU:     bigMilliQuantity.DeepCopy(),
 				v1.ResourceStorage: bigMilliQuantity.DeepCopy(),
 			},
-			expected: core.ResourceList{
+			expected: core.ResourceMap{
 				core.ResourceCPU:     bigMilliQuantity.DeepCopy(),
 				core.ResourceStorage: bigMilliQuantity.DeepCopy(),
 			},
@@ -221,7 +221,7 @@ func TestResourceListConversion(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		output := core.ResourceList{}
+		output := core.ResourceMap{}
 
 		// defaulting is a separate step from conversion that is applied when reading from the API or from etcd.
 		// perform that step explicitly.

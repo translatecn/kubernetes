@@ -33,8 +33,8 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 )
 
-func getResourceList(storage string) api.ResourceList {
-	res := api.ResourceList{}
+func getResourceList(storage string) api.ResourceMap {
+	res := api.ResourceMap{}
 	if storage != "" {
 		res[api.ResourceStorage] = resource.MustParse(storage)
 	}

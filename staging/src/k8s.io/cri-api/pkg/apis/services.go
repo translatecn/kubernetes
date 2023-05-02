@@ -60,8 +60,7 @@ type ContainerManager interface {
 	ReopenContainerLog(ctx context.Context, ContainerID string) error
 	// CheckpointContainer checkpoints a container
 	CheckpointContainer(ctx context.Context, options *runtimeapi.CheckpointContainerRequest) error
-	// GetContainerEvents gets container events from the CRI runtime
-	GetContainerEvents(containerEventsCh chan *runtimeapi.ContainerEventResponse) error
+	GetContainerEvents(containerEventsCh chan *runtimeapi.ContainerEventResponse) error // 获取CRI容器运行时的事件
 }
 
 // PodSandboxManager contains methods for operating on PodSandboxes. The methods

@@ -41,8 +41,8 @@ import (
 	"k8s.io/kubernetes/pkg/quota/v1/install"
 )
 
-func getResourceList(cpu, memory string) api.ResourceList {
-	res := api.ResourceList{}
+func getResourceList(cpu, memory string) api.ResourceMap {
+	res := api.ResourceMap{}
 	if cpu != "" {
 		res[api.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -52,7 +52,7 @@ func getResourceList(cpu, memory string) api.ResourceList {
 	return res
 }
 
-func getResourceRequirements(requests, limits api.ResourceList) api.ResourceRequirements {
+func getResourceRequirements(requests, limits api.ResourceMap) api.ResourceRequirements {
 	res := api.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits
@@ -423,14 +423,14 @@ func TestAdmitHandlesNegativePVCUpdates(t *testing.T) {
 	oldPVC := &api.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc-to-update", Namespace: "test", ResourceVersion: "1"},
 		Spec: api.PersistentVolumeClaimSpec{
-			Resources: getResourceRequirements(api.ResourceList{api.ResourceStorage: resource.MustParse("10Gi")}, api.ResourceList{}),
+			Resources: getResourceRequirements(api.ResourceMap{api.ResourceStorage: resource.MustParse("10Gi")}, api.ResourceMap{}),
 		},
 	}
 
 	newPVC := &api.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc-to-update", Namespace: "test"},
 		Spec: api.PersistentVolumeClaimSpec{
-			Resources: getResourceRequirements(api.ResourceList{api.ResourceStorage: resource.MustParse("5Gi")}, api.ResourceList{}),
+			Resources: getResourceRequirements(api.ResourceMap{api.ResourceStorage: resource.MustParse("5Gi")}, api.ResourceMap{}),
 		},
 	}
 
@@ -475,14 +475,14 @@ func TestAdmitHandlesPVCUpdates(t *testing.T) {
 	oldPVC := &api.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc-to-update", Namespace: "test", ResourceVersion: "1"},
 		Spec: api.PersistentVolumeClaimSpec{
-			Resources: getResourceRequirements(api.ResourceList{api.ResourceStorage: resource.MustParse("10Gi")}, api.ResourceList{}),
+			Resources: getResourceRequirements(api.ResourceMap{api.ResourceStorage: resource.MustParse("10Gi")}, api.ResourceMap{}),
 		},
 	}
 
 	newPVC := &api.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{Name: "pvc-to-update", Namespace: "test"},
 		Spec: api.PersistentVolumeClaimSpec{
-			Resources: getResourceRequirements(api.ResourceList{api.ResourceStorage: resource.MustParse("15Gi")}, api.ResourceList{}),
+			Resources: getResourceRequirements(api.ResourceMap{api.ResourceStorage: resource.MustParse("15Gi")}, api.ResourceMap{}),
 		},
 	}
 
@@ -1066,14 +1066,14 @@ func TestAdmitRejectsNegativeUsage(t *testing.T) {
 
 	informerFactory.Core().V1().ResourceQuotas().Informer().GetIndexer().Add(resourceQuota)
 	// verify quota rejects negative pvc storage requests
-	newPvc := validPersistentVolumeClaim("not-allowed-pvc", getResourceRequirements(api.ResourceList{api.ResourceStorage: resource.MustParse("-1Gi")}, api.ResourceList{}))
+	newPvc := validPersistentVolumeClaim("not-allowed-pvc", getResourceRequirements(api.ResourceMap{api.ResourceStorage: resource.MustParse("-1Gi")}, api.ResourceMap{}))
 	err = handler.Validate(context.TODO(), admission.NewAttributesRecord(newPvc, nil, api.Kind("PersistentVolumeClaim").WithVersion("version"), newPvc.Namespace, newPvc.Name, corev1.Resource("persistentvolumeclaims").WithVersion("version"), "", admission.Create, &metav1.CreateOptions{}, false, nil), nil)
 	if err == nil {
 		t.Errorf("Expected an error because the pvc has negative storage usage")
 	}
 
 	// verify quota accepts non-negative pvc storage requests
-	newPvc = validPersistentVolumeClaim("not-allowed-pvc", getResourceRequirements(api.ResourceList{api.ResourceStorage: resource.MustParse("1Gi")}, api.ResourceList{}))
+	newPvc = validPersistentVolumeClaim("not-allowed-pvc", getResourceRequirements(api.ResourceMap{api.ResourceStorage: resource.MustParse("1Gi")}, api.ResourceMap{}))
 	err = handler.Validate(context.TODO(), admission.NewAttributesRecord(newPvc, nil, api.Kind("PersistentVolumeClaim").WithVersion("version"), newPvc.Namespace, newPvc.Name, corev1.Resource("persistentvolumeclaims").WithVersion("version"), "", admission.Create, &metav1.CreateOptions{}, false, nil), nil)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)

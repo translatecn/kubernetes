@@ -60,11 +60,7 @@ type ContainerManager interface {
 
 	// Status returns internal Status.
 	Status() Status
-
-	// NewPodContainerManager is a factory method which returns a podContainerManager object
-	// Returns a noop implementation if qos cgroup hierarchy is not enabled
-	NewPodContainerManager() PodContainerManager
-
+	NewPodContainerManager() PodContainerManager //
 	// GetMountedSubsystems returns the mounted cgroup subsystems on the node
 	GetMountedSubsystems() *CgroupSubsystems
 
@@ -133,15 +129,15 @@ type NodeConfig struct {
 	QOSReserved                              map[v1.ResourceName]int64
 	CPUManagerPolicy                         string
 	CPUManagerPolicyOptions                  map[string]string
-	ExperimentalTopologyManagerScope         string
 	CPUManagerReconcilePeriod                time.Duration
 	ExperimentalMemoryManagerPolicy          string
 	ExperimentalMemoryManagerReservedMemory  []kubeletconfig.MemoryReservation
-	ExperimentalPodPidsLimit                 int64
+	ExperimentalPodPidsLimit                 int64 // 进程数限制
 	EnforceCPULimits                         bool
 	CPUCFSQuotaPeriod                        time.Duration
-	ExperimentalTopologyManagerPolicy        string
-	ExperimentalTopologyManagerPolicyOptions map[string]string
+	ExperimentalTopologyManagerScope         string            //
+	ExperimentalTopologyManagerPolicy        string            //
+	ExperimentalTopologyManagerPolicyOptions map[string]string //
 }
 
 // NodeAllocatableConfig 存储节点可分配资源的配置信息

@@ -56,7 +56,7 @@ func validNewResourceQuota() *api.ResourceQuota {
 			Namespace: metav1.NamespaceDefault,
 		},
 		Spec: api.ResourceQuotaSpec{
-			Hard: api.ResourceList{
+			Hard: api.ResourceMap{
 				api.ResourceCPU:                    resource.MustParse("100"),
 				api.ResourceMemory:                 resource.MustParse("4Gi"),
 				api.ResourcePods:                   resource.MustParse("10"),
@@ -176,7 +176,7 @@ func TestUpdateStatus(t *testing.T) {
 			Namespace: metav1.NamespaceDefault,
 		},
 		Status: api.ResourceQuotaStatus{
-			Used: api.ResourceList{
+			Used: api.ResourceMap{
 				api.ResourceCPU:                    resource.MustParse("1"),
 				api.ResourceMemory:                 resource.MustParse("1Gi"),
 				api.ResourcePods:                   resource.MustParse("1"),
@@ -184,7 +184,7 @@ func TestUpdateStatus(t *testing.T) {
 				api.ResourceReplicationControllers: resource.MustParse("1"),
 				api.ResourceQuotas:                 resource.MustParse("1"),
 			},
-			Hard: api.ResourceList{
+			Hard: api.ResourceMap{
 				api.ResourceCPU:                    resource.MustParse("100"),
 				api.ResourceMemory:                 resource.MustParse("4Gi"),
 				api.ResourcePods:                   resource.MustParse("10"),

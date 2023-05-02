@@ -721,7 +721,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			}
 		}
 
-		kubeDeps.ContainerManager, err = cm.NewContainerManager(
+		kubeDeps.ContainerManager, err = cm.NewContainerManager( // ✅
 			kubeDeps.Mounter,
 			kubeDeps.CAdvisorInterface,
 			cm.NodeConfig{
@@ -756,7 +756,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 				ExperimentalTopologyManagerScope:         s.TopologyManagerScope,
 				ExperimentalTopologyManagerPolicyOptions: topologyManagerPolicyOptions,
 			},
-			s.FailSwapOn,
+			s.FailSwapOn, //
 			kubeDeps.Recorder,
 			kubeDeps.KubeClient,
 		)

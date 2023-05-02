@@ -302,7 +302,7 @@ type PersistentVolume struct {
 // PersistentVolumeSpec has most of the details required to define a persistent volume
 type PersistentVolumeSpec struct {
 	// Resources represents the actual resources of the volume
-	Capacity ResourceList
+	Capacity ResourceMap
 	// Source represents the location and type of a volume to mount.
 	PersistentVolumeSource
 	// AccessModes contains all ways the volume can be mounted
@@ -557,7 +557,7 @@ type PersistentVolumeClaimStatus struct {
 	AccessModes []PersistentVolumeAccessMode
 	// Represents the actual resources of the underlying volume
 	// +optional
-	Capacity ResourceList
+	Capacity ResourceMap
 	// +optional
 	Conditions []PersistentVolumeClaimCondition
 	// The storage resource within AllocatedResources tracks the capacity allocated to a PVC. It may
@@ -570,7 +570,7 @@ type PersistentVolumeClaimStatus struct {
 	// This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
 	// +featureGate=RecoverVolumeExpansionFailure
 	// +optional
-	AllocatedResources ResourceList
+	AllocatedResources ResourceMap
 	// ResizeStatus stores status of resize operation.
 	// ResizeStatus is not set by default but when expansion is complete resizeStatus is set to empty
 	// string by resize controller or kubelet.
@@ -2178,12 +2178,12 @@ type Capabilities struct {
 type ResourceRequirements struct {
 	// Limits describes the maximum amount of compute resources allowed.
 	// +optional
-	Limits ResourceList
+	Limits ResourceMap
 	// Requests describes the minimum amount of compute resources required.
 	// If Request is omitted for a container, it defaults to Limits if that is explicitly specified,
 	// otherwise to an implementation-defined value
 	// +optional
-	Requests ResourceList
+	Requests ResourceMap
 	// Claims lists the names of resources, defined in spec.resourceClaims,
 	// that are used by this container.
 	//
@@ -2982,7 +2982,7 @@ type PodSpec struct {
 	// 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零.
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead
 	// +optional
-	Overhead ResourceList
+	Overhead ResourceMap
 	// EnableServiceLinks indicates whether information about services should be injected into pod's
 	// environment variables, matching the syntax of Docker links.
 	// If not specified, the default is true.
@@ -4368,10 +4368,10 @@ type NodeConfigStatus struct {
 type NodeStatus struct {
 	// Capacity represents the total resources of a node.
 	// +optional
-	Capacity ResourceList
+	Capacity ResourceMap
 	// Allocatable represents the resources of a node that are available for scheduling.
 	// +optional
-	Allocatable ResourceList
+	Allocatable ResourceMap
 	// NodePhase is the current lifecycle phase of the node.
 	// +optional
 	Phase NodePhase
@@ -4523,10 +4523,10 @@ type NodeAddress struct {
 type NodeResources struct {
 	// Capacity represents the available resources of a node
 	// +optional
-	Capacity ResourceList
+	Capacity ResourceMap
 }
 
-// ResourceName is the name identifying various resources in a ResourceList.
+// ResourceName is the name identifying various resources in a ResourceMap.
 type ResourceName string
 
 // Resource names must be not more than 63 characters, consisting of upper- or lower-case alphanumeric characters,
@@ -4555,8 +4555,8 @@ const (
 	ResourceAttachableVolumesPrefix = "attachable-volumes-"
 )
 
-// ResourceList is a set of (resource name, quantity) pairs.
-type ResourceList map[ResourceName]resource.Quantity
+// ResourceMap is a set of (resource name, quantity) pairs.
+type ResourceMap map[ResourceName]resource.Quantity
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -5029,19 +5029,19 @@ type LimitRangeItem struct {
 	Type LimitType
 	// Max usage constraints on this kind by resource name
 	// +optional
-	Max ResourceList
+	Max ResourceMap
 	// Min usage constraints on this kind by resource name
 	// +optional
-	Min ResourceList
+	Min ResourceMap
 	// Default resource requirement limit value by resource name.
 	// +optional
-	Default ResourceList
+	Default ResourceMap
 	// DefaultRequest resource requirement request value by resource name.
 	// +optional
-	DefaultRequest ResourceList
+	DefaultRequest ResourceMap
 	// MaxLimitRequestRatio represents the max burst value for the named resource
 	// +optional
-	MaxLimitRequestRatio ResourceList
+	MaxLimitRequestRatio ResourceMap
 }
 
 // LimitRangeSpec defines a min/max usage limit for resources that match on kind
@@ -5143,7 +5143,7 @@ const (
 type ResourceQuotaSpec struct {
 	// Hard is the set of desired hard limits for each named resource
 	// +optional
-	Hard ResourceList
+	Hard ResourceMap
 	// A collection of filters that must match each object tracked by a quota.
 	// If not specified, the quota matches all objects.
 	// +optional
@@ -5194,10 +5194,10 @@ const (
 type ResourceQuotaStatus struct {
 	// Hard is the set of enforced hard limits for each named resource
 	// +optional
-	Hard ResourceList
+	Hard ResourceMap
 	// Used is the current observed total usage of the resource in the namespace
 	// +optional
-	Used ResourceList
+	Used ResourceMap
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

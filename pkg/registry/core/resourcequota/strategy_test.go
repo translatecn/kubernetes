@@ -35,7 +35,7 @@ func TestResourceQuotaStrategy(t *testing.T) {
 	resourceQuota := &api.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{Name: "foo"},
 		Status: api.ResourceQuotaStatus{
-			Used: api.ResourceList{
+			Used: api.ResourceMap{
 				api.ResourceCPU:                    resource.MustParse("1"),
 				api.ResourceMemory:                 resource.MustParse("1Gi"),
 				api.ResourcePods:                   resource.MustParse("1"),
@@ -43,7 +43,7 @@ func TestResourceQuotaStrategy(t *testing.T) {
 				api.ResourceReplicationControllers: resource.MustParse("1"),
 				api.ResourceQuotas:                 resource.MustParse("1"),
 			},
-			Hard: api.ResourceList{
+			Hard: api.ResourceMap{
 				api.ResourceCPU:                    resource.MustParse("100"),
 				api.ResourceMemory:                 resource.MustParse("4Gi"),
 				api.ResourcePods:                   resource.MustParse("10"),

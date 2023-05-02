@@ -46,7 +46,7 @@ type Manager interface {
 	GetPodByUID(types.UID) (*v1.Pod, bool)                  // 提供与 Pod UID 匹配的（非镜像）Pod，以及是否找到了该 Pod。
 	GetPodByMirrorPod(*v1.Pod) (*v1.Pod, bool)              // 返回给定镜像 Pod 的静态 Pod，以及该静态 Pod 是否已知于 Pod 管理器。
 	GetMirrorPodByPod(*v1.Pod) (*v1.Pod, bool)              // 返回给定静态 Pod 的镜像 Pod，以及该镜像 Pod 是否已知于 Pod 管理器。
-	GetPodsAndMirrorPods() ([]*v1.Pod, []*v1.Pod)           // 返回常规和镜像 Pod。
+	GetPodsAndMirrorPods() ([]*v1.Pod, []*v1.Pod)           // 返回一般和镜像 Pod。
 	SetPods(pods []*v1.Pod)                                 // 用新 Pod 替换内部 Pod。它目前仅用于测试。
 	AddPod(pod *v1.Pod)                                     // 将给定的 Pod 添加到管理器中。
 	UpdatePod(pod *v1.Pod)                                  // 在管理器中更新给定的 Pod。
@@ -173,8 +173,8 @@ func (pm *basicManager) GetPods() []*v1.Pod {
 func (pm *basicManager) GetPodsAndMirrorPods() ([]*v1.Pod, []*v1.Pod) {
 	pm.lock.RLock()
 	defer pm.lock.RUnlock()
-	pods := podsMapToPods(pm.podByUID)
-	mirrorPods := mirrorPodsMapToMirrorPods(pm.mirrorPodByUID)
+	pods := podsMapToPods(pm.podByUID)                         // 转数组
+	mirrorPods := mirrorPodsMapToMirrorPods(pm.mirrorPodByUID) // 转数组
 	return pods, mirrorPods
 }
 

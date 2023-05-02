@@ -358,7 +358,7 @@ func TestVolumeAttachmentValidation(t *testing.T) {
 				Source: storage.VolumeAttachmentSource{
 					PersistentVolumeName: &volumeName,
 					InlineVolumeSpec: &api.PersistentVolumeSpec{
-						Capacity: api.ResourceList{
+						Capacity: api.ResourceMap{
 							api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
 						},
 						AccessModes: []api.PersistentVolumeAccessMode{api.ReadWriteOnce},

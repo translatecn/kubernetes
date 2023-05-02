@@ -36,8 +36,8 @@ func isSupportedQoSComputeResource(name core.ResourceName) bool {
 // A pod is burstable if limits and requests do not match across all containers.
 // When this function is updated please also update staging/src/k8s.io/kubectl/pkg/util/qos/qos.go
 func GetPodQOS(pod *core.Pod) core.PodQOSClass {
-	requests := core.ResourceList{}
-	limits := core.ResourceList{}
+	requests := core.ResourceMap{}
+	limits := core.ResourceMap{}
 	zeroQuantity := resource.MustParse("0")
 	isGuaranteed := true
 	allContainers := []core.Container{}

@@ -77,10 +77,7 @@ type Manager interface {
 	// RemovePod handles cleaning up the removed pod state, including terminating probe workers and
 	// deleting cached results.
 	RemovePod(pod *v1.Pod)
-
-	// CleanupPods handles cleaning up pods which should no longer be running.
-	// It takes a map of "desired pods" which should not be cleaned up.
-	CleanupPods(desiredPods map[types.UID]sets.Empty)
+	CleanupPods(desiredPods map[types.UID]sets.Empty) // 清理不在desiredPods 里的探测worker。  desiredPods[运行中，可能在运行的]
 
 	// UpdatePodStatus modifies the given PodStatus with the appropriate Ready state for each
 	// container based on container running status, cached probe results and worker states.
@@ -88,8 +85,7 @@ type Manager interface {
 }
 
 type manager struct {
-	// Map of active workers for probes
-	workers map[probeKey]*worker
+	workers map[probeKey]*worker // 工作中的 容器探测 worker
 	// Lock for accessing & mutating workers
 	workerLock sync.RWMutex
 
@@ -111,7 +107,6 @@ type manager struct {
 	start time.Time
 }
 
-// NewManager creates a Manager for pod probing.
 func NewManager(
 	statusManager status.Manager,
 	livenessManager results.Manager,
@@ -139,7 +134,6 @@ type probeKey struct {
 	probeType     probeType
 }
 
-// Type of probe (liveness, readiness or startup)
 type probeType int
 
 const (

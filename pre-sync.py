@@ -29,5 +29,7 @@ for _item in catch_dir(f'./staging/src/{item}', 2):
     shutil.rmtree(f'./vendor/{_item}', ignore_errors=True)
     shutil.copytree(f'./staging/src/{_item}', f'./vendor/{_item}')
 
-os.system('./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
+
+path = 'export PATH="'+ os.getcwd() +'/third_party/etcd:${PATH}"'
+os.system(path + ' && ./hack/update-generated-swagger-docs.sh && ./hack/update-codegen.sh && ./hack/update-openapi-spec.sh')
 os.system("sudo rm -rf vendor _output")

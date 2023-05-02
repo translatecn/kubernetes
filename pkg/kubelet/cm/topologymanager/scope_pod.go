@@ -24,16 +24,16 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/lifecycle"
 )
 
-type podScope struct {
+type PodScope struct {
 	scope
 }
 
-// Ensure podScope implements Scope interface
-var _ Scope = &podScope{}
+// Ensure PodScope implements Scope interface
+var _ Scope = &PodScope{}
 
-// NewPodScope returns a pod scope.
+// NewPodScope returns a pod Scope.
 func NewPodScope(policy Policy) Scope {
-	return &podScope{
+	return &PodScope{
 		scope{
 			name:             podTopologyScope,
 			podTopologyHints: podTopologyHints{},
@@ -43,7 +43,7 @@ func NewPodScope(policy Policy) Scope {
 	}
 }
 
-func (s *podScope) Admit(pod *v1.Pod) lifecycle.PodAdmitResult {
+func (s *PodScope) Admit(pod *v1.Pod) lifecycle.PodAdmitResult {
 	// Exception - Policy : none
 	if s.policy.Name() == PolicyNone {
 		return s.admitPolicyNone(pod)
@@ -67,7 +67,7 @@ func (s *podScope) Admit(pod *v1.Pod) lifecycle.PodAdmitResult {
 	return admission.GetPodAdmitResult(nil)
 }
 
-func (s *podScope) accumulateProvidersHints(pod *v1.Pod) []map[string][]TopologyHint {
+func (s *PodScope) accumulateProvidersHints(pod *v1.Pod) []map[string][]TopologyHint {
 	var providersHints []map[string][]TopologyHint
 
 	for _, provider := range s.hintProviders {
@@ -79,7 +79,7 @@ func (s *podScope) accumulateProvidersHints(pod *v1.Pod) []map[string][]Topology
 	return providersHints
 }
 
-func (s *podScope) calculateAffinity(pod *v1.Pod) (TopologyHint, bool) {
+func (s *PodScope) calculateAffinity(pod *v1.Pod) (TopologyHint, bool) {
 	providersHints := s.accumulateProvidersHints(pod)
 	bestHint, admit := s.policy.Merge(providersHints)
 	klog.InfoS("PodTopologyHint", "bestHint", bestHint)

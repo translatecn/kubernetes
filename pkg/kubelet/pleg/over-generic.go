@@ -109,9 +109,13 @@ type podRecords map[types.UID]*podRecord
 
 // NewGenericPLEG instantiates a new GenericPLEG object and return it.
 // 使用轮询机制来监视容器的状态
-func NewGenericPLEG(runtime kubecontainer.Runtime, eventChannel chan *PodLifecycleEvent,
-	relistDuration *RelistDuration, cache kubecontainer.Cache,
-	clock clock.Clock) PodLifecycleEventGenerator {
+func NewGenericPLEG(
+	runtime kubecontainer.Runtime, // 代表容器运行时
+	eventChannel chan *PodLifecycleEvent, // 代表接受pod lifecycle events的队列长度，默认为1000
+	relistDuration *RelistDuration, // relist间隔，默认为1秒
+	cache kubecontainer.Cache, // 代表pod的缓存
+	clock clock.Clock, // 获取当前时间
+) PodLifecycleEventGenerator {
 	return &GenericPLEG{
 		relistDuration: relistDuration,
 		runtime:        runtime,

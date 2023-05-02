@@ -355,10 +355,10 @@ const (
 	// Enables GRPC probe method for {Liveness,Readiness,Startup}Probe.
 	GRPCContainerProbe featuregate.Feature = "GRPCContainerProbe"
 
-	// owner: @bobbypage
+	// GracefulNodeShutdown owner: @bobbypage
 	// alpha: v1.20
 	// beta:  v1.21
-	// Adds support for kubelet to detect node shutdown and gracefully terminate pods prior to the node being shutdown.
+	// 增加了对kubelet的支持，以检测node关闭并在节点关闭之前优雅地终止pod。
 	GracefulNodeShutdown featuregate.Feature = "GracefulNodeShutdown"
 
 	// owner: @wzshiming
@@ -852,11 +852,11 @@ const (
 	// Allow the usage of options to fine-tune the topology manager policies.
 	TopologyManagerPolicyOptions featuregate.Feature = "TopologyManagerPolicyOptions"
 
-	// owner: @rata, @giuseppe
+	// UserNamespacesStatelessPodsSupport owner: @rata, @giuseppe
 	// kep: https://kep.k8s.io/127
 	// alpha: v1.25
 	//
-	// Enables user namespace support for stateless pods.
+	// 为无状态pod启用用户命名空间支持。
 	UserNamespacesStatelessPodsSupport featuregate.Feature = "UserNamespacesStatelessPodsSupport"
 
 	// owner: @cofyc

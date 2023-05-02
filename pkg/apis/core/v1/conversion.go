@@ -406,12 +406,12 @@ func Convert_v1_Secret_To_core_Secret(in *v1.Secret, out *core.Secret, s convers
 }
 
 // +k8s:conversion-fn=copy-only
-func Convert_v1_ResourceList_To_core_ResourceList(in *v1.ResourceMap, out *core.ResourceList, s conversion.Scope) error {
+func Convert_v1_ResourceMap_To_core_ResourceMap(in *v1.ResourceMap, out *core.ResourceMap, s conversion.Scope) error {
 	if *in == nil {
 		return nil
 	}
 	if *out == nil {
-		*out = make(core.ResourceList, len(*in))
+		*out = make(core.ResourceMap, len(*in))
 	}
 	for key, val := range *in {
 		// Moved to defaults

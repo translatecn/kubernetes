@@ -63,7 +63,7 @@ func validNewNode() *api.Node {
 			},
 		},
 		Status: api.NodeStatus{
-			Capacity: api.ResourceList{
+			Capacity: api.ResourceMap{
 				api.ResourceName(api.ResourceCPU):    resource.MustParse("10"),
 				api.ResourceName(api.ResourceMemory): resource.MustParse("0"),
 			},

@@ -224,9 +224,8 @@ func (m *podContainerManagerImpl) IsPodCgroup(cgroupfs string) (bool, types.UID)
 	return true, types.UID(parts[1])
 }
 
-// GetAllPodsFromCgroups scans through all the subsystems of pod cgroups
-// Get list of pods whose cgroup still exist on the cgroup mounts
-func (m *podContainerManagerImpl) GetAllPodsFromCgroups() (map[types.UID]CgroupName, error) {
+// GetAllPodsFromCgroups 从 cgroup挂载点 中获取所有当前的pod
+func (m *podContainerManagerImpl) GetAllPodsFromCgroups() (map[types.UID]CgroupName, error) { // ✅
 	// Map for storing all the found pods on the disk
 	foundPods := make(map[types.UID]CgroupName)
 	qosContainersList := [3]CgroupName{m.qosContainersInfo.BestEffort, m.qosContainersInfo.Burstable, m.qosContainersInfo.Guaranteed}
@@ -234,10 +233,10 @@ func (m *podContainerManagerImpl) GetAllPodsFromCgroups() (map[types.UID]CgroupN
 	// and through each QoS cgroup directory for each subsystem mount
 	// If a pod cgroup exists in even a single subsystem mount
 	// we will attempt to delete it
-	for _, val := range m.subsystems.MountPoints {
+	for _, val := range m.subsystems.MountPoints { // 每种资源的挂载点
 		for _, qosContainerName := range qosContainersList {
 			// get the subsystems QoS cgroup absolute name
-			qcConversion := m.cgroupManager.Name(qosContainerName)
+			qcConversion := m.cgroupManager.Name(qosContainerName) // 不同的 cgroup 驱动程序可能会对 cgroup 的名称进行不同的转换
 			qc := path.Join(val, qcConversion)
 			dirInfo, err := os.ReadDir(qc)
 			if err != nil {

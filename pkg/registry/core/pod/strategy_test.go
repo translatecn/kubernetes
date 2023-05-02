@@ -197,8 +197,8 @@ func TestMatchPod(t *testing.T) {
 	}
 }
 
-func getResourceList(cpu, memory string) api.ResourceList {
-	res := api.ResourceList{}
+func getResourceList(cpu, memory string) api.ResourceMap {
+	res := api.ResourceMap{}
 	if cpu != "" {
 		res[api.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -208,14 +208,14 @@ func getResourceList(cpu, memory string) api.ResourceList {
 	return res
 }
 
-func getResourceRequirements(requests, limits api.ResourceList) api.ResourceRequirements {
+func getResourceRequirements(requests, limits api.ResourceMap) api.ResourceRequirements {
 	res := api.ResourceRequirements{}
 	res.Requests = requests
 	res.Limits = limits
 	return res
 }
 
-func newContainer(name string, requests api.ResourceList, limits api.ResourceList) api.Container {
+func newContainer(name string, requests api.ResourceMap, limits api.ResourceMap) api.Container {
 	return api.Container{
 		Name:      name,
 		Resources: getResourceRequirements(requests, limits),
@@ -1121,11 +1121,11 @@ func newPodWithHugePageValue(resourceName api.ResourceName, value resource.Quant
 				ImagePullPolicy:          "IfNotPresent",
 				TerminationMessagePolicy: "File",
 				Resources: api.ResourceRequirements{
-					Requests: api.ResourceList{
+					Requests: api.ResourceMap{
 						api.ResourceCPU: resource.MustParse("10"),
 						resourceName:    value,
 					},
-					Limits: api.ResourceList{
+					Limits: api.ResourceMap{
 						api.ResourceCPU: resource.MustParse("10"),
 						resourceName:    value,
 					},
@@ -1161,10 +1161,10 @@ func TestPodStrategyValidate(t *testing.T) {
 						ImagePullPolicy:          "IfNotPresent",
 						TerminationMessagePolicy: "File",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{
+							Requests: api.ResourceMap{
 								api.ResourceName(api.ResourceHugePagesPrefix + "64Ki"): resource.MustParse("127Ki"),
 							},
-							Limits: api.ResourceList{
+							Limits: api.ResourceMap{
 								api.ResourceName(api.ResourceHugePagesPrefix + "64Ki"): resource.MustParse("127Ki"),
 							},
 						}},
@@ -1188,10 +1188,10 @@ func TestPodStrategyValidate(t *testing.T) {
 						ImagePullPolicy:          "IfNotPresent",
 						TerminationMessagePolicy: "File",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{
+							Requests: api.ResourceMap{
 								api.ResourceName(api.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("5.1Mi"),
 							},
-							Limits: api.ResourceList{
+							Limits: api.ResourceMap{
 								api.ResourceName(api.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("5.1Mi"),
 							},
 						}},
@@ -1202,10 +1202,10 @@ func TestPodStrategyValidate(t *testing.T) {
 						ImagePullPolicy:          "IfNotPresent",
 						TerminationMessagePolicy: "File",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{
+							Requests: api.ResourceMap{
 								api.ResourceName(api.ResourceHugePagesPrefix + "1Gi"): resource.MustParse("2Gi"),
 							},
-							Limits: api.ResourceList{
+							Limits: api.ResourceMap{
 								api.ResourceName(api.ResourceHugePagesPrefix + "1Gi"): resource.MustParse("2Gi"),
 							},
 						}},
@@ -1243,11 +1243,11 @@ func TestPodStrategyValidate(t *testing.T) {
 						ImagePullPolicy:          "IfNotPresent",
 						TerminationMessagePolicy: "File",
 						Resources: api.ResourceRequirements{
-							Requests: api.ResourceList{
+							Requests: api.ResourceMap{
 								api.ResourceName(api.ResourceCPU):                     resource.MustParse("10"),
 								api.ResourceName(api.ResourceHugePagesPrefix + "1Mi"): resource.MustParse("2Mi"),
 							},
-							Limits: api.ResourceList{
+							Limits: api.ResourceMap{
 								api.ResourceName(api.ResourceCPU):                     resource.MustParse("10"),
 								api.ResourceName(api.ResourceHugePagesPrefix + "1Mi"): resource.MustParse("2Mi"),
 							},

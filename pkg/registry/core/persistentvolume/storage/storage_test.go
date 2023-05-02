@@ -62,7 +62,7 @@ func validNewPersistentVolume(name string) *api.PersistentVolume {
 			Name: name,
 		},
 		Spec: api.PersistentVolumeSpec{
-			Capacity: api.ResourceList{
+			Capacity: api.ResourceMap{
 				api.ResourceName(api.ResourceStorage): resource.MustParse("10G"),
 			},
 			AccessModes: []api.PersistentVolumeAccessMode{api.ReadWriteOnce},
@@ -108,7 +108,7 @@ func TestUpdate(t *testing.T) {
 		// updateFunc
 		func(obj runtime.Object) runtime.Object {
 			object := obj.(*api.PersistentVolume)
-			object.Spec.Capacity = api.ResourceList{
+			object.Spec.Capacity = api.ResourceMap{
 				api.ResourceName(api.ResourceStorage): resource.MustParse("20G"),
 			}
 			return object

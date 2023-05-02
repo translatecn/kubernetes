@@ -126,13 +126,8 @@ func IsSystemdStyleName(name string) bool {
 
 // CgroupSubsystems holds information about the mounted cgroup subsystems
 type CgroupSubsystems struct {
-	// Cgroup subsystem mounts.
-	// e.g.: "/sys/fs/cgroup/cpu" -> ["cpu", "cpuacct"]
-	Mounts []libcontainercgroups.Mount
-
-	// Cgroup subsystem to their mount location.
-	// e.g.: "cpu" -> "/sys/fs/cgroup/cpu"
-	MountPoints map[string]string
+	Mounts      []libcontainercgroups.Mount // 系统的挂载点        "/sys/fs/cgroup/cpu" -> ["cpu", "cpuacct"]
+	MountPoints map[string]string           // 不同子系统的挂载点   "cpu" -> "/sys/fs/cgroup/cpu"
 }
 
 // cgroupManagerImpl implements the CgroupManager interface.

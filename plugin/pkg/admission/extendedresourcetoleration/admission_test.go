@@ -33,7 +33,7 @@ func TestAdmit(t *testing.T) {
 
 	containerRequestingCPU := core.Container{
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceCPU: *resource.NewQuantity(2, resource.DecimalSI),
 			},
 		},
@@ -41,7 +41,7 @@ func TestAdmit(t *testing.T) {
 
 	containerRequestingMemory := core.Container{
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceMemory: *resource.NewQuantity(2048, resource.DecimalSI),
 			},
 		},
@@ -52,14 +52,14 @@ func TestAdmit(t *testing.T) {
 
 	containerRequestingExtendedResource1 := core.Container{
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(extendedResource1): *resource.NewQuantity(1, resource.DecimalSI),
 			},
 		},
 	}
 	containerRequestingExtendedResource2 := core.Container{
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(extendedResource2): *resource.NewQuantity(2, resource.DecimalSI),
 			},
 		},

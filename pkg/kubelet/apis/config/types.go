@@ -213,16 +213,9 @@ type KubeletConfiguration struct { // --config
 	// Requires the MemoryManager feature gate to be enabled.
 	MemoryManagerPolicy   string
 	TopologyManagerPolicy string // 策略名称，除了 "none" 之外的策略需要启用 TopologyManager 功能门控。一般都开启
-	// TopologyManagerScope represents the scope of topology hint generation
-	// that topology manager requests and hint providers generate.
-	// "pod" scope requires the TopologyManager feature gate to be enabled.
-	// Default: "container"
 	// +optional
-	TopologyManagerScope string
-	// TopologyManagerPolicyOptions is a set of key=value which allows to set extra options
-	// to fine tune the behaviour of the topology manager policies.
-	// Requires  both the "TopologyManager" and "TopologyManagerPolicyOptions" feature gates to be enabled.
-	TopologyManagerPolicyOptions map[string]string
+	TopologyManagerScope         string            // 拓扑管理器请求和提示提供程序生成的拓扑提示的范围。 Default: "container"
+	TopologyManagerPolicyOptions map[string]string // 一组key=value，它允许设置额外的选项来微调拓扑管理器策略的行为。
 	// Map of QoS resource reservation percentages (memory only for now).
 	// Requires the QOSReserved feature gate to be enabled.
 	QOSReserved map[string]string
@@ -242,9 +235,8 @@ type KubeletConfiguration struct { // --config
 	MaxPods     int32 // 可以在Kubelet上运行的pod的数量
 	// The CIDR to use for pod IP addresses, only used in standalone mode.
 	// In cluster mode, this is obtained from the master.
-	PodCIDR string
-	// The maximum number of processes per pod.  If -1, the kubelet defaults to the node allocatable pid capacity.
-	PodPidsLimit int64
+	PodCIDR      string
+	PodPidsLimit int64 // 每个pod的最大进程数,   -1代表 不限制
 	// ResolverConfig is the resolver configuration file used as the basis
 	// for the container DNS resolution configuration.
 	ResolverConfig string
@@ -305,8 +297,7 @@ type KubeletConfiguration struct { // --config
 	// features. This field modifies piecemeal the built-in default values from
 	// "k8s.io/kubernetes/pkg/features/kube_features.go".
 	FeatureGates map[string]bool
-	// Tells the Kubelet to fail to start if swap is enabled on the node.
-	FailSwapOn bool
+	FailSwapOn   bool // 告诉Kubelet，如果在节点上启用了swap，则启动失败。
 	// memorySwap configures swap memory available to container workloads.
 	// +featureGate=NodeSwap
 	// +optional
@@ -358,17 +349,16 @@ type KubeletConfiguration struct { // --config
 	Logging logsapi.LoggingConfiguration
 	// EnableSystemLogHandler enables /logs handler.
 	EnableSystemLogHandler bool
-	// ShutdownGracePeriod specifies the total duration that the node should delay the shutdown and total grace period for pod termination during a node shutdown.
-	// Defaults to 0 seconds.
+
+	// 指定容器优雅关闭等待的时间
 	// +featureGate=GracefulNodeShutdown
 	// +optional
 	ShutdownGracePeriod metav1.Duration
-	// ShutdownGracePeriodCriticalPods specifies the duration used to terminate critical pods during a node shutdown. This should be less than ShutdownGracePeriod.
-	// Defaults to 0 seconds.
-	// For example, if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, during a node shutdown the first 20 seconds would be reserved for gracefully terminating normal pods, and the last 10 seconds would be reserved for terminating critical pods.
+	// 指定分配给节点优雅关闭等待的时间，默认0s。if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间，前20秒将保留用于优雅地终止正常pod，最后10秒将保留用于终止关键pod。
 	// +featureGate=GracefulNodeShutdown
 	// +optional
 	ShutdownGracePeriodCriticalPods metav1.Duration
+
 	// ShutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based
 	// on their associated priority class value.
 	// When a shutdown request is received, the Kubelet will initiate shutdown on all pods
@@ -589,12 +579,10 @@ type MemoryReservation struct {
 	Limits   v1.ResourceMap
 }
 
-// ShutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based on their associated priority class value
+// ShutdownGracePeriodByPodPriority pod优雅关闭的配置
 type ShutdownGracePeriodByPodPriority struct {
-	// priority is the priority value associated with the shutdown grace period
-	Priority int32
-	// shutdownGracePeriodSeconds is the shutdown grace period in seconds
-	ShutdownGracePeriodSeconds int64
+	Priority                   int32 // 优先级
+	ShutdownGracePeriodSeconds int64 // 优雅关闭等待的时间
 }
 
 type MemorySwapConfiguration struct {

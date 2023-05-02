@@ -118,13 +118,8 @@ type VolumeManager interface {
 	// pod.Spec.Volumes[x].Name). It returns an empty VolumeMap if pod has no
 	// volumes.
 	GetMountedVolumesForPod(podName types.UniquePodName) container.VolumeMap
-
-	// GetPossiblyMountedVolumesForPod returns a VolumeMap containing the volumes
-	// referenced by the specified pod that are either successfully attached
-	// and mounted or are "uncertain", i.e. a volume plugin may be mounting
-	// them right now. The key in the map is the OuterVolumeSpecName (i.e.
-	// pod.Spec.Volumes[x].Name). It returns an empty VolumeMap if pod has no
-	// volumes.
+	// 返回一个VolumeMap，其中包含指定pod引用的卷，这些卷要么是成功附加和挂载的，要么是“不确定的”，即卷插件可能正在挂载它们。
+	// 映射中的键是OuterVolumeSpecName(即pod.Spec.Volumes[x].name)。如果pod没有卷，它返回一个空的VolumeMap。
 	GetPossiblyMountedVolumesForPod(podName types.UniquePodName) container.VolumeMap
 
 	// GetExtraSupplementalGroupsForPod returns a list of the extra

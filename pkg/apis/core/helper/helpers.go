@@ -453,7 +453,7 @@ func PersistentVolumeClaimHasClass(claim *core.PersistentVolumeClaim) bool {
 	return false
 }
 
-func toResourceNames(resources core.ResourceList) []core.ResourceName {
+func toResourceNames(resources core.ResourceMap) []core.ResourceName {
 	result := []core.ResourceName{}
 	for resourceName := range resources {
 		result = append(result, resourceName)

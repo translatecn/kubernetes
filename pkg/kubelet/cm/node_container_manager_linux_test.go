@@ -102,7 +102,7 @@ func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 				},
 			},
 		}
-		cm := &containerManagerImpl{
+		cm := &ContainerManagerImpl{
 			NodeConfig: nc,
 			capacity:   tc.capacity,
 		}
@@ -161,7 +161,7 @@ func TestNodeAllocatableReservationForScheduling(t *testing.T) {
 				},
 			},
 		}
-		cm := &containerManagerImpl{
+		cm := &ContainerManagerImpl{
 			NodeConfig: nc,
 			capacity:   tc.capacity,
 		}
@@ -247,7 +247,7 @@ func TestNodeAllocatableForEnforcement(t *testing.T) {
 				},
 			},
 		}
-		cm := &containerManagerImpl{
+		cm := &ContainerManagerImpl{
 			NodeConfig: nc,
 			capacity:   tc.capacity,
 		}
@@ -334,7 +334,7 @@ func TestNodeAllocatableInputValidation(t *testing.T) {
 				},
 			},
 		}
-		cm := &containerManagerImpl{
+		cm := &ContainerManagerImpl{
 			NodeConfig: nc,
 			capacity:   tc.capacity,
 		}
@@ -379,7 +379,7 @@ func TestNodeAllocatableInputValidation(t *testing.T) {
 				},
 			},
 		}
-		cm := &containerManagerImpl{
+		cm := &ContainerManagerImpl{
 			NodeConfig: nc,
 			capacity:   tc.capacity,
 		}

@@ -2290,15 +2290,14 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.PersistentVolumeClaimVolumeSource": {
-        "description": "PersistentVolumeClaimVolumeSource references the user's PVC in the same namespace. This volume finds the bound PV and mounts that volume for the pod. A PersistentVolumeClaimVolumeSource is, essentially, a wrapper around another type of volume that is owned by someone else (the system).",
         "properties": {
           "claimName": {
             "default": "",
-            "description": "claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+            "description": "pvc的名称，将使用该名称创建volume More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
             "type": "string"
           },
           "readOnly": {
-            "description": "readOnly Will force the ReadOnly setting in VolumeMounts. Default false.",
+            "description": "在volume 挂载时设置read only",
             "type": "boolean"
           }
         },
@@ -2471,11 +2470,11 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.PodOS": {
-        "description": "PodOS defines the OS parameters of a pod.",
+        "description": "PodOS 定义pod的操作系统参数。",
         "properties": {
           "name": {
             "default": "",
-            "description": "Name is the name of the operating system. The currently supported values are linux and windows. Additional value may be defined in future and can be one of: https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration Clients should expect to handle additional values and treat unrecognized values in this field as os: null",
+            "description": "操作系统名称 :linux、windows Additional value may be defined in future and can be one of: https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration Clients should expect to handle additional values and treat unrecognized values in this field as os: null",
             "type": "string"
           }
         },
@@ -2747,7 +2746,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.PodOS"
               }
             ],
-            "description": "Specifies the OS of the containers in the pod. Some pod and container fields are restricted if this is set.\n\nIf the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions\n\nIf the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup"
+            "description": "指定pod中容器的操作系统。\n\nIf the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions\n\nIf the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup"
           },
           "overhead": {
             "additionalProperties": {
@@ -2758,7 +2757,7 @@
               ],
               "default": {}
             },
-            "description": "Overhead 表示与运行给定RuntimeClass的pod相关的资源开销. 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销. RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求. 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
+            "description": "Overhead 表示与运行给定RuntimeClass的pod相关的资源开销. 提供一种机制来计算特定于给定运行时解决方案的 pod 开销 该字段将由RuntimeClass准入控制器在准入时自动填充.如果启用了RuntimeClass准入控制器,则在Pod创建请求中不能设置开销. RuntimeClass接收控制器将拒绝已经设置开销的Pod创建请求. 如果在PodSpec中配置并选择了RuntimeClass,则开销将被设置为相应的RuntimeClass中定义的值,否则它将保持未设置并视为零. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md",
             "type": "object"
           },
           "preemptionPolicy": {
@@ -3237,7 +3236,7 @@
               ],
               "default": {}
             },
-            "description": "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+            "description": "所需资源的上限 More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
             "type": "object"
           },
           "requests": {
@@ -3249,7 +3248,7 @@
               ],
               "default": {}
             },
-            "description": "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+            "description": "所有资源的最小值 More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
             "type": "object"
           }
         },
@@ -3918,7 +3917,7 @@
                 "$ref": "#/components/schemas/io.k8s.api.core.v1.PersistentVolumeClaimVolumeSource"
               }
             ],
-            "description": "persistentVolumeClaimVolumeSource represents a reference to a PersistentVolumeClaim in the same namespace. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims"
+            "description": "pvc信息 More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims"
           },
           "photonPersistentDisk": {
             "allOf": [

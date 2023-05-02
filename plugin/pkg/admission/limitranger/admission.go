@@ -213,8 +213,8 @@ func NewLimitRanger(actions LimitRangerActions) (*LimitRanger, error) {
 // the requirement.Requests are taken from the LimitRange default request (if specified)
 func defaultContainerResourceRequirements(limitRange *corev1.LimitRange) api.ResourceRequirements {
 	requirements := api.ResourceRequirements{}
-	requirements.Requests = api.ResourceList{}
-	requirements.Limits = api.ResourceList{}
+	requirements.Requests = api.ResourceMap{}
+	requirements.Limits = api.ResourceMap{}
 
 	for i := range limitRange.Spec.Limits {
 		limit := limitRange.Spec.Limits[i]
@@ -235,10 +235,10 @@ func mergeContainerResources(container *api.Container, defaultRequirements *api.
 	setRequests := []string{}
 	setLimits := []string{}
 	if container.Resources.Limits == nil {
-		container.Resources.Limits = api.ResourceList{}
+		container.Resources.Limits = api.ResourceMap{}
 	}
 	if container.Resources.Requests == nil {
-		container.Resources.Requests = api.ResourceList{}
+		container.Resources.Requests = api.ResourceMap{}
 	}
 	for k, v := range defaultRequirements.Limits {
 		_, found := container.Resources.Limits[k]
@@ -304,7 +304,7 @@ func requestLimitEnforcedValues(requestQuantity, limitQuantity, enforcedQuantity
 }
 
 // minConstraint enforces the min constraint over the specified resource
-func minConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceList, limit api.ResourceList) error {
+func minConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceMap, limit api.ResourceMap) error {
 	req, reqExists := request[api.ResourceName(resourceName)]
 	lim, limExists := limit[api.ResourceName(resourceName)]
 	observedReqValue, observedLimValue, enforcedValue := requestLimitEnforcedValues(req, lim, enforced)
@@ -323,7 +323,7 @@ func minConstraint(limitType string, resourceName string, enforced resource.Quan
 
 // maxRequestConstraint enforces the max constraint over the specified resource
 // use when specify LimitType resource doesn't recognize limit values
-func maxRequestConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceList) error {
+func maxRequestConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceMap) error {
 	req, reqExists := request[api.ResourceName(resourceName)]
 	observedReqValue, _, enforcedValue := requestLimitEnforcedValues(req, resource.Quantity{}, enforced)
 
@@ -337,7 +337,7 @@ func maxRequestConstraint(limitType string, resourceName string, enforced resour
 }
 
 // maxConstraint enforces the max constraint over the specified resource
-func maxConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceList, limit api.ResourceList) error {
+func maxConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceMap, limit api.ResourceMap) error {
 	req, reqExists := request[api.ResourceName(resourceName)]
 	lim, limExists := limit[api.ResourceName(resourceName)]
 	observedReqValue, observedLimValue, enforcedValue := requestLimitEnforcedValues(req, lim, enforced)
@@ -355,7 +355,7 @@ func maxConstraint(limitType string, resourceName string, enforced resource.Quan
 }
 
 // limitRequestRatioConstraint enforces the limit to request ratio over the specified resource
-func limitRequestRatioConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceList, limit api.ResourceList) error {
+func limitRequestRatioConstraint(limitType string, resourceName string, enforced resource.Quantity, request api.ResourceMap, limit api.ResourceMap) error {
 	req, reqExists := request[api.ResourceName(resourceName)]
 	lim, limExists := limit[api.ResourceName(resourceName)]
 	observedReqValue, observedLimValue, _ := requestLimitEnforcedValues(req, lim, enforced)
@@ -384,8 +384,8 @@ func limitRequestRatioConstraint(limitType string, resourceName string, enforced
 
 // sum takes the total of each named resource across all inputs
 // if a key is not in each input, then the output resource list will omit the key
-func sum(inputs []api.ResourceList) api.ResourceList {
-	result := api.ResourceList{}
+func sum(inputs []api.ResourceMap) api.ResourceMap {
+	result := api.ResourceMap{}
 	keys := []api.ResourceName{}
 	for i := range inputs {
 		for k := range inputs[i] {
@@ -486,7 +486,7 @@ func PersistentVolumeClaimValidateLimitFunc(limitRange *corev1.LimitRange, pvc *
 		if limitType == corev1.LimitTypePersistentVolumeClaim {
 			for k, v := range limit.Min {
 				// normal usage of minConstraint. pvc.Spec.Resources.Limits is not recognized as user input
-				if err := minConstraint(string(limitType), string(k), v, pvc.Spec.Resources.Requests, api.ResourceList{}); err != nil {
+				if err := minConstraint(string(limitType), string(k), v, pvc.Spec.Resources.Requests, api.ResourceMap{}); err != nil {
 					errs = append(errs, err)
 				}
 			}
@@ -561,7 +561,7 @@ func PodValidateLimitFunc(limitRange *corev1.LimitRange, pod *api.Pod) error {
 
 		// enforce pod limits on init containers
 		if limitType == corev1.LimitTypePod {
-			containerRequests, containerLimits := []api.ResourceList{}, []api.ResourceList{}
+			containerRequests, containerLimits := []api.ResourceMap{}, []api.ResourceMap{}
 			for j := range pod.Spec.Containers {
 				container := &pod.Spec.Containers[j]
 				containerRequests = append(containerRequests, container.Resources.Requests)

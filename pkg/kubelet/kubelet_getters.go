@@ -289,11 +289,9 @@ func (kl *Kubelet) GetExtraSupplementalGroupsForPod(pod *v1.Pod) []int64 {
 	return kl.volumeManager.GetExtraSupplementalGroupsForPod(pod)
 }
 
-// getPodVolumePathListFromDisk returns a list of the volume paths by reading the
-// volume directories for the given pod from the disk.
-func (kl *Kubelet) getPodVolumePathListFromDisk(podUID types.UID) ([]string, error) {
+func (kl *Kubelet) getPodVolumePathListFromDisk(podUID types.UID) ([]string, error) { // ✅
 	volumes := []string{}
-	podVolDir := kl.getPodVolumesDir(podUID)
+	podVolDir := kl.getPodVolumesDir(podUID) // ✅
 
 	if pathExists, pathErr := mount.PathExists(podVolDir); pathErr != nil {
 		return volumes, fmt.Errorf("error checking if path %q exists: %v", podVolDir, pathErr)
@@ -308,7 +306,7 @@ func (kl *Kubelet) getPodVolumePathListFromDisk(podUID types.UID) ([]string, err
 		return volumes, err
 	}
 	for _, volumePluginDir := range volumePluginDirs {
-		volumePluginName := volumePluginDir.Name()
+		volumePluginName := volumePluginDir.Name() // 目录名
 		volumePluginPath := filepath.Join(podVolDir, volumePluginName)
 		volumeDirs, err := utilpath.ReadDirNoStat(volumePluginPath)
 		if err != nil {

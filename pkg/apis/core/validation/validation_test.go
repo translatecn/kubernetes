@@ -101,7 +101,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"good-volume": {
 			isExpectedFailure: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -116,7 +116,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"good-volume-with-capacity-unit": {
 			isExpectedFailure: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10Gi"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -131,7 +131,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"good-volume-without-capacity-unit": {
 			isExpectedFailure: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -146,7 +146,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"good-volume-with-storage-class": {
 			isExpectedFailure: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -162,7 +162,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"good-volume-with-retain-policy": {
 			isExpectedFailure: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -178,7 +178,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"good-volume-with-volume-mode": {
 			isExpectedFailure: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -194,7 +194,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"invalid-accessmode": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{"fakemode"},
@@ -209,7 +209,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"invalid-reclaimpolicy": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -225,7 +225,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"invalid-volume-mode": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -242,7 +242,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 			isExpectedFailure:      false,
 			enableReadWriteOncePod: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{"ReadWriteOncePod"},
@@ -258,7 +258,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 			isExpectedFailure:      true,
 			enableReadWriteOncePod: false,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{"ReadWriteOncePod"},
@@ -274,7 +274,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 			isExpectedFailure:      true,
 			enableReadWriteOncePod: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{"ReadWriteOncePod", "ReadWriteMany"},
@@ -289,7 +289,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"unexpected-namespace": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "unexpected-namespace", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -304,7 +304,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"missing-volume-source": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -313,7 +313,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"bad-name": {
 			isExpectedFailure: true,
 			volume: testVolume("123*Bad(Name", "unexpected-namespace", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -328,7 +328,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"missing-name": {
 			isExpectedFailure: true,
 			volume: testVolume("", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -355,7 +355,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"bad-volume-zero-capacity": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("0"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -370,7 +370,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"missing-accessmodes": {
 			isExpectedFailure: true,
 			volume: testVolume("goodname", "missing-accessmodes", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				PersistentVolumeSource: core.PersistentVolumeSource{
@@ -384,7 +384,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"too-many-sources": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("5G"),
 				},
 				PersistentVolumeSource: core.PersistentVolumeSource{
@@ -399,7 +399,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"host mount of / with recycle reclaim policy": {
 			isExpectedFailure: true,
 			volume: testVolume("bad-recycle-do-not-want", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -415,7 +415,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"host mount of / with recycle reclaim policy 2": {
 			isExpectedFailure: true,
 			volume: testVolume("bad-recycle-do-not-want", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -431,7 +431,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"invalid-storage-class-name": {
 			isExpectedFailure: true,
 			volume: testVolume("invalid-storage-class-name", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -447,7 +447,7 @@ func TestValidatePersistentVolumes(t *testing.T) {
 		"bad-hostpath-volume-backsteps": {
 			isExpectedFailure: true,
 			volume: testVolume("foo", "", core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -517,7 +517,7 @@ func TestValidatePersistentVolumeSpec(t *testing.T) {
 			isExpectedFailure: false,
 			isInlineSpec:      false,
 			pvSpec: &core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				StorageClassName:              "testclass",
@@ -537,7 +537,7 @@ func TestValidatePersistentVolumeSpec(t *testing.T) {
 			isExpectedFailure: true,
 			isInlineSpec:      true,
 			pvSpec: &core.PersistentVolumeSpec{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 				PersistentVolumeSource: core.PersistentVolumeSource{
@@ -649,7 +649,7 @@ func TestValidatePersistentVolumeSpec(t *testing.T) {
 
 func TestValidatePersistentVolumeSourceUpdate(t *testing.T) {
 	validVolume := testVolume("foo", "", core.PersistentVolumeSpec{
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceName(core.ResourceStorage): resource.MustParse("1G"),
 		},
 		AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -678,7 +678,7 @@ func TestValidatePersistentVolumeSourceUpdate(t *testing.T) {
 	}
 
 	validCSIVolume := testVolume("csi-volume", "", core.PersistentVolumeSpec{
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceName(core.ResourceStorage): resource.MustParse("1G"),
 		},
 		AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -988,7 +988,7 @@ func pvcTemplateWithAccessModes(accessModes []core.PersistentVolumeAccessMode) *
 
 func testLocalVolume(path string, affinity *core.VolumeNodeAffinity) core.PersistentVolumeSpec {
 	return core.PersistentVolumeSpec{
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 		},
 		AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -1056,7 +1056,7 @@ func TestValidateLocalVolumes(t *testing.T) {
 func testVolumeWithNodeAffinity(affinity *core.VolumeNodeAffinity) *core.PersistentVolume {
 	return testVolume("test-affinity-volume", "",
 		core.PersistentVolumeSpec{
-			Capacity: core.ResourceList{
+			Capacity: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -1210,7 +1210,7 @@ func testVolumeSnapshotDataSourceInSpec(name string, kind string, apiGroup strin
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1298,7 +1298,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1457,7 +1457,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 			claim: testVolumeClaim(goodName, goodNS, core.PersistentVolumeClaimSpec{
 				AccessModes: []core.PersistentVolumeAccessMode{"ReadWriteOncePod"},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1469,7 +1469,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 			claim: testVolumeClaim(goodName, goodNS, core.PersistentVolumeClaimSpec{
 				AccessModes: []core.PersistentVolumeAccessMode{"ReadWriteOncePod"},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1481,7 +1481,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 			claim: testVolumeClaim(goodName, goodNS, core.PersistentVolumeClaimSpec{
 				AccessModes: []core.PersistentVolumeAccessMode{"ReadWriteOncePod", "ReadWriteMany"},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1503,7 +1503,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadOnlyMany,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("0G"),
 					},
 				},
@@ -1527,7 +1527,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadOnlyMany,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1538,7 +1538,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 			claim: testVolumeClaim(goodName, goodNS, core.PersistentVolumeClaimSpec{
 				AccessModes: []core.PersistentVolumeAccessMode{"fakemode"},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1548,7 +1548,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 			isExpectedFailure: true,
 			claim: testVolumeClaim(goodName, goodNS, core.PersistentVolumeClaimSpec{
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1569,7 +1569,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadWriteOnce,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					},
 				},
@@ -1591,7 +1591,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadOnlyMany,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("-10G"),
 					},
 				},
@@ -1613,7 +1613,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadOnlyMany,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("0G"),
 					},
 				},
@@ -1635,7 +1635,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadOnlyMany,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1650,7 +1650,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadOnlyMany,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1664,7 +1664,7 @@ func testValidatePVC(t *testing.T, ephemeral bool) {
 					core.ReadWriteOnce,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -1809,7 +1809,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1822,7 +1822,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1832,7 +1832,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1843,7 +1843,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1855,7 +1855,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("20G"),
 			},
 		},
@@ -1866,7 +1866,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadWriteOnce,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1878,7 +1878,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 		},
 		VolumeMode: &file,
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1890,7 +1890,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 		},
 		VolumeMode: &block,
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1902,7 +1902,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 		},
 		VolumeMode: nil,
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1913,7 +1913,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1924,7 +1924,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1936,7 +1936,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -1948,7 +1948,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("15G"),
 			},
 		},
@@ -1962,7 +1962,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("5G"),
 			},
 		},
@@ -1976,7 +1976,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("12G"),
 			},
 		},
@@ -1989,7 +1989,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -2000,7 +2000,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -2011,7 +2011,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -2022,7 +2022,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -2034,7 +2034,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 				core.ReadOnlyMany,
 			},
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 			},
@@ -2046,7 +2046,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 				core.ReadOnlyMany,
 			},
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 			},
@@ -2058,7 +2058,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 				core.ReadOnlyMany,
 			},
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 			},
@@ -2069,7 +2069,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadWriteOncePod,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -2081,7 +2081,7 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadWriteOncePod,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -2093,13 +2093,13 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("15G"),
 			},
 		},
 	}, core.PersistentVolumeClaimStatus{
 		Phase: core.ClaimBound,
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceStorage: resource.MustParse("10G"),
 		},
 	})
@@ -2110,13 +2110,13 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("12G"),
 			},
 		},
 	}, core.PersistentVolumeClaimStatus{
 		Phase: core.ClaimPending,
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceStorage: resource.MustParse("10G"),
 		},
 	})
@@ -2127,13 +2127,13 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceStorage: resource.MustParse("13G"),
 			},
 		},
 	}, core.PersistentVolumeClaimStatus{
 		Phase: core.ClaimBound,
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceStorage: resource.MustParse("10G"),
 		},
 	})
@@ -2144,13 +2144,13 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceStorage: resource.MustParse("10G"),
 			},
 		},
 	}, core.PersistentVolumeClaimStatus{
 		Phase: core.ClaimBound,
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceStorage: resource.MustParse("10G"),
 		},
 	})
@@ -2161,13 +2161,13 @@ func TestValidatePersistentVolumeClaimUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceStorage: resource.MustParse("3G"),
 			},
 		},
 	}, core.PersistentVolumeClaimStatus{
 		Phase: core.ClaimBound,
-		Capacity: core.ResourceList{
+		Capacity: core.ResourceMap{
 			core.ResourceStorage: resource.MustParse("10G"),
 		},
 	})
@@ -5090,12 +5090,12 @@ func TestHugePagesIsolation(t *testing.T) {
 						{
 							Name: "ctr", Image: "image", ImagePullPolicy: "IfNotPresent", TerminationMessagePolicy: "File",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
@@ -5116,13 +5116,13 @@ func TestHugePagesIsolation(t *testing.T) {
 						{
 							Name: "ctr", Image: "image", ImagePullPolicy: "IfNotPresent", TerminationMessagePolicy: "File",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
 									core.ResourceName("hugepages-1Gi"):     resource.MustParse("2Gi"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
@@ -5145,13 +5145,13 @@ func TestHugePagesIsolation(t *testing.T) {
 						{
 							Name: "ctr", Image: "image", ImagePullPolicy: "IfNotPresent", TerminationMessagePolicy: "File",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
 									core.ResourceName("hugepages-1Gi"):     resource.MustParse("2Gi"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
@@ -5173,10 +5173,10 @@ func TestHugePagesIsolation(t *testing.T) {
 						{
 							Name: "ctr", Image: "image", ImagePullPolicy: "IfNotPresent", TerminationMessagePolicy: "File",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("hugepages-2Mi"): resource.MustParse("1Gi"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName("hugepages-2Mi"): resource.MustParse("1Gi"),
 								},
 							},
@@ -5196,12 +5196,12 @@ func TestHugePagesIsolation(t *testing.T) {
 						{
 							Name: "ctr", Image: "image", ImagePullPolicy: "IfNotPresent", TerminationMessagePolicy: "File",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("1Gi"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 									core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 									core.ResourceName("hugepages-2Mi"):     resource.MustParse("2Gi"),
@@ -5303,7 +5303,7 @@ func createTestVolModePVC(vmode *core.PersistentVolumeMode) *core.PersistentVolu
 		},
 		Spec: core.PersistentVolumeClaimSpec{
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 				},
 			},
@@ -5324,7 +5324,7 @@ func createTestVolModePV(vmode *core.PersistentVolumeMode) *core.PersistentVolum
 			Namespace: "",
 		},
 		Spec: core.PersistentVolumeSpec{
-			Capacity: core.ResourceList{
+			Capacity: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -5350,7 +5350,7 @@ func createTestPV() *core.PersistentVolume {
 			Namespace: "",
 		},
 		Spec: core.PersistentVolumeSpec{
-			Capacity: core.ResourceList{
+			Capacity: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
@@ -5379,7 +5379,7 @@ func TestAlphaLocalStorageCapacityIsolation(t *testing.T) {
 	}
 
 	containerLimitCase := core.ResourceRequirements{
-		Limits: core.ResourceList{
+		Limits: core.ResourceMap{
 			core.ResourceEphemeralStorage: *resource.NewMilliQuantity(
 				int64(40000),
 				resource.BinarySI),
@@ -5392,7 +5392,7 @@ func TestAlphaLocalStorageCapacityIsolation(t *testing.T) {
 
 func TestValidateResourceQuotaWithAlphaLocalStorageCapacityIsolation(t *testing.T) {
 	spec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU:                      resource.MustParse("100"),
 			core.ResourceMemory:                   resource.MustParse("10000"),
 			core.ResourceRequestsCPU:              resource.MustParse("100"),
@@ -6163,7 +6163,7 @@ func TestValidateVolumeMounts(t *testing.T) {
 					core.ReadWriteOnce,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -6495,7 +6495,7 @@ func TestAlphaValidateVolumeDevices(t *testing.T) {
 					core.ReadWriteOnce,
 				},
 				Resources: core.ResourceRequirements{
-					Requests: core.ResourceList{
+					Requests: core.ResourceMap{
 						core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 					},
 				},
@@ -6783,8 +6783,8 @@ func TestValidatePullPolicy(t *testing.T) {
 	}
 }
 
-func getResourceLimits(cpu, memory string) core.ResourceList {
-	res := core.ResourceList{}
+func getResourceLimits(cpu, memory string) core.ResourceMap {
+	res := core.ResourceMap{}
 	res[core.ResourceCPU] = resource.MustParse(cpu)
 	res[core.ResourceMemory] = resource.MustParse(memory)
 	return res
@@ -7066,7 +7066,7 @@ func TestValidateEphemeralContainers(t *testing.T) {
 						ImagePullPolicy:          "IfNotPresent",
 						TerminationMessagePolicy: "File",
 						Resources: core.ResourceRequirements{
-							Limits: core.ResourceList{
+							Limits: core.ResourceMap{
 								core.ResourceName(core.ResourceCPU): resource.MustParse("10"),
 							},
 						},
@@ -7264,7 +7264,7 @@ func TestValidateContainers(t *testing.T) {
 			Name:  "resources-test",
 			Image: "image",
 			Resources: core.ResourceRequirements{
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("my.org/resource"):   resource.MustParse("10"),
@@ -7277,11 +7277,11 @@ func TestValidateContainers(t *testing.T) {
 			Name:  "resources-test-with-request-and-limit",
 			Image: "image",
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -7293,10 +7293,10 @@ func TestValidateContainers(t *testing.T) {
 			Name:  "resources-request-limit-simple",
 			Image: "image",
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU): resource.MustParse("8"),
 				},
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU): resource.MustParse("10"),
 				},
 			},
@@ -7307,12 +7307,12 @@ func TestValidateContainers(t *testing.T) {
 			Name:  "resources-request-limit-edge",
 			Image: "image",
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("my.org/resource"):   resource.MustParse("10"),
 				},
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("my.org/resource"):   resource.MustParse("10"),
@@ -7325,11 +7325,11 @@ func TestValidateContainers(t *testing.T) {
 			Name:  "resources-request-limit-partials",
 			Image: "image",
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("9.5"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):  resource.MustParse("10"),
 					core.ResourceName("my.org/resource"): resource.MustParse("10"),
 				},
@@ -7341,7 +7341,7 @@ func TestValidateContainers(t *testing.T) {
 			Name:  "resources-request",
 			Image: "image",
 			Resources: core.ResourceRequirements{
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("9.5"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -7882,7 +7882,7 @@ func TestValidateContainers(t *testing.T) {
 					Name:  "abc-123",
 					Image: "image",
 					Resources: core.ResourceRequirements{
-						Limits: core.ResourceList{
+						Limits: core.ResourceMap{
 							"disk": resource.MustParse("10G"),
 						},
 					},
@@ -7968,7 +7968,7 @@ func TestValidateContainers(t *testing.T) {
 					Name:  "abc-123",
 					Image: "image",
 					Resources: core.ResourceRequirements{
-						Limits: core.ResourceList{
+						Limits: core.ResourceMap{
 							core.ResourceName("attachable-volumes-aws-ebs"): *resource.NewQuantity(10, resource.DecimalSI),
 						},
 					},
@@ -8897,7 +8897,7 @@ func TestValidatePodSpec(t *testing.T) {
 			RestartPolicy:    core.RestartPolicyAlways,
 			DNSPolicy:        core.DNSClusterFirst,
 			RuntimeClassName: utilpointer.StringPtr("valid-sandbox"),
-			Overhead:         core.ResourceList{},
+			Overhead:         core.ResourceMap{},
 		},
 		"populate DNSPolicy": {
 			Containers: []core.Container{{Name: "ctr", Image: "image", ImagePullPolicy: "IfNotPresent", TerminationMessagePolicy: "File"}},
@@ -9146,7 +9146,7 @@ func TestValidatePod(t *testing.T) {
 			core.ReadWriteOnce,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -9680,10 +9680,10 @@ func TestValidatePod(t *testing.T) {
 						Image:           "image",
 						ImagePullPolicy: "IfNotPresent",
 						Resources: core.ResourceRequirements{
-							Requests: core.ResourceList{
+							Requests: core.ResourceMap{
 								core.ResourceName("example.com/a"): resource.MustParse("10"),
 							},
-							Limits: core.ResourceList{
+							Limits: core.ResourceMap{
 								core.ResourceName("example.com/a"): resource.MustParse("10"),
 							},
 						},
@@ -9705,10 +9705,10 @@ func TestValidatePod(t *testing.T) {
 						Image:           "image",
 						ImagePullPolicy: "IfNotPresent",
 						Resources: core.ResourceRequirements{
-							Requests: core.ResourceList{
+							Requests: core.ResourceMap{
 								core.ResourceName("example.com/a"): resource.MustParse("10"),
 							},
-							Limits: core.ResourceList{
+							Limits: core.ResourceMap{
 								core.ResourceName("example.com/a"): resource.MustParse("10"),
 							},
 						},
@@ -10523,10 +10523,10 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("invalid-name"): resource.MustParse("2"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName("invalid-name"): resource.MustParse("2"),
 								},
 							},
@@ -10548,10 +10548,10 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("2"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("1"),
 								},
 							},
@@ -10573,7 +10573,7 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("2"),
 								},
 							},
@@ -10595,7 +10595,7 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("500m"),
 								},
 							},
@@ -10617,7 +10617,7 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("500m"),
 								},
 							},
@@ -10640,10 +10640,10 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("5"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("2.5"),
 								},
 							},
@@ -10665,10 +10665,10 @@ func TestValidatePod(t *testing.T) {
 							Image:           "image",
 							ImagePullPolicy: "IfNotPresent",
 							Resources: core.ResourceRequirements{
-								Requests: core.ResourceList{
+								Requests: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("2.5"),
 								},
-								Limits: core.ResourceList{
+								Limits: core.ResourceMap{
 									core.ResourceName("example.com/a"): resource.MustParse("2.5"),
 								},
 							},
@@ -14764,7 +14764,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("my.org/gpu"):        resource.MustParse("10"),
@@ -14781,7 +14781,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -14796,7 +14796,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("my.org/gpu"):        resource.MustParse("10"),
@@ -14813,7 +14813,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -14851,7 +14851,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -14865,7 +14865,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -14889,7 +14889,7 @@ func TestValidateNode(t *testing.T) {
 			},
 			Status: core.NodeStatus{
 				Addresses: []core.NodeAddress{},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -14901,7 +14901,7 @@ func TestValidateNode(t *testing.T) {
 				Labels: invalidSelector,
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -14933,7 +14933,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -14951,7 +14951,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -14969,7 +14969,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -15008,7 +15008,7 @@ func TestValidateNode(t *testing.T) {
 			},
 			Status: core.NodeStatus{
 				Addresses: []core.NodeAddress{},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -15040,7 +15040,7 @@ func TestValidateNode(t *testing.T) {
 			},
 			Status: core.NodeStatus{
 				Addresses: []core.NodeAddress{},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -15054,7 +15054,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -15071,7 +15071,7 @@ func TestValidateNode(t *testing.T) {
 				Addresses: []core.NodeAddress{
 					{Type: core.NodeExternalIP, Address: "something"},
 				},
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 				},
@@ -15190,7 +15190,7 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Name: "foo",
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceCPU:    resource.MustParse("10000"),
 					core.ResourceMemory: resource.MustParse("100"),
 				},
@@ -15200,7 +15200,7 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Name: "foo",
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceCPU:    resource.MustParse("100"),
 					core.ResourceMemory: resource.MustParse("10000"),
 				},
@@ -15212,7 +15212,7 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Labels: map[string]string{"bar": "foo"},
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceCPU:    resource.MustParse("10000"),
 					core.ResourceMemory: resource.MustParse("100"),
 				},
@@ -15223,7 +15223,7 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Labels: map[string]string{"bar": "fooobaz"},
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceCPU:    resource.MustParse("100"),
 					core.ResourceMemory: resource.MustParse("10000"),
 				},
@@ -15397,7 +15397,7 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Name: "valid-extended-resources",
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("example.com/a"):     resource.MustParse("5"),
@@ -15414,7 +15414,7 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Name: "invalid-fractional-extended-capacity",
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("example.com/a"):     resource.MustParse("500m"),
@@ -15430,12 +15430,12 @@ func TestValidateNodeUpdate(t *testing.T) {
 				Name: "invalid-fractional-extended-allocatable",
 			},
 			Status: core.NodeStatus{
-				Capacity: core.ResourceList{
+				Capacity: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("example.com/a"):     resource.MustParse("5"),
 				},
-				Allocatable: core.ResourceList{
+				Allocatable: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 					core.ResourceName("example.com/a"):     resource.MustParse("4.5"),
@@ -16743,8 +16743,8 @@ func TestValidateResourceNames(t *testing.T) {
 	}
 }
 
-func getResourceList(cpu, memory string) core.ResourceList {
-	res := core.ResourceList{}
+func getResourceList(cpu, memory string) core.ResourceMap {
+	res := core.ResourceMap{}
 	if cpu != "" {
 		res[core.ResourceCPU] = resource.MustParse(cpu)
 	}
@@ -16754,16 +16754,16 @@ func getResourceList(cpu, memory string) core.ResourceList {
 	return res
 }
 
-func getStorageResourceList(storage string) core.ResourceList {
-	res := core.ResourceList{}
+func getStorageResourceList(storage string) core.ResourceMap {
+	res := core.ResourceMap{}
 	if storage != "" {
 		res[core.ResourceStorage] = resource.MustParse(storage)
 	}
 	return res
 }
 
-func getLocalStorageResourceList(ephemeralStorage string) core.ResourceList {
-	res := core.ResourceList{}
+func getLocalStorageResourceList(ephemeralStorage string) core.ResourceMap {
+	res := core.ResourceMap{}
 	if ephemeralStorage != "" {
 		res[core.ResourceEphemeralStorage] = resource.MustParse(ephemeralStorage)
 	}
@@ -17112,7 +17112,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -17123,7 +17123,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -17139,7 +17139,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -17148,7 +17148,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 		Conditions: []core.PersistentVolumeClaimCondition{
 			{Type: core.PersistentVolumeClaimResizing, Status: core.ConditionTrue},
 		},
-		AllocatedResources: core.ResourceList{
+		AllocatedResources: core.ResourceMap{
 			core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 		},
 	})
@@ -17159,7 +17159,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -17168,7 +17168,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 		Conditions: []core.PersistentVolumeClaimCondition{
 			{Type: core.PersistentVolumeClaimResizing, Status: core.ConditionTrue},
 		},
-		AllocatedResources: core.ResourceList{
+		AllocatedResources: core.ResourceMap{
 			core.ResourceName(core.ResourceStorage): resource.MustParse("-10G"),
 		},
 	})
@@ -17178,13 +17178,13 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 			core.ReadWriteOnce,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
 	}, core.PersistentVolumeClaimStatus{
 		Phase: core.ClaimPending,
-		AllocatedResources: core.ResourceList{
+		AllocatedResources: core.ResourceMap{
 			core.ResourceName(core.ResourceCPU): resource.MustParse("10G"),
 		},
 	})
@@ -17277,7 +17277,7 @@ func TestValidatePersistentVolumeClaimStatusUpdate(t *testing.T) {
 
 func TestValidateResourceQuota(t *testing.T) {
 	spec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU:                    resource.MustParse("100"),
 			core.ResourceMemory:                 resource.MustParse("10000"),
 			core.ResourceRequestsCPU:            resource.MustParse("100"),
@@ -17294,7 +17294,7 @@ func TestValidateResourceQuota(t *testing.T) {
 	}
 
 	terminatingSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU:       resource.MustParse("100"),
 			core.ResourceLimitsCPU: resource.MustParse("200"),
 		},
@@ -17302,28 +17302,28 @@ func TestValidateResourceQuota(t *testing.T) {
 	}
 
 	nonTerminatingSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU: resource.MustParse("100"),
 		},
 		Scopes: []core.ResourceQuotaScope{core.ResourceQuotaScopeNotTerminating},
 	}
 
 	bestEffortSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourcePods: resource.MustParse("100"),
 		},
 		Scopes: []core.ResourceQuotaScope{core.ResourceQuotaScopeBestEffort},
 	}
 
 	nonBestEffortSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU: resource.MustParse("100"),
 		},
 		Scopes: []core.ResourceQuotaScope{core.ResourceQuotaScopeNotBestEffort},
 	}
 
 	crossNamespaceAffinitySpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU:       resource.MustParse("100"),
 			core.ResourceLimitsCPU: resource.MustParse("200"),
 		},
@@ -17344,13 +17344,13 @@ func TestValidateResourceQuota(t *testing.T) {
 
 	// storage is not yet supported as a quota tracked resource
 	invalidQuotaResourceSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceStorage: resource.MustParse("10"),
 		},
 	}
 
 	negativeSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU:                    resource.MustParse("-100"),
 			core.ResourceMemory:                 resource.MustParse("-10000"),
 			core.ResourcePods:                   resource.MustParse("-10"),
@@ -17363,13 +17363,13 @@ func TestValidateResourceQuota(t *testing.T) {
 	}
 
 	fractionalComputeSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU: resource.MustParse("100m"),
 		},
 	}
 
 	fractionalPodSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourcePods:                   resource.MustParse(".1"),
 			core.ResourceServices:               resource.MustParse(".5"),
 			core.ResourceReplicationControllers: resource.MustParse("1.25"),
@@ -17378,14 +17378,14 @@ func TestValidateResourceQuota(t *testing.T) {
 	}
 
 	invalidTerminatingScopePairsSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU: resource.MustParse("100"),
 		},
 		Scopes: []core.ResourceQuotaScope{core.ResourceQuotaScopeTerminating, core.ResourceQuotaScopeNotTerminating},
 	}
 
 	invalidBestEffortScopePairsSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourcePods: resource.MustParse("100"),
 		},
 		Scopes: []core.ResourceQuotaScope{core.ResourceQuotaScopeBestEffort, core.ResourceQuotaScopeNotBestEffort},
@@ -17404,7 +17404,7 @@ func TestValidateResourceQuota(t *testing.T) {
 	}
 
 	invalidScopeNameSpec := core.ResourceQuotaSpec{
-		Hard: core.ResourceList{
+		Hard: core.ResourceMap{
 			core.ResourceCPU: resource.MustParse("100"),
 		},
 		Scopes: []core.ResourceQuotaScope{core.ResourceQuotaScope("foo")},
@@ -19731,7 +19731,7 @@ func testDataSourceInSpec(name, kind, apiGroup string) *core.PersistentVolumeCla
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -19868,7 +19868,7 @@ func pvcSpecWithCrossNamespaceSource(apiGroup *string, kind string, namespace *s
 			core.ReadOnlyMany,
 		},
 		Resources: core.ResourceRequirements{
-			Requests: core.ResourceList{
+			Requests: core.ResourceMap{
 				core.ResourceName(core.ResourceStorage): resource.MustParse("10G"),
 			},
 		},
@@ -20200,11 +20200,11 @@ func TestValidateTopologySpreadConstraints(t *testing.T) {
 func TestValidateOverhead(t *testing.T) {
 	successCase := []struct {
 		Name     string
-		overhead core.ResourceList
+		overhead core.ResourceMap
 	}{
 		{
 			Name: "Valid Overhead for CPU + Memory",
-			overhead: core.ResourceList{
+			overhead: core.ResourceMap{
 				core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 				core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 			},
@@ -20218,11 +20218,11 @@ func TestValidateOverhead(t *testing.T) {
 
 	errorCase := []struct {
 		Name     string
-		overhead core.ResourceList
+		overhead core.ResourceMap
 	}{
 		{
 			Name: "Invalid Overhead Resources",
-			overhead: core.ResourceList{
+			overhead: core.ResourceMap{
 				core.ResourceName("my.org"): resource.MustParse("10m"),
 			},
 		},
@@ -20346,7 +20346,7 @@ func makeNode(nodeName string, podCIDRs []string) core.Node {
 			Addresses: []core.NodeAddress{
 				{Type: core.NodeExternalIP, Address: "something"},
 			},
-			Capacity: core.ResourceList{
+			Capacity: core.ResourceMap{
 				core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 				core.ResourceName(core.ResourceMemory): resource.MustParse("0"),
 			},
@@ -20892,11 +20892,11 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "limits and requests of hugepage resource are equal",
 			requirements: core.ResourceRequirements{
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceCPU: resource.MustParse("10"),
 					core.ResourceName(core.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("2Mi"),
 				},
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceCPU: resource.MustParse("10"),
 					core.ResourceName(core.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("2Mi"),
 				},
@@ -20906,10 +20906,10 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "limits and requests of memory resource are equal",
 			requirements: core.ResourceRequirements{
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceMemory: resource.MustParse("2Mi"),
 				},
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceMemory: resource.MustParse("2Mi"),
 				},
 			},
@@ -20918,10 +20918,10 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "limits and requests of cpu resource are equal",
 			requirements: core.ResourceRequirements{
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceCPU: resource.MustParse("10"),
 				},
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceCPU: resource.MustParse("10"),
 				},
 			},
@@ -20945,10 +20945,10 @@ func TestValidateResourceRequirements(t *testing.T) {
 		{
 			name: "hugepage resource without cpu or memory",
 			requirements: core.ResourceRequirements{
-				Limits: core.ResourceList{
+				Limits: core.ResourceMap{
 					core.ResourceName(core.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("2Mi"),
 				},
-				Requests: core.ResourceList{
+				Requests: core.ResourceMap{
 					core.ResourceName(core.ResourceHugePagesPrefix + "2Mi"): resource.MustParse("2Mi"),
 				},
 			},

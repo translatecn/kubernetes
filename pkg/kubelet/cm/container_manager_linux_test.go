@@ -190,14 +190,14 @@ func TestGetCapacity(t *testing.T) {
 	mockCadvisorError.EXPECT().RootFsInfo().Return(cadvisorapiv2.FsInfo{}, errors.New("Unable to get rootfs data from cAdvisor interface"))
 	cases := []struct {
 		name                                 string
-		cm                                   *containerManagerImpl
+		cm                                   *ContainerManagerImpl
 		expectedResourceQuantity             *resource.Quantity
 		expectedNoEphemeralStorage           bool
 		disablelocalStorageCapacityIsolation bool
 	}{
 		{
 			name: "capacity property has ephemeral-storage",
-			cm: &containerManagerImpl{
+			cm: &ContainerManagerImpl{
 				cadvisorInterface: mockCadvisor,
 				capacity: v1.ResourceMap{
 					v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStorageFromCapacity, resource.BinarySI),
@@ -208,7 +208,7 @@ func TestGetCapacity(t *testing.T) {
 		},
 		{
 			name: "capacity property does not have ephemeral-storage",
-			cm: &containerManagerImpl{
+			cm: &ContainerManagerImpl{
 				cadvisorInterface: mockCadvisor,
 				capacity:          v1.ResourceMap{},
 			},
@@ -217,7 +217,7 @@ func TestGetCapacity(t *testing.T) {
 		},
 		{
 			name: "capacity property does not have ephemeral-storage, error from rootfs",
-			cm: &containerManagerImpl{
+			cm: &ContainerManagerImpl{
 				cadvisorInterface: mockCadvisorError,
 				capacity:          v1.ResourceMap{},
 			},
@@ -225,7 +225,7 @@ func TestGetCapacity(t *testing.T) {
 		},
 		{
 			name: "capacity property does not have ephemeral-storage, cadvisor interface is nil",
-			cm: &containerManagerImpl{
+			cm: &ContainerManagerImpl{
 				cadvisorInterface: nil,
 				capacity:          v1.ResourceMap{},
 			},
@@ -233,7 +233,7 @@ func TestGetCapacity(t *testing.T) {
 		},
 		{
 			name: "capacity property has ephemeral-storage, but localStorageCapacityIsolation is disabled",
-			cm: &containerManagerImpl{
+			cm: &ContainerManagerImpl{
 				cadvisorInterface: mockCadvisor,
 				capacity: v1.ResourceMap{
 					v1.ResourceEphemeralStorage: *resource.NewQuantity(ephemeralStorageFromCapacity, resource.BinarySI),

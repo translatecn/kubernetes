@@ -41,7 +41,7 @@ const (
 )
 
 // createNodeAllocatableCgroups 当指定 CgroupsPerQOS 标志为 true 时,将创建节点可分配 Cgroup.
-func (cm *containerManagerImpl) createNodeAllocatableCgroups() error {
+func (cm *ContainerManagerImpl) createNodeAllocatableCgroups() error {
 	nodeAllocatable := cm.internalCapacity
 	// 如果用户请求强制使用节点可分配资源,则使用节点可分配限制而不是容量.
 	nc := cm.NodeConfig.NodeAllocatableConfig
@@ -65,7 +65,7 @@ func (cm *containerManagerImpl) createNodeAllocatableCgroups() error {
 }
 
 // enforceNodeAllocatableCgroups enforce Node Allocatable Cgroup settings.
-func (cm *containerManagerImpl) enforceNodeAllocatableCgroups() error {
+func (cm *ContainerManagerImpl) enforceNodeAllocatableCgroups() error {
 	nc := cm.NodeConfig.NodeAllocatableConfig
 
 	// We need to update limits on node allocatable cgroup no matter what because
@@ -193,11 +193,11 @@ func getCgroupConfig(rl v1.ResourceMap) *ResourceConfig {
 
 // GetNodeAllocatableAbsolute 返回节点可分配资源的绝对值,主要用于强制执行.
 // 请注意,返回的资源列表中未包括节点上可用的所有资源.该函数返回 ResourceMap 类型的结果.
-func (cm *containerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceMap {
+func (cm *ContainerManagerImpl) GetNodeAllocatableAbsolute() v1.ResourceMap {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.capacity)
 }
 
-func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.ResourceMap) v1.ResourceMap {
+func (cm *ContainerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.ResourceMap) v1.ResourceMap {
 	result := make(v1.ResourceMap)
 	for k, v := range capacity {
 		value := v.DeepCopy()
@@ -218,12 +218,12 @@ func (cm *containerManagerImpl) getNodeAllocatableAbsoluteImpl(capacity v1.Resou
 
 // getNodeAllocatableInternalAbsolute 类似于 getNodeAllocatableAbsolute,但它还包括内部资源（当前为进程 ID）.
 // 它旨在仅设置顶层 Cgroup.
-func (cm *containerManagerImpl) getNodeAllocatableInternalAbsolute() v1.ResourceMap {
+func (cm *ContainerManagerImpl) getNodeAllocatableInternalAbsolute() v1.ResourceMap {
 	return cm.getNodeAllocatableAbsoluteImpl(cm.internalCapacity)
 }
 
 // GetNodeAllocatableReservation // 返回一个资源列表,其中包含基于硬回收阈值的资源保留.
-func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceMap {
+func (cm *ContainerManagerImpl) GetNodeAllocatableReservation() v1.ResourceMap {
 	evictionReservation := hardEvictionReservation(cm.HardEvictionThresholds, cm.capacity)
 	result := make(v1.ResourceMap)
 	for k := range cm.capacity {
@@ -246,7 +246,7 @@ func (cm *containerManagerImpl) GetNodeAllocatableReservation() v1.ResourceMap {
 
 // validateNodeAllocatable 验证和校验节点资源配置,确保它们与集群中的其他节点保持一致,并确保它们能够满足集群中的工作负载需求.
 // 如果节点可分配配置超过了节点容量,则可能会导致节点资源不足,从而导致集群中的工作负载无法正常运行.
-func (cm *containerManagerImpl) validateNodeAllocatable() error {
+func (cm *ContainerManagerImpl) validateNodeAllocatable() error {
 	var errors []string
 	nar := cm.GetNodeAllocatableReservation()
 	for k, v := range nar {

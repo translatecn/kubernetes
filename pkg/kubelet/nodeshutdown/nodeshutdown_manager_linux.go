@@ -82,8 +82,8 @@ type managerImpl struct {
 	dbusCon     dbusInhibiter
 	inhibitLock systemd.InhibitLock
 
-	nodeShuttingDownMutex sync.Mutex
-	nodeShuttingDownNow   bool
+	nodeShuttingDownMutex sync.Mutex //
+	nodeShuttingDownNow   bool       //
 
 	clock clock.Clock
 
@@ -142,7 +142,7 @@ func NewManager(conf *Config) (Manager, lifecycle.PodAdmitHandler) {
 	return manager, manager
 }
 
-// Admit rejects all pods if node is shutting
+// Admit 判断node 是不是在关闭中
 func (m *managerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	nodeShuttingDown := m.ShutdownStatus() != nil
 

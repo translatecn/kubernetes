@@ -307,7 +307,7 @@ func ValidateRuntimeClassName(name string, fldPath *field.Path) field.ErrorList 
 }
 
 // validateOverhead can be used to check whether the given Overhead is valid.
-func validateOverhead(overhead core.ResourceList, fldPath *field.Path, opts PodValidationOptions) field.ErrorList {
+func validateOverhead(overhead core.ResourceMap, fldPath *field.Path, opts PodValidationOptions) field.ErrorList {
 	// reuse the ResourceRequirements validation logic
 	return ValidateResourceRequirements(&core.ResourceRequirements{Limits: overhead}, nil, fldPath, opts)
 }

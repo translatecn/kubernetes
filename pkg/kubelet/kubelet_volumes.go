@@ -74,10 +74,9 @@ func (kl *Kubelet) ListBlockVolumesForPod(podUID types.UID) (map[string]volume.B
 
 // podVolumesExist checks with the volume manager and returns true any of the
 // pods for the specified volume are mounted or are uncertain.
-func (kl *Kubelet) podVolumesExist(podUID types.UID) bool {
-	if mountedVolumes :=
-		kl.volumeManager.GetPossiblyMountedVolumesForPod(
-			volumetypes.UniquePodName(podUID)); len(mountedVolumes) > 0 {
+func (kl *Kubelet) podVolumesExist(podUID types.UID) bool { // 检查pod使用的vloume是否存在
+	mountedVolumes := kl.volumeManager.GetPossiblyMountedVolumesForPod(volumetypes.UniquePodName(podUID)) // ✅
+	if len(mountedVolumes) > 0 {
 		return true
 	}
 	// TODO: This checks pod volume paths and whether they are mounted. If checking returns error, podVolumesExist will return true
@@ -163,8 +162,7 @@ func (kl *Kubelet) removeOrphanedPodVolumeDirs(uid types.UID) []error {
 	return orphanVolumeErrors
 }
 
-// cleanupOrphanedPodDirs removes the volumes of pods that should not be
-// running and that have no containers running.  Note that we roll up logs here since it runs in the main loop.
+// 删除不应该运行且没有容器运行的pod卷。注意，我们在这里roll up 日志，因为它在主循环中运行。
 func (kl *Kubelet) cleanupOrphanedPodDirs(pods []*v1.Pod, runningPods []*kubecontainer.Pod) error {
 	allPods := sets.NewString()
 	for _, pod := range pods {
@@ -186,12 +184,14 @@ func (kl *Kubelet) cleanupOrphanedPodDirs(pods []*v1.Pod, runningPods []*kubecon
 		if allPods.Has(string(uid)) {
 			continue
 		}
+		// 磁盘有，pod不存在
+
 		// If volumes have not been unmounted/detached, do not delete directory.
 		// Doing so may result in corruption of data.
 		// TODO: getMountedVolumePathListFromDisk() call may be redundant with
 		// kl.getPodVolumePathListFromDisk(). Can this be cleaned up?
 		if podVolumesExist := kl.podVolumesExist(uid); podVolumesExist {
-			klog.V(3).InfoS("Orphaned pod found, but volumes are not cleaned up", "podUID", uid)
+			klog.V(3).InfoS("发现了孤儿pod，但volume没有清理干净", "podUID", uid)
 			continue
 		}
 

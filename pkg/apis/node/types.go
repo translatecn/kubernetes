@@ -65,7 +65,7 @@ type RuntimeClass struct {
 type Overhead struct {
 	//  PodFixed represents the fixed resource overhead associated with running a pod.
 	// +optional
-	PodFixed core.ResourceList
+	PodFixed core.ResourceMap
 }
 
 // Scheduling specifies the scheduling constraints for nodes supporting a

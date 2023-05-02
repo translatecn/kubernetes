@@ -88,7 +88,7 @@ func newSystemCgroups(containerName string) (*systemContainer, error) {
 	}, nil
 }
 
-type containerManagerImpl struct {
+type ContainerManagerImpl struct {
 	sync.RWMutex                                //
 	cadvisorInterface   cadvisor.Interface      // 与 cAdvisor 进行交互的接口.
 	mountUtil           mount.Interface         // 与挂载系统进行交互的接口.
@@ -104,18 +104,26 @@ type containerManagerImpl struct {
 	cgroupRoot          CgroupName              // 绝对 cgroupfs 路径,Kubelet 需要将所有 pod 放在该路径下的顶级容器中,以实现节点可分配性.
 	recorder            record.EventRecorder    // 事件记录器接口.
 	qosContainerManager QOSContainerManager     // QoS cgroup 管理的接口.
-	deviceManager       devicemanager.Manager   // 设备插件 报告的设备的 导出和分配的接口.
+	DeviceManager       devicemanager.Manager   // 设备插件 报告的设备的 导出和分配的接口.
 	cpuManager          cpumanager.Manager      // CPU 亲和性管理的接口.
 	memoryManager       memorymanager.Manager   // 内存亲和性管理的接口.
-	topologyManager     topologymanager.Manager // 拓扑资源协调的接口. ✅
+	TopologyManager     topologymanager.Manager // 拓扑资源协调的接口. ✅
 	draManager          dra.Manager             // 动态资源分配管理的接口.
 }
+
+// TopologyManager
+// https://developer.aliyun.com/article/784148
+// https://blog.csdn.net/qjm1993/article/details/103237944/
+// https://zhuanlan.zhihu.com/p/362030360
+// https://www.modb.pro/db/78825
+// https://blog.csdn.net/bandaoyu/article/details/122959097
+// https://zhuanlan.zhihu.com/p/554043638
 
 type features struct {
 	cpuHardcapping bool // 对 CPU 使用时间的硬限制.
 }
 
-var _ ContainerManager = &containerManagerImpl{}
+var _ ContainerManager = &ContainerManagerImpl{}
 
 // cgroups 是 Linux 内核的一个功能,它允许将进程组织成一组,以便对它们进行资源限制和控制.
 // 在 Kubernetes 中,cgroups 用于限制容器的资源使用,例如 CPU、内存、磁盘等.
@@ -174,24 +182,24 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 	return f, nil
 }
 
-// TODO(vmarmol): Add limits to the system containers.
-// Takes the absolute name of the specified containers.
-// Empty container name disables use of the specified container.
+// NewContainerManager TODO(vmarmol): 为系统容器添加限制
+// 获取指定容器的绝对名称。
+// 空容器名禁用使用指定的容器。
 func NewContainerManager(
 	mountUtil mount.Interface,
 	cadvisorInterface cadvisor.Interface,
 	nodeConfig NodeConfig,
-	failSwapOn bool,
+	failSwapOn bool, // 告诉Kubelet，如果在节点上启用了swap，则启动失败。
 	recorder record.EventRecorder,
 	kubeClient clientset.Interface,
 ) (ContainerManager, error) {
-	subsystems, err := GetCgroupSubsystems()
+	subsystems, err := GetCgroupSubsystems() // 子系统
 	if err != nil {
 		return nil, fmt.Errorf("failed to get mounted cgroup subsystems: %v", err)
 	}
 
 	if failSwapOn {
-		// Check whether swap is enabled. The Kubelet does not support running with swap enabled.
+		// 检查swap是否开启。Kubelet不支持在启用swap的情况下运行。
 		swapFile := "/proc/swaps"
 		swapData, err := os.ReadFile(swapFile)
 		if err != nil {
@@ -260,7 +268,7 @@ func NewContainerManager(
 		return nil, err
 	}
 
-	cm := &containerManagerImpl{
+	cm := &ContainerManagerImpl{
 		cadvisorInterface:   cadvisorInterface,
 		mountUtil:           mountUtil,
 		NodeConfig:          nodeConfig,
@@ -274,11 +282,11 @@ func NewContainerManager(
 	}
 
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
-		cm.topologyManager, err = topologymanager.NewManager(
-			machineInfo.Topology, // 机器拓扑信息
-			nodeConfig.ExperimentalTopologyManagerPolicy,
-			nodeConfig.ExperimentalTopologyManagerScope,
-			nodeConfig.ExperimentalTopologyManagerPolicyOptions,
+		cm.TopologyManager, err = topologymanager.NewManager(
+			machineInfo.Topology,                                // 机器拓扑信息
+			nodeConfig.ExperimentalTopologyManagerPolicy,        // 实验性拓扑管理器策略
+			nodeConfig.ExperimentalTopologyManagerScope,         // 实验性拓扑管理器范围
+			nodeConfig.ExperimentalTopologyManagerPolicyOptions, // 实验性拓扑管理器策略配置
 		)
 
 		if err != nil {
@@ -286,15 +294,15 @@ func NewContainerManager(
 		}
 
 	} else {
-		cm.topologyManager = topologymanager.NewFakeManager()
+		cm.TopologyManager = topologymanager.NewFakeManager()
 	}
 
 	klog.InfoS("Creating device plugin manager")
-	cm.deviceManager, err = devicemanager.NewManagerImpl(machineInfo.Topology, cm.topologyManager)
+	cm.DeviceManager, err = devicemanager.NewManagerImpl(machineInfo.Topology, cm.TopologyManager)
 	if err != nil {
 		return nil, err
 	}
-	cm.topologyManager.AddHintProvider(cm.deviceManager)
+	cm.TopologyManager.AddHintProvider(cm.DeviceManager)
 
 	// initialize DRA manager
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DynamicResourceAllocation) {
@@ -314,13 +322,13 @@ func NewContainerManager(
 		nodeConfig.NodeAllocatableConfig.ReservedSystemCPUs,
 		cm.GetNodeAllocatableReservation(), // 资源预留
 		nodeConfig.KubeletRootDir,
-		cm.topologyManager,
+		cm.TopologyManager,
 	)
 	if err != nil {
 		klog.ErrorS(err, "Failed to initialize cpu manager")
 		return nil, err
 	}
-	cm.topologyManager.AddHintProvider(cm.cpuManager)
+	cm.TopologyManager.AddHintProvider(cm.cpuManager)
 
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.MemoryManager) {
 		cm.memoryManager, err = memorymanager.NewManager(
@@ -329,22 +337,19 @@ func NewContainerManager(
 			cm.GetNodeAllocatableReservation(),
 			nodeConfig.ExperimentalMemoryManagerReservedMemory,
 			nodeConfig.KubeletRootDir,
-			cm.topologyManager,
+			cm.TopologyManager,
 		)
 		if err != nil {
 			klog.ErrorS(err, "Failed to initialize memory manager")
 			return nil, err
 		}
-		cm.topologyManager.AddHintProvider(cm.memoryManager)
+		cm.TopologyManager.AddHintProvider(cm.memoryManager)
 	}
 
 	return cm, nil
 }
 
-// NewPodContainerManager is a factory method returns a PodContainerManager object
-// If qosCgroups are enabled then it returns the general pod container manager
-// otherwise it returns a no-op manager which essentially does nothing
-func (cm *containerManagerImpl) NewPodContainerManager() PodContainerManager {
+func (cm *ContainerManagerImpl) NewPodContainerManager() PodContainerManager {
 	if cm.NodeConfig.CgroupsPerQOS {
 		return &podContainerManagerImpl{
 			qosContainersInfo: cm.GetQOSContainersInfo(),
@@ -362,8 +367,8 @@ func (cm *containerManagerImpl) NewPodContainerManager() PodContainerManager {
 	}
 }
 
-func (cm *containerManagerImpl) InternalContainerLifecycle() InternalContainerLifecycle {
-	return &internalContainerLifecycleImpl{cm.cpuManager, cm.memoryManager, cm.topologyManager}
+func (cm *ContainerManagerImpl) InternalContainerLifecycle() InternalContainerLifecycle {
+	return &internalContainerLifecycleImpl{cm.cpuManager, cm.memoryManager, cm.TopologyManager}
 }
 
 // 创建一个 cgroup 容器管理器.
@@ -435,7 +440,7 @@ func setupKernelTunables(option KernelTunableBehavior) error {
 	return utilerrors.NewAggregate(errList)
 }
 
-func (cm *containerManagerImpl) setupNode(activePods ActivePodsFunc) error {
+func (cm *ContainerManagerImpl) setupNode(activePods ActivePodsFunc) error {
 	f, err := validateSystemRequirements(cm.mountUtil) // 是否启用了cpu 硬限制
 	if err != nil {
 		return err
@@ -515,36 +520,36 @@ func (cm *containerManagerImpl) setupNode(activePods ActivePodsFunc) error {
 	return nil
 }
 
-func (cm *containerManagerImpl) GetNodeConfig() NodeConfig {
+func (cm *ContainerManagerImpl) GetNodeConfig() NodeConfig {
 	cm.RLock()
 	defer cm.RUnlock()
 	return cm.NodeConfig
 }
 
 // GetPodCgroupRoot returns the literal cgroupfs value for the cgroup containing all pods.
-func (cm *containerManagerImpl) GetPodCgroupRoot() string {
+func (cm *ContainerManagerImpl) GetPodCgroupRoot() string {
 	return cm.cgroupManager.Name(cm.cgroupRoot)
 }
 
-func (cm *containerManagerImpl) GetMountedSubsystems() *CgroupSubsystems {
+func (cm *ContainerManagerImpl) GetMountedSubsystems() *CgroupSubsystems {
 	return cm.subsystems
 }
 
-func (cm *containerManagerImpl) GetQOSContainersInfo() QOSContainersInfo {
+func (cm *ContainerManagerImpl) GetQOSContainersInfo() QOSContainersInfo {
 	return cm.qosContainerManager.GetQOSContainersInfo()
 }
 
-func (cm *containerManagerImpl) UpdateQOSCgroups() error {
+func (cm *ContainerManagerImpl) UpdateQOSCgroups() error {
 	return cm.qosContainerManager.UpdateCgroups()
 }
 
-func (cm *containerManagerImpl) Status() Status {
+func (cm *ContainerManagerImpl) Status() Status {
 	cm.RLock()
 	defer cm.RUnlock()
 	return cm.status
 }
 
-func (cm *containerManagerImpl) Start(node *v1.Node,
+func (cm *ContainerManagerImpl) Start(node *v1.Node,
 	activePods ActivePodsFunc,
 	sourcesReady config.SourcesReady,
 	podStatusProvider status.PodStatusProvider,
@@ -625,19 +630,19 @@ func (cm *containerManagerImpl) Start(node *v1.Node,
 	}
 
 	// Starts device manager.
-	if err := cm.deviceManager.Start(devicemanager.ActivePodsFunc(activePods), sourcesReady); err != nil {
+	if err := cm.DeviceManager.Start(devicemanager.ActivePodsFunc(activePods), sourcesReady); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (cm *containerManagerImpl) GetPluginRegistrationHandler() cache.PluginHandler {
-	return cm.deviceManager.GetWatcherHandler()
+func (cm *ContainerManagerImpl) GetPluginRegistrationHandler() cache.PluginHandler {
+	return cm.DeviceManager.GetWatcherHandler()
 }
 
 // TODO: move the GetResources logic to PodContainerManager.
-func (cm *containerManagerImpl) GetResources(pod *v1.Pod, container *v1.Container) (*kubecontainer.RunContainerOptions, error) {
+func (cm *ContainerManagerImpl) GetResources(pod *v1.Pod, container *v1.Container) (*kubecontainer.RunContainerOptions, error) {
 	opts := &kubecontainer.RunContainerOptions{}
 	if cm.draManager != nil {
 		resOpts, err := cm.PrepareResources(pod, container)
@@ -648,7 +653,7 @@ func (cm *containerManagerImpl) GetResources(pod *v1.Pod, container *v1.Containe
 	}
 	// Allocate should already be called during predicateAdmitHandler.Admit(),
 	// just try to fetch device runtime information from cached state here
-	devOpts, err := cm.deviceManager.GetDeviceRunContainerOptions(pod, container)
+	devOpts, err := cm.DeviceManager.GetDeviceRunContainerOptions(pod, container)
 	if err != nil {
 		return nil, err
 	} else if devOpts == nil {
@@ -661,19 +666,19 @@ func (cm *containerManagerImpl) GetResources(pod *v1.Pod, container *v1.Containe
 	return opts, nil
 }
 
-func (cm *containerManagerImpl) UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error {
-	return cm.deviceManager.UpdatePluginResources(node, attrs)
+func (cm *ContainerManagerImpl) UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error {
+	return cm.DeviceManager.UpdatePluginResources(node, attrs)
 }
 
-// GetAllocateResourcesPodAdmitHandler 检查是否还有创建 pod 所需要的资源
-func (cm *containerManagerImpl) GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler {
+// GetAllocateResourcesPodAdmitHandler 检查有创建 pod 所需要的资源
+func (cm *ContainerManagerImpl) GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler {
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
-		return cm.topologyManager // 默认开启
+		return cm.TopologyManager // 默认开启
 	}
-	return cm.topologyManager // 默认开启,已修改代码
+	return cm.TopologyManager // 默认开启,已修改代码
 }
 
-func (cm *containerManagerImpl) SystemCgroupsLimit() v1.ResourceMap {
+func (cm *ContainerManagerImpl) SystemCgroupsLimit() v1.ResourceMap {
 	cpuLimit := int64(0)
 
 	// Sum up resources of all external containers.
@@ -879,7 +884,7 @@ func isKernelPid(pid int) bool {
 
 // GetCapacity returns node capacity data for "cpu", "memory", "ephemeral-storage", and "huge-pages*"
 // At present this method is only invoked when introspecting ephemeral storage
-func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap {
+func (cm *ContainerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap {
 	if localStorageCapacityIsolation {
 		// We store allocatable ephemeral-storage in the capacity property once we Start() the container manager
 		if _, ok := cm.capacity[v1.ResourceEphemeralStorage]; !ok {
@@ -905,33 +910,33 @@ func (cm *containerManagerImpl) GetCapacity(localStorageCapacityIsolation bool) 
 	return cm.capacity
 }
 
-func (cm *containerManagerImpl) GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
-	return cm.deviceManager.GetCapacity()
+func (cm *ContainerManagerImpl) GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
+	return cm.DeviceManager.GetCapacity()
 }
 
-func (cm *containerManagerImpl) GetDevices(podUID, containerName string) []*podresourcesapi.ContainerDevices {
-	return containerDevicesFromResourceDeviceInstances(cm.deviceManager.GetDevices(podUID, containerName))
+func (cm *ContainerManagerImpl) GetDevices(podUID, containerName string) []*podresourcesapi.ContainerDevices {
+	return containerDevicesFromResourceDeviceInstances(cm.DeviceManager.GetDevices(podUID, containerName))
 }
 
-func (cm *containerManagerImpl) GetAllocatableDevices() []*podresourcesapi.ContainerDevices {
-	return containerDevicesFromResourceDeviceInstances(cm.deviceManager.GetAllocatableDevices())
+func (cm *ContainerManagerImpl) GetAllocatableDevices() []*podresourcesapi.ContainerDevices {
+	return containerDevicesFromResourceDeviceInstances(cm.DeviceManager.GetAllocatableDevices())
 }
 
-func (cm *containerManagerImpl) GetCPUs(podUID, containerName string) []int64 {
+func (cm *ContainerManagerImpl) GetCPUs(podUID, containerName string) []int64 {
 	if cm.cpuManager != nil {
 		return cm.cpuManager.GetExclusiveCPUs(podUID, containerName).ToSliceNoSortInt64()
 	}
 	return []int64{}
 }
 
-func (cm *containerManagerImpl) GetAllocatableCPUs() []int64 {
+func (cm *ContainerManagerImpl) GetAllocatableCPUs() []int64 {
 	if cm.cpuManager != nil {
 		return cm.cpuManager.GetAllocatableCPUs().ToSliceNoSortInt64()
 	}
 	return []int64{}
 }
 
-func (cm *containerManagerImpl) GetMemory(podUID, containerName string) []*podresourcesapi.ContainerMemory {
+func (cm *ContainerManagerImpl) GetMemory(podUID, containerName string) []*podresourcesapi.ContainerMemory {
 	if cm.memoryManager == nil {
 		return []*podresourcesapi.ContainerMemory{}
 	}
@@ -939,7 +944,7 @@ func (cm *containerManagerImpl) GetMemory(podUID, containerName string) []*podre
 	return containerMemoryFromBlock(cm.memoryManager.GetMemory(podUID, containerName))
 }
 
-func (cm *containerManagerImpl) GetAllocatableMemory() []*podresourcesapi.ContainerMemory {
+func (cm *ContainerManagerImpl) GetAllocatableMemory() []*podresourcesapi.ContainerMemory {
 	if cm.memoryManager == nil {
 		return []*podresourcesapi.ContainerMemory{}
 	}
@@ -947,12 +952,12 @@ func (cm *containerManagerImpl) GetAllocatableMemory() []*podresourcesapi.Contai
 	return containerMemoryFromBlock(cm.memoryManager.GetAllocatableMemory())
 }
 
-func (cm *containerManagerImpl) ShouldResetExtendedResourceCapacity() bool {
-	return cm.deviceManager.ShouldResetExtendedResourceCapacity()
+func (cm *ContainerManagerImpl) ShouldResetExtendedResourceCapacity() bool {
+	return cm.DeviceManager.ShouldResetExtendedResourceCapacity()
 }
 
-func (cm *containerManagerImpl) UpdateAllocatedDevices() {
-	cm.deviceManager.UpdateAllocatedDevices()
+func (cm *ContainerManagerImpl) UpdateAllocatedDevices() {
+	cm.DeviceManager.UpdateAllocatedDevices()
 }
 
 func containerMemoryFromBlock(blocks []memorymanagerstate.Block) []*podresourcesapi.ContainerMemory {
@@ -977,15 +982,15 @@ func containerMemoryFromBlock(blocks []memorymanagerstate.Block) []*podresources
 	return containerMemories
 }
 
-func (cm *containerManagerImpl) PrepareResources(pod *v1.Pod, container *v1.Container) (*dra.ContainerInfo, error) {
+func (cm *ContainerManagerImpl) PrepareResources(pod *v1.Pod, container *v1.Container) (*dra.ContainerInfo, error) {
 	return cm.draManager.PrepareResources(pod, container)
 }
 
-func (cm *containerManagerImpl) UnprepareResources(pod *v1.Pod) error {
+func (cm *ContainerManagerImpl) UnprepareResources(pod *v1.Pod) error {
 	return cm.draManager.UnprepareResources(pod)
 }
 
-func (cm *containerManagerImpl) PodMightNeedToUnprepareResources(UID types.UID) bool {
+func (cm *ContainerManagerImpl) PodMightNeedToUnprepareResources(UID types.UID) bool {
 	if cm.draManager != nil {
 		return cm.draManager.PodMightNeedToUnprepareResources(UID)
 	}

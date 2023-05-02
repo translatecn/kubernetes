@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"k8s.io/kubernetes/pkg/kubelet/cm/topologymanager"
 	"math"
 	"net"
 	"net/http"
@@ -233,7 +234,7 @@ type Dependencies struct {
 	Auth                     server.AuthInterface            // 用于进行身份验证的接口.
 	CAdvisorInterface        cadvisor.Interface              // 用于与cAdvisor交互的接口.
 	Cloud                    cloudprovider.Interface         // 用于与云提供商交互的接口.
-	ContainerManager         cm.ContainerManager             // 容器管理器的接口.
+	ContainerManager         cm.ContainerManager             // 容器管理器的接口.✅
 	EventClient              v1core.EventsGetter             // 用于与Kubernetes event 系统交互的接口.
 	HeartbeatClient          clientset.Interface             // 用于与Kubernetes 心跳系统交互的接口.✅
 	OnHeartbeatFailure       func()                          // 心跳失败时执行的回调函数.
@@ -544,7 +545,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		podsPerCore:                             int(kubeCfg.PodsPerCore),
 		syncLoopMonitor:                         atomic.Value{},
 		daemonEndpoints:                         daemonEndpoints,
-		containerManager:                        kubeDeps.ContainerManager,
+		containerManager:                        kubeDeps.ContainerManager, // ✅
 		nodeIPs:                                 nodeIPs,
 		nodeIPValidator:                         validateNodeIP,
 		clock:                                   clock.RealClock{},
@@ -680,11 +681,13 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.streamingRuntime = runtime
 	klet.runner = runtime
 
-	runtimeCache, err := kubecontainer.NewRuntimeCache(klet.containerRuntime)
-	if err != nil {
-		return nil, err
+	{
+		runtimeCache, err := kubecontainer.NewRuntimeCache(klet.containerRuntime)
+		if err != nil {
+			return nil, err
+		}
+		klet.runtimeCache = runtimeCache
 	}
-	klet.runtimeCache = runtimeCache
 
 	// common provider to get host file system usage associated with a pod managed by kubelet
 	hostStatsProvider := stats.NewHostStatsProvider(kubecontainer.RealOS{}, func(podUID types.UID) string {
@@ -711,30 +714,31 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 			utilfeature.DefaultFeatureGate.Enabled(features.PodAndContainerStatsFromCRI))
 	}
 
-	eventChannel := make(chan *pleg.PodLifecycleEvent, plegChannelCapacity)
-
-	if utilfeature.DefaultFeatureGate.Enabled(features.EventedPLEG) {
-		// adjust Generic PLEG relisting period and threshold to higher value when Evented PLEG is turned on
-		genericRelistDuration := &pleg.RelistDuration{
-			RelistPeriod:    eventedPlegRelistPeriod,
-			RelistThreshold: eventedPlegRelistThreshold,
+	{ // ✅
+		eventChannel := make(chan *pleg.PodLifecycleEvent, plegChannelCapacity)
+		if utilfeature.DefaultFeatureGate.Enabled(features.EventedPLEG) {
+			// adjust Generic PLEG relisting period and threshold to higher value when Evented PLEG is turned on
+			genericRelistDuration := &pleg.RelistDuration{
+				RelistPeriod:    eventedPlegRelistPeriod,
+				RelistThreshold: eventedPlegRelistThreshold,
+			}
+			klet.pleg = pleg.NewGenericPLEG(klet.containerRuntime, eventChannel, genericRelistDuration, klet.podCache, clock.RealClock{})
+			// In case Evented PLEG has to fall back on Generic PLEG due to an error,
+			// Evented PLEG should be able to reset the Generic PLEG relisting duration
+			// to the default value.
+			eventedRelistDuration := &pleg.RelistDuration{
+				RelistPeriod:    genericPlegRelistPeriod,
+				RelistThreshold: genericPlegRelistThreshold,
+			}
+			klet.eventedPleg = pleg.NewEventedPLEG(klet.containerRuntime, klet.runtimeService, eventChannel,
+				klet.podCache, klet.pleg, eventedPlegMaxStreamRetries, eventedRelistDuration, clock.RealClock{})
+		} else {
+			genericRelistDuration := &pleg.RelistDuration{
+				RelistPeriod:    genericPlegRelistPeriod,
+				RelistThreshold: genericPlegRelistThreshold,
+			}
+			klet.pleg = pleg.NewGenericPLEG(klet.containerRuntime, eventChannel, genericRelistDuration, klet.podCache, clock.RealClock{})
 		}
-		klet.pleg = pleg.NewGenericPLEG(klet.containerRuntime, eventChannel, genericRelistDuration, klet.podCache, clock.RealClock{})
-		// In case Evented PLEG has to fall back on Generic PLEG due to an error,
-		// Evented PLEG should be able to reset the Generic PLEG relisting duration
-		// to the default value.
-		eventedRelistDuration := &pleg.RelistDuration{
-			RelistPeriod:    genericPlegRelistPeriod,
-			RelistThreshold: genericPlegRelistThreshold,
-		}
-		klet.eventedPleg = pleg.NewEventedPLEG(klet.containerRuntime, klet.runtimeService, eventChannel,
-			klet.podCache, klet.pleg, eventedPlegMaxStreamRetries, eventedRelistDuration, clock.RealClock{})
-	} else {
-		genericRelistDuration := &pleg.RelistDuration{
-			RelistPeriod:    genericPlegRelistPeriod,
-			RelistThreshold: genericPlegRelistThreshold,
-		}
-		klet.pleg = pleg.NewGenericPLEG(klet.containerRuntime, eventChannel, genericRelistDuration, klet.podCache, clock.RealClock{})
 	}
 
 	klet.runtimeState = newRuntimeState(maxWaitForContainerRuntime)
@@ -752,13 +756,15 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		return nil, err
 	}
 	klet.containerGC = containerGC
-	klet.containerDeletor = newPodContainerDeletor( // ✅
-		klet.containerRuntime,
-		integer.IntMax(
-			containerGCPolicy.MaxPerPodContainer, // 每个容器 具有的最大死亡容器数量
-			minDeadContainerInPod,                // 每个pod至少可以保留一个dead 容器
-		),
-	)
+	{
+		klet.containerDeletor = newPodContainerDeletor( // ✅
+			klet.containerRuntime,
+			integer.IntMax(
+				containerGCPolicy.MaxPerPodContainer, // 每个容器 具有的最大死亡容器数量
+				minDeadContainerInPod,                // 每个pod至少可以保留一个dead 容器
+			),
+		)
+	}
 
 	// setup imageManager
 	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
@@ -780,17 +786,18 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 			return cert, nil
 		}
 	}
-
-	if kubeDeps.ProbeManager != nil {
-		klet.probeManager = kubeDeps.ProbeManager
-	} else {
-		klet.probeManager = prober.NewManager(
-			klet.statusManager,
-			klet.livenessManager,
-			klet.readinessManager,
-			klet.startupManager,
-			klet.runner,
-			kubeDeps.Recorder)
+	{
+		if kubeDeps.ProbeManager != nil {
+			klet.probeManager = kubeDeps.ProbeManager
+		} else {
+			klet.probeManager = prober.NewManager(
+				klet.statusManager,
+				klet.livenessManager,
+				klet.readinessManager,
+				klet.startupManager,
+				klet.runner,
+				kubeDeps.Recorder)
+		}
 	}
 
 	tokenManager := token.NewManager(kubeDeps.KubeClient)
@@ -873,7 +880,16 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.AddPodSyncLoopHandler(activeDeadlineHandler)
 	klet.AddPodSyncHandler(activeDeadlineHandler)
 
-	klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // todo
+	{
+		// myself
+
+		var _ = klet.containerManager.(*cm.ContainerManagerImpl).
+			TopologyManager.(*topologymanager.ScopeManager).Scope.(*topologymanager.ContainerScope).Admit // 默认是容器级
+		//var _ = klet.containerManager.(*cm.ContainerManagerImpl).
+		//	TopologyManager.(*topologymanager.ScopeManager).Scope.(*topologymanager.PodScope).Admit
+	}
+
+	klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // TODO
 
 	criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // pod 准入失败恢复器  ✅
 		klet.GetActivePods,
@@ -931,14 +947,12 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	if err != nil {
 		return nil, err
 	}
-	klet.admitHandlers.AddPodAdmitHandler(shutdownAdmitHandler)
+	klet.admitHandlers.AddPodAdmitHandler(shutdownAdmitHandler) // ✅
 
 	// Finally, put the most recent version of the config on the Kubelet, so
 	// people can see how it was configured.
 	klet.kubeletConfiguration = *kubeCfg
 
-	// Generating the status funcs should be the last thing we do,
-	// since this relies on the rest of the Kubelet having been constructed.
 	// 在tryUpdateNodeStatus loop中调用的处理程序✅
 	klet.setNodeStatusFuncs = klet.defaultNodeStatusFuncs()
 
@@ -955,7 +969,7 @@ type Kubelet struct {
 	hostname                                string                                     // 表示节点的主机名. ✅
 	hostnameOverridden                      bool                                       // 是否覆盖了节点的主机名. ✅
 	nodeName                                types.NodeName                             // 表示节点的名称. ✅
-	runtimeCache                            kubecontainer.RuntimeCache                 // 表示 kubelet 运行时的缓存.
+	runtimeCache                            kubecontainer.RuntimeCache                 // 表示 kubelet 运行时的缓存.✅
 	kubeClient                              clientset.Interface                        // kubelet 使用的 Kubernetes API 客户端.
 	heartbeatClient                         clientset.Interface                        // kubelet 使用的心跳 API 客户端.
 	rootDirectory                           string                                     // kubelet 使用的根目录.
@@ -983,7 +997,7 @@ type Kubelet struct {
 	nodeLabels                              map[string]string                          // 要注册的节点标签列表.
 	runtimeState                            *runtimeState                              // 最后一个runtime响应 ping 的时间戳.
 	volumePluginMgr                         *volume.VolumePluginMgr                    // 用于管理卷插件的卷插件管理器.
-	probeManager                            prober.Manager                             // 用于处理容器探测的探测管理器.
+	probeManager                            prober.Manager                             // 用于处理容器探测的探测管理器.✅
 	livenessManager                         proberesults.Manager                       // 用于管理容器存活性检查结果的存活性管理器.
 	readinessManager                        proberesults.Manager                       // 用于管理容器可用性检查结果的存活性管理器.
 	startupManager                          proberesults.Manager                       // 用于管理容器启动检查结果的启动管理器.
@@ -1026,7 +1040,7 @@ type Kubelet struct {
 	mounter                                 mount.Interface                            // 用于挂载卷的 mount.Interface 接口实现.
 	hostutil                                hostutil.HostUtils                         // 用于与节点文件系统交互的 hostutil.HostUtils 实例.
 	subpather                               subpath.Interface                          // 用于执行子路径操作的 subpath.Interface 接口实现.
-	containerManager                        cm.ContainerManager                        // 非运行时容器的管理器.
+	containerManager                        cm.ContainerManager                        // 运行时容器的管理器.✅
 	maxPods                                 int                                        // 最多可运行的pod数量 ✅
 	syncLoopMonitor                         atomic.Value                               // Kubelet 同步循环监视器.记录开始、结束的时间✅
 	backOff                                 *flowcontrol.Backoff                       // 容器重启的退避时间.
@@ -1959,8 +1973,14 @@ func (kl *Kubelet) syncLoop(ctx context.Context, updates <-chan kubetypes.PodUpd
 // 3.  syncCh:         读取周期性同步事件
 // 4.  housekeepingCh: 读取清理事件
 // 5.  plegCh:         读取 PLEG 更新
-func (kl *Kubelet) syncLoopIteration(ctx context.Context, configCh <-chan kubetypes.PodUpdate, handler SyncHandler,
-	syncCh <-chan time.Time, housekeepingCh <-chan time.Time, plegCh <-chan *pleg.PodLifecycleEvent) bool {
+func (kl *Kubelet) syncLoopIteration(
+	ctx context.Context,
+	configCh <-chan kubetypes.PodUpdate,
+	handler SyncHandler,
+	syncCh <-chan time.Time,
+	housekeepingCh <-chan time.Time,
+	plegCh <-chan *pleg.PodLifecycleEvent,
+) bool {
 	// kubelet 的日志通常可以在 /var/log/messages 或 /var/log/syslog 中找到。
 	select {
 	case u, open := <-configCh:
@@ -2004,13 +2024,15 @@ func (kl *Kubelet) syncLoopIteration(ctx context.Context, configCh <-chan kubety
 		kl.sourcesReady.AddSource(u.Source)
 
 	case e := <-plegCh:
-		if isSyncPodWorthy(e) {
+		// - pleg通过定时的执行relist方法调用容器运行时获取pod信息
+		// - 遍历pod中的容器对比缓存中的状态，生成状态变化事件交给syncloop事件循环处理
+		if isSyncPodWorthy(e) { // 过滤掉不值得进行pod同步的事件  , (不是删除)
 			// PLEG event for a pod; sync it.
 			if pod, ok := kl.podManager.GetPodByUID(e.ID); ok {
 				klog.V(2).InfoS("SyncLoop (PLEG): event for pod", "pod", klog.KObj(pod), "event", e)
 				handler.HandlePodSyncs([]*v1.Pod{pod})
 			} else {
-				// If the pod no longer exists, ignore the event.
+				// 如果pod不再存在，忽略该事件。
 				klog.V(4).InfoS("SyncLoop (PLEG): pod does not exist, ignore irrelevant event", "event", e)
 			}
 		}
@@ -2020,6 +2042,7 @@ func (kl *Kubelet) syncLoopIteration(ctx context.Context, configCh <-chan kubety
 				kl.cleanUpContainersInPod(e.ID, containerID)
 			}
 		}
+
 	case <-syncCh:
 		// Sync pods waiting for sync
 		podsToSync := kl.getPodsToSync()
@@ -2286,11 +2309,11 @@ func (kl *Kubelet) ListenAndServePodResources() {
 	server.ListenAndServePodResources(socket, kl.podManager, kl.containerManager, kl.containerManager, kl.containerManager)
 }
 
-// Delete the eligible dead container instances in a pod. Depending on the configuration, the latest dead containers may be kept around.
+// 删除pod中符合条件的死容器实例。根据配置的不同，可能会保留最新的失效容器。
 func (kl *Kubelet) cleanUpContainersInPod(podID types.UID, exitedContainerID string) {
 	if podStatus, err := kl.podCache.Get(podID); err == nil {
-		// When an evicted or deleted pod has already synced, all containers can be removed.
-		removeAll := kl.podWorkers.ShouldPodContentBeRemoved(podID)
+		// 当被驱逐或删除的pod已经同步时，可以删除所有容器。
+		removeAll := kl.podWorkers.ShouldPodContentBeRemoved(podID) // 是不是可以删除pod数据， 【驱逐，删除】
 		kl.containerDeletor.deleteContainersInPod(exitedContainerID, podStatus, removeAll)
 	}
 }
@@ -2362,7 +2385,7 @@ func (kl *Kubelet) supportLocalStorageCapacityIsolation() bool {
 	return kl.GetConfiguration().LocalStorageCapacityIsolation
 }
 
-// isSyncPodWorthy filters out events that are not worthy of pod syncing
+// isSyncPodWorthy 过滤掉不值得进行pod同步的事件
 func isSyncPodWorthy(event *pleg.PodLifecycleEvent) bool {
 	// ContainerRemoved doesn't affect pod state
 	return event.Type != pleg.ContainerRemoved

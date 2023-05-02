@@ -28,7 +28,7 @@ import (
 
 func BenchmarkNoWarnings(b *testing.B) {
 	ctx := context.TODO()
-	resources := api.ResourceList{
+	resources := api.ResourceMap{
 		api.ResourceCPU:              resource.MustParse("100m"),
 		api.ResourceMemory:           resource.MustParse("4M"),
 		api.ResourceEphemeralStorage: resource.MustParse("4G"),
@@ -93,7 +93,7 @@ func BenchmarkNoWarnings(b *testing.B) {
 
 func BenchmarkWarnings(b *testing.B) {
 	ctx := context.TODO()
-	resources := api.ResourceList{
+	resources := api.ResourceMap{
 		api.ResourceCPU:              resource.MustParse("100m"),
 		api.ResourceMemory:           resource.MustParse("4m"),
 		api.ResourceEphemeralStorage: resource.MustParse("4m"),
@@ -136,7 +136,7 @@ func BenchmarkWarnings(b *testing.B) {
 }
 
 func TestWarnings(t *testing.T) {
-	resources := api.ResourceList{
+	resources := api.ResourceMap{
 		api.ResourceCPU:              resource.MustParse("100m"),
 		api.ResourceMemory:           resource.MustParse("4m"),
 		api.ResourceEphemeralStorage: resource.MustParse("4m"),
@@ -467,7 +467,7 @@ func TestWarnings(t *testing.T) {
 					{Name: "ephemeral-volume", VolumeSource: api.VolumeSource{Ephemeral: &api.EphemeralVolumeSource{
 						VolumeClaimTemplate: &api.PersistentVolumeClaimTemplate{
 							Spec: api.PersistentVolumeClaimSpec{Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{api.ResourceStorage: resource.MustParse("200Mi")}}},
+								Requests: api.ResourceMap{api.ResourceStorage: resource.MustParse("200Mi")}}},
 						},
 					}}}}},
 			},
@@ -481,7 +481,7 @@ func TestWarnings(t *testing.T) {
 					{Name: "ephemeral-volume", VolumeSource: api.VolumeSource{Ephemeral: &api.EphemeralVolumeSource{
 						VolumeClaimTemplate: &api.PersistentVolumeClaimTemplate{
 							Spec: api.PersistentVolumeClaimSpec{Resources: api.ResourceRequirements{
-								Requests: api.ResourceList{api.ResourceStorage: resource.MustParse("200m")}}},
+								Requests: api.ResourceMap{api.ResourceStorage: resource.MustParse("200m")}}},
 						},
 					}}}}},
 			},

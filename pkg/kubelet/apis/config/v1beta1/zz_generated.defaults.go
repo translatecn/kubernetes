@@ -24,7 +24,6 @@ package v1beta1
 import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	v1beta1 "k8s.io/kubelet/config/v1beta1"
-	v1 "k8s.io/kubernetes/pkg/apis/core/v1"
 )
 
 // RegisterDefaults adds defaulters functions to the given scheme.
@@ -37,8 +36,4 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 
 func SetObjectDefaults_KubeletConfiguration(in *v1beta1.KubeletConfiguration) {
 	SetDefaults_KubeletConfiguration(in)
-	for i := range in.ReservedMemory {
-		a := &in.ReservedMemory[i]
-		v1.SetDefaults_ResourceList(&a.Limits)
-	}
 }

@@ -98,8 +98,6 @@ func SetObjectDefaults_DaemonSet(in *v1beta2.DaemonSet) {
 		if a.VolumeSource.Ephemeral != nil {
 			if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 				v1.SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 			}
 		}
 	}
@@ -120,8 +118,6 @@ func SetObjectDefaults_DaemonSet(in *v1beta2.DaemonSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -188,8 +184,6 @@ func SetObjectDefaults_DaemonSet(in *v1beta2.DaemonSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -256,8 +250,6 @@ func SetObjectDefaults_DaemonSet(in *v1beta2.DaemonSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 		if a.EphemeralContainerCommon.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 			if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -307,7 +299,6 @@ func SetObjectDefaults_DaemonSet(in *v1beta2.DaemonSet) {
 			}
 		}
 	}
-	v1.SetDefaults_ResourceList(&in.Spec.Template.Spec.Overhead)
 }
 
 func SetObjectDefaults_DaemonSetList(in *v1beta2.DaemonSetList) {
@@ -373,8 +364,6 @@ func SetObjectDefaults_Deployment(in *v1beta2.Deployment) {
 		if a.VolumeSource.Ephemeral != nil {
 			if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 				v1.SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 			}
 		}
 	}
@@ -395,8 +384,6 @@ func SetObjectDefaults_Deployment(in *v1beta2.Deployment) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -463,8 +450,6 @@ func SetObjectDefaults_Deployment(in *v1beta2.Deployment) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -531,8 +516,6 @@ func SetObjectDefaults_Deployment(in *v1beta2.Deployment) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 		if a.EphemeralContainerCommon.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 			if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -582,7 +565,6 @@ func SetObjectDefaults_Deployment(in *v1beta2.Deployment) {
 			}
 		}
 	}
-	v1.SetDefaults_ResourceList(&in.Spec.Template.Spec.Overhead)
 }
 
 func SetObjectDefaults_DeploymentList(in *v1beta2.DeploymentList) {
@@ -648,8 +630,6 @@ func SetObjectDefaults_ReplicaSet(in *v1beta2.ReplicaSet) {
 		if a.VolumeSource.Ephemeral != nil {
 			if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 				v1.SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 			}
 		}
 	}
@@ -670,8 +650,6 @@ func SetObjectDefaults_ReplicaSet(in *v1beta2.ReplicaSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -738,8 +716,6 @@ func SetObjectDefaults_ReplicaSet(in *v1beta2.ReplicaSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -806,8 +782,6 @@ func SetObjectDefaults_ReplicaSet(in *v1beta2.ReplicaSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 		if a.EphemeralContainerCommon.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 			if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -857,7 +831,6 @@ func SetObjectDefaults_ReplicaSet(in *v1beta2.ReplicaSet) {
 			}
 		}
 	}
-	v1.SetDefaults_ResourceList(&in.Spec.Template.Spec.Overhead)
 }
 
 func SetObjectDefaults_ReplicaSetList(in *v1beta2.ReplicaSetList) {
@@ -923,8 +896,6 @@ func SetObjectDefaults_StatefulSet(in *v1beta2.StatefulSet) {
 		if a.VolumeSource.Ephemeral != nil {
 			if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 				v1.SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-				v1.SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 			}
 		}
 	}
@@ -945,8 +916,6 @@ func SetObjectDefaults_StatefulSet(in *v1beta2.StatefulSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -1013,8 +982,6 @@ func SetObjectDefaults_StatefulSet(in *v1beta2.StatefulSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -1081,8 +1048,6 @@ func SetObjectDefaults_StatefulSet(in *v1beta2.StatefulSet) {
 				}
 			}
 		}
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 		if a.EphemeralContainerCommon.LivenessProbe != nil {
 			v1.SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 			if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -1132,15 +1097,10 @@ func SetObjectDefaults_StatefulSet(in *v1beta2.StatefulSet) {
 			}
 		}
 	}
-	v1.SetDefaults_ResourceList(&in.Spec.Template.Spec.Overhead)
 	for i := range in.Spec.VolumeClaimTemplates {
 		a := &in.Spec.VolumeClaimTemplates[i]
 		v1.SetDefaults_PersistentVolumeClaim(a)
 		v1.SetDefaults_PersistentVolumeClaimSpec(&a.Spec)
-		v1.SetDefaults_ResourceList(&a.Spec.Resources.Limits)
-		v1.SetDefaults_ResourceList(&a.Spec.Resources.Requests)
-		v1.SetDefaults_ResourceList(&a.Status.Capacity)
-		v1.SetDefaults_ResourceList(&a.Status.AllocatedResources)
 	}
 }
 

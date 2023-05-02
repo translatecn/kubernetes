@@ -83,7 +83,7 @@ func RegisterConversions(s *runtime.Scheme) error {
 }
 
 func autoConvert_v1_Overhead_To_node_Overhead(in *v1.Overhead, out *node.Overhead, s conversion.Scope) error {
-	out.PodFixed = *(*core.ResourceList)(unsafe.Pointer(&in.PodFixed))
+	out.PodFixed = *(*core.ResourceMap)(unsafe.Pointer(&in.PodFixed))
 	return nil
 }
 

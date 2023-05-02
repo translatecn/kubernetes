@@ -34,7 +34,7 @@ func NewFakeManager() Manager {
 	return &fakeManager{}
 }
 
-// NewFakeManagerWithHint returns an instance of fake topology manager with specified topology hints
+// NewFakeManagerWithHint returns an instance of fake topology ScopeManager with specified topology hints
 func NewFakeManagerWithHint(hint *TopologyHint) Manager {
 	klog.InfoS("NewFakeManagerWithHint")
 	return &fakeManager{
@@ -43,7 +43,7 @@ func NewFakeManagerWithHint(hint *TopologyHint) Manager {
 	}
 }
 
-// NewFakeManagerWithPolicy returns an instance of fake topology manager with specified policy
+// NewFakeManagerWithPolicy returns an instance of fake topology ScopeManager with specified policy
 func NewFakeManagerWithPolicy(policy Policy) Manager {
 	klog.InfoS("NewFakeManagerWithPolicy")
 	return &fakeManager{

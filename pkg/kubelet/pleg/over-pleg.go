@@ -49,12 +49,9 @@ const (
 
 // PodLifecycleEvent is an event that reflects the change of the pod state.
 type PodLifecycleEvent struct {
-	ID   types.UID // pod id
-	Type PodLifeCycleEventType
-	// The accompanied data which varies based on the event type.
-	//   - ContainerStarted/ContainerStopped: the container name (string).
-	//   - All other event types: unused.
-	Data interface{}
+	ID   types.UID             // pod id
+	Type PodLifeCycleEventType //
+	Data interface{}           //   - ContainerStarted/ContainerStopped: the container name (string).- All other event types: unused.
 }
 
 // PodLifecycleEventGenerator contains functions for generating pod life cycle events.

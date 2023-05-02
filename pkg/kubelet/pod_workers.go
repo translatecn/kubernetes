@@ -134,13 +134,8 @@ type PodWorkers interface {
 	// pod的状态将传递给syncPod方法,直到pod被标记为已删除,达到终端阶段（已成功/已失败）或kubelet驱逐pod.
 	// 一旦发生这种情况,将调用syncTerminatingPod方法,直到成功退出,之后所有进一步的UpdatePod（）调用将被忽略,直到由于时间过去而被遗忘.已终止的pod将永远不会重新启动.
 	UpdatePod(options UpdatePodOptions)
-	// SyncKnownPods removes workers for pods that are not in the desiredPods set
-	// and have been terminated for a significant period of time. Once this method
-	// has been called once, the workers are assumed to be fully initialized and
-	// subsequent calls to ShouldPodContentBeRemoved on unknown pods will return
-	// true. It returns a map describing the state of each known pod worker.
-	SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState
-	IsPodKnownTerminated(uid types.UID) bool // pod是否被被完全终止
+	SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState // 删除不在 desiredPods 集合中且已经终止一段时间的 Pod 的工作器。
+	IsPodKnownTerminated(uid types.UID) bool                          // pod是否被被完全终止
 	// CouldHaveRunningContainers 确定是否可以在 Pod 上运行容器。如果 Pod 尚未同步，则可能会返回 true，因为尚未确定 Pod 的状态。
 	// 如果 Pod 已同步，则可能会返回 true，因为 Pod 可能已经被调度到节点上，但尚未启动容器。
 	// 如果 Pod 已终止，则返回 false，因为在这种情况下，所有容器都已停止。
@@ -169,18 +164,7 @@ type PodWorkers interface {
 	// containers are required in docker to preserve pod logs until after the pod
 	// is deleted.
 	ShouldPodRuntimeBeRemoved(uid types.UID) bool
-	// ShouldPodContentBeRemoved returns true if resource managers within the Kubelet
-	// should aggressively cleanup all content related to the pod. This is true
-	// during pod eviction (when we wish to remove that content to free resources)
-	// as well as after the request to delete a pod has resulted in containers being
-	// stopped (which is a more graceful action). Note that a deleting pod can still
-	// be evicted.
-	//
-	// Intended for use by subsystem sync loops to know when to start tearing down
-	// resources that are used by non-deleted pods. Content is generally preserved
-	// until deletion+removal_from_etcd or eviction, although garbage collection
-	// can free content when this method returns false.
-	ShouldPodContentBeRemoved(uid types.UID) bool
+	ShouldPodContentBeRemoved(uid types.UID) bool // 是不是应该删除 pod 相关的内容【正在删除的pod仍然可以被驱逐】
 	// IsPodForMirrorPodTerminatingByFullName returns true if a static pod with the
 	// provided pod name is currently terminating and has yet to complete. It is
 	// intended to be used only during orphan mirror pod cleanup to prevent us from
@@ -232,21 +216,13 @@ type podSyncStatus struct {
 	// TerminatingPodWork). Once this is set, it is safe for other components
 	// of the kubelet to assume that no other containers may be started.
 	startedTerminating bool
-	// deleted is true if the pod has been marked for deletion on the apiserver
-	// or has no configuration represented (was deleted before).
-	deleted bool
-	// gracePeriod is the requested gracePeriod once terminatingAt is nonzero.
-	gracePeriod int64
-	// evicted is true if the kill indicated this was an eviction (an evicted
-	// pod can be more aggressively cleaned up).
-	evicted      bool
-	terminatedAt time.Time // 在pod worker成功完成syncTerminatingPod调用后设置，这意味着所有正在运行的容器都将停止。
-	finished     bool      // 一旦pod worker完成pod的处理（syncTerminatedPod 无错误退出）,finished为true,直到调用SyncKnownPods以删除pod.终端pod（已成功/已失败）将具有终止状态,直到删除pod.
-	// restartRequested is true if the pod worker was informed the pod is
-	// expected to exist (update type of create, update, or sync) after
-	// it has been killed. When known pods are synced, any pod that is
-	// terminated and has restartRequested will have its history cleared.
-	restartRequested bool
+	deleted            bool      // 如果pod已在apisserver上标记为删除，或者没有表示任何配置(之前已删除)，则为true。
+	gracePeriod        int64     // 优雅删除的时间
+	evicted            bool      // 是不是被驱逐的
+	terminatedAt       time.Time // 在pod worker成功完成syncTerminatingPod调用后设置，这意味着所有正在运行的容器都将停止。
+	finished           bool      // 一旦pod worker完成pod的处理（syncTerminatedPod 无错误退出）,finished为true,直到调用SyncKnownPods以删除pod.终端pod（已成功/已失败）将具有终止状态,直到删除pod.
+	restartRequested   bool      // 当 Pod 被杀死后，如果 restartRequested 为 true，则 kubelet 将尝试重新启动该 Pod。这通常是在更新类型为 create、update 或 sync 时发生的。
+
 	// notifyPostTerminating will be closed once the pod transitions to
 	// terminated. After the pod is in terminated state, nothing should be
 	// added to this list.
@@ -343,11 +319,8 @@ func (s *podSyncStatus) IsDeleted() bool              { return s.deleted }
 // or permanently (if the phase of the pod is set to a terminal phase
 // in the pod status change).
 type podWorkers struct {
-	// Protects all per worker fields.
-	podLock sync.Mutex
-	// podsSynced is true once the pod worker has been synced at least once,
-	// which means that all working pods have been started via UpdatePod().
-	podsSynced                bool
+	podLock                   sync.Mutex                   //
+	podsSynced                bool                         // 是否完整的同步过一次数据
 	podUpdates                map[types.UID]chan podWork   // 跟踪所有正在运行的每个pod goroutine - 每个pod goroutine将通过其相应的通道处理接收到的更新.
 	lastUndeliveredWorkUpdate map[types.UID]podWork        // 跟踪此pod的最后一个未传递的工作项 - 如果工作程序正在工作,则工作项未传递.
 	podSyncStatuses           map[types.UID]*podSyncStatus // 通过UID跟踪pod的终止状态—同步、终止、终止和逐出.
@@ -466,6 +439,7 @@ func (p *podWorkers) ShouldPodRuntimeBeRemoved(uid types.UID) bool {
 }
 
 func (p *podWorkers) ShouldPodContentBeRemoved(uid types.UID) bool {
+	// 是否应该删除 pod 数据
 	p.podLock.Lock()
 	defer p.podLock.Unlock()
 	if status, ok := p.podSyncStatuses[uid]; ok {
@@ -1161,7 +1135,8 @@ func (p *podWorkers) contextForWorker(uid types.UID) context.Context {
 // to UpdatePods for new pods. It returns a map of known workers that are not finished
 // with a value of SyncPodTerminated, SyncPodKill, or SyncPodSync depending on whether
 // the pod is terminated, terminating, or syncing.
-func (p *podWorkers) SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState {
+// 清除任何已完全终止且不在 desiredPods 列表中的 Pod。
+func (p *podWorkers) SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState { // ✅
 	workers := make(map[types.UID]PodWorkerState)
 	known := make(map[types.UID]struct{})
 	for _, pod := range desiredPods {
@@ -1174,7 +1149,7 @@ func (p *podWorkers) SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorke
 	p.podsSynced = true
 	for uid, status := range p.podSyncStatuses {
 		if _, exists := known[uid]; !exists || status.restartRequested {
-			p.removeTerminatedWorker(uid)
+			p.removeTerminatedWorker(uid) // 任何已终止且具有 restartRequested 的 Pod 都将清除其历史记录。这是因为这些 Pod 已经被标记为需要重新启动，因此它们的历史记录不再需要保留。
 		}
 		switch {
 		case !status.terminatedAt.IsZero():
@@ -1196,7 +1171,7 @@ func (p *podWorkers) SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorke
 // that has reached a terminal state of "finished" - has successfully exited
 // syncTerminatedPod. This "forgets" a pod by UID and allows another pod to be
 // recreated with the same UID.
-func (p *podWorkers) removeTerminatedWorker(uid types.UID) {
+func (p *podWorkers) removeTerminatedWorker(uid types.UID) { // ✅
 	status, ok := p.podSyncStatuses[uid]
 	if !ok {
 		// already forgotten, or forgotten too early

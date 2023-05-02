@@ -138,7 +138,7 @@ func TestValidateOverhead(t *testing.T) {
 		{
 			Name: "Overhead with valid cpu and memory resources",
 			overhead: &node.Overhead{
-				PodFixed: core.ResourceList{
+				PodFixed: core.ResourceMap{
 					core.ResourceName(core.ResourceCPU):    resource.MustParse("10"),
 					core.ResourceName(core.ResourceMemory): resource.MustParse("10G"),
 				},
@@ -164,7 +164,7 @@ func TestValidateOverhead(t *testing.T) {
 		{
 			Name: "Invalid Resources",
 			overhead: &node.Overhead{
-				PodFixed: core.ResourceList{
+				PodFixed: core.ResourceMap{
 					core.ResourceName("my.org"): resource.MustParse("10m"),
 				},
 			},

@@ -122,7 +122,7 @@ func TestPodCalculateAffinity(t *testing.T) {
 	}
 
 	for _, tc := range tcases {
-		podScope := &podScope{
+		podScope := &PodScope{
 			scope{
 				hintProviders: tc.hp,
 				policy:        &mockPolicy{},
@@ -255,7 +255,7 @@ func TestPodAccumulateProvidersHints(t *testing.T) {
 	}
 
 	for _, tc := range tcases {
-		pScope := podScope{
+		pScope := PodScope{
 			scope{
 				hintProviders: tc.hp,
 			},

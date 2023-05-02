@@ -192,6 +192,7 @@ func (e *EventedPLEG) watchEventsChannel() {
 }
 
 func (e *EventedPLEG) processCRIEvents(containerEventsResponseCh chan *runtimeapi.ContainerEventResponse) {
+	//遍历pod中的容器对比缓存中的状态，生成状态变化事件交给syncloop事件循环处理
 	for event := range containerEventsResponseCh {
 		// Ignore the event if PodSandboxStatus is nil.
 		// This might happen under some race condition where the podSandbox has
@@ -208,7 +209,6 @@ func (e *EventedPLEG) processCRIEvents(containerEventsResponseCh chan *runtimeap
 
 		podID := types.UID(event.PodSandboxStatus.Metadata.Uid)
 		shouldSendPLEGEvent := false
-
 		status, err := e.runtime.GeneratePodStatus(event)
 		if err != nil {
 			// nolint:logcheck // Not using the result of klog.V inside the
@@ -252,7 +252,7 @@ func (e *EventedPLEG) processCRIEvents(containerEventsResponseCh chan *runtimeap
 			}
 		}
 
-		if shouldSendPLEGEvent {
+		if shouldSendPLEGEvent { // 删除事件、更新缓存
 			e.processCRIEvent(event)
 		}
 	}

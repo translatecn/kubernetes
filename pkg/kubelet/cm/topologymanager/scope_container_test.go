@@ -122,7 +122,7 @@ func TestContainerCalculateAffinity(t *testing.T) {
 	}
 
 	for _, tc := range tcases {
-		ctnScope := &containerScope{
+		ctnScope := &ContainerScope{
 			scope{
 				hintProviders: tc.hp,
 				policy:        &mockPolicy{},
@@ -255,7 +255,7 @@ func TestContainerAccumulateProvidersHints(t *testing.T) {
 	}
 
 	for _, tc := range tcases {
-		ctnScope := containerScope{
+		ctnScope := ContainerScope{
 			scope{
 				hintProviders: tc.hp,
 			},

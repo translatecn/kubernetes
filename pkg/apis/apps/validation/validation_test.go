@@ -940,7 +940,7 @@ func TestValidateStatefulSetUpdate(t *testing.T) {
 		Spec: api.PersistentVolumeClaimSpec{
 			StorageClassName: &storageClass,
 			Resources: api.ResourceRequirements{
-				Requests: api.ResourceList{
+				Requests: api.ResourceMap{
 					api.ResourceStorage: resource.MustParse("1Gi"),
 				},
 			},
@@ -959,7 +959,7 @@ func TestValidateStatefulSetUpdate(t *testing.T) {
 		Spec: api.PersistentVolumeClaimSpec{
 			StorageClassName: &storageClass2,
 			Resources: api.ResourceRequirements{
-				Requests: api.ResourceList{
+				Requests: api.ResourceMap{
 					api.ResourceStorage: resource.MustParse("2Gi"),
 				},
 			},

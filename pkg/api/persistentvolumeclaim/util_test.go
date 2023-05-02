@@ -476,7 +476,7 @@ func getPVC() *core.PersistentVolumeClaim {
 func withAllocatedResource(q string) *core.PersistentVolumeClaim {
 	return &core.PersistentVolumeClaim{
 		Status: core.PersistentVolumeClaimStatus{
-			AllocatedResources: core.ResourceList{
+			AllocatedResources: core.ResourceMap{
 				core.ResourceStorage: resource.MustParse(q),
 			},
 		},
@@ -507,10 +507,10 @@ func TestWarnings(t *testing.T) {
 			template: &core.PersistentVolumeClaim{
 				Spec: core.PersistentVolumeClaimSpec{
 					Resources: core.ResourceRequirements{
-						Requests: core.ResourceList{
+						Requests: core.ResourceMap{
 							core.ResourceStorage: resource.MustParse("200Mi"),
 						},
-						Limits: core.ResourceList{
+						Limits: core.ResourceMap{
 							core.ResourceStorage: resource.MustParse("200Mi"),
 						},
 					},
@@ -523,10 +523,10 @@ func TestWarnings(t *testing.T) {
 			template: &core.PersistentVolumeClaim{
 				Spec: core.PersistentVolumeClaimSpec{
 					Resources: core.ResourceRequirements{
-						Requests: core.ResourceList{
+						Requests: core.ResourceMap{
 							core.ResourceStorage: resource.MustParse("200m"),
 						},
-						Limits: core.ResourceList{
+						Limits: core.ResourceMap{
 							core.ResourceStorage: resource.MustParse("100m"),
 						},
 					},
@@ -542,7 +542,7 @@ func TestWarnings(t *testing.T) {
 			template: &core.PersistentVolumeClaim{
 				Spec: core.PersistentVolumeClaimSpec{
 					Resources: core.ResourceRequirements{
-						Requests: core.ResourceList{
+						Requests: core.ResourceMap{
 							core.ResourceStorage: resource.MustParse("200"),
 						},
 					},

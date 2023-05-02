@@ -64,7 +64,6 @@ func SetObjectDefaults_StorageClassList(in *v1beta1.StorageClassList) {
 
 func SetObjectDefaults_VolumeAttachment(in *v1beta1.VolumeAttachment) {
 	if in.Spec.Source.InlineVolumeSpec != nil {
-		v1.SetDefaults_ResourceList(&in.Spec.Source.InlineVolumeSpec.Capacity)
 		if in.Spec.Source.InlineVolumeSpec.PersistentVolumeSource.HostPath != nil {
 			v1.SetDefaults_HostPathVolumeSource(in.Spec.Source.InlineVolumeSpec.PersistentVolumeSource.HostPath)
 		}

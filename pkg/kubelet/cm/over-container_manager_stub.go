@@ -37,7 +37,7 @@ import (
 )
 
 type containerManagerStub struct {
-	shouldResetExtendedResourceCapacity bool
+	shouldResetExtendedResourceCapacity bool // 是不是应该重置扩展资源容量
 	extendedPluginResources             v1.ResourceMap
 }
 

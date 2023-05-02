@@ -55,7 +55,7 @@ type userNsPodsManager interface {
 
 type usernsManager struct {
 	used         *allocator.AllocationBitmap
-	usedBy       map[types.UID]uint32 // Map pod.UID to range used
+	usedBy       map[types.UID]uint32 // 运行中的pod
 	removed      int
 	numAllocated int
 	kl           userNsPodsManager
@@ -431,7 +431,7 @@ func (m *usernsManager) GetOrCreateUserNamespaceMappings(pod *v1.Pod) (*runtimea
 // CleanupOrphanedPodUsernsAllocations reconciliates the state of user namespace
 // allocations with the pods actually running. It frees any user namespace
 // allocation for orphaned pods.
-func (m *usernsManager) CleanupOrphanedPodUsernsAllocations(pods []*v1.Pod, runningPods []*kubecontainer.Pod) error {
+func (m *usernsManager) CleanupOrphanedPodUsernsAllocations(pods []*v1.Pod, runningPods []*kubecontainer.Pod) error { // ✅
 	if !utilfeature.DefaultFeatureGate.Enabled(features.UserNamespacesStatelessPodsSupport) {
 		return nil
 	}
@@ -459,6 +459,7 @@ func (m *usernsManager) CleanupOrphanedPodUsernsAllocations(pods []*v1.Pod, runn
 
 	// Lets remove all the pods "found" that are not known.
 	for _, podUID := range found {
+		// pods和runningPods 没有，但在磁盘上还有的pod对应的数据
 		if allPods.Has(string(podUID)) {
 			continue
 		}
@@ -469,6 +470,7 @@ func (m *usernsManager) CleanupOrphanedPodUsernsAllocations(pods []*v1.Pod, runn
 
 	// Lets remove any existing allocation for a pod that is not "found".
 	for podUID := range m.usedBy {
+		// 磁盘上没有, 但pods和runningPods有
 		if allFound.Has(string(podUID)) {
 			continue
 		}

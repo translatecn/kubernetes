@@ -54,8 +54,6 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 	scheme.AddTypeDefaultingFunc(&v1.ReplicationControllerList{}, func(obj interface{}) {
 		SetObjectDefaults_ReplicationControllerList(obj.(*v1.ReplicationControllerList))
 	})
-	scheme.AddTypeDefaultingFunc(&v1.ResourceQuota{}, func(obj interface{}) { SetObjectDefaults_ResourceQuota(obj.(*v1.ResourceQuota)) })
-	scheme.AddTypeDefaultingFunc(&v1.ResourceQuotaList{}, func(obj interface{}) { SetObjectDefaults_ResourceQuotaList(obj.(*v1.ResourceQuotaList)) })
 	scheme.AddTypeDefaultingFunc(&v1.Secret{}, func(obj interface{}) { SetObjectDefaults_Secret(obj.(*v1.Secret)) })
 	scheme.AddTypeDefaultingFunc(&v1.SecretList{}, func(obj interface{}) { SetObjectDefaults_SecretList(obj.(*v1.SecretList)) })
 	scheme.AddTypeDefaultingFunc(&v1.Service{}, func(obj interface{}) { SetObjectDefaults_Service(obj.(*v1.Service)) })
@@ -89,11 +87,6 @@ func SetObjectDefaults_LimitRange(in *v1.LimitRange) {
 	for i := range in.Spec.Limits {
 		a := &in.Spec.Limits[i]
 		SetDefaults_LimitRangeItem(a)
-		SetDefaults_ResourceList(&a.Max)
-		SetDefaults_ResourceList(&a.Min)
-		SetDefaults_ResourceList(&a.Default)
-		SetDefaults_ResourceList(&a.DefaultRequest)
-		SetDefaults_ResourceList(&a.MaxLimitRequestRatio)
 	}
 }
 
@@ -118,8 +111,6 @@ func SetObjectDefaults_NamespaceList(in *v1.NamespaceList) {
 
 func SetObjectDefaults_Node(in *v1.Node) {
 	SetDefaults_NodeStatus(&in.Status)
-	SetDefaults_ResourceList(&in.Status.Capacity)
-	SetDefaults_ResourceList(&in.Status.Allocatable)
 }
 
 func SetObjectDefaults_NodeList(in *v1.NodeList) {
@@ -131,7 +122,6 @@ func SetObjectDefaults_NodeList(in *v1.NodeList) {
 
 func SetObjectDefaults_PersistentVolume(in *v1.PersistentVolume) {
 	SetDefaults_PersistentVolume(in)
-	SetDefaults_ResourceList(&in.Spec.Capacity)
 	if in.Spec.PersistentVolumeSource.HostPath != nil {
 		SetDefaults_HostPathVolumeSource(in.Spec.PersistentVolumeSource.HostPath)
 	}
@@ -152,10 +142,6 @@ func SetObjectDefaults_PersistentVolume(in *v1.PersistentVolume) {
 func SetObjectDefaults_PersistentVolumeClaim(in *v1.PersistentVolumeClaim) {
 	SetDefaults_PersistentVolumeClaim(in)
 	SetDefaults_PersistentVolumeClaimSpec(&in.Spec)
-	SetDefaults_ResourceList(&in.Spec.Resources.Limits)
-	SetDefaults_ResourceList(&in.Spec.Resources.Requests)
-	SetDefaults_ResourceList(&in.Status.Capacity)
-	SetDefaults_ResourceList(&in.Status.AllocatedResources)
 }
 
 func SetObjectDefaults_PersistentVolumeClaimList(in *v1.PersistentVolumeClaimList) {
@@ -228,8 +214,6 @@ func SetObjectDefaults_Pod(in *v1.Pod) {
 		if a.VolumeSource.Ephemeral != nil {
 			if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 				SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-				SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-				SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 			}
 		}
 	}
@@ -250,8 +234,6 @@ func SetObjectDefaults_Pod(in *v1.Pod) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&a.Resources.Limits)
-		SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -318,8 +300,6 @@ func SetObjectDefaults_Pod(in *v1.Pod) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&a.Resources.Limits)
-		SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -386,8 +366,6 @@ func SetObjectDefaults_Pod(in *v1.Pod) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-		SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 		if a.EphemeralContainerCommon.LivenessProbe != nil {
 			SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 			if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -437,7 +415,6 @@ func SetObjectDefaults_Pod(in *v1.Pod) {
 			}
 		}
 	}
-	SetDefaults_ResourceList(&in.Spec.Overhead)
 }
 
 func SetObjectDefaults_PodList(in *v1.PodList) {
@@ -502,8 +479,6 @@ func SetObjectDefaults_PodTemplate(in *v1.PodTemplate) {
 		if a.VolumeSource.Ephemeral != nil {
 			if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 				SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-				SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-				SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 			}
 		}
 	}
@@ -524,8 +499,6 @@ func SetObjectDefaults_PodTemplate(in *v1.PodTemplate) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&a.Resources.Limits)
-		SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -592,8 +565,6 @@ func SetObjectDefaults_PodTemplate(in *v1.PodTemplate) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&a.Resources.Limits)
-		SetDefaults_ResourceList(&a.Resources.Requests)
 		if a.LivenessProbe != nil {
 			SetDefaults_Probe(a.LivenessProbe)
 			if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -660,8 +631,6 @@ func SetObjectDefaults_PodTemplate(in *v1.PodTemplate) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-		SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 		if a.EphemeralContainerCommon.LivenessProbe != nil {
 			SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 			if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -711,7 +680,6 @@ func SetObjectDefaults_PodTemplate(in *v1.PodTemplate) {
 			}
 		}
 	}
-	SetDefaults_ResourceList(&in.Template.Spec.Overhead)
 }
 
 func SetObjectDefaults_PodTemplateList(in *v1.PodTemplateList) {
@@ -778,8 +746,6 @@ func SetObjectDefaults_ReplicationController(in *v1.ReplicationController) {
 			if a.VolumeSource.Ephemeral != nil {
 				if a.VolumeSource.Ephemeral.VolumeClaimTemplate != nil {
 					SetDefaults_PersistentVolumeClaimSpec(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec)
-					SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Limits)
-					SetDefaults_ResourceList(&a.VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.Resources.Requests)
 				}
 			}
 		}
@@ -800,8 +766,6 @@ func SetObjectDefaults_ReplicationController(in *v1.ReplicationController) {
 					}
 				}
 			}
-			SetDefaults_ResourceList(&a.Resources.Limits)
-			SetDefaults_ResourceList(&a.Resources.Requests)
 			if a.LivenessProbe != nil {
 				SetDefaults_Probe(a.LivenessProbe)
 				if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -868,8 +832,6 @@ func SetObjectDefaults_ReplicationController(in *v1.ReplicationController) {
 					}
 				}
 			}
-			SetDefaults_ResourceList(&a.Resources.Limits)
-			SetDefaults_ResourceList(&a.Resources.Requests)
 			if a.LivenessProbe != nil {
 				SetDefaults_Probe(a.LivenessProbe)
 				if a.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -936,8 +898,6 @@ func SetObjectDefaults_ReplicationController(in *v1.ReplicationController) {
 					}
 				}
 			}
-			SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Limits)
-			SetDefaults_ResourceList(&a.EphemeralContainerCommon.Resources.Requests)
 			if a.EphemeralContainerCommon.LivenessProbe != nil {
 				SetDefaults_Probe(a.EphemeralContainerCommon.LivenessProbe)
 				if a.EphemeralContainerCommon.LivenessProbe.ProbeHandler.HTTPGet != nil {
@@ -987,7 +947,6 @@ func SetObjectDefaults_ReplicationController(in *v1.ReplicationController) {
 				}
 			}
 		}
-		SetDefaults_ResourceList(&in.Spec.Template.Spec.Overhead)
 	}
 }
 
@@ -995,19 +954,6 @@ func SetObjectDefaults_ReplicationControllerList(in *v1.ReplicationControllerLis
 	for i := range in.Items {
 		a := &in.Items[i]
 		SetObjectDefaults_ReplicationController(a)
-	}
-}
-
-func SetObjectDefaults_ResourceQuota(in *v1.ResourceQuota) {
-	SetDefaults_ResourceList(&in.Spec.Hard)
-	SetDefaults_ResourceList(&in.Status.Hard)
-	SetDefaults_ResourceList(&in.Status.Used)
-}
-
-func SetObjectDefaults_ResourceQuotaList(in *v1.ResourceQuotaList) {
-	for i := range in.Items {
-		a := &in.Items[i]
-		SetObjectDefaults_ResourceQuota(a)
 	}
 }
 

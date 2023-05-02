@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// containerManagerImpl implements container manager on Windows.
+// ContainerManagerImpl implements container manager on Windows.
 // Only GetNodeAllocatableReservation() and GetCapacity() are implemented now.
 
 package cm
@@ -95,7 +95,6 @@ func (cm *containerManagerImpl) Start(node *v1.Node,
 	return nil
 }
 
-// NewContainerManager creates windows container manager.
 func NewContainerManager(mountUtil mount.Interface, cadvisorInterface cadvisor.Interface, nodeConfig NodeConfig, failSwapOn bool, recorder record.EventRecorder, kubeClient clientset.Interface) (ContainerManager, error) {
 	// It is safe to invoke `MachineInfo` on cAdvisor before logically initializing cAdvisor here because
 	// machine info is computed and cached once as part of cAdvisor object creation.

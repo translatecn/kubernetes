@@ -52,7 +52,7 @@ func newOverheadValidPod(name string, numContainers int, resources core.Resource
 	}
 
 	if setOverhead {
-		pod.Spec.Overhead = core.ResourceList{
+		pod.Spec.Overhead = core.ResourceMap{
 			core.ResourceName(core.ResourceCPU):    resource.MustParse("100m"),
 			core.ResourceName(core.ResourceMemory): resource.MustParse("1"),
 		}
@@ -71,7 +71,7 @@ func newSchedulingValidPod(name string, nodeSelector map[string]string, tolerati
 }
 
 func getGuaranteedRequirements() core.ResourceRequirements {
-	resources := core.ResourceList{
+	resources := core.ResourceMap{
 		core.ResourceName(core.ResourceCPU):    resource.MustParse("1"),
 		core.ResourceName(core.ResourceMemory): resource.MustParse("10"),
 	}

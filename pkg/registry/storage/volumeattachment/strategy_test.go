@@ -48,7 +48,7 @@ func getValidVolumeAttachmentWithInlineSpec(name string) *storage.VolumeAttachme
 	volumeAttachment := getValidVolumeAttachment(name)
 	volumeAttachment.Spec.Source.PersistentVolumeName = nil
 	volumeAttachment.Spec.Source.InlineVolumeSpec = &api.PersistentVolumeSpec{
-		Capacity: api.ResourceList{
+		Capacity: api.ResourceMap{
 			api.ResourceName(api.ResourceStorage): resource.MustParse("10"),
 		},
 		AccessModes: []api.PersistentVolumeAccessMode{api.ReadWriteOnce},

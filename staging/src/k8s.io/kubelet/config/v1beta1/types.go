@@ -425,8 +425,7 @@ type KubeletConfiguration struct {
 	// Default: ""
 	// +optional
 	PodCIDR string `json:"podCIDR,omitempty"`
-	// podPidsLimit is the maximum number of PIDs in any pod.
-	// Default: -1
+	// pod中pid的最大数目。Default: -1
 	// +optional
 	PodPidsLimit *int64 `json:"podPidsLimit,omitempty"`
 	// resolvConf is the resolver configuration file used as the basis

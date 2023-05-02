@@ -49,8 +49,8 @@ func TestPodAdmission(t *testing.T) {
 				{
 					Name: "test",
 					Resources: api.ResourceRequirements{
-						Limits:   api.ResourceList{api.ResourceCPU: CPU1000m},
-						Requests: api.ResourceList{api.ResourceCPU: CPU500m},
+						Limits:   api.ResourceMap{api.ResourceCPU: CPU1000m},
+						Requests: api.ResourceMap{api.ResourceCPU: CPU500m},
 					},
 				},
 			},
@@ -64,8 +64,8 @@ func TestPodAdmission(t *testing.T) {
 				{
 					Name: "test",
 					Resources: api.ResourceRequirements{
-						Limits:   api.ResourceList{api.ResourceCPU: CPU1000m},
-						Requests: api.ResourceList{api.ResourceCPU: CPU1000m},
+						Limits:   api.ResourceMap{api.ResourceCPU: CPU1000m},
+						Requests: api.ResourceMap{api.ResourceCPU: CPU1000m},
 					},
 				},
 			},
