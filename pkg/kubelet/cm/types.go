@@ -21,22 +21,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// ResourceConfig holds information about all the supported cgroup resource parameters.
+// ResourceConfig 包含了所有支持的 cgroup 资源参数的信息。
 type ResourceConfig struct {
-	// Memory limit (in bytes).
-	Memory *int64
-	// CPU shares (relative weight vs. other containers).
-	CpuShares *uint64
-	// CPU hardcap limit (in usecs). Allowed cpu time in a given period.
-	CpuQuota *int64
-	// CPU quota period.
-	CpuPeriod *uint64
-	// HugePageLimit map from page size (in bytes) to limit (in bytes)
-	HugePageLimit map[int64]int64
-	// Maximum number of pids
-	PidsLimit *int64
-	// Unified for cgroup v2
-	Unified map[string]string
+	Memory        *int64            // 内存限制（以字节为单位）。
+	CpuShares     *uint64           // CPU 分配权重（与其他容器相对比）。
+	CpuQuota      *int64            // CPU 硬性限制（以微秒为单位）。
+	CpuPeriod     *uint64           // CPU 限制周期（以微秒为单位）。
+	HugePageLimit map[int64]int64   // 从页面大小（以字节为单位）到限制（以字节为单位）的映射。
+	PidsLimit     *int64            // 最大进程数限制。
+	Unified       map[string]string // 用于 cgroup v2。
 }
 
 // CgroupName is the abstract name of a cgroup prior to any driver specific conversion.
@@ -44,15 +37,10 @@ type ResourceConfig struct {
 // {"kubepods", "burstable", "pod1234-abcd-5678-efgh"}
 type CgroupName []string //  cgroup 层级
 
-// CgroupConfig holds the cgroup configuration information.
-// This is common object which is used to specify
-// cgroup information to both systemd and raw cgroup fs
-// implementation of the Cgroup Manager interface.
+// CgroupConfig 这是一个通用的对象，用于向 systemd 和原始 cgroup fs 实现的 Cgroup Manager 接口指定 cgroup 信息。
 type CgroupConfig struct {
-	// Fully qualified name prior to any driver specific conversions.
-	Name CgroupName
-	// ResourceParameters contains various cgroups settings to apply.
-	ResourceParameters *ResourceConfig
+	Name               CgroupName
+	ResourceParameters *ResourceConfig // cgroup 设置
 }
 
 // CgroupManager allows for cgroup management.
@@ -73,12 +61,9 @@ type CgroupManager interface {
 	Name(name CgroupName) string // 不同的 cgroup 驱动程序可能会对 cgroup 的名称进行不同的转换  {"kubepods", "besteffort"} -> /kubepods.slice/kubepods-besteffort.slice
 	// CgroupName converts the literal cgroupfs name on the host to an internal identifier.
 	CgroupName(name string) CgroupName
-	// Pids scans through all subsystems to find pids associated with specified cgroup.
-	Pids(name CgroupName) []int
-	// ReduceCPULimits reduces the CPU CFS values to the minimum amount of shares.
-	ReduceCPULimits(cgroupName CgroupName) error
-	// MemoryUsage returns current memory usage of the specified cgroup, as read from the cgroupfs.
-	MemoryUsage(name CgroupName) (int64, error)
+	Pids(name CgroupName) []int                  // 扫描所有子系统以查找与指定 cgroup 相关联的 pid。
+	ReduceCPULimits(cgroupName CgroupName) error // 将CPU CFS值减少到最小的共享数量。用于限制进程使用CPU的时间
+	MemoryUsage(name CgroupName) (int64, error)  // 从 cgroupfs 读取指定 cgroup 的当前内存使用情况，并返回该值。 memory.usage_in_bytes
 }
 
 // QOSContainersInfo stores the names of containers per qos
@@ -99,16 +84,9 @@ type PodContainerManager interface {
 	// pod cgroup exists if qos cgroup hierarchy flag is enabled.
 	// If the pod cgroup doesn't already exist this method creates it.
 	EnsureExists(*v1.Pod) error
-
-	// Exists returns true if the pod cgroup exists.
-	Exists(*v1.Pod) bool
-
-	// Destroy takes a pod Cgroup name as argument and destroys the pod's container.
-	Destroy(name CgroupName) error
-
-	// ReduceCPULimits reduces the CPU CFS values to the minimum amount of shares.
-	ReduceCPULimits(name CgroupName) error
+	Exists(*v1.Pod) bool                                      // 判断一个pod 的cgroup 路径是否存在
+	Destroy(name CgroupName) error                            // 删除容器
+	ReduceCPULimits(name CgroupName) error                    // 将CPU CFS值减少到最小的共享数量。用于限制进程使用CPU的时间
 	GetAllPodsFromCgroups() (map[types.UID]CgroupName, error) // 根据cgroupfs系统的状态，返回一组pod id到它们相关联的cgroup。
-	// IsPodCgroup returns true if the literal cgroupfs name corresponds to a pod
-	IsPodCgroup(cgroupfs string) (bool, types.UID)
+	IsPodCgroup(cgroupfs string) (bool, types.UID)            // 返回 cgroupfs 名称对应于一个 Pod
 }

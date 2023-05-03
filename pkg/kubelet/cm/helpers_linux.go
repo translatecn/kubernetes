@@ -38,7 +38,7 @@ import (
 const (
 	// These limits are defined in the kernel:
 	// https://github.com/torvalds/linux/blob/0bddd227f3dc55975e2b8dfa7fc6f959b062a2c7/kernel/sched/sched.h#L427-L428
-	MinShares = 2
+	MinShares = 2 // CPU共享时间片的最小值
 	MaxShares = 262144
 
 	SharesPerCPU  = 1024

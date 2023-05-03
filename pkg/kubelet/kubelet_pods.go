@@ -1036,9 +1036,7 @@ func (kl *Kubelet) removeOrphanedPodStatuses(pods []*v1.Pod, mirrorPods []*v1.Po
 	kl.statusManager.RemoveOrphanedStatuses(podUIDs)
 }
 
-// deleteOrphanedMirrorPods checks whether pod killer has done with orphaned mirror pod.
-// If pod killing is done, podManager.DeleteMirrorPod() is called to delete mirror pod
-// from the API server
+// 检查孤儿镜像pod killer是否已经完成。如果pod终止完成，将调用podmanager.deletemirorpod()从API服务器上删除镜像pod
 func (kl *Kubelet) deleteOrphanedMirrorPods() {
 	mirrorPods := kl.podManager.GetOrphanedMirrorPodNames()
 	for _, podFullname := range mirrorPods {
@@ -1153,15 +1151,8 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		klog.ErrorS(err, "Failed cleaning up orphaned pod user namespaces allocations")
 	}
 
-	// Remove orphaned volumes from pods that are known not to have any
-	// containers. Note that we pass all pods (including terminated pods) to
-	// the function, so that we don't remove volumes associated with terminated
-	// but not yet deleted pods.
-	// TODO: this method could more aggressively cleanup terminated pods
-	// in the future (volumes, mount dirs, logs, and containers could all be
-	// better separated)
 	klog.V(3).InfoS("Clean up orphaned pod directories")
-	err = kl.cleanupOrphanedPodDirs(allPods, runningRuntimePods)
+	err = kl.cleanupOrphanedPodDirs(allPods, runningRuntimePods) // 删除不应该运行且没有容器运行的pod卷。注意，我们在这里roll up 日志，因为它在主循环中运行。
 	if err != nil {
 		// We want all cleanup tasks to be run even if one of them failed. So
 		// we just log an error here and continue other cleanup tasks.
@@ -1169,10 +1160,9 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		klog.ErrorS(err, "Failed cleaning up orphaned pod directories")
 	}
 
-	// Remove any orphaned mirror pods (mirror pods are tracked by name via the
-	// pod worker)
+	// Remove any orphaned mirror pods (mirror pods are tracked by name via the pod worker)
 	klog.V(3).InfoS("Clean up orphaned mirror pods")
-	kl.deleteOrphanedMirrorPods()
+	kl.deleteOrphanedMirrorPods() // ✅
 
 	// Remove any cgroups in the hierarchy for pods that are definitely no longer
 	// running (not in the container runtime).
@@ -1953,12 +1943,13 @@ func (kl *Kubelet) GetPortForward(ctx context.Context, podName, podNamespace str
 	return kl.streamingRuntime.GetPortForward(ctx, podName, podNamespace, podUID, portForwardOpts.Ports)
 }
 
-// cleanupOrphanedPodCgroups removes cgroups that should no longer exist.
-// it reconciles the cached state of cgroupPods with the specified list of runningPods
+// cleanupOrphanedPodCgroups 删除不应该存在的cgroups。
+// 将cgroupPods的缓存状态与指定的runningPods列表进行协调
 func (kl *Kubelet) cleanupOrphanedPodCgroups(pcm cm.PodContainerManager, cgroupPods map[types.UID]cm.CgroupName, possiblyRunningPods map[types.UID]sets.Empty) {
 	// Iterate over all the found pods to verify if they should be running
 	for uid, val := range cgroupPods {
 		// if the pod is in the running set, its not a candidate for cleanup
+		// 如果pod在running set 中，它就不是清理的候选对象
 		if _, ok := possiblyRunningPods[uid]; ok {
 			continue
 		}
@@ -1970,8 +1961,10 @@ func (kl *Kubelet) cleanupOrphanedPodCgroups(pcm cm.PodContainerManager, cgroupP
 		// is configured to keep terminated volumes, we will delete the cgroup and not block.
 		if podVolumesExist := kl.podVolumesExist(uid); podVolumesExist && !kl.keepTerminatedPodVolumes {
 			klog.V(3).InfoS("Orphaned pod found, but volumes not yet removed.  Reducing cpu to minimum", "podUID", uid)
+			// kubelet 无法减少等待清理卷的 Pod 的 CPU 时间。
+			// 可能因为该 Pod 正在进行一些长时间运行的操作，例如文件系统清理、网络连接清理等。这些操作可能需要大量的 CPU 时间，并且可能会阻塞 kubelet 的操作。
 			if err := pcm.ReduceCPULimits(val); err != nil {
-				klog.InfoS("Failed to reduce cpu time for pod pending volume cleanup", "podUID", uid, "err", err)
+				klog.InfoS("无法减少等待清理卷的 Pod 的 CPU 时间。 Failed to reduce cpu time for pod pending volume cleanup", "podUID", uid, "err", err)
 			}
 			continue
 		}

@@ -163,7 +163,7 @@ func (kl *Kubelet) removeOrphanedPodVolumeDirs(uid types.UID) []error {
 }
 
 // 删除不应该运行且没有容器运行的pod卷。注意，我们在这里roll up 日志，因为它在主循环中运行。
-func (kl *Kubelet) cleanupOrphanedPodDirs(pods []*v1.Pod, runningPods []*kubecontainer.Pod) error {
+func (kl *Kubelet) cleanupOrphanedPodDirs(pods []*v1.Pod, runningPods []*kubecontainer.Pod) error { // ✅
 	allPods := sets.NewString()
 	for _, pod := range pods {
 		allPods.Insert(string(pod.UID))

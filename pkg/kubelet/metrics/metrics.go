@@ -164,7 +164,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           CgroupManagerOperationsKey,
-			Help:           "Duration in seconds for cgroup manager operations. Broken down by method.",
+			Help:           "cgroup 操作的持续时间",
 			Buckets:        metrics.DefBuckets,
 			StabilityLevel: metrics.ALPHA,
 		},

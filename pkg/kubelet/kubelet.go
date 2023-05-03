@@ -345,7 +345,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	maxContainerCount int32,
 	masterServiceNamespace string,
 	registerSchedulable bool,
-	keepTerminatedPodVolumes bool,
+	keepTerminatedPodVolumes bool, // ✅
 	nodeLabels map[string]string,
 	nodeStatusMaxImages int32,
 	seccompDefault bool,
@@ -977,9 +977,9 @@ type Kubelet struct {
 	lastObservedNodeAddresses               []v1.NodeAddress                           // 节点地址.✅
 	onRepeatedHeartbeatFailure              func()                                     // 当心跳操作失败多次时要调用的函数.✅
 	podWorkers                              PodWorkers                                 // 同步pod 状态到events
+	podManager                              kubepod.Manager                            // pod 管理器.
 	resyncInterval                          time.Duration                              // 周期性全量协调 pod 之间的间隔时间.
 	sourcesReady                            config.SourcesReady                        // kubelet 记录的sources,是线程安全的. api、file、url ✅
-	podManager                              kubepod.Manager                            // pod 管理器.
 	evictionManager                         eviction.Manager                           // 用于观察和响应可能影响节点稳定性的情况的驱逐管理器.
 	logServer                               http.Handler                               // kubelet 使用的日志服务器.defaults to /logs/ from /var/log
 	runner                                  kubecontainer.CommandRunner                // kubelet 使用的命令运行器.

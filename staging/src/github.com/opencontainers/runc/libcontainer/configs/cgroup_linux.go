@@ -58,23 +58,8 @@ type Resources struct {
 	Rdma                         map[string]LinuxRdma `json:"rdma"`                             // 资源限制配置.
 	CpuWeight                    uint64               `json:"cpu_weight"`                       // 设置比例带宽限制.
 	Unified                      map[string]string    `json:"unified"`                          // 仅适用于 cgroupv2 的键值对映射.
-
-	// SkipDevices allows to skip configuring device permissions.
-	// Used by e.g. kubelet while creating a parent cgroup (kubepods)
-	// common for many containers, and by runc update.
-	//
-	// NOTE it is impossible to start a container which has this flag set.
-	SkipDevices bool `json:"-"`
-
-	// SkipFreezeOnSet is a flag for cgroup manager to skip the cgroup
-	// freeze when setting resources. Only applicable to systemd legacy
-	// (i.e. cgroup v1) manager (which uses freeze by default to avoid
-	// spurious permission errors caused by systemd inability to update
-	// device rules in a non-disruptive manner).
-	//
-	// If not set, a few methods (such as looking into cgroup's
-	// devices.list and querying the systemd unit properties) are used
-	// during Set() to figure out whether the freeze is required. Those
-	// methods may be relatively slow, thus this flag.
+	SkipDevices                  bool                 `json:"-"`                                // SkipDevices允许跳过配置设备权限。例如，kubelet在创建父cgroup (kubepods)时使用，这在许多容器中都很常见，并且在运行update时使用。
+	// SkipFreezeOnSet是cgroup管理器在设置资源时跳过cgroup冻结的标志。仅适用于systemd遗留(即cgroup v1)管理器(默认情况下使用freeze来避免由于systemd无法以非中断方式更新设备规则而导致的虚假权限错误)。
+	// 如果没有设置，可以使用一些方法(例如查看cgroup的设备)。在Set()期间使用list和查询systemd单元属性来确定是否需要冻结。这些//方法可能相对较慢，因此使用此标志。
 	SkipFreezeOnSet bool `json:"-"`
 }

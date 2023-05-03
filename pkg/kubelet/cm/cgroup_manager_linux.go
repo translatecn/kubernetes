@@ -135,12 +135,8 @@ type CgroupSubsystems struct {
 // update,create or delete any number of cgroups
 // It relies on runc/libcontainer cgroup managers.
 type cgroupManagerImpl struct {
-	// subsystems holds information about all the
-	// mounted cgroup subsystems on the node
-	subsystems *CgroupSubsystems
-
-	// useSystemd tells if systemd cgroup manager should be used.
-	useSystemd bool
+	subsystems *CgroupSubsystems //
+	useSystemd bool              // 是否应该使用 systemd cgroup 管理器。
 }
 
 // Make sure that cgroupManagerImpl implements the CgroupManager interface
@@ -187,13 +183,13 @@ func (m *cgroupManagerImpl) buildCgroupUnifiedPath(name CgroupName) string {
 	return path.Join(cmutil.CgroupRoot, cgroupFsAdaptedName)
 }
 
-// libctCgroupConfig converts CgroupConfig to libcontainer's Cgroup config.
+// 将cgroup 通用配置 转换成 libcontainer需要的配置
 func (m *cgroupManagerImpl) libctCgroupConfig(in *CgroupConfig, needResources bool) *libcontainerconfigs.Cgroup {
 	config := &libcontainerconfigs.Cgroup{
 		Systemd: m.useSystemd,
 	}
 	if needResources {
-		config.Resources = m.toResources(in.ResourceParameters)
+		config.Resources = m.toResources(in.ResourceParameters) // ✅
 	} else {
 		config.Resources = &libcontainerconfigs.Resources{}
 	}
@@ -202,7 +198,6 @@ func (m *cgroupManagerImpl) libctCgroupConfig(in *CgroupConfig, needResources bo
 		// For fs cgroup manager, we can either set Path or Name and Parent.
 		// Setting Path is easier.
 		config.Path = in.Name.ToCgroupfs()
-
 		return config
 	}
 
@@ -312,7 +307,7 @@ func getCpuWeight(cpuShares *uint64) uint64 {
 	return 1 + ((*cpuShares-2)*9999)/262142
 }
 
-// readUnifiedControllers reads the controllers available at the specified cgroup
+// readUnifiedControllers 获取所有支持的子系统
 func readUnifiedControllers(path string) (sets.String, error) {
 	controllersFileContent, err := os.ReadFile(filepath.Join(path, "cgroup.controllers"))
 	if err != nil {
@@ -327,9 +322,9 @@ var (
 	availableRootControllers     sets.String
 )
 
-// getSupportedUnifiedControllers returns a set of supported controllers when running on cgroup v2
+// getSupportedUnifiedControllers 返回一组在cgroup v2上运行时支持的控制器
 func getSupportedUnifiedControllers() sets.String {
-	// This is the set of controllers used by the Kubelet
+	// 这是Kubelet使用的一组控制器
 	supportedControllers := sets.NewString("cpu", "cpuset", "memory", "hugetlb", "pids")
 	// Memoize the set of controllers that are present in the root cgroup
 	availableRootControllersOnce.Do(func() {
@@ -343,7 +338,7 @@ func getSupportedUnifiedControllers() sets.String {
 	return supportedControllers.Intersection(availableRootControllers)
 }
 
-func (m *cgroupManagerImpl) toResources(resourceConfig *ResourceConfig) *libcontainerconfigs.Resources {
+func (m *cgroupManagerImpl) toResources(resourceConfig *ResourceConfig) *libcontainerconfigs.Resources { // ✅
 	resources := &libcontainerconfigs.Resources{
 		SkipDevices:     true,
 		SkipFreezeOnSet: true,
@@ -371,11 +366,11 @@ func (m *cgroupManagerImpl) toResources(resourceConfig *ResourceConfig) *libcont
 		resources.PidsLimit = *resourceConfig.PidsLimit
 	}
 
-	m.maybeSetHugetlb(resourceConfig, resources)
+	m.maybeSetHugetlb(resourceConfig, resources) // ✅
 
-	// Ideally unified is used for all the resources when running on cgroup v2.
-	// It doesn't make difference for the memory.max limit, but for e.g. the cpu controller
-	// you can specify the correct setting without relying on the conversions performed by the OCI runtime.
+	//理想情况下，在cgroup v2上运行时，所有的资源都是统一的。
+	//这对内存没有影响。最大限制，但对于例如CPU控制器
+	//你可以指定正确的设置，而不依赖于OCI运行时执行的转换。
 	if resourceConfig.Unified != nil && libcontainercgroups.IsCgroup2UnifiedMode() {
 		resources.Unified = make(map[string]string)
 		for k, v := range resourceConfig.Unified {
@@ -385,6 +380,7 @@ func (m *cgroupManagerImpl) toResources(resourceConfig *ResourceConfig) *libcont
 	return resources
 }
 
+// 尽可能的设置的 内存大页
 func (m *cgroupManagerImpl) maybeSetHugetlb(resourceConfig *ResourceConfig, resources *libcontainerconfigs.Resources) {
 	// Check if hugetlb is supported.
 	if libcontainercgroups.IsCgroup2UnifiedMode() {
@@ -424,13 +420,14 @@ func (m *cgroupManagerImpl) maybeSetHugetlb(resourceConfig *ResourceConfig, reso
 }
 
 // Update updates the cgroup with the specified Cgroup Configuration
+// 使用指定的 cgroup 配置更新 cgroup
 func (m *cgroupManagerImpl) Update(cgroupConfig *CgroupConfig) error {
 	start := time.Now()
 	defer func() {
 		metrics.CgroupManagerDuration.WithLabelValues("update").Observe(metrics.SinceInSeconds(start))
 	}()
 
-	libcontainerCgroupConfig := m.libctCgroupConfig(cgroupConfig, true)
+	libcontainerCgroupConfig := m.libctCgroupConfig(cgroupConfig, true) // 格式转换  ✅
 	manager, err := manager.New(libcontainerCgroupConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create cgroup manager: %v", err)
@@ -520,7 +517,7 @@ func (m *cgroupManagerImpl) Pids(name CgroupName) []int {
 	return pidsToKill.List()
 }
 
-// ReduceCPULimits reduces the cgroup's cpu shares to the lowest possible value
+// ReduceCPULimits 将CPU CFS值减少到最小的共享数量。用于限制进程使用CPU的时间
 func (m *cgroupManagerImpl) ReduceCPULimits(cgroupName CgroupName) error {
 	// Set lowest possible CpuShares value for the cgroup
 	minimumCPUShares := uint64(MinShares)
@@ -531,7 +528,7 @@ func (m *cgroupManagerImpl) ReduceCPULimits(cgroupName CgroupName) error {
 		Name:               cgroupName,
 		ResourceParameters: resources,
 	}
-	return m.Update(containerConfig)
+	return m.Update(containerConfig) // ✅
 }
 
 // MemoryUsage returns the current memory usage of the specified cgroup,

@@ -194,8 +194,9 @@ func (m *podContainerManagerImpl) Destroy(podCgroup CgroupName) error {
 	return nil
 }
 
-// ReduceCPULimits reduces the CPU CFS values to the minimum amount of shares.
+// ReduceCPULimits 将CPU CFS值减少到最小的共享数量。用于限制进程使用CPU的时间
 func (m *podContainerManagerImpl) ReduceCPULimits(podCgroup CgroupName) error {
+	// 可能因为该 Pod 正在进行一些长时间运行的操作，例如文件系统清理、网络连接清理等。这些操作可能需要大量的 CPU 时间，并且可能会阻塞 kubelet 的操作。
 	return m.cgroupManager.ReduceCPULimits(podCgroup)
 }
 
