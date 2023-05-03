@@ -110,15 +110,10 @@ func GetPodSource(pod *v1.Pod) (string, error) {
 type SyncPodType int
 
 const (
-	// SyncPodSync is when the pod is synced to ensure desired state
-	SyncPodSync SyncPodType = iota
-	// SyncPodUpdate is when the pod is updated from source
-	SyncPodUpdate
-	// SyncPodCreate is when the pod is created from source
-	SyncPodCreate
-	// SyncPodKill is when the pod should have no running containers. A pod stopped in this way could be
-	// restarted in the future due config changes.
-	SyncPodKill
+	SyncPodSync   SyncPodType = iota // 当 Pod 被同步以确保期望状态时。
+	SyncPodUpdate                    // 当 Pod 从源更新时。
+	SyncPodCreate                    // 当从源创建 Pod 时。
+	SyncPodKill                      // 当 Pod 应该没有运行的容器时。以这种方式停止的 Pod 可能会由于配置更改在将来重新启动。
 )
 
 func (sp SyncPodType) String() string {

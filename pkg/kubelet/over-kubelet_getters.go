@@ -22,6 +22,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	cadvisorapiv1 "github.com/google/cadvisor/info/v1"
 	cadvisorv2 "github.com/google/cadvisor/info/v2"
@@ -174,8 +175,7 @@ func (kl *Kubelet) getPodResourcesDir() string {
 // pods.
 func (kl *Kubelet) GetPods() []*v1.Pod {
 	pods := kl.podManager.GetPods()
-	// a kubelet running without apiserver requires an additional
-	// update of the static pod status. See #57106
+	// 没有 apisserver 的kubelet需要对静态pod状态进行额外的更新。看到 #57106
 	for _, p := range pods {
 		if kubelettypes.IsStaticPod(p) {
 			if status, ok := kl.statusManager.GetPodStatus(p.UID); ok {
@@ -291,7 +291,7 @@ func (kl *Kubelet) GetExtraSupplementalGroupsForPod(pod *v1.Pod) []int64 {
 
 func (kl *Kubelet) getPodVolumePathListFromDisk(podUID types.UID) ([]string, error) { // ✅
 	volumes := []string{}
-	podVolDir := kl.getPodVolumesDir(podUID) // ✅
+	podVolDir := kl.getPodVolumesDir(podUID) // ✅ /var/lib/kubelet/pods/5db0fcf06766f43ddbdcd81dd06f03cc/volumes
 
 	if pathExists, pathErr := mount.PathExists(podVolDir); pathErr != nil {
 		return volumes, fmt.Errorf("error checking if path %q exists: %v", podVolDir, pathErr)
@@ -299,7 +299,9 @@ func (kl *Kubelet) getPodVolumePathListFromDisk(podUID types.UID) ([]string, err
 		klog.V(6).InfoS("Path does not exist", "path", podVolDir)
 		return volumes, nil
 	}
-
+	if strings.Contains(podVolDir, "9d3bcccf-6c3a-40") {
+		fmt.Println(123)
+	}
 	volumePluginDirs, err := os.ReadDir(podVolDir)
 	if err != nil {
 		klog.ErrorS(err, "Could not read directory", "path", podVolDir)
@@ -339,11 +341,11 @@ func (kl *Kubelet) getMountedVolumePathListFromDisk(podUID types.UID) ([]string,
 	if err != nil {
 		return mountedVolumes, err
 	}
-	// Only use IsLikelyNotMountPoint to check might not cover all cases. For CSI volumes that
-	// either: 1) don't mount or 2) bind mount in the rootfs, the mount check will not work as expected.
-	// We plan to remove this mountpoint check as a condition before deleting pods since it is
-	// not reliable and the condition might be different for different types of volumes. But it requires
-	// a reliable way to clean up unused volume dir to avoid problems during pod deletion. See discussion in issue #74650
+	// 仅使用 IsLikelyNotMountPoint 来检查可能无法覆盖所有情况。
+	// 对于 CSI 卷，如果不挂载 或 在 rootfs 中绑定挂载，则挂载检查将无法按预期工作。
+	// 我们计划在删除 Pod 之前删除此挂载点检查作为条件，因为它不可靠，而且不同类型的卷可能具有不同的条件。
+	// 但是，这需要一种可靠的方式来清理未使用的卷目录，以避免在删除 Pod 期间出现问题。#74650
+
 	for _, volumePath := range volumePaths {
 		isNotMount, err := kl.mounter.IsLikelyNotMountPoint(volumePath)
 		if err != nil {

@@ -57,13 +57,8 @@ type Interface interface {
 	// consistent (i.e. it could change between chunked reads). This is guaranteed
 	// to be consistent.
 	List() ([]MountPoint, error)
-	// IsLikelyNotMountPoint uses heuristics to determine if a directory
-	// is not a mountpoint.
-	// It should return ErrNotExist when the directory does not exist.
-	// IsLikelyNotMountPoint does NOT properly detect all mountpoint types
-	// most notably linux bind mounts and symbolic link. For callers that do not
-	// care about such situations, this is a faster alternative to calling List()
-	// and scanning that output.
+	// IsLikelyNotMountPoint 使用启发式方法来确定一个目录是否不是挂载点。当目录不存在时，返回ErrNotExist。
+	// 不能正确检测所有挂载点类型，特别是linux绑定挂载和符号链接。对于不关心这种情况的调用者来说，这是调用List()并扫描输出的更快的替代方法。
 	IsLikelyNotMountPoint(file string) (bool, error)
 	// canSafelySkipMountPointCheck indicates whether this mounter returns errors on
 	// operations for targets that are not mount points. If this returns true, no such

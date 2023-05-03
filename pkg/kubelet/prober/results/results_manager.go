@@ -39,17 +39,11 @@ type Manager interface {
 	Updates() <-chan Update
 }
 
-// Result is the type for probe results.
-type Result int
+type Result int // probe 探测的结果
 
 const (
-	// Unknown is encoded as -1 (type Result)
 	Unknown Result = iota - 1
-
-	// Success is encoded as 0 (type Result)
 	Success
-
-	// Failure is encoded as 1 (type Result)
 	Failure
 )
 

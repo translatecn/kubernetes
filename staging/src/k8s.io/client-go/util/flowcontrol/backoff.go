@@ -17,49 +17,28 @@ limitations under the License.
 package flowcontrol
 
 import (
+	testingclock "k8s.io/utils/clock/testing"
 	"math/rand"
 	"sync"
 	"time"
 
 	"k8s.io/utils/clock"
-	testingclock "k8s.io/utils/clock/testing"
 	"k8s.io/utils/integer"
 )
 
 type backoffEntry struct {
-	backoff    time.Duration
-	lastUpdate time.Time
+	backoff    time.Duration // 回退时间间隔,下一次重试的等待时间。
+	lastUpdate time.Time     // 上次更新回退时间间隔的时间戳。
 }
 
 type Backoff struct {
 	sync.RWMutex
-	Clock           clock.Clock
-	defaultDuration time.Duration
-	maxDuration     time.Duration
-	perItemBackoff  map[string]*backoffEntry
-	rand            *rand.Rand
-
-	// maxJitterFactor adds jitter to the exponentially backed off delay.
-	// if maxJitterFactor is zero, no jitter is added to the delay in
-	// order to maintain current behavior.
-	maxJitterFactor float64
-}
-
-func NewFakeBackOff(initial, max time.Duration, tc *testingclock.FakeClock) *Backoff {
-	return newBackoff(tc, initial, max, 0.0)
-}
-
-func NewBackOff(initial, max time.Duration) *Backoff {
-	return NewBackOffWithJitter(initial, max, 0.0)
-}
-
-func NewFakeBackOffWithJitter(initial, max time.Duration, tc *testingclock.FakeClock, maxJitterFactor float64) *Backoff {
-	return newBackoff(tc, initial, max, maxJitterFactor)
-}
-
-func NewBackOffWithJitter(initial, max time.Duration, maxJitterFactor float64) *Backoff {
-	clock := clock.RealClock{}
-	return newBackoff(clock, initial, max, maxJitterFactor)
+	Clock           clock.Clock              // 用于获取当前时间。
+	defaultDuration time.Duration            // 默认的回退时间间隔。
+	maxDuration     time.Duration            // 最大的回退时间间隔。
+	perItemBackoff  map[string]*backoffEntry // 每个项目的回退时间间隔，以项目名称为键，backoffEntry 结构体为值。
+	rand            *rand.Rand               // 随机数生成器，用于添加随机因素到回退时间间隔中。
+	maxJitterFactor float64                  // 最大的抖动因子，用于在回退时间间隔中添加随机因素。
 }
 
 func newBackoff(clock clock.Clock, initial, max time.Duration, maxJitterFactor float64) *Backoff {
@@ -75,18 +54,6 @@ func newBackoff(clock clock.Clock, initial, max time.Duration, maxJitterFactor f
 		maxJitterFactor: maxJitterFactor,
 		rand:            random,
 	}
-}
-
-// Get the current backoff Duration
-func (p *Backoff) Get(id string) time.Duration {
-	p.RLock()
-	defer p.RUnlock()
-	var delay time.Duration
-	entry, ok := p.perItemBackoff[id]
-	if ok {
-		delay = entry.backoff
-	}
-	return delay
 }
 
 // move backoff to the next mark, capping at maxDuration
@@ -105,15 +72,11 @@ func (p *Backoff) Next(id string, eventTime time.Time) {
 	entry.lastUpdate = p.Clock.Now()
 }
 
-// Reset forces clearing of all backoff data for a given key.
-func (p *Backoff) Reset(id string) {
-	p.Lock()
-	defer p.Unlock()
-	delete(p.perItemBackoff, id)
-}
-
 // Returns True if the elapsed time since eventTime is smaller than the current backoff window
 func (p *Backoff) IsInBackOffSince(id string, eventTime time.Time) bool {
+	// 如果自事件时间以来的经过时间小于当前的回退窗口，则说明还没有到达下一次重试的时间，可以继续等待。
+	//
+	// 如果经过时间大于或等于当前的回退窗口，则说明可以进行下一次重试，返回 False。
 	p.RLock()
 	defer p.RUnlock()
 	entry, ok := p.perItemBackoff[id]
@@ -140,8 +103,65 @@ func (p *Backoff) IsInBackOffSinceUpdate(id string, eventTime time.Time) bool {
 	return eventTime.Sub(entry.lastUpdate) < entry.backoff
 }
 
-// Garbage collect records that have aged past maxDuration. Backoff users are expected
-// to invoke this periodically.
+// Take a lock on *Backoff, before calling initEntryUnsafe
+func (p *Backoff) initEntryUnsafe(id string) *backoffEntry {
+	entry := &backoffEntry{backoff: p.defaultDuration}
+	p.perItemBackoff[id] = entry
+	return entry
+}
+
+// ------------------------------------------------------------------------------------------------
+
+func NewBackOffWithJitter(initial, max time.Duration, maxJitterFactor float64) *Backoff {
+	clock := clock.RealClock{}
+	return newBackoff(clock, initial, max, maxJitterFactor)
+}
+
+func NewFakeBackOff(initial, max time.Duration, tc *testingclock.FakeClock) *Backoff {
+	return newBackoff(tc, initial, max, 0.0)
+}
+
+func NewBackOff(initial, max time.Duration) *Backoff {
+	return NewBackOffWithJitter(initial, max, 0.0)
+}
+
+func NewFakeBackOffWithJitter(initial, max time.Duration, tc *testingclock.FakeClock, maxJitterFactor float64) *Backoff {
+	return newBackoff(tc, initial, max, maxJitterFactor)
+}
+
+// Get the current backoff Duration
+func (p *Backoff) Get(id string) time.Duration {
+	p.RLock()
+	defer p.RUnlock()
+	var delay time.Duration
+	entry, ok := p.perItemBackoff[id]
+	if ok {
+		delay = entry.backoff
+	}
+	return delay
+}
+
+// Reset forces clearing of all backoff data for a given key.
+func (p *Backoff) Reset(id string) {
+	p.Lock()
+	defer p.Unlock()
+	delete(p.perItemBackoff, id)
+}
+
+// After 2*maxDuration we restart the backoff factor to the beginning
+func hasExpired(eventTime time.Time, lastUpdate time.Time, maxDuration time.Duration) bool {
+	return eventTime.Sub(lastUpdate) > maxDuration*2 // consider stable if it's ok for twice the maxDuration
+}
+
+// 抖动
+func (p *Backoff) jitter(delay time.Duration) time.Duration {
+	if p.rand == nil {
+		return 0
+	}
+
+	return time.Duration(p.rand.Float64() * p.maxJitterFactor * float64(delay))
+}
+
 func (p *Backoff) GC() {
 	p.Lock()
 	defer p.Unlock()
@@ -158,24 +178,4 @@ func (p *Backoff) DeleteEntry(id string) {
 	p.Lock()
 	defer p.Unlock()
 	delete(p.perItemBackoff, id)
-}
-
-// Take a lock on *Backoff, before calling initEntryUnsafe
-func (p *Backoff) initEntryUnsafe(id string) *backoffEntry {
-	entry := &backoffEntry{backoff: p.defaultDuration}
-	p.perItemBackoff[id] = entry
-	return entry
-}
-
-func (p *Backoff) jitter(delay time.Duration) time.Duration {
-	if p.rand == nil {
-		return 0
-	}
-
-	return time.Duration(p.rand.Float64() * p.maxJitterFactor * float64(delay))
-}
-
-// After 2*maxDuration we restart the backoff factor to the beginning
-func hasExpired(eventTime time.Time, lastUpdate time.Time, maxDuration time.Duration) bool {
-	return eventTime.Sub(lastUpdate) > maxDuration*2 // consider stable if it's ok for twice the maxDuration
 }

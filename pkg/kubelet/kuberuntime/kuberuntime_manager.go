@@ -489,7 +489,7 @@ func containerSucceeded(c *v1.Container, podStatus *kubecontainer.PodStatus) boo
 	return cStatus.ExitCode == 0
 }
 
-// computePodActions checks whether the pod spec has changed and returns the changes if true.
+// computePodActions 检查pod规范是否更改，如果更改为真，则返回更改。
 func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *kubecontainer.PodStatus) podActions {
 	klog.V(5).InfoS("Syncing Pod", "pod", klog.KObj(pod))
 

@@ -73,19 +73,12 @@ type QOSContainersInfo struct {
 	Burstable  CgroupName
 }
 
-// PodContainerManager stores and manages pod level containers
-// The Pod workers interact with the PodContainerManager to create and destroy
-// containers for the pod.
+// PodContainerManager 存储和管理pod 级别的容器，与pod worker 交互
 type PodContainerManager interface {
-	// GetPodContainerName returns the CgroupName identifier, and its literal cgroupfs form on the host.
 	GetPodContainerName(*v1.Pod) (CgroupName, string)
-
-	// EnsureExists takes a pod as argument and makes sure that
-	// pod cgroup exists if qos cgroup hierarchy flag is enabled.
-	// If the pod cgroup doesn't already exist this method creates it.
-	EnsureExists(*v1.Pod) error
+	EnsureExists(*v1.Pod) error                               // 在 qos 启用下，确认pod cgroup 存在，不存在 创建
 	Exists(*v1.Pod) bool                                      // 判断一个pod 的cgroup 路径是否存在
-	Destroy(name CgroupName) error                            // 删除容器
+	Destroy(name CgroupName) error                            // 通过cgroup删除容器
 	ReduceCPULimits(name CgroupName) error                    // 将CPU CFS值减少到最小的共享数量。用于限制进程使用CPU的时间
 	GetAllPodsFromCgroups() (map[types.UID]CgroupName, error) // 根据cgroupfs系统的状态，返回一组pod id到它们相关联的cgroup。
 	IsPodCgroup(cgroupfs string) (bool, types.UID)            // 返回 cgroupfs 名称对应于一个 Pod

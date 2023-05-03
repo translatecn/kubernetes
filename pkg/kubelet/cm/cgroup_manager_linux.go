@@ -470,7 +470,7 @@ func (m *cgroupManagerImpl) Create(cgroupConfig *CgroupConfig) error {
 // Scans through all subsystems to find pids associated with specified cgroup.
 func (m *cgroupManagerImpl) Pids(name CgroupName) []int {
 	// we need the driver specific name
-	cgroupFsName := m.Name(name)
+	cgroupFsName := m.Name(name) // /kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3310c7eddedab26dc72390e54d2b6af3.slice
 
 	// Get a list of processes that we need to kill
 	pidsToKill := sets.NewInt()
