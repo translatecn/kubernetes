@@ -2195,30 +2195,25 @@ type ExecAction struct {
 	Command []string `json:"command,omitempty" protobuf:"bytes,1,rep,name=command"`
 }
 
-// Probe describes a health check to be performed against a container to determine whether it is
-// alive or ready to receive traffic.
+// Probe 健康检查 ，以判断是否ready 以及接受流量
 type Probe struct {
-	// The action taken to determine the health of a container
+	// 如何判断ready的方式
 	ProbeHandler `json:",inline" protobuf:"bytes,1,opt,name=handler"`
-	// Number of seconds after the container has started before liveness probes are initiated.
+	// 在启动活动探针之前，容器启动后的秒数。
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty" protobuf:"varint,2,opt,name=initialDelaySeconds"`
-	// Number of seconds after which the probe times out.
-	// Defaults to 1 second. Minimum value is 1.
+	// 探测超时，默认1s
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"`
-	// How often (in seconds) to perform the probe.
-	// Default to 10 seconds. Minimum value is 1.
+	// 探测间隔, 1-10 ,默认10s
 	// +optional
 	PeriodSeconds int32 `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"`
-	// Minimum consecutive successes for the probe to be considered successful after having failed.
-	// Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+	// 连续成功一定次数内, 保持探针状态不变 ，默认1 // 偶尔成功一次，不算
 	// +optional
 	SuccessThreshold int32 `json:"successThreshold,omitempty" protobuf:"varint,5,opt,name=successThreshold"`
-	// Minimum consecutive failures for the probe to be considered failed after having succeeded.
-	// Defaults to 3. Minimum value is 1.
+	// 连续失败一定次数内, 保持探针状态不变 ，默认 3 // 偶尔失败一次，不算
 	// +optional
 	FailureThreshold int32 `json:"failureThreshold,omitempty" protobuf:"varint,6,opt,name=failureThreshold"`
 	// Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
@@ -2593,48 +2588,38 @@ type ContainerStateTerminated struct {
 	ContainerID string `json:"containerID,omitempty" protobuf:"bytes,7,opt,name=containerID"`
 }
 
-// ContainerState holds a possible state of container.
-// Only one of its members may be specified.
-// If none of them is specified, the default one is ContainerStateWaiting.
+// ContainerState 容器状态，只可能是其中一种，默认是Waiting
 type ContainerState struct {
-	// Details about a waiting container
 	// +optional
 	Waiting *ContainerStateWaiting `json:"waiting,omitempty" protobuf:"bytes,1,opt,name=waiting"`
-	// Details about a running container
 	// +optional
 	Running *ContainerStateRunning `json:"running,omitempty" protobuf:"bytes,2,opt,name=running"`
-	// Details about a terminated container
 	// +optional
 	Terminated *ContainerStateTerminated `json:"terminated,omitempty" protobuf:"bytes,3,opt,name=terminated"`
 }
 
-// ContainerStatus contains details for the current status of this container.
+// ContainerStatus 每个容器当前的状态
 type ContainerStatus struct {
-	// This must be a DNS_LABEL. Each container in a pod must have a unique name.
-	// Cannot be updated.
+	// 容器名称
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
-	// Details about the container's current condition.
+	// 当前状态
 	// +optional
 	State ContainerState `json:"state,omitempty" protobuf:"bytes,2,opt,name=state"`
-	// Details about the container's last termination condition.
+	// 容器上一次终止的情况
 	// +optional
 	LastTerminationState ContainerState `json:"lastState,omitempty" protobuf:"bytes,3,opt,name=lastState"`
-	// Specifies whether the container has passed its readiness probe.
+	// 容器是否已通过其就绪探测。
 	Ready bool `json:"ready" protobuf:"varint,4,opt,name=ready"`
-	// The number of times the container has been restarted.
+	// 重启的次数
 	RestartCount int32 `json:"restartCount" protobuf:"varint,5,opt,name=restartCount"`
-	// The image the container is running.
 	// More info: https://kubernetes.io/docs/concepts/containers/images.
 	Image string `json:"image" protobuf:"bytes,6,opt,name=image"`
 	// ImageID of the container's image.
 	ImageID string `json:"imageID" protobuf:"bytes,7,opt,name=imageID"`
-	// Container's ID in the format '<type>://<container_id>'.
+	// 容器的ID，格式：'<type>://<container_id>'.
 	// +optional
 	ContainerID string `json:"containerID,omitempty" protobuf:"bytes,8,opt,name=containerID"`
-	// Specifies whether the container has passed its startup probe.
-	// Initialized as false, becomes true after startupProbe is considered successful.
-	// Resets to false when the container is restarted, or if kubelet loses state temporarily.
-	// Is always true when no startupProbe is defined.
+	// 指示容器是否完成了启动探针的检测，在容器重新启动或 kubelet 暂时丢失状态时重置为 false。
 	// +optional
 	Started *bool `json:"started,omitempty" protobuf:"varint,9,opt,name=started"`
 }

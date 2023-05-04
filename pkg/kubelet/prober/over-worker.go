@@ -51,45 +51,24 @@ type worker struct {
 	container v1.Container
 
 	// Describes the probe configuration (read-only)
-	spec *v1.Probe
-
-	// The type of the worker.
-	probeType probeType
-
-	// The probe value during the initial delay.
-	initialValue results.Result
-
-	// Where to store this workers results.
-	resultsManager results.Manager
-	probeManager   *manager
-
-	// The last known container ID for this worker.
-	containerID kubecontainer.ContainerID
-	// The last probe result for this worker.
-	lastResult results.Result
-	// How many times in a row the probe has returned the same result.
-	resultRun int
-
-	// If set, skip probing.
-	onHold bool
-
-	// proberResultsMetricLabels holds the labels attached to this worker
-	// for the ProberResults metric by result.
-	proberResultsSuccessfulMetricLabels metrics.Labels
-	proberResultsFailedMetricLabels     metrics.Labels
-	proberResultsUnknownMetricLabels    metrics.Labels
-	// proberDurationMetricLabels holds the labels attached to this worker
-	// for the ProberDuration metric by result.
+	spec                                 *v1.Probe
+	probeType                            probeType
+	initialValue                         results.Result            // 初始延迟期间的探测默认值
+	resultsManager                       results.Manager           // 存储 这个worker的结果，具体可以是 startupManager、readinessManager、livenessManager
+	probeManager                         *manager                  //
+	containerID                          kubecontainer.ContainerID // 此worker的最后一个已知容器ID。
+	lastResult                           results.Result            //
+	resultRun                            int                       // 当前状态，持续检测了多少次
+	onHold                               bool                      // 如何设置了，跳过本次探测
+	proberResultsSuccessfulMetricLabels  metrics.Labels
+	proberResultsFailedMetricLabels      metrics.Labels
+	proberResultsUnknownMetricLabels     metrics.Labels
 	proberDurationSuccessfulMetricLabels metrics.Labels
 	proberDurationUnknownMetricLabels    metrics.Labels
 }
 
 // Creates and starts a new probe worker.
-func newWorker(
-	m *manager,
-	probeType probeType,
-	pod *v1.Pod,
-	container v1.Container) *worker {
+func newWorker(m *manager, probeType probeType, pod *v1.Pod, container v1.Container) *worker {
 
 	w := &worker{
 		stopCh:          make(chan struct{}, 1), // Buffer so stop() can be non-blocking.
@@ -147,15 +126,13 @@ func newWorker(
 	return w
 }
 
-// run periodically probes the container.
 func (w *worker) run() {
 	ctx := context.Background()
 	probeTickerPeriod := time.Duration(w.spec.PeriodSeconds) * time.Second
 
-	// If kubelet restarted the probes could be started in rapid succession.
-	// Let the worker wait for a random portion of tickerPeriod before probing.
-	// Do it only if the kubelet has started recently.
 	if probeTickerPeriod > time.Since(w.probeManager.start) {
+		// 当 kubelet 重新启动时，探针可能会在短时间内连续启动，导致负载过大或者产生其他问题。
+		// 为了避免这种情况，需要让 worker 在一定时间内随机等待一段时间，然后再进行探测。这个等待时间是 tickerPeriod 的随机部分，用于平滑探针的启动。
 		time.Sleep(time.Duration(rand.Float64() * float64(probeTickerPeriod)))
 	}
 
@@ -198,8 +175,7 @@ func (w *worker) stop() {
 	}
 }
 
-// doProbe probes the container once and records the result.
-// Returns whether the worker should continue.
+// 对容器进行一次探测并记录结果。告诉worker是否应该继续。
 func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
 	defer runtime.HandleCrash(func(_ interface{}) { keepGoing = true })
@@ -226,40 +202,36 @@ func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 			"pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		return true // Wait for more information.
 	}
-
-	if w.containerID.String() != c.ContainerID {
+	// 比如说，某个pod 重建了 退出码不是0
+	if w.containerID.String() != c.ContainerID { // 判断是不是启动了一个新的容器
 		if !w.containerID.IsEmpty() {
 			w.resultsManager.Remove(w.containerID)
 		}
 		w.containerID = kubecontainer.ParseContainerID(c.ContainerID)
 		w.resultsManager.Set(w.containerID, w.initialValue, w.pod)
-		// We've got a new container; resume probing.
+		// 我们有一个新的容器;继续探索。
 		w.onHold = false
 	}
 
 	if w.onHold {
-		// Worker is on hold until there is a new container.
+		// worker 被搁置，直到有一个新的container
 		return true
 	}
 
 	if c.State.Running == nil {
-		klog.V(3).InfoS("Non-running container probed",
-			"pod", klog.KObj(w.pod), "containerName", w.container.Name)
+		klog.V(3).InfoS("探测到未运行的容器", "pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		if !w.containerID.IsEmpty() {
 			w.resultsManager.Set(w.containerID, results.Failure, w.pod)
 		}
 		// Abort if the container will not be restarted.
-		return c.State.Terminated == nil ||
-			w.pod.Spec.RestartPolicy != v1.RestartPolicyNever
+		return c.State.Terminated == nil || w.pod.Spec.RestartPolicy != v1.RestartPolicyNever
 	}
 
 	// Graceful shutdown of the pod.
 	if w.pod.ObjectMeta.DeletionTimestamp != nil && (w.probeType == liveness || w.probeType == startup) {
-		klog.V(3).InfoS("Pod deletion requested, setting probe result to success",
-			"probeType", w.probeType, "pod", klog.KObj(w.pod), "containerName", w.container.Name)
+		klog.V(3).InfoS("请求删除Pod，将探测结果设置为成功", "probeType", w.probeType, "pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		if w.probeType == startup {
-			klog.InfoS("Pod deletion requested before container has fully started",
-				"pod", klog.KObj(w.pod), "containerName", w.container.Name)
+			klog.InfoS("在容器完全启动之前请求删除Pod", "pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		}
 		// Set a last result to ensure quiet shutdown.
 		w.resultsManager.Set(w.containerID, results.Success, w.pod)
@@ -273,13 +245,13 @@ func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 	}
 
 	if c.Started != nil && *c.Started {
-		// Stop probing for startup once container has started.
-		// we keep it running to make sure it will work for restarted container.
+		// 一旦容器启动，停止 探测 启动。
+		// 我们让它继续运行，以确保它可以为重启的容器工作。
 		if w.probeType == startup {
 			return true
 		}
 	} else {
-		// Disable other probes until container has started.
+		// 禁止其他探测，直到 启动
 		if w.probeType != startup {
 			return true
 		}
@@ -312,7 +284,7 @@ func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 
 	if (result == results.Failure && w.resultRun < int(w.spec.FailureThreshold)) ||
 		(result == results.Success && w.resultRun < int(w.spec.SuccessThreshold)) {
-		// Success or failure is below threshold - leave the probe state unchanged.
+		// Success or failure is below threshold - leave the probe state unchanged.保持探针状态不变
 		return true
 	}
 
@@ -339,13 +311,16 @@ func deepCopyPrometheusLabels(m metrics.Labels) metrics.Labels {
 }
 
 func getPodLabelName(pod *v1.Pod) string {
+	// 	vcluster-demo-6fd6585d4-bqdz7
 	podName := pod.Name
 	if pod.GenerateName != "" {
 		podNameSlice := strings.Split(pod.Name, "-")
-		podName = strings.Join(podNameSlice[:len(podNameSlice)-1], "-")
-		if label, ok := pod.GetLabels()[apps.DefaultDeploymentUniqueLabelKey]; ok {
-			podName = strings.ReplaceAll(podName, fmt.Sprintf("-%s", label), "")
+		podName = strings.Join(podNameSlice[:len(podNameSlice)-1], "-")             // 去掉随机字符串
+		if label, ok := pod.GetLabels()[apps.DefaultDeploymentUniqueLabelKey]; ok { // pod-template-hash
+			podName = strings.ReplaceAll(podName, fmt.Sprintf("-%s", label), "") // 去掉哈希值
 		}
+		// 	vcluster-demo
 	}
+
 	return podName
 }

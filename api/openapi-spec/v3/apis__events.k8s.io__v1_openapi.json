@@ -800,7 +800,7 @@
             "x-kubernetes-patch-strategy": "merge"
           },
           "generateName": {
-            "description": "GenerateName is an optional prefix, used by the server, to generate a unique name ONLY IF the Name field has not been provided. If this field is used, the name returned to the client will be different than the name passed. This value will also be combined with a unique suffix. The provided value has the same validation rules as the Name field, and may be truncated by the length of the suffix required to make the value unique on the server.\n\nIf this field is specified and the generated name exists, the server will return a 409.\n\nApplied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
+            "description": "一个可选的前缀，由服务器用于生成唯一名称，仅在未提供 Name 字段时使用。 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
             "type": "string"
           },
           "generation": {

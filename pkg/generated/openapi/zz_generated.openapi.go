@@ -17276,25 +17276,22 @@ func schema_k8sio_api_core_v1_ContainerState(ref common.ReferenceCallback) commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ContainerState holds a possible state of container. Only one of its members may be specified. If none of them is specified, the default one is ContainerStateWaiting.",
+				Description: "ContainerState 容器状态，只可能是其中一种，默认是Waiting",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"waiting": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details about a waiting container",
-							Ref:         ref("k8s.io/api/core/v1.ContainerStateWaiting"),
+							Ref: ref("k8s.io/api/core/v1.ContainerStateWaiting"),
 						},
 					},
 					"running": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details about a running container",
-							Ref:         ref("k8s.io/api/core/v1.ContainerStateRunning"),
+							Ref: ref("k8s.io/api/core/v1.ContainerStateRunning"),
 						},
 					},
 					"terminated": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details about a terminated container",
-							Ref:         ref("k8s.io/api/core/v1.ContainerStateTerminated"),
+							Ref: ref("k8s.io/api/core/v1.ContainerStateTerminated"),
 						},
 					},
 				},
@@ -17424,7 +17421,7 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ContainerStatus contains details for the current status of this container.",
+				Description: "ContainerStatus 每个容器当前的状态",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
@@ -17451,7 +17448,7 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 					},
 					"ready": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies whether the container has passed its readiness probe.",
+							Description: "容器是否已通过其就绪探测。",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -17467,7 +17464,7 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The image the container is running. More info: https://kubernetes.io/docs/concepts/containers/images.",
+							Description: "More info: https://kubernetes.io/docs/concepts/containers/images.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -17483,14 +17480,14 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 					},
 					"containerID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Container's ID in the format '<type>://<container_id>'.",
+							Description: "容器的ID，格式：'<type>://<container_id>'.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"started": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies whether the container has passed its startup probe. Initialized as false, becomes true after startupProbe is considered successful. Resets to false when the container is restarted, or if kubelet loses state temporarily. Is always true when no startupProbe is defined.",
+							Description: "指示容器是否完成了启动探针的检测，在容器重新启动或 kubelet 暂时丢失状态时重置为 false。",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -24037,7 +24034,7 @@ func schema_k8sio_api_core_v1_Probe(ref common.ReferenceCallback) common.OpenAPI
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
+				Description: "Probe 健康检查 ，以判断是否ready 以及接受流量",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"exec": {
@@ -24066,35 +24063,35 @@ func schema_k8sio_api_core_v1_Probe(ref common.ReferenceCallback) common.OpenAPI
 					},
 					"initialDelaySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+							Description: "在启动活动探针之前，容器启动后的秒数。 More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"timeoutSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+							Description: "探测超时，默认1s More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"periodSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.",
+							Description: "探测间隔, 1-10 ,默认10s",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"successThreshold": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.",
+							Description: "连续成功一定次数内, 保持探针状态不变 ，默认1 // 偶尔成功一次，不算",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"failureThreshold": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.",
+							Description: "连续失败一定次数内, 保持探针状态不变 ，默认 3 // 偶尔失败一次，不算",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -48836,7 +48833,7 @@ func schema_pkg_apis_meta_v1_ObjectMeta(ref common.ReferenceCallback) common.Ope
 					},
 					"generateName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GenerateName is an optional prefix, used by the server, to generate a unique name ONLY IF the Name field has not been provided. If this field is used, the name returned to the client will be different than the name passed. This value will also be combined with a unique suffix. The provided value has the same validation rules as the Name field, and may be truncated by the length of the suffix required to make the value unique on the server.\n\nIf this field is specified and the generated name exists, the server will return a 409.\n\nApplied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
+							Description: "一个可选的前缀，由服务器用于生成唯一名称，仅在未提供 Name 字段时使用。 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
 							Type:        []string{"string"},
 							Format:      "",
 						},

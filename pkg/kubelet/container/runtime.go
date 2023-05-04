@@ -161,11 +161,8 @@ type Attacher interface {
 	AttachContainer(ctx context.Context, id ContainerID, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) (err error)
 }
 
-// CommandRunner interface allows to run command in a container.
 type CommandRunner interface {
-	// RunInContainer synchronously executes the command in the container, and returns the output.
-	// If the command completes with a non-0 exit code, a k8s.io/utils/exec.ExitError will be returned.
-	RunInContainer(ctx context.Context, id ContainerID, cmd []string, timeout time.Duration) ([]byte, error)
+	RunInContainer(ctx context.Context, id ContainerID, cmd []string, timeout time.Duration) ([]byte, error) // 在容器中同步执行命令，并返回输出。 如果命令以非0退出代码结束，则 k8s.io/utils/exec.ExitError 将被返回。
 }
 
 // Pod is a group of containers.

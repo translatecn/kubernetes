@@ -62,25 +62,12 @@ type KillPodOptions struct {
 
 // UpdatePodOptions is an options struct to pass to a UpdatePod operation.
 type UpdatePodOptions struct {
-	// The type of update (create, update, sync, kill).
-	UpdateType kubetypes.SyncPodType
-	// StartTime is an optional timestamp for when this update was created. If set,
-	// when this update is fully realized by the pod worker it will be recorded in
-	// the PodWorkerDuration metric.
-	StartTime time.Time
-	// Pod to update. Required.
-	Pod *v1.Pod
-	// MirrorPod is the mirror pod if Pod is a static pod. Optional when UpdateType
-	// is kill or terminated.
-	MirrorPod *v1.Pod
-	// RunningPod is a runtime pod that is no longer present in config. Required if Pod is nil, ignored if Pod is set.
-	RunningPod *kubecontainer.Pod
-	// KillPodOptions is used to override the default termination behavior of the
-	// pod or to update the pod status after an operation is completed. Since a
-	// pod can be killed for multiple reasons, PodStatusFunc is invoked in order
-	// and later kills have an opportunity to override the status (i.e. a preemption
-	// may be later turned into an eviction).
-	KillPodOptions *KillPodOptions
+	UpdateType     kubetypes.SyncPodType // // 更新类型（create, update, sync, kill）。
+	StartTime      time.Time             // 是此更新创建的可选时间戳
+	Pod            *v1.Pod               // 更新的 Pod
+	MirrorPod      *v1.Pod               // 如果 Pod 是静态 Pod，则 MirrorPod 是镜像 Pod。当 UpdateType 为 kill 或 terminated 时可选。
+	RunningPod     *kubecontainer.Pod    // 不再存在于配置中的运行时 Pod .。如果 Pod 为 nil，则必填，如果 Pod 已设置，则忽略。
+	KillPodOptions *KillPodOptions       // 用于覆盖 Pod 的默认终止行为，或在操作完成后更新 Pod 状态。由于 Pod 可以因多种原因被终止，因此 PodStatusFunc 按顺序调用，后续的终止行为有机会覆盖状态（即，抢占可能会转变为驱逐）。
 }
 
 // PodWorkType 将pod生命周期的三个阶段分类 - 设置（同步）,容器的拆卸（终止）,清理（已终止）.
@@ -179,7 +166,7 @@ type syncPodFnType func(ctx context.Context, updateType kubetypes.SyncPodType, p
 // 终止pod的调用函数（确保没有运行的进程存在）.
 type syncTerminatingPodFnType func(ctx context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, runningPod *kubecontainer.Pod, gracePeriod *int64, podStatusFn func(*v1.PodStatus)) error
 
-// the function to invoke to cleanup a pod that is terminated
+// 清理一个已经终止的pod资源
 type syncTerminatedPodFnType func(ctx context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus) error
 
 const (
@@ -234,90 +221,15 @@ type podSyncStatus struct {
 	statusPostTerminating []PodStatusFunc
 }
 
-func (s *podSyncStatus) IsWorking() bool              { return s.working }
-func (s *podSyncStatus) IsTerminationRequested() bool { return !s.terminatingAt.IsZero() }
-func (s *podSyncStatus) IsTerminationStarted() bool   { return s.startedTerminating }
-func (s *podSyncStatus) IsTerminated() bool           { return !s.terminatedAt.IsZero() }
-func (s *podSyncStatus) IsFinished() bool             { return s.finished }
-func (s *podSyncStatus) IsEvicted() bool              { return s.evicted }
-func (s *podSyncStatus) IsDeleted() bool              { return s.deleted }
-
-// podWorkers keeps track of operations on pods and ensures each pod is
-// reconciled with the container runtime and other subsystems. The worker
-// also tracks which pods are in flight for starting, which pods are
-// shutting down but still have running containers, and which pods have
-// terminated recently and are guaranteed to have no running containers.
+// podWorkers 追踪pod 在runtime中的状态
 //
-// A pod passed to a pod worker is either being synced (expected to be
-// running), terminating (has running containers but no new containers are
-// expected to start), terminated (has no running containers but may still
-// have resources being consumed), or cleaned up (no resources remaining).
-// Once a pod is set to be "torn down" it cannot be started again for that
-// UID (corresponding to a delete or eviction) until:
+// 传递给pod worker的pod要么正在同步(预计正在运行)，要么正在终止(有正在运行的容器，但预计不会启动新的容器)，要么终止(没有正在运行的容器，但可能仍有资源正在消耗)，要么正在清理(没有资源剩余)。
+// 一旦一个pod被设置为“拆除”，它就不能为该UID(对应于删除或驱逐)再次启动，直到:
 //
-//  1. The pod worker is finalized (syncTerminatingPod and
-//     syncTerminatedPod exit without error sequentially)
-//  2. The SyncKnownPods method is invoked by kubelet housekeeping and the pod
-//     is not part of the known config.
+//	1。pod worker完成(syncTerminatingPod和syncTerminatedPod按顺序退出，没有错误)
+//	2。SyncKnownPods 方法由kubelet内务管理调用，并且该pod不是已知配置的一部分。
 //
-// Pod workers provide a consistent source of information to other kubelet
-// loops about the status of the pod and whether containers can be
-// running. The ShouldPodContentBeRemoved() method tracks whether a pod's
-// contents should still exist, which includes non-existent pods after
-// SyncKnownPods() has been called once (as per the contract, all existing
-// pods should be provided via UpdatePod before SyncKnownPods is invoked).
-// Generally other sync loops are expected to separate "setup" and
-// "teardown" responsibilities and the information methods here assist in
-// each by centralizing that state. A simple visualization of the time
-// intervals involved might look like:
-//
-// ---|                                         = kubelet config has synced at least once
-// -------|                                  |- = pod exists in apiserver config
-// --------|                  |---------------- = CouldHaveRunningContainers() is true
-//
-//	^- pod is observed by pod worker  .
-//	.                                 .
-//
-// ----------|       |------------------------- = syncPod is running
-//
-//	. ^- pod worker loop sees change and invokes syncPod
-//	. .                               .
-//
-// --------------|                     |------- = ShouldPodContainersBeTerminating() returns true
-// --------------|                     |------- = IsPodTerminationRequested() returns true (pod is known)
-//
-//	. .   ^- Kubelet evicts pod       .
-//	. .                               .
-//
-// -------------------|       |---------------- = syncTerminatingPod runs then exits without error
-//
-//	        . .        ^ pod worker loop exits syncPod, sees pod is terminating,
-//					 . .          invokes syncTerminatingPod
-//	        . .                               .
-//
-// ---|    |------------------|              .  = ShouldPodRuntimeBeRemoved() returns true (post-sync)
-//
-//	.                ^ syncTerminatingPod has exited successfully
-//	.                               .
-//
-// ----------------------------|       |------- = syncTerminatedPod runs then exits without error
-//
-//	.                         ^ other loops can tear down
-//	.                               .
-//
-// ------------------------------------|  |---- = status manager is waiting for PodResourcesAreReclaimed()
-//
-//	.                         ^     .
-//
-// ----------|                               |- = status manager can be writing pod status
-//
-//	^ status manager deletes pod because no longer exists in config
-//
-// Other components in the Kubelet can request a termination of the pod
-// via the UpdatePod method or the killPodNow wrapper - this will ensure
-// the components of the pod are stopped until the kubelet is restarted
-// or permanently (if the phase of the pod is set to a terminal phase
-// in the pod status change).
+// Kubelet中的其他组件可以通过UpdatePod方法或killPodNow包装器请求终止pod -这将确保pod的组件被停止，直到Kubelet重新启动或永久(如果pod的阶段在pod状态更改中设置为终止阶段)。
 type podWorkers struct {
 	podLock                   sync.Mutex                   //
 	podsSynced                bool                         // 是否完整的同步过一次数据
@@ -379,16 +291,6 @@ func newPodWorkers(
 		backOffPeriod:                      backOffPeriod,
 		podCache:                           podCache,
 	}
-}
-
-func (p *podWorkers) IsPodKnownTerminated(uid types.UID) bool {
-	p.podLock.Lock()
-	defer p.podLock.Unlock()
-	if status, ok := p.podSyncStatuses[uid]; ok {
-		return status.IsTerminated()
-	}
-	// if the pod is not known, we return false (pod worker is not aware of it)
-	return false
 }
 
 func (p *podWorkers) CouldHaveRunningContainers(uid types.UID) bool {
@@ -1251,3 +1153,23 @@ func (p *podWorkers) cleanupPodUpdates(uid types.UID) {
 	delete(p.podUpdates, uid)
 	delete(p.lastUndeliveredWorkUpdate, uid)
 }
+
+// ----------------------------------------------------------------------------------------------------
+
+func (p *podWorkers) IsPodKnownTerminated(uid types.UID) bool {
+	p.podLock.Lock()
+	defer p.podLock.Unlock()
+	if status, ok := p.podSyncStatuses[uid]; ok {
+		return status.IsTerminated()
+	}
+	// if the pod is not known, we return false (pod worker is not aware of it)
+	return false
+}
+
+func (s *podSyncStatus) IsWorking() bool              { return s.working }
+func (s *podSyncStatus) IsTerminationRequested() bool { return !s.terminatingAt.IsZero() }
+func (s *podSyncStatus) IsTerminationStarted() bool   { return s.startedTerminating }
+func (s *podSyncStatus) IsTerminated() bool           { return !s.terminatedAt.IsZero() }
+func (s *podSyncStatus) IsFinished() bool             { return s.finished }
+func (s *podSyncStatus) IsEvicted() bool              { return s.evicted }
+func (s *podSyncStatus) IsDeleted() bool              { return s.deleted }

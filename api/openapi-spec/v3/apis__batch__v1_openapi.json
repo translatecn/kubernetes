@@ -2989,7 +2989,7 @@
         "type": "object"
       },
       "io.k8s.api.core.v1.Probe": {
-        "description": "Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.",
+        "description": "Probe 健康检查 ，以判断是否ready 以及接受流量",
         "properties": {
           "exec": {
             "allOf": [
@@ -3000,7 +3000,7 @@
             "description": "Exec specifies the action to take."
           },
           "failureThreshold": {
-            "description": "Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.",
+            "description": "连续失败一定次数内, 保持探针状态不变 ，默认 3 // 偶尔失败一次，不算",
             "format": "int32",
             "type": "integer"
           },
@@ -3021,17 +3021,17 @@
             "description": "HTTPGet specifies the http request to perform."
           },
           "initialDelaySeconds": {
-            "description": "Number of seconds after the container has started before liveness probes are initiated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+            "description": "在启动活动探针之前，容器启动后的秒数。 More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
             "format": "int32",
             "type": "integer"
           },
           "periodSeconds": {
-            "description": "How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.",
+            "description": "探测间隔, 1-10 ,默认10s",
             "format": "int32",
             "type": "integer"
           },
           "successThreshold": {
-            "description": "Minimum consecutive successes for the probe to be considered successful after having failed. Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.",
+            "description": "连续成功一定次数内, 保持探针状态不变 ，默认1 // 偶尔成功一次，不算",
             "format": "int32",
             "type": "integer"
           },
@@ -3049,7 +3049,7 @@
             "type": "integer"
           },
           "timeoutSeconds": {
-            "description": "Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+            "description": "探测超时，默认1s More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
             "format": "int32",
             "type": "integer"
           }
@@ -4784,7 +4784,7 @@
             "x-kubernetes-patch-strategy": "merge"
           },
           "generateName": {
-            "description": "GenerateName is an optional prefix, used by the server, to generate a unique name ONLY IF the Name field has not been provided. If this field is used, the name returned to the client will be different than the name passed. This value will also be combined with a unique suffix. The provided value has the same validation rules as the Name field, and may be truncated by the length of the suffix required to make the value unique on the server.\n\nIf this field is specified and the generated name exists, the server will return a 409.\n\nApplied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
+            "description": "一个可选的前缀，由服务器用于生成唯一名称，仅在未提供 Name 字段时使用。 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
             "type": "string"
           },
           "generation": {

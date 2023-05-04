@@ -40,7 +40,7 @@ type PodStartupLatencyTracker interface {
 type basicPodStartupLatencyTracker struct {
 	// protect against concurrent read and write on pods map
 	lock sync.Mutex
-	pods map[types.UID]*perPodState
+	pods map[types.UID]*perPodState // 容器的启动延迟
 	// For testability
 	clock clock.Clock
 }

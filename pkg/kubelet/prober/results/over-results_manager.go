@@ -26,17 +26,10 @@ import (
 
 // Manager provides a probe results cache and channel of updates.
 type Manager interface {
-	// Get returns the cached result for the container with the given ID.
-	Get(kubecontainer.ContainerID) (Result, bool)
-	// Set sets the cached result for the container with the given ID.
-	// The pod is only included to be sent with the update.
-	Set(kubecontainer.ContainerID, Result, *v1.Pod)
-	// Remove clears the cached result for the container with the given ID.
-	Remove(kubecontainer.ContainerID)
-	// Updates creates a channel that receives an Update whenever its result changes (but not
-	// removed).
-	// NOTE: The current implementation only supports a single updates channel.
-	Updates() <-chan Update
+	Get(kubecontainer.ContainerID) (Result, bool)   //
+	Set(kubecontainer.ContainerID, Result, *v1.Pod) // 设置探测结果 ， pod只在更新中设置
+	Remove(kubecontainer.ContainerID)               // 移除缓存的容器探测结果
+	Updates() <-chan Update                         // 创建一个通道，该通道在其 探测结果更改时 接收Update事件
 }
 
 type Result int // probe 探测的结果
@@ -110,7 +103,7 @@ func (m *manager) Set(id kubecontainer.ContainerID, result Result, pod *v1.Pod) 
 	}
 }
 
-// Internal helper for locked portion of set. Returns whether an update should be sent.
+// 判断是否应该发送更新
 func (m *manager) setInternal(id kubecontainer.ContainerID, result Result) bool {
 	m.Lock()
 	defer m.Unlock()

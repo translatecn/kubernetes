@@ -23,10 +23,8 @@ import (
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
-// RuntimeVersioner contains methods for runtime name, version and API version.
 type RuntimeVersioner interface {
-	// Version returns the runtime name, runtime version and runtime API version
-	Version(ctx context.Context, apiVersion string) (*runtimeapi.VersionResponse, error)
+	Version(ctx context.Context, apiVersion string) (*runtimeapi.VersionResponse, error) // 返回运行时的 名称，版本，api版本
 }
 
 // ContainerManager contains methods to manipulate containers managed by a

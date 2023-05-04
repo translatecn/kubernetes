@@ -258,46 +258,6 @@ type Dependencies struct {
 	useLegacyCadvisorStats bool // 指示是否使用旧版本的cAdvisor统计信息.
 }
 
-func makePodSourceConfig( // ✅ 获取要运行的pod
-	kubeCfg *kubeletconfiginternal.KubeletConfiguration,
-	kubeDeps *Dependencies,
-	nodeName types.NodeName,
-	nodeHasSynced func() bool,
-) (*config.PodConfig, error) {
-	manifestURLHeader := make(http.Header)
-	if len(kubeCfg.StaticPodURLHeader) > 0 {
-		for k, v := range kubeCfg.StaticPodURLHeader {
-			for i := range v {
-				manifestURLHeader.Add(k, v[i])
-			}
-		}
-	}
-
-	// source of all configuration
-	cfg := config.NewPodConfig(config.PodConfigNotificationIncremental, kubeDeps.Recorder, kubeDeps.PodStartupLatencyTracker)
-
-	// TODO:  it needs to be replaced by a proper context in the future
-	ctx := context.TODO()
-
-	// define file config source
-	if kubeCfg.StaticPodPath != "" {
-		klog.InfoS("Adding static pod path", "path", kubeCfg.StaticPodPath)
-		config.NewSourceFile(kubeCfg.StaticPodPath, nodeName, kubeCfg.FileCheckFrequency.Duration, cfg.Channel(ctx, kubetypes.FileSource))
-	}
-
-	// define url config source
-	if kubeCfg.StaticPodURL != "" {
-		klog.InfoS("Adding pod URL with HTTP header", "URL", kubeCfg.StaticPodURL, "header", manifestURLHeader)
-		config.NewSourceURL(kubeCfg.StaticPodURL, manifestURLHeader, nodeName, kubeCfg.HTTPCheckFrequency.Duration, cfg.Channel(ctx, kubetypes.HTTPSource))
-	}
-
-	if kubeDeps.KubeClient != nil {
-		klog.InfoS("Adding apiserver pod source")
-		config.NewSourceApiserver(kubeDeps.KubeClient, nodeName, nodeHasSynced, cfg.Channel(ctx, kubetypes.ApiserverSource))
-	}
-	return cfg, nil
-}
-
 // PreInitRuntimeService will init runtime service before RunKubelet.
 func PreInitRuntimeService(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	kubeDeps *Dependencies,
@@ -648,7 +608,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		kubecontainer.FilterEventRecorder(kubeDeps.Recorder),
 		klet.livenessManager,
 		klet.readinessManager,
-		klet.startupManager,
+		klet.startupManager, // runtime
 		rootDirectory,
 		machineInfo,
 		klet.podWorkers,
@@ -794,7 +754,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 				klet.statusManager,
 				klet.livenessManager,
 				klet.readinessManager,
-				klet.startupManager,
+				klet.startupManager, // probe
 				klet.runner,
 				kubeDeps.Recorder)
 		}
@@ -978,13 +938,13 @@ type Kubelet struct {
 	onRepeatedHeartbeatFailure   func()                                     // 当心跳操作失败多次时要调用的函数.✅
 	podWorkers                   PodWorkers                                 // 同步pod 状态到events
 
-	podManager               kubepod.Manager            // pod 管理器.
-	statusManager            status.Manager             // 用于同步 pod 状态的状态管理器,也用作状态缓存.
+	statusManager            status.Manager             // 用于同步 pod 状态的状态管理器,也用作状态缓存. 与 apiserver 通信
+	podManager               kubepod.Manager            // pod 管理器 维护静态pod与镜像pod的关系.✅
 	runtimeCache             kubecontainer.RuntimeCache // 表示 kubelet 运行时的缓存.✅
 	evictionManager          eviction.Manager           // 用于观察和响应可能影响节点稳定性的情况的驱逐管理器.
 	probeManager             prober.Manager             // 用于处理容器探测的探测管理器.✅
-	livenessManager          proberesults.Manager       // 用于管理容器存活性检查结果的存活性管理器.
-	readinessManager         proberesults.Manager       // 用于管理容器可用性检查结果的存活性管理器.
+	livenessManager          proberesults.Manager       // 用于管理容器存活性检查结果的存活性管理器.✅
+	readinessManager         proberesults.Manager       // 用于管理容器可用性检查结果的存活性管理器.✅
 	startupManager           proberesults.Manager       // 用于管理容器启动检查结果的启动管理器.✅
 	secretManager            secret.Manager             // 用于管理 Secret 的 Secret 管理器.
 	configMapManager         configmap.Manager          // 用于管理 ConfigMap 的 ConfigMap 管理器.
@@ -1318,82 +1278,6 @@ func (kl *Kubelet) initializeRuntimeDependentModules() {
 		// The shutdown manager is not critical for kubelet, so log failure, but don't block Kubelet startup if there was a failure starting it.
 		klog.ErrorS(err, "Failed to start node shutdown manager")
 	}
-}
-
-// 启动kubelet响应配置更新
-
-func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) { // ✅
-	// go k.Run(podCfg.Updates())
-	ctx := context.Background()
-	if kl.logServer == nil {
-		kl.logServer = http.StripPrefix("/logs/", http.FileServer(http.Dir("/var/log/")))
-	}
-	if kl.kubeClient == nil {
-		klog.InfoS("No API server defined - no node status update will be sent")
-	}
-
-	// Start the cloud provider sync manager
-	if kl.cloudResourceSyncManager != nil {
-		go kl.cloudResourceSyncManager.Run(wait.NeverStop)
-	}
-
-	if err := kl.initializeModules(); err != nil { // 不需要依赖容器运行时的内部模块
-		kl.recorder.Eventf(kl.nodeRef, v1.EventTypeWarning, events.KubeletSetupFailed, err.Error())
-		klog.ErrorS(err, "Failed to initialize internal modules")
-		os.Exit(1)
-	}
-
-	// volume卷管理器
-	go kl.volumeManager.Run(kl.sourcesReady, wait.NeverStop)
-
-	// 与apiserver同步节点状态
-	if kl.kubeClient != nil {
-		// Start two go-routines to update the status.
-		//
-		// The first will report to the apiserver every nodeStatusUpdateFrequency and is aimed to provide regular status intervals,
-		// while the second is used to provide a more timely status update during initialization and runs an one-shot update to the apiserver
-		// once the node becomes ready, then exits afterwards.
-		//
-		// Introduce some small jittering to ensure that over time the requests won't start
-		// accumulating at approximately the same time from the set of nodes due to priority and
-		// fairness effect.
-		// 创建了两个 Go 协程,用于更新节点状态.
-		//		第一个协程每隔一定时间（nodeStatusUpdateFrequency）向 API 服务器报告节点状态,旨在提供定期的状态更新.
-		//		第二个协程在初始化过程中使用,它会在节点就绪后向 API 服务器提供更及时的状态更新,并在更新完成后退出.
-		//
-		//
-		// 为了确保请求不会在一组节点中由于优先级和公平性效应而在大约相同的时间开始积累,该代码引入了一些小的抖动.
-		// 这意味着每个节点的状态更新请求将在稍微不同的时间开始,从而分散请求并减轻 API 服务器的负载.
-		go wait.JitterUntil(kl.syncNodeStatus, kl.nodeStatusUpdateFrequency, 0.04, true, wait.NeverStop) // ✅
-		go kl.fastStatusUpdateOnce()                                                                     // ✅
-
-		// start syncing lease
-		go kl.nodeLeaseController.Run(wait.NeverStop) // ✅
-	}
-	go wait.Until(kl.updateRuntimeUp, 5*time.Second, wait.NeverStop) // 更新运行时间 后台✅
-
-	// iptables管理器
-	if kl.makeIPTablesUtilChains {
-		kl.initNetworkUtil()
-	}
-
-	// 与api server同步pod信息
-	kl.statusManager.Start() // ✅
-
-	// Start syncing RuntimeClasses if enabled.
-	if kl.runtimeClassManager != nil {
-		kl.runtimeClassManager.Start(wait.NeverStop) // watch runtime class// ✅
-	}
-
-	// Start the pod lifecycle event generator.
-	kl.pleg.Start() // ✅
-
-	// Start eventedPLEG only if EventedPLEG feature gate is enabled.
-	if utilfeature.DefaultFeatureGate.Enabled(features.EventedPLEG) {
-		kl.eventedPleg.Start() // ✅
-	}
-	//处理pod请求的主循环
-	kl.syncLoop(ctx, updates, kl)
 }
 
 // syncPod is the transaction script for the sync of a single pod (setting up)
@@ -1899,22 +1783,6 @@ func (kl *Kubelet) rejectPod(pod *v1.Pod, reason, message string) {
 		Message: "Pod was rejected: " + message})
 }
 
-// 在 Kubernetes 中，当一个 Pod 被创建时，它需要经过准入控制器（admission controller）的审批才能被准许运行。
-// 准入控制器是 Kubernetes 中的一个重要组件，用于对新创建的资源进行审批和验证，以确保它们符合集群的策略和要求。
-// 如果符合，则准许该 Pod 运行；否则，拒绝该 Pod。
-func (kl *Kubelet) canAdmitPod(activePods []*v1.Pod, pod *v1.Pod) (bool, string, string) {
-	// TODO: move out of disk check into a pod admitter
-	// TODO: out of resource eviction should have a pod admitter call-out
-	attrs := &lifecycle.PodAdmitAttributes{Pod: pod, OtherPods: activePods}
-	for _, podAdmitHandler := range kl.admitHandlers {
-		if result := podAdmitHandler.Admit(attrs); !result.Admit {
-			return false, result.Reason, result.Message
-		}
-	}
-
-	return true, "", ""
-}
-
 func (kl *Kubelet) canRunPod(pod *v1.Pod) lifecycle.PodAdmitResult {
 	attrs := &lifecycle.PodAdmitAttributes{Pod: pod}
 	// Get "OtherPods". Rejected pods are failed, so only include admitted pods that are alive.
@@ -2097,18 +1965,6 @@ func (kl *Kubelet) syncLoopIteration(
 	return true
 }
 
-func handleProbeSync(kl *Kubelet, update proberesults.Update, handler SyncHandler, probe, status string) {
-	// We should not use the pod from manager, because it is never updated after initialization.
-	pod, ok := kl.podManager.GetPodByUID(update.PodUID)
-	if !ok {
-		// If the pod no longer exists, ignore the update.
-		klog.V(4).InfoS("SyncLoop (probe): ignore irrelevant update", "probe", probe, "status", status, "update", update)
-		return
-	}
-	klog.V(1).InfoS("SyncLoop (probe)", "probe", probe, "status", status, "pod", klog.KObj(pod))
-	handler.HandlePodSyncs([]*v1.Pod{pod})
-}
-
 // 在pod worker中启动pod的异步同步。如果pod已经完成终止，dispatchWork将不执行任何操作。
 func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
 	// 异步更新
@@ -2213,16 +2069,6 @@ func (kl *Kubelet) HandlePodReconcile(pods []*v1.Pod) { // ✅
 	}
 }
 
-// HandlePodSyncs is the callback in the syncHandler interface for pods
-// that should be dispatched to pod workers for sync.
-func (kl *Kubelet) HandlePodSyncs(pods []*v1.Pod) {
-	start := kl.clock.Now()
-	for _, pod := range pods {
-		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
-		kl.dispatchWork(pod, kubetypes.SyncPodSync, mirrorPod, start)
-	}
-}
-
 // LatestLoopEntryTime returns the last time in the sync loop monitor.
 func (kl *Kubelet) LatestLoopEntryTime() time.Time {
 	val := kl.syncLoopMonitor.Load()
@@ -2312,28 +2158,6 @@ func (kl *Kubelet) ListenAndServePodResources() {
 	server.ListenAndServePodResources(socket, kl.podManager, kl.containerManager, kl.containerManager, kl.containerManager)
 }
 
-// 删除pod中符合条件的死容器实例。根据配置的不同，可能会保留最新的失效容器。
-func (kl *Kubelet) cleanUpContainersInPod(podID types.UID, exitedContainerID string) {
-	if podStatus, err := kl.podCache.Get(podID); err == nil {
-		// 当被驱逐或删除的pod已经同步时，可以删除所有容器。
-		removeAll := kl.podWorkers.ShouldPodContentBeRemoved(podID) // 是不是可以删除pod数据， 【驱逐，删除】
-		kl.containerDeletor.deleteContainersInPod(exitedContainerID, podStatus, removeAll)
-	}
-}
-
-// 在初始化过程中使用,它会在节点就绪后向 API 服务器提供更及时的状态更新,并在更新完成后退出.
-func (kl *Kubelet) fastStatusUpdateOnce() { // ✅
-	ctx := context.Background()
-	start := kl.clock.Now()
-	stopCh := make(chan struct{})
-
-	wait.Until(func() {
-		if kl.fastNodeStatusUpdate(ctx, kl.clock.Since(start) >= nodeReadyGracePeriod) { // 120s
-			close(stopCh)
-		}
-	}, 100*time.Millisecond, stopCh)
-}
-
 // CheckpointContainer tries to checkpoint a container. The parameters are used to
 // look up the specified container. If the container specified by the given parameters
 // cannot be found an error is returned. If the container is found the container
@@ -2383,13 +2207,191 @@ func (kl *Kubelet) ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.Pod
 	return kl.containerRuntime.ListPodSandboxMetrics(ctx)
 }
 
+// -------------------------------------------------------------------------------------------------------------------
+
+func makePodSourceConfig( // ✅ 获取要运行的pod
+	kubeCfg *kubeletconfiginternal.KubeletConfiguration,
+	kubeDeps *Dependencies,
+	nodeName types.NodeName,
+	nodeHasSynced func() bool,
+) (*config.PodConfig, error) {
+	manifestURLHeader := make(http.Header)
+	if len(kubeCfg.StaticPodURLHeader) > 0 {
+		for k, v := range kubeCfg.StaticPodURLHeader {
+			for i := range v {
+				manifestURLHeader.Add(k, v[i])
+			}
+		}
+	}
+
+	// source of all configuration
+	cfg := config.NewPodConfig(config.PodConfigNotificationIncremental, kubeDeps.Recorder, kubeDeps.PodStartupLatencyTracker)
+
+	// TODO:  it needs to be replaced by a proper context in the future
+	ctx := context.TODO()
+
+	// define file config source
+	if kubeCfg.StaticPodPath != "" {
+		klog.InfoS("Adding static pod path", "path", kubeCfg.StaticPodPath)
+		config.NewSourceFile(kubeCfg.StaticPodPath, nodeName, kubeCfg.FileCheckFrequency.Duration, cfg.Channel(ctx, kubetypes.FileSource))
+	}
+
+	// define url config source
+	if kubeCfg.StaticPodURL != "" {
+		klog.InfoS("Adding pod URL with HTTP header", "URL", kubeCfg.StaticPodURL, "header", manifestURLHeader)
+		config.NewSourceURL(kubeCfg.StaticPodURL, manifestURLHeader, nodeName, kubeCfg.HTTPCheckFrequency.Duration, cfg.Channel(ctx, kubetypes.HTTPSource))
+	}
+
+	if kubeDeps.KubeClient != nil {
+		klog.InfoS("Adding apiserver pod source")
+		config.NewSourceApiserver(kubeDeps.KubeClient, nodeName, nodeHasSynced, cfg.Channel(ctx, kubetypes.ApiserverSource))
+	}
+	return cfg, nil
+}
+
+// isSyncPodWorthy 过滤掉不值得进行pod同步的事件  不是ContainerRemoved的
+func isSyncPodWorthy(event *pleg.PodLifecycleEvent) bool {
+	// ContainerRemoved doesn't affect pod state
+	return event.Type != pleg.ContainerRemoved
+}
+
 // 支持本地存储容量隔离
 func (kl *Kubelet) supportLocalStorageCapacityIsolation() bool {
 	return kl.GetConfiguration().LocalStorageCapacityIsolation
 }
 
-// isSyncPodWorthy 过滤掉不值得进行pod同步的事件
-func isSyncPodWorthy(event *pleg.PodLifecycleEvent) bool {
-	// ContainerRemoved doesn't affect pod state
-	return event.Type != pleg.ContainerRemoved
+// 在初始化过程中使用,它会在节点就绪后向 API 服务器提供更及时的状态更新,并在更新完成后退出.
+func (kl *Kubelet) fastStatusUpdateOnce() { // ✅
+	ctx := context.Background()
+	start := kl.clock.Now()
+	stopCh := make(chan struct{})
+
+	wait.Until(func() {
+		if kl.fastNodeStatusUpdate(ctx, kl.clock.Since(start) >= nodeReadyGracePeriod) { // 120s
+			close(stopCh)
+		}
+	}, 100*time.Millisecond, stopCh)
+}
+
+// 删除pod中符合条件的死容器实例。根据配置的不同，可能会保留最新的失效容器。
+func (kl *Kubelet) cleanUpContainersInPod(podID types.UID, exitedContainerID string) {
+	if podStatus, err := kl.podCache.Get(podID); err == nil {
+		// 当被驱逐或删除的pod已经同步时，可以删除所有容器。
+		removeAll := kl.podWorkers.ShouldPodContentBeRemoved(podID) // 是不是可以删除pod数据， 【驱逐，删除】
+		kl.containerDeletor.deleteContainersInPod(exitedContainerID, podStatus, removeAll)
+	}
+}
+
+// 在 Kubernetes 中，当一个 Pod 被创建时，它需要经过准入控制器（admission controller）的审批才能被准许运行。
+// 准入控制器是 Kubernetes 中的一个重要组件，用于对新创建的资源进行审批和验证，以确保它们符合集群的策略和要求。
+// 如果符合，则准许该 Pod 运行；否则，拒绝该 Pod。
+func (kl *Kubelet) canAdmitPod(activePods []*v1.Pod, pod *v1.Pod) (bool, string, string) {
+	// TODO: move out of disk check into a pod admitter
+	// TODO: out of resource eviction should have a pod admitter call-out
+	attrs := &lifecycle.PodAdmitAttributes{Pod: pod, OtherPods: activePods}
+	for _, podAdmitHandler := range kl.admitHandlers {
+		if result := podAdmitHandler.Admit(attrs); !result.Admit {
+			return false, result.Reason, result.Message
+		}
+	}
+
+	return true, "", ""
+}
+
+// 启动kubelet响应配置更新
+
+func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) { // ✅
+	// go k.Run(podCfg.Updates())
+	ctx := context.Background()
+	if kl.logServer == nil {
+		kl.logServer = http.StripPrefix("/logs/", http.FileServer(http.Dir("/var/log/")))
+	}
+	if kl.kubeClient == nil {
+		klog.InfoS("No API server defined - no node status update will be sent")
+	}
+
+	// Start the cloud provider sync manager
+	if kl.cloudResourceSyncManager != nil {
+		go kl.cloudResourceSyncManager.Run(wait.NeverStop)
+	}
+
+	if err := kl.initializeModules(); err != nil { // 不需要依赖容器运行时的内部模块
+		kl.recorder.Eventf(kl.nodeRef, v1.EventTypeWarning, events.KubeletSetupFailed, err.Error())
+		klog.ErrorS(err, "Failed to initialize internal modules")
+		os.Exit(1)
+	}
+
+	// volume卷管理器
+	go kl.volumeManager.Run(kl.sourcesReady, wait.NeverStop)
+
+	// 与apiserver同步节点状态
+	if kl.kubeClient != nil {
+		// Start two go-routines to update the status.
+		//
+		// The first will report to the apiserver every nodeStatusUpdateFrequency and is aimed to provide regular status intervals,
+		// while the second is used to provide a more timely status update during initialization and runs an one-shot update to the apiserver
+		// once the node becomes ready, then exits afterwards.
+		//
+		// Introduce some small jittering to ensure that over time the requests won't start
+		// accumulating at approximately the same time from the set of nodes due to priority and
+		// fairness effect.
+		// 创建了两个 Go 协程,用于更新节点状态.
+		//		第一个协程每隔一定时间（nodeStatusUpdateFrequency）向 API 服务器报告节点状态,旨在提供定期的状态更新.
+		//		第二个协程在初始化过程中使用,它会在节点就绪后向 API 服务器提供更及时的状态更新,并在更新完成后退出.
+		//
+		//
+		// 为了确保请求不会在一组节点中由于优先级和公平性效应而在大约相同的时间开始积累,该代码引入了一些小的抖动.
+		// 这意味着每个节点的状态更新请求将在稍微不同的时间开始,从而分散请求并减轻 API 服务器的负载.
+		go wait.JitterUntil(kl.syncNodeStatus, kl.nodeStatusUpdateFrequency, 0.04, true, wait.NeverStop) // ✅
+		go kl.fastStatusUpdateOnce()                                                                     // ✅
+
+		// start syncing lease
+		go kl.nodeLeaseController.Run(wait.NeverStop) // ✅
+	}
+	go wait.Until(kl.updateRuntimeUp, 5*time.Second, wait.NeverStop) // 更新运行时间 后台✅
+
+	// iptables管理器
+	if kl.makeIPTablesUtilChains {
+		kl.initNetworkUtil()
+	}
+
+	// 与api server同步pod信息
+	kl.statusManager.Start() // ✅
+
+	// Start syncing RuntimeClasses if enabled.
+	if kl.runtimeClassManager != nil {
+		kl.runtimeClassManager.Start(wait.NeverStop) // watch runtime class// ✅
+	}
+
+	// Start the pod lifecycle event generator.
+	kl.pleg.Start() // ✅
+
+	// Start eventedPLEG only if EventedPLEG feature gate is enabled.
+	if utilfeature.DefaultFeatureGate.Enabled(features.EventedPLEG) {
+		kl.eventedPleg.Start() // ✅
+	}
+	//处理pod请求的主循环
+	kl.syncLoop(ctx, updates, kl)
+}
+
+func handleProbeSync(kl *Kubelet, update proberesults.Update, handler SyncHandler, probe, status string) {
+	// We should not use the pod from manager, because it is never updated after initialization.
+	pod, ok := kl.podManager.GetPodByUID(update.PodUID)
+	if !ok {
+		// If the pod no longer exists, ignore the update.
+		klog.V(4).InfoS("SyncLoop (probe): ignore irrelevant update", "probe", probe, "status", status, "update", update)
+		return
+	}
+	klog.V(1).InfoS("SyncLoop (probe)", "probe", probe, "status", status, "pod", klog.KObj(pod))
+	handler.HandlePodSyncs([]*v1.Pod{pod})
+}
+
+// HandlePodSyncs is the callback in the syncHandler interface for pods
+// that should be dispatched to pod workers for sync.
+func (kl *Kubelet) HandlePodSyncs(pods []*v1.Pod) {
+	start := kl.clock.Now()
+	for _, pod := range pods {
+		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
+		kl.dispatchWork(pod, kubetypes.SyncPodSync, mirrorPod, start)
+	}
 }

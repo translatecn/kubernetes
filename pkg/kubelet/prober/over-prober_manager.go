@@ -37,7 +37,7 @@ var ProberResults = metrics.NewCounterVec(
 	&metrics.CounterOpts{
 		Subsystem:      "prober",
 		Name:           "probe_total",
-		Help:           "Cumulative number of a liveness, readiness or startup probe for a container by result.",
+		Help:           "按结果统计容器的存活探针、就绪探针或启动探针的累计次数。",
 		StabilityLevel: metrics.ALPHA,
 	},
 	[]string{"probe_type",
@@ -53,7 +53,7 @@ var ProberDuration = metrics.NewHistogramVec(
 	&metrics.HistogramOpts{
 		Subsystem:      "prober",
 		Name:           "probe_duration_seconds",
-		Help:           "Duration in seconds for a probe response.",
+		Help:           "探测响应时间",
 		StabilityLevel: metrics.ALPHA,
 	},
 	[]string{"probe_type",
@@ -92,19 +92,13 @@ type manager struct {
 	// The statusManager cache provides pod IP and container IDs for probing.
 	statusManager status.Manager
 
-	// readinessManager manages the results of readiness probes
-	readinessManager results.Manager
-
-	// livenessManager manages the results of liveness probes
-	livenessManager results.Manager
-
-	// startupManager manages the results of startup probes
-	startupManager results.Manager
+	readinessManager results.Manager // readiness 探测器
+	livenessManager  results.Manager // liveness 探测器
+	startupManager   results.Manager // startup 探测器
 
 	// prober executes the probe actions.
 	prober *prober
-
-	start time.Time
+	start  time.Time
 }
 
 func NewManager(
@@ -121,7 +115,7 @@ func NewManager(
 		prober:           prober,
 		readinessManager: readinessManager,
 		livenessManager:  livenessManager,
-		startupManager:   startupManager,
+		startupManager:   startupManager, // set
 		workers:          make(map[probeKey]*worker),
 		start:            clock.RealClock{}.Now(),
 	}
@@ -160,7 +154,7 @@ func (t probeType) String() string {
 	}
 }
 
-func (m *manager) AddPod(pod *v1.Pod) {
+func (m *manager) AddPod(pod *v1.Pod) { // ✅
 	m.workerLock.Lock()
 	defer m.workerLock.Unlock()
 
@@ -206,22 +200,6 @@ func (m *manager) AddPod(pod *v1.Pod) {
 	}
 }
 
-func (m *manager) StopLivenessAndStartup(pod *v1.Pod) {
-	m.workerLock.RLock()
-	defer m.workerLock.RUnlock()
-
-	key := probeKey{podUID: pod.UID}
-	for _, c := range pod.Spec.Containers {
-		key.containerName = c.Name
-		for _, probeType := range [...]probeType{liveness, startup} {
-			key.probeType = probeType
-			if worker, ok := m.workers[key]; ok {
-				worker.stop()
-			}
-		}
-	}
-}
-
 func (m *manager) RemovePod(pod *v1.Pod) {
 	m.workerLock.RLock()
 	defer m.workerLock.RUnlock()
@@ -230,6 +208,22 @@ func (m *manager) RemovePod(pod *v1.Pod) {
 	for _, c := range pod.Spec.Containers {
 		key.containerName = c.Name
 		for _, probeType := range [...]probeType{readiness, liveness, startup} {
+			key.probeType = probeType
+			if worker, ok := m.workers[key]; ok {
+				worker.stop()
+			}
+		}
+	}
+}
+
+func (m *manager) StopLivenessAndStartup(pod *v1.Pod) {
+	m.workerLock.RLock()
+	defer m.workerLock.RUnlock()
+
+	key := probeKey{podUID: pod.UID}
+	for _, c := range pod.Spec.Containers {
+		key.containerName = c.Name
+		for _, probeType := range [...]probeType{liveness, startup} {
 			key.probeType = probeType
 			if worker, ok := m.workers[key]; ok {
 				worker.stop()
@@ -247,6 +241,27 @@ func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
 			worker.stop()
 		}
 	}
+}
+
+func (m *manager) getWorker(podUID types.UID, containerName string, probeType probeType) (*worker, bool) {
+	m.workerLock.RLock()
+	defer m.workerLock.RUnlock()
+	worker, ok := m.workers[probeKey{podUID, containerName, probeType}]
+	return worker, ok
+}
+
+// Called by the worker after exiting.
+func (m *manager) removeWorker(podUID types.UID, containerName string, probeType probeType) {
+	m.workerLock.Lock()
+	defer m.workerLock.Unlock()
+	delete(m.workers, probeKey{podUID, containerName, probeType})
+}
+
+// workerCount returns the total number of probe workers. For testing.
+func (m *manager) workerCount() int {
+	m.workerLock.RLock()
+	defer m.workerLock.RUnlock()
+	return len(m.workers)
 }
 
 func (m *manager) UpdatePodStatus(podUID types.UID, podStatus *v1.PodStatus) {
@@ -294,25 +309,4 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podStatus *v1.PodStatus) {
 		}
 		podStatus.InitContainerStatuses[i].Ready = ready
 	}
-}
-
-func (m *manager) getWorker(podUID types.UID, containerName string, probeType probeType) (*worker, bool) {
-	m.workerLock.RLock()
-	defer m.workerLock.RUnlock()
-	worker, ok := m.workers[probeKey{podUID, containerName, probeType}]
-	return worker, ok
-}
-
-// Called by the worker after exiting.
-func (m *manager) removeWorker(podUID types.UID, containerName string, probeType probeType) {
-	m.workerLock.Lock()
-	defer m.workerLock.Unlock()
-	delete(m.workers, probeKey{podUID, containerName, probeType})
-}
-
-// workerCount returns the total number of probe workers. For testing.
-func (m *manager) workerCount() int {
-	m.workerLock.RLock()
-	defer m.workerLock.RUnlock()
-	return len(m.workers)
 }

@@ -44,6 +44,7 @@ func (pr tcpProber) Probe(host string, port int, timeout time.Duration) (probe.R
 }
 
 // DoTCPProbe checks that a TCP socket to the address can be opened.
+// 检查tcp 端口是否打开
 // If the socket can be opened, it returns Success
 // If the socket fails to open, it returns Failure.
 // This is exported because some other packages may want to do direct TCP probes.

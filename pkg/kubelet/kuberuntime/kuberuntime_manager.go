@@ -209,7 +209,7 @@ func NewKubeGenericRuntimeManager(
 		seccompProfileRoot:     filepath.Join(rootDirectory, "seccomp"),
 		livenessManager:        livenessManager,
 		readinessManager:       readinessManager,
-		startupManager:         startupManager,
+		startupManager:         startupManager, // kubeRuntimeManager
 		machineInfo:            machineInfo,
 		osInterface:            osInterface,
 		runtimeHelper:          runtimeHelper,

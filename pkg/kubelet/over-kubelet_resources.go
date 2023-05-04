@@ -32,6 +32,7 @@ import (
 // the node allocatable.
 // TODO: if/when we have pod level resources, we need to update this function
 // to use those limits instead of node allocatable.
+// 对pod内的每个容器，以及指定的容器,设置资源上限
 func (kl *Kubelet) defaultPodLimitsForDownwardAPI(pod *v1.Pod, container *v1.Container) (*v1.Pod, *v1.Container, error) {
 	if pod == nil {
 		return nil, nil, fmt.Errorf("invalid input, pod cannot be nil")
