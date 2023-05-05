@@ -509,17 +509,17 @@ const (
 	// 启用kubelet的pod资源gRPC端点.
 	KubeletPodResources featuregate.Feature = "KubeletPodResources"
 
-	// owner: @fromanirh
+	// KubeletPodResourcesGetAllocatable owner: @fromanirh
 	// alpha: v1.21
 	// beta: v1.23
-	// Enable POD resources API to return allocatable resources
+	// 启用POD资源API以返回可分配的资源
 	KubeletPodResourcesGetAllocatable featuregate.Feature = "KubeletPodResourcesGetAllocatable"
 
-	// owner: @sallyom
+	// KubeletTracing owner: @sallyom
 	// kep: https://kep.k8s.io/2832
 	// alpha: v1.25
 	//
-	// Add support for distributed tracing in the kubelet
+	// 在kubelet中添加对分布式跟踪的支持
 	KubeletTracing featuregate.Feature = "KubeletTracing"
 
 	// owner: @zshihang
@@ -652,12 +652,12 @@ const (
 	// Enables PDBUnhealthyPodEvictionPolicy for PodDisruptionBudgets
 	PDBUnhealthyPodEvictionPolicy featuregate.Feature = "PDBUnhealthyPodEvictionPolicy"
 
-	// owner: @haircommander
+	// PodAndContainerStatsFromCRI owner: @haircommander
 	// kep: https://kep.k8s.io/2364
 	// alpha: v1.23
 	//
-	// Configures the Kubelet to use the CRI to populate pod and container stats, instead of supplimenting with stats from cAdvisor.
-	// Requires the CRI implementation supports supplying the required stats.
+	//配置Kubelet使用CRI来填充pod和容器的统计信息，而不是从cAdvisor补充统计信息。
+	//要求CRI实现支持提供所需的统计信息。
 	PodAndContainerStatsFromCRI featuregate.Feature = "PodAndContainerStatsFromCRI"
 
 	// owner: @ahg-g

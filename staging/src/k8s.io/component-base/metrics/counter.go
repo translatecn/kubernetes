@@ -132,6 +132,7 @@ func NewCounterVec(opts *CounterOpts, labels []string) *CounterVec {
 		lazyMetric:     lazyMetric{stabilityLevel: opts.StabilityLevel},
 	}
 	cv.lazyInit(cv, fqName)
+	var _ = cv.Create
 	return cv
 }
 

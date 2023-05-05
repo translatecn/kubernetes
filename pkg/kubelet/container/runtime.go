@@ -121,14 +121,11 @@ type Runtime interface {
 	CheckpointContainer(ctx context.Context, options *runtimeapi.CheckpointContainerRequest) error
 	// Generate pod status from the CRI event
 	GeneratePodStatus(event *runtimeapi.ContainerEventResponse) (*PodStatus, error)
-	// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.
-	// This list should be static at startup: either the client and server restart together when
-	// adding or removing metrics descriptors, or they should not change.
-	// Put differently, if ListPodSandboxMetrics references a name that is not described in the initial
-	// ListMetricDescriptors call, then the metric will not be broadcasted.
-	ListMetricDescriptors(ctx context.Context) ([]*runtimeapi.MetricDescriptor, error)
-	// ListPodSandboxMetrics retrieves the metrics for all pod sandboxes.
-	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error)
+	// ListMetricDescriptors 获取ListPodSandboxMetrics中返回的指标的描述符。
+	// 这个列表在启动时应该是静态的:当添加或删除指标描述符时，要么客户端和服务器一起重启，要么它们不应该改变。
+	// 换句话说，如果ListPodSandboxMetrics引用了一个在初始ListMetricDescriptors调用中没有描述的名称，那么指标将不会被广播。
+	ListMetricDescriptors(ctx context.Context) ([]*runtimeapi.MetricDescriptor, error)  //
+	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error) // 检索所有pod沙箱的指标。
 }
 
 // StreamingRuntime is the interface implemented by runtimes that handle the serving of the

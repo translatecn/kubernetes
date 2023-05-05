@@ -215,7 +215,7 @@ type Option func(*Kubelet)
 // Bootstrap is a bootstrapping interface for kubelet, targets the initialization protocol
 type Bootstrap interface {
 	GetConfiguration() kubeletconfiginternal.KubeletConfiguration
-	BirthCry()
+	BirthCry() // 发送kubelet已经启动的事件
 	StartGarbageCollection()
 	ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfiguration, tlsOptions *server.TLSOptions, auth server.AuthInterface, tp trace.TracerProvider)
 	ListenAndServeReadOnly(address net.IP, port uint)
@@ -370,20 +370,8 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		}
 	}
 
-	containerGCPolicy := kubecontainer.GCPolicy{
-		MinAge:             minimumGCAge.Duration,
-		MaxPerPodContainer: int(maxPerPodContainerCount),
-		MaxContainers:      int(maxContainerCount),
-	}
-
 	daemonEndpoints := &v1.NodeDaemonEndpoints{
 		KubeletEndpoint: v1.DaemonEndpoint{Port: kubeCfg.Port}, // ✅
-	}
-
-	imageGCPolicy := images.ImageGCPolicy{
-		MinAge:               kubeCfg.ImageMinimumGCAge.Duration,
-		HighThresholdPercent: int(kubeCfg.ImageGCHighThresholdPercent),
-		LowThresholdPercent:  int(kubeCfg.ImageGCLowThresholdPercent),
 	}
 
 	enforceNodeAllocatable := kubeCfg.EnforceNodeAllocatable
@@ -424,7 +412,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		Namespace: "",
 	}
 
-	oomWatcher, err := oomwatcher.NewWatcher(kubeDeps.Recorder)
+	oomWatcher, err := oomwatcher.NewWatcher(kubeDeps.Recorder) // ✅
 	if err != nil {
 		if libcontaineruserns.RunningInUserNS() {
 			if utilfeature.DefaultFeatureGate.Enabled(features.KubeletInUserNamespace) {
@@ -473,7 +461,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		heartbeatClient:                         kubeDeps.HeartbeatClient,
 		onRepeatedHeartbeatFailure:              kubeDeps.OnHeartbeatFailure,
 		rootDirectory:                           rootDirectory,
-		resyncInterval:                          kubeCfg.SyncFrequency.Duration,
+		resyncInterval:                          kubeCfg.SyncFrequency.Duration,                            // ✅
 		sourcesReady:                            config.NewSourcesReady(kubeDeps.PodConfig.SeenAllSources), // ✅
 		registerNode:                            registerNode,
 		registerWithTaints:                      registerWithTaints,
@@ -495,7 +483,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		nodeStatusUpdateFrequency:               kubeCfg.NodeStatusUpdateFrequency.Duration,
 		nodeStatusReportFrequency:               kubeCfg.NodeStatusReportFrequency.Duration,
 		os:                                      kubeDeps.OSInterface,
-		oomWatcher:                              oomWatcher,
+		oomWatcher:                              oomWatcher, // ✅
 		cgroupsPerQOS:                           kubeCfg.CgroupsPerQOS,
 		cgroupRoot:                              kubeCfg.CgroupRoot,
 		mounter:                                 kubeDeps.Mounter,
@@ -568,10 +556,8 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	mirrorPodClient := kubepod.NewBasicMirrorClient(klet.kubeClient, string(nodeName), nodeLister)
 	klet.podManager = kubepod.NewBasicPodManager(mirrorPodClient, secretManager, configMapManager)
 
-	klet.statusManager = status.NewManager(klet.kubeClient, klet.podManager, klet, kubeDeps.PodStartupLatencyTracker) // ✅
-
-	klet.resourceAnalyzer = serverstats.NewResourceAnalyzer(klet, kubeCfg.VolumeStatsAggPeriod.Duration, kubeDeps.Recorder)
-
+	klet.statusManager = status.NewManager(klet.kubeClient, klet.podManager, klet, kubeDeps.PodStartupLatencyTracker)       // ✅
+	klet.resourceAnalyzer = serverstats.NewResourceAnalyzer(klet, kubeCfg.VolumeStatsAggPeriod.Duration, kubeDeps.Recorder) //  ✅ 10s
 	klet.runtimeService = kubeDeps.RemoteRuntimeService
 
 	if kubeDeps.KubeClient != nil {
@@ -710,12 +696,11 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		klog.ErrorS(err, "Pod CIDR update failed")
 	}
 
-	// setup containerGC
-	containerGC, err := kubecontainer.NewContainerGC(klet.containerRuntime, containerGCPolicy, klet.sourcesReady)
-	if err != nil {
-		return nil, err
+	containerGCPolicy := kubecontainer.GCPolicy{
+		MinAge:             minimumGCAge.Duration,
+		MaxPerPodContainer: int(maxPerPodContainerCount),
+		MaxContainers:      int(maxContainerCount),
 	}
-	klet.containerGC = containerGC
 	{
 		klet.containerDeletor = newPodContainerDeletor( // ✅
 			klet.containerRuntime,
@@ -725,13 +710,25 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 			),
 		)
 	}
-
-	// setup imageManager
-	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize image manager: %v", err)
+	{
+		// setup containerGC
+		containerGC, err := kubecontainer.NewContainerGC(klet.containerRuntime, containerGCPolicy, klet.sourcesReady)
+		if err != nil {
+			return nil, err
+		}
+		klet.containerGC = containerGC
+		// setup imageManager
+		imageGCPolicy := images.ImageGCPolicy{
+			MinAge:               kubeCfg.ImageMinimumGCAge.Duration,
+			HighThresholdPercent: int(kubeCfg.ImageGCHighThresholdPercent),
+			LowThresholdPercent:  int(kubeCfg.ImageGCLowThresholdPercent),
+		}
+		imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize image manager: %v", err)
+		}
+		klet.imageManager = imageManager
 	}
-	klet.imageManager = imageManager
 
 	if kubeCfg.ServerTLSBootstrap && kubeDeps.TLSOptions != nil && utilfeature.DefaultFeatureGate.Enabled(features.RotateKubeletServerCertificate) {
 		klet.serverCertificateManager, err = kubeletcertificate.NewKubeletServerCertificateManager(klet.kubeClient, kubeCfg, klet.nodeName, klet.getLastObservedNodeAddresses, certDirectory)
@@ -950,7 +947,7 @@ type Kubelet struct {
 	configMapManager         configmap.Manager          // 用于管理 ConfigMap 的 ConfigMap 管理器.
 	serverCertificateManager certificate.Manager        // 用于处理证书轮换的证书管理器.
 
-	resyncInterval                          time.Duration                           // 周期性全量协调 pod 之间的间隔时间.
+	resyncInterval                          time.Duration                           // 周期性 全量同步 pod 的间隔时间. ✅
 	sourcesReady                            config.SourcesReady                     // kubelet 记录的sources,是线程安全的. api、file、url ✅
 	logServer                               http.Handler                            // kubelet 使用的日志服务器.defaults to /logs/ from /var/log
 	runner                                  kubecontainer.CommandRunner             // kubelet 使用的命令运行器.
@@ -970,8 +967,8 @@ type Kubelet struct {
 	volumePluginMgr                         *volume.VolumePluginMgr                 // 用于管理卷插件的卷插件管理器.
 	streamingConnectionIdleTimeout          time.Duration                           // 表示在终止execution/port 连接之前保持空闲的时间.
 	recorder                                record.EventRecorder                    // 用于记录事件的事件记录器✅
-	containerGC                             kubecontainer.GC                        // 用于处理死亡容器垃圾回收的容器 GC 策略.
-	imageManager                            images.ImageGCManager                   // 管理镜像垃圾回收的镜像 GC 管理器.
+	containerGC                             kubecontainer.GC                        // 用于处理死亡容器垃圾回收的容器 GC 策略.✅
+	imageManager                            images.ImageGCManager                   // 管理镜像垃圾回收的镜像 GC 管理器.✅
 	containerLogManager                     logs.ContainerLogManager                // 用于管理容器日志的容器日志管理器.
 	machineInfoLock                         sync.RWMutex                            // 用于保护机器信息的读写锁.
 	machineInfo                             *cadvisorapi.MachineInfo                // 表示由 cadvisor 返回的缓存的 MachineInfo. ✅
@@ -996,8 +993,8 @@ type Kubelet struct {
 	eventedPleg                             pleg.PodLifecycleEventGenerator         // 事件化, pod 生命周期事件生成器. ✅
 	podCache                                kubecontainer.Cache                     // 表示存储所有 pod 的 kubecontainer.PodStatus 的缓存.
 	os                                      kubecontainer.OSInterface               // 在测试期间需要模拟的各种系统调用.
-	oomWatcher                              oomwatcher.Watcher                      // 表示内存不足事件的监视器.
-	resourceAnalyzer                        serverstats.ResourceAnalyzer            // 表示监视资源使用情况的资源分析器.
+	oomWatcher                              oomwatcher.Watcher                      // 表示内存不足事件的监视器. ✅
+	resourceAnalyzer                        serverstats.ResourceAnalyzer            // 表示监视资源使用情况的资源分析器. ✅
 	cgroupsPerQOS                           bool                                    // 表示是否应为资源管理使用 QOS cgroup 层次结构.
 	cgroupRoot                              string                                  // 如果非空,则将其作为根 cgroup 传递给容器运行时.
 	mounter                                 mount.Interface                         // 用于挂载卷的 mount.Interface 接口实现.
@@ -1134,56 +1131,6 @@ func (kl *Kubelet) setupDataDirs() error {
 	return nil
 }
 
-// StartGarbageCollection starts garbage collection threads.
-func (kl *Kubelet) StartGarbageCollection() {
-	loggedContainerGCFailure := false
-	go wait.Until(func() {
-		ctx := context.Background()
-		if err := kl.containerGC.GarbageCollect(ctx); err != nil {
-			klog.ErrorS(err, "Container garbage collection failed")
-			kl.recorder.Eventf(kl.nodeRef, v1.EventTypeWarning, events.ContainerGCFailed, err.Error())
-			loggedContainerGCFailure = true
-		} else {
-			var vLevel klog.Level = 4
-			if loggedContainerGCFailure {
-				vLevel = 1
-				loggedContainerGCFailure = false
-			}
-
-			klog.V(vLevel).InfoS("Container garbage collection succeeded")
-		}
-	}, ContainerGCPeriod, wait.NeverStop)
-
-	// when the high threshold is set to 100, stub the image GC manager
-	if kl.kubeletConfiguration.ImageGCHighThresholdPercent == 100 {
-		klog.V(2).InfoS("ImageGCHighThresholdPercent is set 100, Disable image GC")
-		return
-	}
-
-	prevImageGCFailed := false
-	go wait.Until(func() {
-		ctx := context.Background()
-		if err := kl.imageManager.GarbageCollect(ctx); err != nil {
-			if prevImageGCFailed {
-				klog.ErrorS(err, "Image garbage collection failed multiple times in a row")
-				// Only create an event for repeated failures
-				kl.recorder.Eventf(kl.nodeRef, v1.EventTypeWarning, events.ImageGCFailed, err.Error())
-			} else {
-				klog.ErrorS(err, "Image garbage collection failed once. Stats initialization may not have completed yet")
-			}
-			prevImageGCFailed = true
-		} else {
-			var vLevel klog.Level = 4
-			if prevImageGCFailed {
-				vLevel = 1
-				prevImageGCFailed = false
-			}
-
-			klog.V(vLevel).InfoS("Image garbage collection succeeded")
-		}
-	}, ImageGCPeriod, wait.NeverStop)
-}
-
 // initializeModules 不需要依赖容器运行时的内部模块
 func (kl *Kubelet) initializeModules() error {
 	// Prometheus metrics.
@@ -1216,7 +1163,7 @@ func (kl *Kubelet) initializeModules() error {
 
 	// 开启oom watcher
 	if kl.oomWatcher != nil {
-		if err := kl.oomWatcher.Start(kl.nodeRef); err != nil {
+		if err := kl.oomWatcher.Start(kl.nodeRef); err != nil { // ✅
 			return fmt.Errorf("failed to start OOM watcher: %w", err)
 		}
 	}
@@ -1965,21 +1912,6 @@ func (kl *Kubelet) syncLoopIteration(
 	return true
 }
 
-// 在pod worker中启动pod的异步同步。如果pod已经完成终止，dispatchWork将不执行任何操作。
-func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
-	// 异步更新
-	kl.podWorkers.UpdatePod(UpdatePodOptions{ // dispatchWork
-		Pod:        pod,
-		MirrorPod:  mirrorPod,
-		UpdateType: syncType,
-		StartTime:  start,
-	})
-	// Note the number of containers for new pods.
-	if syncType == kubetypes.SyncPodCreate {
-		metrics.ContainersPerPodCount.Observe(float64(len(pod.Spec.Containers)))
-	}
-}
-
 // TODO: handle mirror pods in a separate component (issue #17251)
 func (kl *Kubelet) handleMirrorPod(mirrorPod *v1.Pod, start time.Time) {
 	// 镜像pod的ADD/UPDATE/DELETE操作被认为是对相应静态pod的UPDATE操作。如果静态pod存在，则向pod worker发送更新。
@@ -2069,93 +2001,15 @@ func (kl *Kubelet) HandlePodReconcile(pods []*v1.Pod) { // ✅
 	}
 }
 
-// LatestLoopEntryTime returns the last time in the sync loop monitor.
-func (kl *Kubelet) LatestLoopEntryTime() time.Time {
-	val := kl.syncLoopMonitor.Load()
-	if val == nil {
-		return time.Time{}
-	}
-	return val.(time.Time)
-}
-
-// 调用容器运行时状态回调函数,当容器运行时首次启动时初始化运行时相关模块,并且如果状态检查失败,则返回一个错误.
-// 如果状态检查成功,则在 kubelet 运行时状态中更新容器运行时的正常运行时间.✅
-func (kl *Kubelet) updateRuntimeUp() { // ✅
-	kl.updateRuntimeMux.Lock()
-	defer kl.updateRuntimeMux.Unlock()
-	ctx := context.Background()
-
-	s, err := kl.containerRuntime.Status(ctx)
-	if err != nil {
-		klog.ErrorS(err, "Container runtime sanity check failed")
-		return
-	}
-	if s == nil {
-		klog.ErrorS(nil, "Container runtime status is nil")
-		return
-	}
-	// Periodically log the whole runtime status for debugging.
-	klog.V(4).InfoS("Container runtime status", "status", s)
-	klogErrorS := klog.ErrorS
-	if !kl.containerRuntimeReadyExpected { // 表示容器运行时是否准备好
-		klogErrorS = klog.V(4).ErrorS // 等级高一些,显示的日志就少
-	}
-	networkReady := s.GetRuntimeCondition(kubecontainer.NetworkReady)
-	if networkReady == nil || !networkReady.Status {
-		klogErrorS(nil, "Container runtime network not ready", "networkReady", networkReady)
-		kl.runtimeState.setNetworkState(fmt.Errorf("container runtime network not ready: %v", networkReady))
-	} else {
-		// Set nil if the container runtime network is ready.
-		kl.runtimeState.setNetworkState(nil)
-	}
-	// information in RuntimeReady condition will be propagated to NodeReady condition.
-	runtimeReady := s.GetRuntimeCondition(kubecontainer.RuntimeReady)
-	// If RuntimeReady is not set or is false, report an error.
-	if runtimeReady == nil || !runtimeReady.Status {
-		klogErrorS(nil, "Container runtime not ready", "runtimeReady", runtimeReady)
-		kl.runtimeState.setRuntimeState(fmt.Errorf("container runtime not ready: %v", runtimeReady))
-		return
-	}
-	kl.runtimeState.setRuntimeState(nil)
-	kl.oneTimeInitializer.Do(kl.initializeRuntimeDependentModules) // ✅
-	kl.runtimeState.setRuntimeSync(kl.clock.Now())
-}
-
 // GetConfiguration returns the KubeletConfiguration used to configure the kubelet.
 func (kl *Kubelet) GetConfiguration() kubeletconfiginternal.KubeletConfiguration {
 	return kl.kubeletConfiguration
-}
-
-// BirthCry sends an event that the kubelet has started up.
-func (kl *Kubelet) BirthCry() {
-	// Make an event that kubelet restarted.
-	kl.recorder.Eventf(kl.nodeRef, v1.EventTypeNormal, events.StartingKubelet, "Starting kubelet.")
-}
-
-// ResyncInterval returns the interval used for periodic syncs.
-func (kl *Kubelet) ResyncInterval() time.Duration {
-	return kl.resyncInterval
 }
 
 // ListenAndServe runs the kubelet HTTP server.
 func (kl *Kubelet) ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfiguration, tlsOptions *server.TLSOptions,
 	auth server.AuthInterface, tp trace.TracerProvider) {
 	server.ListenAndServeKubeletServer(kl, kl.resourceAnalyzer, kubeCfg, tlsOptions, auth, tp)
-}
-
-// ListenAndServeReadOnly 以只读模式运行kubelet HTTP服务器.
-func (kl *Kubelet) ListenAndServeReadOnly(address net.IP, port uint) {
-	server.ListenAndServeKubeletReadOnlyServer(kl, kl.resourceAnalyzer, address, port)
-}
-
-// ListenAndServePodResources runs the kubelet podresources grpc service
-func (kl *Kubelet) ListenAndServePodResources() {
-	socket, err := util.LocalEndpoint(kl.getPodResourcesDir(), podresources.Socket)
-	if err != nil {
-		klog.V(2).InfoS("Failed to get local endpoint for PodResources endpoint", "err", err)
-		return
-	}
-	server.ListenAndServePodResources(socket, kl.podManager, kl.containerManager, kl.containerManager, kl.containerManager)
 }
 
 // CheckpointContainer tries to checkpoint a container. The parameters are used to
@@ -2195,16 +2049,6 @@ func (kl *Kubelet) CheckpointContainer(
 	}
 
 	return nil
-}
-
-// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.
-func (kl *Kubelet) ListMetricDescriptors(ctx context.Context) ([]*runtimeapi.MetricDescriptor, error) {
-	return kl.containerRuntime.ListMetricDescriptors(ctx)
-}
-
-// ListPodSandboxMetrics retrieves the metrics for all pod sandboxes.
-func (kl *Kubelet) ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error) {
-	return kl.containerRuntime.ListPodSandboxMetrics(ctx)
 }
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -2394,4 +2238,158 @@ func (kl *Kubelet) HandlePodSyncs(pods []*v1.Pod) {
 		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
 		kl.dispatchWork(pod, kubetypes.SyncPodSync, mirrorPod, start)
 	}
+}
+
+// ListMetricDescriptors gets the descriptors for the metrics that will be returned in ListPodSandboxMetrics.
+func (kl *Kubelet) ListMetricDescriptors(ctx context.Context) ([]*runtimeapi.MetricDescriptor, error) {
+	return kl.containerRuntime.ListMetricDescriptors(ctx)
+}
+
+// ListPodSandboxMetrics retrieves the metrics for all pod sandboxes.
+func (kl *Kubelet) ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error) {
+	return kl.containerRuntime.ListPodSandboxMetrics(ctx)
+}
+
+// 调用容器运行时状态回调函数,当容器运行时首次启动时初始化运行时相关模块,并且如果状态检查失败,则返回一个错误.
+// 如果状态检查成功,则在 kubelet 运行时状态中更新容器运行时的正常运行时间.✅
+func (kl *Kubelet) updateRuntimeUp() { // ✅
+	kl.updateRuntimeMux.Lock()
+	defer kl.updateRuntimeMux.Unlock()
+	ctx := context.Background()
+
+	s, err := kl.containerRuntime.Status(ctx)
+	if err != nil {
+		klog.ErrorS(err, "Container runtime sanity check failed")
+		return
+	}
+	if s == nil {
+		klog.ErrorS(nil, "Container runtime status is nil")
+		return
+	}
+	// Periodically log the whole runtime status for debugging.
+	klog.V(4).InfoS("Container runtime status", "status", s)
+	klogErrorS := klog.ErrorS
+	if !kl.containerRuntimeReadyExpected { // 表示容器运行时是否准备好
+		klogErrorS = klog.V(4).ErrorS // 等级高一些,显示的日志就少
+	}
+	networkReady := s.GetRuntimeCondition(kubecontainer.NetworkReady)
+	if networkReady == nil || !networkReady.Status {
+		klogErrorS(nil, "Container runtime network not ready", "networkReady", networkReady)
+		kl.runtimeState.setNetworkState(fmt.Errorf("container runtime network not ready: %v", networkReady))
+	} else {
+		// Set nil if the container runtime network is ready.
+		kl.runtimeState.setNetworkState(nil)
+	}
+	// information in RuntimeReady condition will be propagated to NodeReady condition.
+	runtimeReady := s.GetRuntimeCondition(kubecontainer.RuntimeReady)
+	// If RuntimeReady is not set or is false, report an error.
+	if runtimeReady == nil || !runtimeReady.Status {
+		klogErrorS(nil, "Container runtime not ready", "runtimeReady", runtimeReady)
+		kl.runtimeState.setRuntimeState(fmt.Errorf("container runtime not ready: %v", runtimeReady))
+		return
+	}
+	kl.runtimeState.setRuntimeState(nil)
+	kl.oneTimeInitializer.Do(kl.initializeRuntimeDependentModules) // ✅
+	kl.runtimeState.setRuntimeSync(kl.clock.Now())
+}
+
+// 在pod worker中启动pod的异步同步。如果pod已经完成终止，dispatchWork将不执行任何操作。
+func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
+	// 异步更新
+	kl.podWorkers.UpdatePod(UpdatePodOptions{ // dispatchWork
+		Pod:        pod,
+		MirrorPod:  mirrorPod,
+		UpdateType: syncType,
+		StartTime:  start,
+	})
+	// Note the number of containers for new pods.
+	if syncType == kubetypes.SyncPodCreate {
+		metrics.ContainersPerPodCount.Observe(float64(len(pod.Spec.Containers)))
+	}
+}
+
+// ListenAndServePodResources runs the kubelet podresources grpc service
+func (kl *Kubelet) ListenAndServePodResources() {
+	socket, err := util.LocalEndpoint(kl.getPodResourcesDir(), podresources.Socket)
+	if err != nil {
+		klog.V(2).InfoS("Failed to get local endpoint for PodResources endpoint", "err", err)
+		return
+	}
+	server.ListenAndServePodResources(socket, kl.podManager, kl.containerManager, kl.containerManager, kl.containerManager)
+}
+
+// BirthCry 发送kubelet已经启动的事件。
+func (kl *Kubelet) BirthCry() {
+	// Make an event that kubelet restarted.
+	kl.recorder.Eventf(kl.nodeRef, v1.EventTypeNormal, events.StartingKubelet, "Starting kubelet.")
+}
+
+// ResyncInterval 返回用于定期同步的间隔。
+func (kl *Kubelet) ResyncInterval() time.Duration {
+	return kl.resyncInterval
+}
+
+// StartGarbageCollection starts garbage collection threads.
+func (kl *Kubelet) StartGarbageCollection() {
+	loggedContainerGCFailure := false
+	go wait.Until(func() {
+		ctx := context.Background()
+		if err := kl.containerGC.GarbageCollect(ctx); err != nil {
+			klog.ErrorS(err, "Container garbage collection failed")
+			kl.recorder.Eventf(kl.nodeRef, v1.EventTypeWarning, events.ContainerGCFailed, err.Error())
+			loggedContainerGCFailure = true
+		} else {
+			var vLevel klog.Level = 4
+			if loggedContainerGCFailure {
+				vLevel = 1
+				loggedContainerGCFailure = false
+			}
+
+			klog.V(vLevel).InfoS("Container garbage collection succeeded")
+		}
+	}, ContainerGCPeriod, wait.NeverStop)
+
+	// when the high threshold is set to 100, stub the image GC manager
+	// 当 高阈值设置为100时，将停止image gc
+	if kl.kubeletConfiguration.ImageGCHighThresholdPercent == 100 {
+		klog.V(2).InfoS("ImageGCHighThresholdPercent is set 100, Disable image GC")
+		return
+	}
+
+	prevImageGCFailed := false
+	go wait.Until(func() {
+		ctx := context.Background()
+		if err := kl.imageManager.GarbageCollect(ctx); err != nil {
+			if prevImageGCFailed {
+				klog.ErrorS(err, "Image garbage collection failed multiple times in a row")
+				// Only create an event for repeated failures
+				kl.recorder.Eventf(kl.nodeRef, v1.EventTypeWarning, events.ImageGCFailed, err.Error())
+			} else {
+				klog.ErrorS(err, "Image garbage collection failed once. Stats initialization may not have completed yet")
+			}
+			prevImageGCFailed = true
+		} else {
+			var vLevel klog.Level = 4
+			if prevImageGCFailed {
+				vLevel = 1
+				prevImageGCFailed = false
+			}
+
+			klog.V(vLevel).InfoS("Image garbage collection succeeded")
+		}
+	}, ImageGCPeriod, wait.NeverStop)
+}
+
+// ListenAndServeReadOnly 以只读模式运行kubelet HTTP服务器.
+func (kl *Kubelet) ListenAndServeReadOnly(address net.IP, port uint) {
+	server.ListenAndServeKubeletReadOnlyServer(kl, kl.resourceAnalyzer, address, port)
+}
+
+// LatestLoopEntryTime returns the last time in the sync loop monitor.
+func (kl *Kubelet) LatestLoopEntryTime() time.Time { // ✅
+	val := kl.syncLoopMonitor.Load()
+	if val == nil {
+		return time.Time{}
+	}
+	return val.(time.Time)
 }

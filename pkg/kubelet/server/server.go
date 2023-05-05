@@ -99,13 +99,19 @@ const (
 	logsPath            = "/logs/"
 	pprofBasePath       = "/debug/pprof/"
 	debugFlagPath       = "/debug/flags/v"
+
+	x1 = "/stats/summary"
+	x2 = "/healthz"
+	x3 = "/pods"
+	x5 = "/stats/summary"
+	x4 = "/checkpoint/{podNamespace}/{podID}/{containerName}"
 )
 
 // Server is a http.Handler which exposes kubelet functionality over HTTP.
 type Server struct {
 	auth                 AuthInterface
 	host                 HostInterface
-	restfulCont          containerInterface
+	restfulCont          containerInterface // 路由的root容器
 	metricsBuckets       sets.String
 	metricsMethodBuckets sets.String
 	resourceAnalyzer     stats.ResourceAnalyzer
@@ -185,7 +191,7 @@ func ListenAndServeKubeletServer(
 }
 
 // ListenAndServeKubeletReadOnlyServer 初始化服务器以响应Kubelet上的HTTP网络请求.
-func ListenAndServeKubeletReadOnlyServer(
+func ListenAndServeKubeletReadOnlyServer( // ✅
 	host HostInterface,
 	resourceAnalyzer stats.ResourceAnalyzer,
 	address net.IP,
@@ -209,8 +215,13 @@ func ListenAndServeKubeletReadOnlyServer(
 	}
 }
 
-// ListenAndServePodResources initializes a gRPC server to serve the PodResources service
-func ListenAndServePodResources(socket string, podsProvider podresources.PodsProvider, devicesProvider podresources.DevicesProvider, cpusProvider podresources.CPUsProvider, memoryProvider podresources.MemoryProvider) {
+func ListenAndServePodResources( // ✅
+	socket string,
+	podsProvider podresources.PodsProvider,
+	devicesProvider podresources.DevicesProvider,
+	cpusProvider podresources.CPUsProvider,
+	memoryProvider podresources.MemoryProvider,
+) {
 	server := grpc.NewServer()
 	podresourcesapiv1alpha1.RegisterPodResourcesListerServer(server, podresources.NewV1alpha1PodResourcesServer(podsProvider, devicesProvider))
 	podresourcesapi.RegisterPodResourcesListerServer(server, podresources.NewV1PodResourcesServer(podsProvider, devicesProvider, cpusProvider, memoryProvider))
@@ -265,16 +276,16 @@ func NewServer(
 	server := Server{
 		host:                 host,
 		resourceAnalyzer:     resourceAnalyzer,
-		auth:                 auth,
+		auth:                 auth, // nil
 		restfulCont:          &filteringContainer{Container: restful.NewContainer()},
 		metricsBuckets:       sets.NewString(),
 		metricsMethodBuckets: sets.NewString("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"),
 	}
 	if auth != nil {
-		server.InstallAuthFilter()
+		server.InstallAuthFilter() // ✅
 	}
 	if utilfeature.DefaultFeatureGate.Enabled(features.KubeletTracing) {
-		server.InstallTracingFilter(tp)
+		server.InstallTracingFilter(tp) // ✅
 	}
 	server.InstallDefaultHandlers()
 	if kubeCfg != nil && kubeCfg.EnableDebuggingHandlers {
@@ -290,8 +301,7 @@ func NewServer(
 	return server
 }
 
-// InstallAuthFilter installs authentication filters with the restful Container.
-func (s *Server) InstallAuthFilter() {
+func (s *Server) InstallAuthFilter() { // ✅
 	s.restfulCont.Filter(func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		// Authenticate
 		info, ok, err := s.auth.AuthenticateRequest(req.Request)
@@ -361,12 +371,12 @@ func (s *Server) InstallDefaultHandlers() {
 	s.addMetricsBucketMatcher("healthz")
 	healthz.InstallHandler(s.restfulCont,
 		healthz.PingHealthz,
-		healthz.LogHealthz,
-		healthz.NamedCheck("syncloop", s.syncLoopHealthCheck),
+		healthz.LogHealthz, // 检查klog 日志是否落盘
+		healthz.NamedCheck("syncloop", s.syncLoopHealthCheck), // 同步检查
 	)
 
 	if utilfeature.DefaultFeatureGate.Enabled(metricsfeatures.ComponentSLIs) {
-		slis.SLIMetricsWithReset{}.Install(s.restfulCont)
+		slis.SLIMetricsWithReset{}.Install(s.restfulCont) // SLI：服务水平指标,
 	}
 	s.addMetricsBucketMatcher("pods")
 	ws := new(restful.WebService)
@@ -375,59 +385,66 @@ func (s *Server) InstallDefaultHandlers() {
 	s.restfulCont.Add(ws)
 
 	s.addMetricsBucketMatcher("stats")
-	s.restfulCont.Add(stats.CreateHandlers(statsPath, s.host, s.resourceAnalyzer))
+	s.restfulCont.Add(stats.CreateHandlers(statsPath, s.host, s.resourceAnalyzer)) // "/stats/summary"   pod、 node指标
 
 	s.addMetricsBucketMatcher("metrics")
 	s.addMetricsBucketMatcher("metrics/cadvisor")
 	s.addMetricsBucketMatcher("metrics/probes")
 	s.addMetricsBucketMatcher("metrics/resource")
-	s.restfulCont.Handle(metricsPath, legacyregistry.Handler())
 
-	includedMetrics := cadvisormetrics.MetricSet{
-		cadvisormetrics.CpuUsageMetrics:     struct{}{},
-		cadvisormetrics.MemoryUsageMetrics:  struct{}{},
-		cadvisormetrics.CpuLoadMetrics:      struct{}{},
-		cadvisormetrics.DiskIOMetrics:       struct{}{},
-		cadvisormetrics.DiskUsageMetrics:    struct{}{},
-		cadvisormetrics.NetworkUsageMetrics: struct{}{},
-		cadvisormetrics.AppMetrics:          struct{}{},
-		cadvisormetrics.ProcessMetrics:      struct{}{},
-		cadvisormetrics.OOMMetrics:          struct{}{},
-	}
-	// cAdvisor metrics are exposed under the secured handler as well
-	r := compbasemetrics.NewKubeRegistry()
-	r.RawMustRegister(metrics.NewPrometheusMachineCollector(prometheusHostAdapter{s.host}, includedMetrics))
-	if utilfeature.DefaultFeatureGate.Enabled(features.PodAndContainerStatsFromCRI) {
-		r.CustomRegister(collectors.NewCRIMetricsCollector(context.TODO(), s.host.ListPodSandboxMetrics, s.host.ListMetricDescriptors))
-	} else {
-		cadvisorOpts := cadvisorv2.RequestOptions{
-			IdType:    cadvisorv2.TypeName,
-			Count:     1,
-			Recursive: true,
+	s.restfulCont.Handle(metricsPath, legacyregistry.Handler()) // 另外很多其他指标
+
+	{
+		includedMetrics := cadvisormetrics.MetricSet{
+			cadvisormetrics.CpuUsageMetrics:     struct{}{},
+			cadvisormetrics.MemoryUsageMetrics:  struct{}{},
+			cadvisormetrics.CpuLoadMetrics:      struct{}{},
+			cadvisormetrics.DiskIOMetrics:       struct{}{},
+			cadvisormetrics.DiskUsageMetrics:    struct{}{},
+			cadvisormetrics.NetworkUsageMetrics: struct{}{},
+			cadvisormetrics.AppMetrics:          struct{}{},
+			cadvisormetrics.ProcessMetrics:      struct{}{},
+			cadvisormetrics.OOMMetrics:          struct{}{},
 		}
-		r.RawMustRegister(metrics.NewPrometheusCollector(prometheusHostAdapter{s.host}, containerPrometheusLabelsFunc(s.host), includedMetrics, clock.RealClock{}, cadvisorOpts))
+
+		// cAdvisor metrics are exposed under the secured handler as well
+		r := compbasemetrics.NewKubeRegistry()
+		r.RawMustRegister(metrics.NewPrometheusMachineCollector(prometheusHostAdapter{s.host}, includedMetrics))
+		if utilfeature.DefaultFeatureGate.Enabled(features.PodAndContainerStatsFromCRI) {
+			r.CustomRegister(collectors.NewCRIMetricsCollector(context.TODO(), s.host.ListPodSandboxMetrics, s.host.ListMetricDescriptors))
+		} else {
+			cadvisorOpts := cadvisorv2.RequestOptions{
+				IdType:    cadvisorv2.TypeName,
+				Count:     1,
+				Recursive: true,
+			}
+			r.RawMustRegister(metrics.NewPrometheusCollector(prometheusHostAdapter{s.host}, containerPrometheusLabelsFunc(s.host), includedMetrics, clock.RealClock{}, cadvisorOpts))
+		}
+		s.restfulCont.Handle(cadvisorMetricsPath,
+			compbasemetrics.HandlerFor(r, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}),
+		)
 	}
-	s.restfulCont.Handle(cadvisorMetricsPath,
-		compbasemetrics.HandlerFor(r, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}),
-	)
 
-	s.addMetricsBucketMatcher("metrics/resource")
-	resourceRegistry := compbasemetrics.NewKubeRegistry()
-	resourceRegistry.CustomMustRegister(collectors.NewResourceMetricsCollector(s.resourceAnalyzer))
-	s.restfulCont.Handle(resourceMetricsPath,
-		compbasemetrics.HandlerFor(resourceRegistry, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}),
-	)
+	{
+		s.addMetricsBucketMatcher("metrics/resource")
+		resourceRegistry := compbasemetrics.NewKubeRegistry()
+		resourceRegistry.CustomMustRegister(collectors.NewResourceMetricsCollector(s.resourceAnalyzer))
+		s.restfulCont.Handle(resourceMetricsPath,
+			compbasemetrics.HandlerFor(resourceRegistry, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}),
+		)
+	}
 
-	// prober metrics are exposed under a different endpoint
-
-	s.addMetricsBucketMatcher("metrics/probes")
-	p := compbasemetrics.NewKubeRegistry()
-	_ = compbasemetrics.RegisterProcessStartTime(p.Register)
-	p.MustRegister(prober.ProberResults)
-	p.MustRegister(prober.ProberDuration)
-	s.restfulCont.Handle(proberMetricsPath,
-		compbasemetrics.HandlerFor(p, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}),
-	)
+	{
+		// prober metrics are exposed under a different endpoint
+		s.addMetricsBucketMatcher("metrics/probes")
+		p := compbasemetrics.NewKubeRegistry()
+		_ = compbasemetrics.RegisterProcessStartTime(p.Register)
+		p.MustRegister(prober.ProberResults)
+		p.MustRegister(prober.ProberDuration)
+		s.restfulCont.Handle(proberMetricsPath,
+			compbasemetrics.HandlerFor(p, compbasemetrics.HandlerOpts{ErrorHandling: compbasemetrics.ContinueOnError}),
+		)
+	}
 
 	// Only enable checkpoint API if the feature is enabled
 	if utilfeature.DefaultFeatureGate.Enabled(features.ContainerCheckpoint) {
@@ -605,14 +622,14 @@ func (s *Server) InstallProfilingHandler(enableProfilingLogHandler bool, enableC
 	}
 }
 
-// Checks if kubelet's sync loop  that updates containers is working.
-func (s *Server) syncLoopHealthCheck(req *http.Request) error {
+// 检查kubelet syncloop 是否正常工作
+func (s *Server) syncLoopHealthCheck(req *http.Request) error { // ✅
 	duration := s.host.ResyncInterval() * 2
 	minDuration := time.Minute * 5
 	if duration < minDuration {
 		duration = minDuration
 	}
-	enterLoopTime := s.host.LatestLoopEntryTime()
+	enterLoopTime := s.host.LatestLoopEntryTime() // 进入、离开syncloop的时间
 	if !enterLoopTime.IsZero() && time.Now().After(enterLoopTime.Add(duration)) {
 		return fmt.Errorf("sync Loop took longer than expected")
 	}

@@ -86,10 +86,8 @@ type KubeletConfiguration struct { // --config
 	EnableServer bool
 	// staticPodPath is the path to the directory containing local (static) pods to
 	// run, or the path to a single static pod file.
-	StaticPodPath string // 静态pod的文件夹
-	// syncFrequency is the max period between synchronizing running
-	// containers and config
-	SyncFrequency      metav1.Duration
+	StaticPodPath      string          // 静态pod的文件夹
+	SyncFrequency      metav1.Duration // 周期性全量同步容器、配置的间隔
 	FileCheckFrequency metav1.Duration // 静态pod文件检查周期
 	// httpCheckFrequency is the duration between checking http for new data
 	HTTPCheckFrequency metav1.Duration
@@ -187,8 +185,7 @@ type KubeletConfiguration struct { // --config
 	// image garbage collection is never run. Lowest disk usage to garbage
 	// collect to. The percent is calculated as this field value out of 100.
 	ImageGCLowThresholdPercent int32
-	// How frequently to calculate and cache volume disk usage for all pods
-	VolumeStatsAggPeriod metav1.Duration
+	VolumeStatsAggPeriod       metav1.Duration // 计算和缓存所有pod卷磁盘使用量的频率  10s
 	// KubeletCgroups is the absolute name of cgroups to isolate the kubelet in
 	KubeletCgroups string
 	// SystemCgroups is absolute name of cgroups in which to place

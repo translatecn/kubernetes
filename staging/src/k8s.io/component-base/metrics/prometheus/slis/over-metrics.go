@@ -23,6 +23,9 @@ import (
 
 type HealthcheckStatus string
 
+// SLI：服务水平指标
+// 你实际测量的是什么，以确定你的SLO是否在满足目标/偏离目标。
+
 const (
 	Success HealthcheckStatus = "success"
 	Error   HealthcheckStatus = "error"
@@ -32,22 +35,24 @@ type HealthcheckType string
 
 var (
 	// healthcheck is a Prometheus Gauge metrics used for recording the results of a k8s healthcheck.
+	// Gauge metrics用于度量单个数值的指标，例如 CPU 使用率、内存使用量等。
 	healthcheck = k8smetrics.NewGaugeVec(
 		&k8smetrics.GaugeOpts{
 			Namespace:      "kubernetes",
 			Name:           "healthcheck",
-			Help:           "This metric records the result of a single healthcheck.",
+			Help:           "此指标记录单个运行状况检查的结果。",
 			StabilityLevel: k8smetrics.ALPHA,
 		},
 		[]string{"name", "type"},
 	)
 
 	// healthchecksTotal is a Prometheus Counter metrics used for counting the results of a k8s healthcheck.
+	// 用于度量计数器类型的指标，例如请求数、错误数等.只能随时间变化而增加，不能减少。
 	healthchecksTotal = k8smetrics.NewCounterVec(
 		&k8smetrics.CounterOpts{
 			Namespace:      "kubernetes",
 			Name:           "healthchecks_total",
-			Help:           "This metric records the results of all healthcheck.",
+			Help:           "此指标记录所有健康检查的结果。",
 			StabilityLevel: k8smetrics.ALPHA,
 		},
 		[]string{"name", "type", "status"},

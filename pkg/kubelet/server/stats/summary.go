@@ -30,21 +30,15 @@ import (
 
 // SummaryProvider provides summaries of the stats from Kubelet.
 type SummaryProvider interface {
-	// Get provides a new Summary with the stats from Kubelet,
-	// and will update some stats if updateStats is true
-	Get(ctx context.Context, updateStats bool) (*statsapi.Summary, error)
-	// GetCPUAndMemoryStats provides a new Summary with the CPU and memory stats from Kubelet,
-	GetCPUAndMemoryStats(ctx context.Context) (*statsapi.Summary, error)
+	Get(ctx context.Context, updateStats bool) (*statsapi.Summary, error) // 返回kubelet的状态，并更新状态
+	GetCPUAndMemoryStats(ctx context.Context) (*statsapi.Summary, error)  // 返回 cpu\mem的状态
 }
 
 // summaryProviderImpl implements the SummaryProvider interface.
 type summaryProviderImpl struct {
-	// kubeletCreationTime is the time at which the summaryProvider was created.
-	kubeletCreationTime metav1.Time
-	// systemBootTime is the time at which the system was started
-	systemBootTime metav1.Time
-
-	provider Provider
+	kubeletCreationTime metav1.Time // 本次状态汇总的时间
+	systemBootTime      metav1.Time // 启动了多长时间爱你
+	provider            Provider
 }
 
 var _ SummaryProvider = &summaryProviderImpl{}

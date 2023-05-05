@@ -85,7 +85,7 @@ var (
 )
 
 // NewResourceMetricsCollector returns a metrics.StableCollector which exports resource metrics
-func NewResourceMetricsCollector(provider stats.SummaryProvider) metrics.StableCollector {
+func NewResourceMetricsCollector(provider stats.SummaryProvider) metrics.StableCollector { // ✅
 	return &resourceMetricsCollector{
 		provider: provider,
 	}
@@ -93,7 +93,6 @@ func NewResourceMetricsCollector(provider stats.SummaryProvider) metrics.StableC
 
 type resourceMetricsCollector struct {
 	metrics.BaseStableCollector
-
 	provider stats.SummaryProvider
 }
 

@@ -277,7 +277,7 @@ func newHealthzAndMetricsHandler(config *kubeschedulerconfig.KubeSchedulerConfig
 	healthz.InstallHandler(pathRecorderMux, checks...)
 	installMetricHandler(pathRecorderMux, informers, isLeader)
 	if utilfeature.DefaultFeatureGate.Enabled(features.ComponentSLIs) {
-		slis.SLIMetricsWithReset{}.Install(pathRecorderMux)
+		slis.SLIMetricsWithReset{}.Install(pathRecorderMux) // delete
 	}
 	if config.EnableProfiling {
 		routes.Profiling{}.Install(pathRecorderMux)

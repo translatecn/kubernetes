@@ -137,11 +137,8 @@ func (r *lazyMetric) IsDeprecated() bool {
 	return r.isDeprecated
 }
 
-// Create forces the initialization of metric which has been deferred until
-// the point at which this method is invoked. This method will determine whether
-// the metric is deprecated or hidden, no-opting if the metric should be considered
-// hidden. Furthermore, this function no-opts and returns true if metric is already
-// created.
+// Create 强制度量的初始化，该度量被延迟到调用此方法的点。此方法将确定度量是弃用还是隐藏，如果度量应该被认为是隐藏，则不选择。
+// 此外，如果已经创建了度量，则此函数不选择并返回true。
 func (r *lazyMetric) Create(version *semver.Version) bool {
 	if version != nil {
 		r.preprocessMetric(*version)

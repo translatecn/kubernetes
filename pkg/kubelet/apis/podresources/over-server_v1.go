@@ -51,7 +51,7 @@ func (p *v1PodResourcesServer) List(ctx context.Context, req *v1.ListPodResource
 	metrics.PodResourcesEndpointRequestsTotalCount.WithLabelValues("v1").Inc()
 	metrics.PodResourcesEndpointRequestsListCount.WithLabelValues("v1").Inc()
 
-	pods := p.podsProvider.GetPods()
+	pods := p.podsProvider.GetPods() // kubepod.Manager
 	podResources := make([]*v1.PodResources, len(pods))
 	p.devicesProvider.UpdateAllocatedDevices()
 

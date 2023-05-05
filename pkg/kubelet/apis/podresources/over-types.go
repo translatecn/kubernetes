@@ -24,12 +24,9 @@ import (
 
 // DevicesProvider knows how to provide the devices used by the given container
 type DevicesProvider interface {
-	// UpdateAllocatedDevices frees any Devices that are bound to terminated pods.
-	UpdateAllocatedDevices()
-	// GetDevices returns information about the devices assigned to pods and containers
-	GetDevices(podUID, containerName string) []*podresourcesapi.ContainerDevices
-	// GetAllocatableDevices returns information about all the devices known to the manager
-	GetAllocatableDevices() []*podresourcesapi.ContainerDevices
+	UpdateAllocatedDevices()                                                     // 释放任何绑定到终止pod的设备。
+	GetDevices(podUID, containerName string) []*podresourcesapi.ContainerDevices // 返回分配到容器的设备信息
+	GetAllocatableDevices() []*podresourcesapi.ContainerDevices                  // 返回可以分配的设备信息
 }
 
 // PodsProvider knows how to provide the pods admitted by the node

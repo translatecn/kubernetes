@@ -29,10 +29,8 @@ type ContainerRuntimeOptions struct {
 	// ContainerRuntime is the container runtime to use.
 	ContainerRuntime string
 	// RuntimeCgroups that container runtime is expected to be isolated in.
-	RuntimeCgroups string
-	// PodSandboxImage is the image whose network/ipc namespaces
-	// containers in each pod will use.
-	PodSandboxImage string
+	RuntimeCgroups  string
+	PodSandboxImage string // 是每个pod中的net/ipc 空间容器 将使用的映像。  pause镜像
 	// Image credential provider plugin options
 
 	// ImageCredentialProviderConfigFile is the path to the credential provider plugin config file.

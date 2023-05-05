@@ -38,7 +38,7 @@ type fsResourceAnalyzerInterface interface {
 // fsResourceAnalyzer provides stats about fs resource usage
 type fsResourceAnalyzer struct {
 	statsProvider     Provider
-	calcPeriod        time.Duration
+	calcPeriod        time.Duration // 10s
 	cachedVolumeStats atomic.Value
 	startOnce         sync.Once
 	eventRecorder     record.EventRecorder
@@ -50,7 +50,7 @@ var _ fsResourceAnalyzerInterface = &fsResourceAnalyzer{}
 func newFsResourceAnalyzer(statsProvider Provider, calcVolumePeriod time.Duration, eventRecorder record.EventRecorder) *fsResourceAnalyzer {
 	r := &fsResourceAnalyzer{
 		statsProvider: statsProvider,
-		calcPeriod:    calcVolumePeriod,
+		calcPeriod:    calcVolumePeriod, // 10s
 		eventRecorder: eventRecorder,
 	}
 	r.cachedVolumeStats.Store(make(statCache))

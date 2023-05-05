@@ -1243,8 +1243,7 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 		return nil, err
 	}
 
-	k.BirthCry()
-
+	k.BirthCry() // 发送kubelet已经启动的事件
 	k.StartGarbageCollection()
 
 	return k, nil

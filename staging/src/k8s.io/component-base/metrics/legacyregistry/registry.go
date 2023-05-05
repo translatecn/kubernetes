@@ -29,7 +29,7 @@ import (
 var (
 	defaultRegistry = metrics.NewKubeRegistry()
 	// DefaultGatherer exposes the global registry gatherer
-	DefaultGatherer metrics.Gatherer = defaultRegistry
+	DefaultGatherer metrics.Gatherer = defaultRegistry //
 	// Reset calls reset on the global registry
 	Reset = defaultRegistry.Reset
 	// MustRegister registers registerable metrics but uses the global registry.

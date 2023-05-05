@@ -38,7 +38,11 @@ type criMetricsCollector struct {
 var _ metrics.StableCollector = &criMetricsCollector{}
 
 // NewCRIMetricsCollector implements the metrics.Collector interface
-func NewCRIMetricsCollector(ctx context.Context, listPodSandboxMetricsFn func(context.Context) ([]*runtimeapi.PodSandboxMetrics, error), listMetricDescriptorsFn func(context.Context) ([]*runtimeapi.MetricDescriptor, error)) metrics.StableCollector {
+func NewCRIMetricsCollector( // ✅
+	ctx context.Context,
+	listPodSandboxMetricsFn func(context.Context) ([]*runtimeapi.PodSandboxMetrics, error),
+	listMetricDescriptorsFn func(context.Context) ([]*runtimeapi.MetricDescriptor, error),
+) metrics.StableCollector {
 	descs, err := listMetricDescriptorsFn(ctx)
 	if err != nil {
 		klog.ErrorS(err, "Error reading MetricDescriptors")

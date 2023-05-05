@@ -82,10 +82,8 @@ type Provider interface {
 	// GetPodByName returns the spec of the pod with the name in the specified
 	// namespace.
 	GetPodByName(namespace, name string) (*v1.Pod, bool)
-	// GetNode returns the spec of the local node.
-	GetNode() (*v1.Node, error)
-	// GetNodeConfig returns the configuration of the local node.
-	GetNodeConfig() cm.NodeConfig
+	GetNode() (*v1.Node, error)   //
+	GetNodeConfig() cm.NodeConfig // 返回本节点的配置信息
 	// ListVolumesForPod returns the stats of the volume used by the pod with
 	// the podUID.
 	ListVolumesForPod(podUID types.UID) (map[string]volume.Volume, bool)
@@ -112,7 +110,7 @@ type handler struct {
 }
 
 // CreateHandlers creates the REST handlers for the stats.
-func CreateHandlers(rootPath string, provider Provider, summaryProvider SummaryProvider) *restful.WebService {
+func CreateHandlers(rootPath string, provider Provider, summaryProvider SummaryProvider) *restful.WebService { // ✅
 	h := &handler{provider, summaryProvider}
 
 	ws := &restful.WebService{}
