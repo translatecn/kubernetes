@@ -1221,7 +1221,7 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 		kubeServer.ProviderID,
 		kubeServer.CloudProvider,
 		kubeServer.CertDirectory,
-		kubeServer.RootDirectory,
+		kubeServer.RootDirectory, // /var/lib/kubelet
 		kubeServer.ImageCredentialProviderConfigFile,
 		kubeServer.ImageCredentialProviderBinDir,
 		kubeServer.RegisterNode,

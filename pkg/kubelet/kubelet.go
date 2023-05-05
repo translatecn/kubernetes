@@ -291,7 +291,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	providerID string,
 	cloudProvider string,
 	certDirectory string,
-	rootDirectory string,
+	rootDirectory string, // /var/lib/kubelet
 	imageCredentialProviderConfigFile string,
 	imageCredentialProviderBinDir string,
 	registerNode bool,
@@ -460,7 +460,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		kubeClient:                              kubeDeps.KubeClient,
 		heartbeatClient:                         kubeDeps.HeartbeatClient,
 		onRepeatedHeartbeatFailure:              kubeDeps.OnHeartbeatFailure,
-		rootDirectory:                           rootDirectory,
+		rootDirectory:                           rootDirectory,                                             // ✅
 		resyncInterval:                          kubeCfg.SyncFrequency.Duration,                            // ✅
 		sourcesReady:                            config.NewSourcesReady(kubeDeps.PodConfig.SeenAllSources), // ✅
 		registerNode:                            registerNode,
@@ -929,7 +929,7 @@ type Kubelet struct {
 	nodeName                     types.NodeName                             // 表示节点的名称. ✅
 	kubeClient                   clientset.Interface                        // kubelet 使用的 Kubernetes API 客户端.
 	heartbeatClient              clientset.Interface                        // kubelet 使用的心跳 API 客户端.
-	rootDirectory                string                                     // kubelet 使用的根目录.
+	rootDirectory                string                                     // kubelet 使用的根目录.✅
 	lastObservedNodeAddressesMux sync.RWMutex                               // 观察节点地址的读写锁.
 	lastObservedNodeAddresses    []v1.NodeAddress                           // 节点地址.✅
 	onRepeatedHeartbeatFailure   func()                                     // 当心跳操作失败多次时要调用的函数.✅
@@ -2017,13 +2017,15 @@ func (kl *Kubelet) ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfigur
 // cannot be found an error is returned. If the container is found the container
 // engine will be asked to checkpoint the given container into the kubelet's default
 // checkpoint directory.
+// 尝试对容器进行检查点。这些参数用于查找指定的容器。如果无法找到给定参数指定的容器，则返回错误。如果找到容器，则会要求容器引擎将指定容器检查点保存到 kubelet 的默认检查点目录中。
+// 在 Kubernetes 中，检查点是一种机制，用于保存容器的状态和数据。检查点可以用于容器的备份、恢复和迁移。在该代码中，CheckpointContainer 函数用于对容器进行检查点操作。
 func (kl *Kubelet) CheckpointContainer(
 	ctx context.Context,
 	podUID types.UID,
 	podFullName,
 	containerName string,
 	options *runtimeapi.CheckpointContainerRequest,
-) error {
+) error { // 创建一个容器的检查点
 	container, err := kl.findContainer(ctx, podFullName, podUID, containerName)
 	if err != nil {
 		return err

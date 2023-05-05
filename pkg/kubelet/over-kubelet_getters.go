@@ -19,17 +19,15 @@ package kubelet
 import (
 	"context"
 	"fmt"
-	"net"
-	"os"
-	"path/filepath"
-	"strings"
-
 	cadvisorapiv1 "github.com/google/cadvisor/info/v1"
 	cadvisorv2 "github.com/google/cadvisor/info/v2"
 	"k8s.io/klog/v2"
 	"k8s.io/mount-utils"
 	utilpath "k8s.io/utils/path"
 	utilstrings "k8s.io/utils/strings"
+	"net"
+	"os"
+	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -46,7 +44,7 @@ import (
 // that may need to know where to write data without getting a whole kubelet
 // instance.
 func (kl *Kubelet) getRootDir() string {
-	return kl.rootDirectory
+	return kl.rootDirectory // /var/lib/kubelet
 }
 
 // getPodsDir returns the full path to the directory under which pod
@@ -81,7 +79,7 @@ func (kl *Kubelet) getPluginDir(pluginName string) string {
 // getCheckpointsDir returns a data directory name for checkpoints.
 // Checkpoints can be stored in this directory for further use.
 func (kl *Kubelet) getCheckpointsDir() string {
-	return filepath.Join(kl.getRootDir(), config.DefaultKubeletCheckpointsDirName)
+	return filepath.Join(kl.getRootDir(), config.DefaultKubeletCheckpointsDirName) // /var/lib/kubelet/checkpoints
 }
 
 // getVolumeDevicePluginsDir returns the full path to the directory under which plugin
@@ -299,9 +297,7 @@ func (kl *Kubelet) getPodVolumePathListFromDisk(podUID types.UID) ([]string, err
 		klog.V(6).InfoS("Path does not exist", "path", podVolDir)
 		return volumes, nil
 	}
-	if strings.Contains(podVolDir, "9d3bcccf-6c3a-40") {
-		fmt.Println(123)
-	}
+
 	volumePluginDirs, err := os.ReadDir(podVolDir)
 	if err != nil {
 		klog.ErrorS(err, "Could not read directory", "path", podVolDir)

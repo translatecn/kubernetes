@@ -18,7 +18,6 @@ package metrics
 
 import (
 	"context"
-
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
@@ -132,7 +131,7 @@ func NewCounterVec(opts *CounterOpts, labels []string) *CounterVec {
 		lazyMetric:     lazyMetric{stabilityLevel: opts.StabilityLevel},
 	}
 	cv.lazyInit(cv, fqName)
-	var _ = cv.Create
+	//fmt.Println("cv.Create->", cv.Create)
 	return cv
 }
 
