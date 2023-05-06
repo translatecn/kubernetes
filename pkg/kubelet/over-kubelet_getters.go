@@ -172,7 +172,7 @@ func (kl *Kubelet) getPodResourcesDir() string {
 // GetPods returns all pods bound to the kubelet and their spec, and the mirror
 // pods.
 func (kl *Kubelet) GetPods() []*v1.Pod {
-	pods := kl.podManager.GetPods()
+	pods := kl.mirrorPodManager.GetPods()
 	// 没有 apisserver 的kubelet需要对静态pod状态进行额外的更新。看到 #57106
 	for _, p := range pods {
 		if kubelettypes.IsStaticPod(p) {
@@ -205,13 +205,13 @@ func (kl *Kubelet) GetRunningPods(ctx context.Context) ([]*v1.Pod, error) {
 // GetPodByFullName gets the pod with the given 'full' name, which
 // incorporates the namespace as well as whether the pod was found.
 func (kl *Kubelet) GetPodByFullName(podFullName string) (*v1.Pod, bool) {
-	return kl.podManager.GetPodByFullName(podFullName)
+	return kl.mirrorPodManager.GetPodByFullName(podFullName)
 }
 
 // GetPodByName provides the first pod that matches namespace and name, as well
 // as whether the pod was found.
 func (kl *Kubelet) GetPodByName(namespace, name string) (*v1.Pod, bool) {
-	return kl.podManager.GetPodByName(namespace, name)
+	return kl.mirrorPodManager.GetPodByName(namespace, name)
 }
 
 // GetPodByCgroupfs provides the pod that maps to the specified cgroup, as well
@@ -219,7 +219,7 @@ func (kl *Kubelet) GetPodByName(namespace, name string) (*v1.Pod, bool) {
 func (kl *Kubelet) GetPodByCgroupfs(cgroupfs string) (*v1.Pod, bool) {
 	pcm := kl.containerManager.NewPodContainerManager()
 	if result, podUID := pcm.IsPodCgroup(cgroupfs); result {
-		return kl.podManager.GetPodByUID(podUID)
+		return kl.mirrorPodManager.GetPodByUID(podUID)
 	}
 	return nil, false
 }

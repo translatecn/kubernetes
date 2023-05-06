@@ -79,7 +79,7 @@ func TestListVolumesForPod(t *testing.T) {
 	stopCh := runVolumeManager(kubelet)
 	defer close(stopCh)
 
-	kubelet.podManager.SetPods([]*v1.Pod{pod})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{pod})
 	err := kubelet.volumeManager.WaitForAttachAndMount(pod)
 	assert.NoError(t, err)
 
@@ -197,7 +197,7 @@ func TestPodVolumesExist(t *testing.T) {
 	stopCh := runVolumeManager(kubelet)
 	defer close(stopCh)
 
-	kubelet.podManager.SetPods(pods)
+	kubelet.mirrorPodManager.SetPods(pods)
 	for _, pod := range pods {
 		err := kubelet.volumeManager.WaitForAttachAndMount(pod)
 		assert.NoError(t, err)
@@ -245,7 +245,7 @@ func TestVolumeAttachAndMountControllerDisabled(t *testing.T) {
 	stopCh := runVolumeManager(kubelet)
 	defer close(stopCh)
 
-	kubelet.podManager.SetPods([]*v1.Pod{pod})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{pod})
 	err := kubelet.volumeManager.WaitForAttachAndMount(pod)
 	assert.NoError(t, err)
 
@@ -305,7 +305,7 @@ func TestVolumeUnmountAndDetachControllerDisabled(t *testing.T) {
 	defer close(stopCh)
 
 	// Add pod
-	kubelet.podManager.SetPods([]*v1.Pod{pod})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{pod})
 
 	// Verify volumes attached
 	err := kubelet.volumeManager.WaitForAttachAndMount(pod)
@@ -333,7 +333,7 @@ func TestVolumeUnmountAndDetachControllerDisabled(t *testing.T) {
 	// Remove pod
 	// TODO: technically waitForVolumeUnmount
 	kubelet.podWorkers.(*fakePodWorkers).setPodRuntimeBeRemoved(pod.UID)
-	kubelet.podManager.SetPods([]*v1.Pod{})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{})
 
 	assert.NoError(t, kubelet.volumeManager.WaitForUnmount(pod))
 	if actual := kubelet.volumeManager.GetMountedVolumesForPod(util.GetUniquePodName(pod)); len(actual) > 0 {
@@ -410,7 +410,7 @@ func TestVolumeAttachAndMountControllerEnabled(t *testing.T) {
 	stopCh := runVolumeManager(kubelet)
 	defer close(stopCh)
 
-	kubelet.podManager.SetPods([]*v1.Pod{pod})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{pod})
 
 	// Fake node status update
 	go simulateVolumeInUseUpdate(
@@ -495,7 +495,7 @@ func TestVolumeUnmountAndDetachControllerEnabled(t *testing.T) {
 	defer close(stopCh)
 
 	// Add pod
-	kubelet.podManager.SetPods([]*v1.Pod{pod})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{pod})
 
 	// Fake node status update
 	go simulateVolumeInUseUpdate(
@@ -529,7 +529,7 @@ func TestVolumeUnmountAndDetachControllerEnabled(t *testing.T) {
 
 	// Remove pod
 	kubelet.podWorkers.(*fakePodWorkers).setPodRuntimeBeRemoved(pod.UID)
-	kubelet.podManager.SetPods([]*v1.Pod{})
+	kubelet.mirrorPodManager.SetPods([]*v1.Pod{})
 
 	assert.NoError(t, waitForVolumeUnmount(kubelet.volumeManager, pod))
 

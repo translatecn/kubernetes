@@ -94,6 +94,6 @@ func (r *runtimeCache) updateCache(ctx context.Context) error {
 func (r *runtimeCache) getPodsWithTimestamp(ctx context.Context) ([]*Pod, time.Time, error) {
 	// Always record the timestamp before getting the pods to avoid stale pods.
 	timestamp := time.Now()
-	pods, err := r.getter.GetPods(ctx, false)
+	pods, err := r.getter.GetPods(ctx, false) // 不包含dead容器
 	return pods, timestamp, err
 }

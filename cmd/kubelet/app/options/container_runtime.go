@@ -27,6 +27,7 @@ const (
 	defaultPodSandboxImageVersion = "3.9"
 )
 
+// registry.k8s.io/pause:3.9
 var (
 	defaultPodSandboxImage = defaultPodSandboxImageName +
 		":" + defaultPodSandboxImageVersion

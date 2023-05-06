@@ -747,13 +747,11 @@ const (
 	// Allow assigning StorageClass to unbound PVCs retroactively
 	RetroactiveDefaultStorageClass featuregate.Feature = "RetroactiveDefaultStorageClass"
 
-	// owner: @mikedanese
+	// RotateKubeletServerCertificate owner: @mikedanese
 	// alpha: v1.7
 	// beta: v1.12
 	//
-	// Gets a server certificate for the kubelet from the Certificate Signing
-	// Request API instead of generating one self signed and auto rotates the
-	// certificate as expiration approaches.
+	// 从证书签名请求 API 获取 kubelet 的服务器证书，而不是生成一个自签名的证书，并在证书过期接近时自动进行轮换。
 	RotateKubeletServerCertificate featuregate.Feature = "RotateKubeletServerCertificate"
 
 	// owner: @saschagrunert

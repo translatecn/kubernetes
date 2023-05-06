@@ -38,8 +38,11 @@ type resourceAnalyzer struct {
 var _ ResourceAnalyzer = &resourceAnalyzer{}
 
 // NewResourceAnalyzer returns a new ResourceAnalyzer
-// 计算和缓存所有pod卷磁盘使用量的频率
-func NewResourceAnalyzer(statsProvider Provider, calVolumeFrequency time.Duration, eventRecorder record.EventRecorder) ResourceAnalyzer {
+func NewResourceAnalyzer(
+	statsProvider Provider,
+	calVolumeFrequency time.Duration, // 计算和缓存所有pod卷磁盘使用量的频率
+	eventRecorder record.EventRecorder,
+) ResourceAnalyzer {
 	fsAnalyzer := newFsResourceAnalyzer(statsProvider, calVolumeFrequency, eventRecorder)
 	summaryProvider := NewSummaryProvider(statsProvider)
 	_ = resourceAnalyzer.Get

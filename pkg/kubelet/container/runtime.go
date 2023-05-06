@@ -77,11 +77,8 @@ type Runtime interface {
 	// This may be different from the runtime engine's version.
 	// TODO(random-liu): We should fold this into Version()
 	APIVersion() (Version, error)
-	Status(ctx context.Context) (*RuntimeStatus, error) // 返回运行时的状态.
-	// GetPods returns a list of containers grouped by pods. The boolean parameter
-	// specifies whether the runtime returns all containers including those already
-	// exited and dead containers (used for garbage collection).
-	GetPods(ctx context.Context, all bool) ([]*Pod, error)
+	Status(ctx context.Context) (*RuntimeStatus, error)    // 返回运行时的状态.
+	GetPods(ctx context.Context, all bool) ([]*Pod, error) // 否会所有pod, all=true会返回已经死亡的容器
 	// GarbageCollect removes dead containers using the specified container gc policy
 	// If allSourcesReady is not true, it means that kubelet doesn't have the
 	// complete list of pods from all available sources (e.g., apiserver, http,
@@ -116,9 +113,7 @@ type Runtime interface {
 	// This method just proxies a new runtimeConfig with the updated
 	// CIDR value down to the runtime shim.
 	UpdatePodCIDR(ctx context.Context, podCIDR string) error
-	// CheckpointContainer tells the runtime to checkpoint a container
-	// and store the resulting archive to the checkpoint directory.
-	CheckpointContainer(ctx context.Context, options *runtimeapi.CheckpointContainerRequest) error
+	CheckpointContainer(ctx context.Context, options *runtimeapi.CheckpointContainerRequest) error // 让容器运行时创建检查点
 	// Generate pod status from the CRI event
 	GeneratePodStatus(event *runtimeapi.ContainerEventResponse) (*PodStatus, error)
 	// ListMetricDescriptors 获取ListPodSandboxMetrics中返回的指标的描述符。
@@ -142,9 +137,7 @@ type ImageService interface {
 	// PullImage pulls an image from the network to local storage using the supplied
 	// secrets if necessary. It returns a reference (digest or ID) to the pulled image.
 	PullImage(ctx context.Context, image ImageSpec, pullSecrets []v1.Secret, podSandboxConfig *runtimeapi.PodSandboxConfig) (string, error)
-	// GetImageRef gets the reference (digest or ID) of the image which has already been in
-	// the local storage. It returns ("", nil) if the image isn't in the local storage.
-	GetImageRef(ctx context.Context, image ImageSpec) (string, error)
+	GetImageRef(ctx context.Context, image ImageSpec) (string, error) // 获取已经存在于本地存储中的图像的引用(摘要或ID)。如果图像不在本地存储中，则返回(""，nil)。
 	// ListImages gets all images currently on the machine.
 	ListImages(ctx context.Context) ([]Image, error)
 	// RemoveImage removes the specified image.
@@ -347,9 +340,8 @@ type Image struct {
 	// The size of the image in bytes.
 	Size int64
 	// ImageSpec for the image which include annotations.
-	Spec ImageSpec
-	// Pin for preventing garbage collection
-	Pinned bool
+	Spec   ImageSpec
+	Pinned bool // 防止垃圾收集的标记
 }
 
 // EnvVar represents the environment variable.

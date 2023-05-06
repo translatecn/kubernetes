@@ -37,19 +37,12 @@ type PodOperation int
 
 // These constants identify the PodOperations that can be made on a pod configuration.
 const (
-	// SET is the current pod configuration.
 	SET PodOperation = iota
-	// ADD signifies pods that are new to this source.
 	ADD
-	// DELETE signifies pods that are gracefully deleted from this source.
 	DELETE
-	// REMOVE signifies pods that have been removed from this source.
 	REMOVE
-	// UPDATE signifies pods have been updated in this source.
 	UPDATE
-	// RECONCILE signifies pods that have unexpected status in this source,
-	// kubelet should reconcile status with this source.
-	RECONCILE
+	RECONCILE // 表示这些 Pod 在源中有意外的状态，kubelet 应该使用此源协调状态。
 )
 
 // These constants identify the sources of pods.

@@ -86,7 +86,7 @@ func TestRunOnce(t *testing.T) {
 		cadvisor:         cadvisor,
 		nodeLister:       testNodeLister{},
 		statusManager:    status.NewManager(nil, podManager, &statustest.FakePodDeletionSafetyProvider{}, podStartupLatencyTracker),
-		podManager:       podManager,
+		mirrorPodManager: podManager,
 		podWorkers:       &fakePodWorkers{},
 		os:               &containertest.FakeOS{},
 		containerRuntime: fakeRuntime,
@@ -109,7 +109,7 @@ func TestRunOnce(t *testing.T) {
 	kb.volumeManager = volumemanager.NewVolumeManager(
 		true,
 		kb.nodeName,
-		kb.podManager,
+		kb.mirrorPodManager,
 		kb.podWorkers,
 		kb.kubeClient,
 		kb.volumePluginMgr,

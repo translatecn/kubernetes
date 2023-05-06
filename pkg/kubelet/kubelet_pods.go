@@ -87,7 +87,7 @@ const (
 // those pods during admission may still be in use. See
 // https://github.com/kubernetes/kubernetes/issues/104824
 func (kl *Kubelet) GetActivePods() []*v1.Pod {
-	allPods := kl.podManager.GetPods()
+	allPods := kl.mirrorPodManager.GetPods()
 	activePods := kl.filterOutInactivePods(allPods)
 	return activePods
 }
@@ -999,7 +999,7 @@ func (kl *Kubelet) GetKubeletContainerLogs(ctx context.Context, podFullName, con
 	}
 
 	podUID := pod.UID
-	if mirrorPod, ok := kl.podManager.GetMirrorPodByPod(pod); ok {
+	if mirrorPod, ok := kl.mirrorPodManager.GetMirrorPodByPod(pod); ok {
 		podUID = mirrorPod.UID
 	}
 	podStatus, found := kl.statusManager.GetPodStatus(podUID)
@@ -1421,20 +1421,6 @@ func (kl *Kubelet) convertToAPIContainerStatuses(pod *v1.Pod, podStatus *kubecon
 	return containerStatuses
 }
 
-// findContainer finds and returns the container with the given pod ID, full name, and container name.
-// It returns nil if not found.
-func (kl *Kubelet) findContainer(ctx context.Context, podFullName string, podUID types.UID, containerName string) (*kubecontainer.Container, error) {
-	pods, err := kl.containerRuntime.GetPods(ctx, false)
-	if err != nil {
-		return nil, err
-	}
-	// Resolve and type convert back again.
-	// We need the static pod UID but the kubecontainer API works with types.UID.
-	podUID = types.UID(kl.podManager.TranslatePodUID(podUID))
-	pod := kubecontainer.Pods(pods).FindPod(podFullName, podUID)
-	return pod.FindContainerByName(containerName), nil
-}
-
 // RunInContainer runs a command in a container, returns the combined stdout, stderr as an array of bytes
 func (kl *Kubelet) RunInContainer(ctx context.Context, podFullName string, podUID types.UID, containerName string, cmd []string) ([]byte, error) {
 	container, err := kl.findContainer(ctx, podFullName, podUID, containerName)
@@ -1494,7 +1480,7 @@ func (kl *Kubelet) GetPortForward(ctx context.Context, podName, podNamespace str
 	}
 	// Resolve and type convert back again.
 	// We need the static pod UID but the kubecontainer API works with types.UID.
-	podUID = types.UID(kl.podManager.TranslatePodUID(podUID))
+	podUID = types.UID(kl.mirrorPodManager.TranslatePodUID(podUID))
 	podFullName := kubecontainer.BuildPodFullName(podName, podNamespace)
 	pod := kubecontainer.Pods(pods).FindPod(podFullName, podUID)
 	if pod.IsEmpty() {
@@ -1600,7 +1586,7 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 		}
 	}
 
-	allPods, mirrorPods := kl.podManager.GetPodsAndMirrorPods() // 读取缓存里的数据
+	allPods, mirrorPods := kl.mirrorPodManager.GetPodsAndMirrorPods() // 读取缓存里的数据
 	//Pod 的阶段（phase）是单调递增的。一旦 Pod 达到了最终状态，无论重启策略如何，它都不应该离开这个状态。这些 Pod 的状态不应该被更改，也没有必要同步它们。
 	//但是，这段代码还存在两种情况无法处理：
 	//	1、如果容器在死亡后立即被删除，kubelet 可能无法生成正确的状态，更不用说正确地过滤了。
@@ -1733,7 +1719,7 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 			continue
 		}
 		start := kl.clock.Now()
-		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
+		mirrorPod, _ := kl.mirrorPodManager.GetMirrorPodByPod(pod)
 		klog.V(3).InfoS("由于UID重用，Pod在终止后可重新启动", "pod", klog.KObj(pod), "podUID", pod.UID)
 		kl.dispatchWork(pod, kubetypes.SyncPodCreate, mirrorPod, start)
 	}
@@ -1780,10 +1766,10 @@ func (kl *Kubelet) isAdmittedPodTerminal(pod *v1.Pod) bool {
 
 // 检查孤儿镜像pod killer是否已经完成。如果pod终止完成，将调用podmanager.deletemirorpod()从API服务器上删除镜像pod
 func (kl *Kubelet) deleteOrphanedMirrorPods() {
-	mirrorPods := kl.podManager.GetOrphanedMirrorPodNames()
+	mirrorPods := kl.mirrorPodManager.GetOrphanedMirrorPodNames()
 	for _, podFullname := range mirrorPods {
 		if !kl.podWorkers.IsPodForMirrorPodTerminatingByFullName(podFullname) {
-			_, err := kl.podManager.DeleteMirrorPod(podFullname, nil)
+			_, err := kl.mirrorPodManager.DeleteMirrorPod(podFullname, nil)
 			if err != nil {
 				klog.ErrorS(err, "Encountered error when deleting mirror pod", "podName", podFullname)
 			} else {
@@ -2061,4 +2047,18 @@ func (kl *Kubelet) getServiceEnvVarMap(ns string, enableServiceLinks bool) (map[
 		m[e.Name] = e.Value
 	}
 	return m, nil
+}
+
+// findContainer finds and returns the container with the given pod ID, full name, and container name.
+// It returns nil if not found.
+func (kl *Kubelet) findContainer(ctx context.Context, podFullName string, podUID types.UID, containerName string) (*kubecontainer.Container, error) {
+	pods, err := kl.containerRuntime.GetPods(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	// Resolve and type convert back again.
+	// We need the static pod UID but the kubecontainer API works with types.UID.
+	podUID = types.UID(kl.mirrorPodManager.TranslatePodUID(podUID))
+	pod := kubecontainer.Pods(pods).FindPod(podFullName, podUID)
+	return pod.FindContainerByName(containerName), nil
 }

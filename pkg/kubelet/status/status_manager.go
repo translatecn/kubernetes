@@ -381,7 +381,9 @@ func (m *manager) TerminatePod(pod *v1.Pod) {
 
 // --------------------------------------------------------------------------------------------------------
 
-// NeedToReconcilePodReadiness 是否需要 同步 Readiness 状态
+// NeedToReconcilePodReadiness 检查 Pod 的就绪状态是否需要重新协调
+// Pod 的就绪状态是指所有容器都已经启动并准备好接收流量。kubelet 组件会定期检查 Pod 的就绪状态，并与期望状态进行比较。
+// 如果发现 Pod 的就绪状态与期望状态不一致，kubelet 组件会重新协调 Pod 的就绪状态，以确保其状态正确。
 func NeedToReconcilePodReadiness(pod *v1.Pod) bool { // ✅
 	if len(pod.Spec.ReadinessGates) == 0 {
 		return false

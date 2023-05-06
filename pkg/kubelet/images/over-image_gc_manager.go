@@ -71,18 +71,13 @@ type ImageGCPolicy struct {
 	// Any usage below this threshold will never trigger garbage collection.
 	// This is the lowest threshold we will try to garbage collect to.
 	LowThresholdPercent int
-
-	// Minimum age at which an image can be garbage collected.
-	MinAge time.Duration
+	MinAge              time.Duration // 允许垃圾存在的时间
 }
 
 type realImageGCManager struct {
-	// Container runtime
-	runtime container.Runtime
-
-	// Records of images and their use.
-	imageRecords     map[string]*imageRecord
-	imageRecordsLock sync.Mutex
+	runtime          container.Runtime
+	imageRecords     map[string]*imageRecord // 记录本地所有镜像的检测状态，相当于是一份缓存
+	imageRecordsLock sync.Mutex              //
 
 	// The image garbage collection policy in use.
 	policy ImageGCPolicy
@@ -97,20 +92,14 @@ type realImageGCManager struct {
 	nodeRef *v1.ObjectReference
 
 	// Track initialization
-	initialized bool
-
-	// imageCache is the cache of latest image list.
-	imageCache imageCache
-
-	// sandbox image exempted from GC
-	sandboxImage string
+	initialized  bool
+	imageCache   imageCache // runtime 当前的镜像
+	sandboxImage string     // 沙箱镜像，不GC
 }
 
 // imageCache caches latest result of ListImages.
 type imageCache struct {
-	// sync.Mutex is the mutex protects the image cache.
 	sync.Mutex
-	// images is the image cache.
 	images []container.Image
 }
 
@@ -139,17 +128,10 @@ func (i *imageCache) get() []container.Image {
 
 // Information about the images we track.
 type imageRecord struct {
-	// Time when this image was first detected.
-	firstDetected time.Time
-
-	// Time when we last saw this image being used.
-	lastUsed time.Time
-
-	// Size of the image in bytes.
-	size int64
-
-	// Pinned status of the image
-	pinned bool
+	firstDetected time.Time // 第一次检测到的时间
+	lastUsed      time.Time // 上一次使用到的时间
+	size          int64     // 大小
+	pinned        bool      // 避免垃圾回收
 }
 
 // NewImageGCManager instantiates a new ImageGCManager object.
@@ -211,11 +193,12 @@ func (im *realImageGCManager) GetImageList() ([]container.Image, error) {
 	return im.imageCache.get(), nil
 }
 
+// 更新缓存，并返回使用中的镜像
 func (im *realImageGCManager) detectImages(ctx context.Context, detectTime time.Time) (sets.String, error) {
 	imagesInUse := sets.NewString()
 
-	// Always consider the container runtime pod sandbox image in use
-	imageRef, err := im.runtime.GetImageRef(ctx, container.ImageSpec{Image: im.sandboxImage})
+	// 获取已经存在于本地存储中的图像的引用(摘要或ID)。如果图像不在本地存储中，则返回(""，nil)。
+	imageRef, err := im.runtime.GetImageRef(ctx, container.ImageSpec{Image: im.sandboxImage}) // 默认 registry.k8s.io/pause:3.9
 	if err == nil && imageRef != "" {
 		imagesInUse.Insert(imageRef)
 	}
@@ -280,7 +263,7 @@ func (im *realImageGCManager) detectImages(ctx context.Context, detectTime time.
 
 func (im *realImageGCManager) GarbageCollect(ctx context.Context) error {
 	// Get disk usage on disk holding images.
-	fsStats, err := im.statsProvider.ImageFsStats(ctx)
+	fsStats, err := im.statsProvider.ImageFsStats(ctx) // 获取磁盘使用量
 	if err != nil {
 		return err
 	}
@@ -293,7 +276,7 @@ func (im *realImageGCManager) GarbageCollect(ctx context.Context) error {
 		available = int64(*fsStats.AvailableBytes)
 	}
 
-	if available > capacity {
+	if available > capacity { // 可用>容量
 		klog.InfoS("Availability is larger than capacity", "available", available, "capacity", capacity)
 		available = capacity
 	}
@@ -306,7 +289,7 @@ func (im *realImageGCManager) GarbageCollect(ctx context.Context) error {
 	}
 
 	// If over the max threshold, free enough to place us at the lower threshold.
-	usagePercent := 100 - int(available*100/capacity)
+	usagePercent := 100 - int(available*100/capacity) // 磁盘使用量
 	if usagePercent >= im.policy.HighThresholdPercent {
 		amountToFree := capacity*int64(100-im.policy.LowThresholdPercent)/100 - available
 		klog.InfoS("Disk usage on image filesystem is over the high threshold, trying to free bytes down to the low threshold", "usage", usagePercent, "highThreshold", im.policy.HighThresholdPercent, "amountToFree", amountToFree, "lowThreshold", im.policy.LowThresholdPercent)
@@ -338,7 +321,7 @@ func (im *realImageGCManager) DeleteUnusedImages(ctx context.Context) error {
 // Note that error may be nil and the number of bytes free may be less
 // than bytesToFree.
 func (im *realImageGCManager) freeSpace(ctx context.Context, bytesToFree int64, freeTime time.Time) (int64, error) {
-	imagesInUse, err := im.detectImages(ctx, freeTime)
+	imagesInUse, err := im.detectImages(ctx, freeTime) // 使用中的镜像
 	if err != nil {
 		return 0, err
 	}
@@ -364,7 +347,7 @@ func (im *realImageGCManager) freeSpace(ctx context.Context, bytesToFree int64, 
 			imageRecord: *record,
 		})
 	}
-	sort.Sort(byLastUsedAndDetected(images))
+	sort.Sort(byLastUsedAndDetected(images)) // 可以删除的image
 
 	// Delete unused images until we've freed up enough space.
 	var deletionErrors []error
