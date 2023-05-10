@@ -138,8 +138,7 @@ func (a *Webhook) ValidateInitialization() error {
 	return nil
 }
 
-// ShouldCallHook returns invocation details if the webhook should be called, nil if the webhook should not be called,
-// or an error if an error was encountered during evaluation.
+// ShouldCallHook 如果应该调用该webhook，则返回调用细节;如果不应该调用该webhook，则返回nil;如果在求值期间遇到错误，则返回错误。
 func (a *Webhook) ShouldCallHook(h webhook.WebhookAccessor, attr admission.Attributes, o admission.ObjectInterfaces) (*WebhookInvocation, *apierrors.StatusError) {
 	matches, matchNsErr := a.namespaceMatcher.MatchNamespaceSelector(h, attr)
 	// Should not return an error here for webhooks which do not apply to the request, even if err is an unexpected scenario.

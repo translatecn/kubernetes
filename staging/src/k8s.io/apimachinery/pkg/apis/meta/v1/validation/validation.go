@@ -30,8 +30,7 @@ import (
 
 // LabelSelectorValidationOptions is a struct that can be passed to ValidateLabelSelector to record the validate options
 type LabelSelectorValidationOptions struct {
-	// Allow invalid label value in selector
-	AllowInvalidLabelValueInSelector bool
+	AllowInvalidLabelValueInSelector bool // 在选择器中允许无效的标签值
 }
 
 // LabelSelectorHasInvalidLabelValue returns true if the given selector contains an invalid label value in a match expression.
