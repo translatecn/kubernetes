@@ -40,7 +40,7 @@ func (AWSElasticBlockStoreVolumeSource) SwaggerDoc() map[string]string {
 }
 
 var map_Affinity = map[string]string{
-	"":                "Affinity 是一组亲和性调度规则。",
+	"":                "Affinity 是一组亲和性调度规则.",
 	"nodeAffinity":    "Describes node affinity scheduling rules for the pod.",
 	"podAffinity":     "Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).",
 	"podAntiAffinity": "Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).",
@@ -1405,14 +1405,14 @@ func (PersistentVolumeSource) SwaggerDoc() map[string]string {
 
 var map_PersistentVolumeSpec = map[string]string{
 	"":                              "PersistentVolumeSpec is the specification of a persistent volume.",
-	"capacity":                      "capacity is the description of the persistent volume's resources and capacity. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity",
+	"capacity":                      "存储设备的可用空间大小. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity",
 	"accessModes":                   "accessModes contains all ways the volume can be mounted. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes",
 	"claimRef":                      "claimRef is part of a bi-directional binding between PersistentVolume and PersistentVolumeClaim. Expected to be non-nil when bound. claim.VolumeName is the authoritative bind between PV and PVC. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#binding",
 	"persistentVolumeReclaimPolicy": "persistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim. Valid options are Retain (default for manually created PersistentVolumes), Delete (default for dynamically provisioned PersistentVolumes), and Recycle (deprecated). Recycle must be supported by the volume plugin underlying this PersistentVolume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming",
 	"storageClassName":              "storageClassName is the name of StorageClass to which this persistent volume belongs. Empty value means that this volume does not belong to any StorageClass.",
 	"mountOptions":                  "mountOptions is the list of mount options, e.g. [\"ro\", \"soft\"]. Not validated - mount will simply fail if one is invalid. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#mount-options",
 	"volumeMode":                    "volumeMode defines if a volume is intended to be used with a formatted filesystem or to remain in raw block state. Value of Filesystem is implied when not included in spec.",
-	"nodeAffinity":                  "nodeAffinity defines constraints that limit what nodes this volume can be accessed from. This field influences the scheduling of pods that use this volume.",
+	"nodeAffinity":                  "限制可以从哪些节点访问该卷.",
 }
 
 func (PersistentVolumeSpec) SwaggerDoc() map[string]string {
@@ -2513,7 +2513,7 @@ func (VolumeMount) SwaggerDoc() map[string]string {
 }
 
 var map_VolumeNodeAffinity = map[string]string{
-	"":         "VolumeNodeAffinity defines constraints that limit what nodes this volume can be accessed from.",
+	"":         "VolumeNodeAffinity 限制可以从哪些节点访问该卷.",
 	"required": "required specifies hard node constraints that must be met.",
 }
 

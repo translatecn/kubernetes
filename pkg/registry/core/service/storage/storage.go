@@ -509,9 +509,9 @@ func isValidAddress(ctx context.Context, addr *api.EndpointAddress, pods rest.Ge
 	return fmt.Errorf("pod ip(s) doesn't match endpoint ip, skipping: %v vs %s (%s/%s)", pod.Status.PodIPs, addr.IP, addr.TargetRef.Namespace, addr.TargetRef.Name)
 }
 
-// 用于调整 Kubernetes Service 中 clusterIPs 字段的函数。在 Kubernetes 中，Service 是一种用于将一组 Pod 暴露给集群内部或外部的机制。
-// 其中 clusterIPs 字段用于指定 Service 的 Cluster IP 地址。
-// 但是，如果 Service 的 Cluster IP 地址与 clusterIPs 字段中指定的地址不匹配，那么就需要调整 clusterIPs 字段以确保其与 Cluster IP 地址匹配。
+// 用于调整 Kubernetes Service 中 clusterIPs 字段的函数.在 Kubernetes 中,Service 是一种用于将一组 Pod 暴露给集群内部或外部的机制.
+// 其中 clusterIPs 字段用于指定 Service 的 Cluster IP 地址.
+// 但是,如果 Service 的 Cluster IP 地址与 clusterIPs 字段中指定的地址不匹配,那么就需要调整 clusterIPs 字段以确保其与 Cluster IP 地址匹配.
 func normalizeClusterIPs(after After, before Before) {
 	oldSvc, newSvc := before.Service, after.Service
 

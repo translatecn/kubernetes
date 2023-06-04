@@ -118,7 +118,7 @@ type ObjectMeta struct {
 	// +optional
 	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
 
-	// 一个可选的前缀，由服务器用于生成唯一名称，仅在未提供 Name 字段时使用。
+	// 一个可选的前缀,由服务器用于生成唯一名称,仅在未提供 Name 字段时使用.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency
 	// +optional
 	GenerateName string `json:"generateName,omitempty" protobuf:"bytes,2,opt,name=generateName"`

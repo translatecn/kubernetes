@@ -92,12 +92,11 @@ type KubeletConfiguration struct { // --config
 	// httpCheckFrequency is the duration between checking http for new data
 	HTTPCheckFrequency metav1.Duration
 	StaticPodURL       string              // 获取静态文件列表的地址
-	StaticPodURLHeader map[string][]string `datapolicy:"token"` // 获取静态文件列表的地址，需要使用一些 HTTP 头部信息
+	StaticPodURLHeader map[string][]string `datapolicy:"token"` // 获取静态文件列表的地址,需要使用一些 HTTP 头部信息
 	Address            string              //
 	Port               int32               //
 	ReadOnlyPort       int32               // 0 禁用
-	// volumePluginDir is the full path of the directory in which to search
-	// for additional third party volume plugins.
+	// 搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.
 	VolumePluginDir string
 	// providerID, if set, sets the unique id of the instance that an external provider (i.e. cloudprovider)
 	// can use to identify a specific node
@@ -176,16 +175,10 @@ type KubeletConfiguration struct { // --config
 	NodeLeaseDurationSeconds  int32 // Kubelet将在其相应的Lease上设置的持续时间.
 	// imageMinimumGCAge is the minimum age for an unused image before it is
 	// garbage collected.
-	ImageMinimumGCAge metav1.Duration
-	// imageGCHighThresholdPercent is the percent of disk usage after which
-	// image garbage collection is always run. The percent is calculated as
-	// this field value out of 100.
-	ImageGCHighThresholdPercent int32
-	// imageGCLowThresholdPercent is the percent of disk usage before which
-	// image garbage collection is never run. Lowest disk usage to garbage
-	// collect to. The percent is calculated as this field value out of 100.
-	ImageGCLowThresholdPercent int32
-	VolumeStatsAggPeriod       metav1.Duration // 计算和缓存所有pod卷磁盘使用量的频率  10s
+	ImageMinimumGCAge           metav1.Duration
+	ImageGCHighThresholdPercent int32           // 运行image GC的磁盘使用百分比.取值范围为[0,100],不启用image gcc回收,设置为100.
+	ImageGCLowThresholdPercent  int32           // 在此之前从未运行image GC的磁盘使用百分比.要进行垃圾收集的磁盘使用率最低.取值必须在[0,100]范围内,且不能大于--image-gc-high-threshold
+	VolumeStatsAggPeriod        metav1.Duration // 计算和缓存所有pod卷磁盘使用量的频率  10s
 	// KubeletCgroups is the absolute name of cgroups to isolate the kubelet in
 	KubeletCgroups string
 	// SystemCgroups is absolute name of cgroups in which to place
@@ -209,10 +202,10 @@ type KubeletConfiguration struct { // --config
 	// MemoryManagerPolicy is the name of the policy to use.
 	// Requires the MemoryManager feature gate to be enabled.
 	MemoryManagerPolicy   string
-	TopologyManagerPolicy string // 策略名称，除了 "none" 之外的策略需要启用 TopologyManager 功能门控。一般都开启
+	TopologyManagerPolicy string // 策略名称,除了 "none" 之外的策略需要启用 TopologyManager 功能门控.一般都开启
 	// +optional
-	TopologyManagerScope         string            // 拓扑管理器请求和提示提供程序生成的拓扑提示的范围。 Default: "container"
-	TopologyManagerPolicyOptions map[string]string // 一组key=value，它允许设置额外的选项来微调拓扑管理器策略的行为。
+	TopologyManagerScope         string            // 拓扑管理器请求和提示提供程序生成的拓扑提示的范围. Default: "container"
+	TopologyManagerPolicyOptions map[string]string // 一组key=value,它允许设置额外的选项来微调拓扑管理器策略的行为.
 	// Map of QoS resource reservation percentages (memory only for now).
 	// Requires the QOSReserved feature gate to be enabled.
 	QOSReserved map[string]string
@@ -237,7 +230,7 @@ type KubeletConfiguration struct { // --config
 	// ResolverConfig is the resolver configuration file used as the basis
 	// for the container DNS resolution configuration.
 	ResolverConfig string
-	RunOnce        bool // Kubelet 仅检查一次 API 服务器以获取 Pod，运行这些 Pod 并在完成后退出，除了静态 Pod 文件中指定的 Pod 之外
+	RunOnce        bool // Kubelet 仅检查一次 API 服务器以获取 Pod,运行这些 Pod 并在完成后退出,除了静态 Pod 文件中指定的 Pod 之外
 	// cpuCFSQuota enables CPU CFS quota enforcement for containers that
 	// specify CPU limits
 	CPUCFSQuota bool
@@ -279,8 +272,8 @@ type KubeletConfiguration struct { // --config
 	// disables kubelet from executing any attach/detach operations
 	EnableControllerAttachDetach bool
 	ProtectKernelDefaults        bool // 如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期.
-	// 如果为true, kubelet将确保主机上存在iptables实用程序规则。
-	// 这些规则将作为各种组件的实用工具，例如kube-proxy。规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建。
+	// 如果为true, kubelet将确保主机上存在iptables实用程序规则.
+	// 这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建.
 	MakeIPTablesUtilChains bool
 	// iptablesMasqueradeBit is the bit of the iptables fwmark space to mark for SNAT
 	// Values must be within the range [0, 31]. Must be different from other mark bits.
@@ -294,7 +287,7 @@ type KubeletConfiguration struct { // --config
 	// features. This field modifies piecemeal the built-in default values from
 	// "k8s.io/kubernetes/pkg/features/kube_features.go".
 	FeatureGates map[string]bool
-	FailSwapOn   bool // 告诉Kubelet，如果在节点上启用了swap，则启动失败。
+	FailSwapOn   bool // 告诉Kubelet,如果在节点上启用了swap,则启动失败.
 	// memorySwap configures swap memory available to container workloads.
 	// +featureGate=NodeSwap
 	// +optional
@@ -306,7 +299,7 @@ type KubeletConfiguration struct { // --config
 	// ConfigMapAndSecretChangeDetectionStrategy is a mode in which config map and secret managers are running.
 	ConfigMapAndSecretChangeDetectionStrategy ResourceChangeDetectionStrategy
 	// +optional
-	AllowedUnsafeSysctls    []string // 被允许的 sysctl 不安全指令；这些系统设置了名称空间，但默认情况下不允许。 `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.
+	AllowedUnsafeSysctls    []string // 被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.
 	KernelMemcgNotification bool     // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
 
 	/* the following fields are meant for Node Allocatable */
@@ -351,7 +344,7 @@ type KubeletConfiguration struct { // --config
 	// +featureGate=GracefulNodeShutdown
 	// +optional
 	ShutdownGracePeriod metav1.Duration
-	// 指定分配给节点优雅关闭等待的时间，默认0s。if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间，前20秒将保留用于优雅地终止正常pod，最后10秒将保留用于终止关键pod。
+	// 指定分配给节点优雅关闭等待的时间,默认0s.if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间,前20秒将保留用于优雅地终止正常pod,最后10秒将保留用于终止关键pod.
 	// +featureGate=GracefulNodeShutdown
 	// +optional
 	ShutdownGracePeriodCriticalPods metav1.Duration
@@ -411,7 +404,9 @@ type KubeletConfiguration struct { // --config
 	// LocalStorageCapacityIsolation 启用本地临时存储隔离功能.默认设置为true.此功能允许用户为容器的临时存储设置request/limit,并以类似于CPU和内存的方式进行管理.它还允许为emptyDir卷设置sizeLimit,如果来自卷的磁盘使用超过限制,则会触发Pod驱逐.
 	//
 	// 此功能取决于检测正确的根文件系统磁盘使用情况的能力.对于某些系统,例如kind rootless,如果无法支持此功能,则应禁用LocalStorageCapacityIsolation.一旦禁用,用户不应为容器的临时存储设置请求/限制,或为emptyDir设置sizeLimit.
+	// 如果开启了LocalStorageCapacityIsolation特性就通过 cadvisor接口获取 rootfsinfo
 
+	// - 然后将类型为ephemeral-storage的存储的容量设置为rootfs获取到的
 	// +optional
 	LocalStorageCapacityIsolation bool
 }

@@ -18,6 +18,7 @@ package kubelet
 
 import (
 	"fmt"
+	token "k8s.io/kubernetes/pkg/kubelet/over-token"
 	"net"
 	"runtime"
 
@@ -37,64 +38,12 @@ import (
 	cloudprovider "k8s.io/cloud-provider"
 	"k8s.io/kubernetes/pkg/kubelet/configmap"
 	"k8s.io/kubernetes/pkg/kubelet/secret"
-	"k8s.io/kubernetes/pkg/kubelet/token"
 	proxyutil "k8s.io/kubernetes/pkg/proxy/util"
 	"k8s.io/kubernetes/pkg/volume"
 	"k8s.io/kubernetes/pkg/volume/util"
 	"k8s.io/kubernetes/pkg/volume/util/hostutil"
 	"k8s.io/kubernetes/pkg/volume/util/subpath"
 )
-
-// NewInitializedVolumePluginMgr returns a new instance of
-// volume.VolumePluginMgr initialized with kubelets implementation of the
-// volume.VolumeHost interface.
-//
-// kubelet - used by VolumeHost methods to expose kubelet specific parameters
-// plugins - used to initialize volumePluginMgr
-func NewInitializedVolumePluginMgr(
-	kubelet *Kubelet,
-	secretManager secret.Manager,
-	configMapManager configmap.Manager,
-	tokenManager *token.Manager,
-	plugins []volume.VolumePlugin,
-	prober volume.DynamicPluginProber) (*volume.VolumePluginMgr, error) {
-
-	// Initialize csiDriverLister before calling InitPlugins
-	var informerFactory informers.SharedInformerFactory
-	var csiDriverLister storagelisters.CSIDriverLister
-	var csiDriversSynced cache.InformerSynced
-	const resyncPeriod = 0
-	// Don't initialize if kubeClient is nil
-	if kubelet.kubeClient != nil {
-		informerFactory = informers.NewSharedInformerFactory(kubelet.kubeClient, resyncPeriod)
-		csiDriverInformer := informerFactory.Storage().V1().CSIDrivers()
-		csiDriverLister = csiDriverInformer.Lister()
-		csiDriversSynced = csiDriverInformer.Informer().HasSynced
-
-	} else {
-		klog.InfoS("KubeClient is nil. Skip initialization of CSIDriverLister")
-	}
-
-	kvh := &kubeletVolumeHost{
-		kubelet:          kubelet,
-		volumePluginMgr:  volume.VolumePluginMgr{},
-		secretManager:    secretManager,
-		configMapManager: configMapManager,
-		tokenManager:     tokenManager,
-		informerFactory:  informerFactory,
-		csiDriverLister:  csiDriverLister,
-		csiDriversSynced: csiDriversSynced,
-		exec:             utilexec.New(),
-	}
-
-	if err := kvh.volumePluginMgr.InitPlugins(plugins, prober, kvh); err != nil {
-		return nil, fmt.Errorf(
-			"could not initialize volume plugins for KubeletVolumePluginMgr: %v",
-			err)
-	}
-
-	return &kvh.volumePluginMgr, nil
-}
 
 // Compile-time check to ensure kubeletVolumeHost implements the VolumeHost interface
 var _ volume.VolumeHost = &kubeletVolumeHost{}
@@ -136,14 +85,6 @@ func (kvh *kubeletVolumeHost) GetPodsDir() string {
 // same containerUID and containerGID params are returned.
 func (kvh *kubeletVolumeHost) GetHostIDsForPod(pod *v1.Pod, containerUID, containerGID *int64) (hostUID, hostGID *int64, err error) {
 	return kvh.kubelet.getHostIDsForPod(pod, containerUID, containerGID)
-}
-
-func (kvh *kubeletVolumeHost) GetPodVolumeDir(podUID types.UID, pluginName string, volumeName string) string {
-	dir := kvh.kubelet.getPodVolumeDir(podUID, pluginName, volumeName)
-	if runtime.GOOS == "windows" {
-		dir = util.GetWindowsPath(dir)
-	}
-	return dir
 }
 
 func (kvh *kubeletVolumeHost) GetPodVolumeDeviceDir(podUID types.UID, pluginName string) string {
@@ -199,11 +140,7 @@ func (kvh *kubeletVolumeHost) WaitForCacheSync() error {
 	return nil
 }
 
-func (kvh *kubeletVolumeHost) NewWrapperMounter(
-	volName string,
-	spec volume.Spec,
-	pod *v1.Pod,
-	opts volume.VolumeOptions) (volume.Mounter, error) {
+func (kvh *kubeletVolumeHost) NewWrapperMounter(volName string, spec volume.Spec, pod *v1.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
 	// The name of wrapper volume is set to "wrapped_{wrapped_volume_name}"
 	wrapperVolumeName := "wrapped_" + volName
 	if spec.Volume != nil {
@@ -213,27 +150,8 @@ func (kvh *kubeletVolumeHost) NewWrapperMounter(
 	return kvh.kubelet.newVolumeMounterFromPlugins(&spec, pod, opts)
 }
 
-func (kvh *kubeletVolumeHost) NewWrapperUnmounter(volName string, spec volume.Spec, podUID types.UID) (volume.Unmounter, error) {
-	// The name of wrapper volume is set to "wrapped_{wrapped_volume_name}"
-	wrapperVolumeName := "wrapped_" + volName
-	if spec.Volume != nil {
-		spec.Volume.Name = wrapperVolumeName
-	}
-
-	plugin, err := kvh.kubelet.volumePluginMgr.FindPluginBySpec(&spec)
-	if err != nil {
-		return nil, err
-	}
-
-	return plugin.NewUnmounter(spec.Name(), podUID)
-}
-
 func (kvh *kubeletVolumeHost) GetCloudProvider() cloudprovider.Interface {
 	return kvh.kubelet.cloud
-}
-
-func (kvh *kubeletVolumeHost) GetMounter(pluginName string) mount.Interface {
-	return kvh.kubelet.mounter
 }
 
 func (kvh *kubeletVolumeHost) GetHostName() string {
@@ -274,10 +192,6 @@ func (kvh *kubeletVolumeHost) GetConfigMapFunc() func(namespace, name string) (*
 	}
 }
 
-func (kvh *kubeletVolumeHost) GetServiceAccountTokenFunc() func(namespace, name string, tr *authenticationv1.TokenRequest) (*authenticationv1.TokenRequest, error) {
-	return kvh.tokenManager.GetServiceAccountToken
-}
-
 func (kvh *kubeletVolumeHost) DeleteServiceAccountTokenFunc() func(podUID types.UID) {
 	return kvh.tokenManager.DeleteServiceAccountToken
 }
@@ -304,6 +218,57 @@ func (kvh *kubeletVolumeHost) GetAttachedVolumesFromNodeStatus() (map[v1.UniqueV
 	return result, nil
 }
 
+// --------------------------------------------------------------------------------------------------------------------
+
+func NewInitializedVolumePluginMgr(
+	kubelet *Kubelet,
+	secretManager secret.Manager,
+	configMapManager configmap.Manager,
+	tokenManager *token.Manager,
+	plugins []volume.VolumePlugin,
+	prober volume.DynamicPluginProber) (*volume.VolumePluginMgr, error) {
+
+	// Initialize csiDriverLister before calling InitPlugins
+	var informerFactory informers.SharedInformerFactory
+	var csiDriverLister storagelisters.CSIDriverLister
+	var csiDriversSynced cache.InformerSynced
+	const resyncPeriod = 0
+	// Don't initialize if kubeClient is nil
+	if kubelet.kubeClient != nil {
+		informerFactory = informers.NewSharedInformerFactory(kubelet.kubeClient, resyncPeriod)
+		csiDriverInformer := informerFactory.Storage().V1().CSIDrivers()
+		csiDriverLister = csiDriverInformer.Lister()
+		csiDriversSynced = csiDriverInformer.Informer().HasSynced
+
+	} else {
+		klog.InfoS("KubeClient is nil. Skip initialization of CSIDriverLister")
+	}
+
+	kvh := &kubeletVolumeHost{
+		kubelet:          kubelet,
+		volumePluginMgr:  volume.VolumePluginMgr{},
+		secretManager:    secretManager,
+		configMapManager: configMapManager,
+		tokenManager:     tokenManager,
+		informerFactory:  informerFactory,
+		csiDriverLister:  csiDriverLister,
+		csiDriversSynced: csiDriversSynced,
+		exec:             utilexec.New(),
+	}
+
+	if err := kvh.volumePluginMgr.InitPlugins(plugins, prober, kvh); err != nil {
+		return nil, fmt.Errorf(
+			"could not initialize volume plugins for KubeletVolumePluginMgr: %v",
+			err)
+	}
+
+	return &kvh.volumePluginMgr, nil
+}
+
+func (kvh *kubeletVolumeHost) GetMounter(pluginName string) mount.Interface {
+	return kvh.kubelet.mounter
+}
+
 func (kvh *kubeletVolumeHost) GetNodeName() types.NodeName {
 	return kvh.kubelet.nodeName
 }
@@ -314,4 +279,30 @@ func (kvh *kubeletVolumeHost) GetEventRecorder() record.EventRecorder {
 
 func (kvh *kubeletVolumeHost) GetExec(pluginName string) utilexec.Interface {
 	return kvh.exec
+}
+func (kvh *kubeletVolumeHost) GetPodVolumeDir(podUID types.UID, pluginName string, volumeName string) string {
+	// /var/lib/kubelet/pods/0145e07d-d295-4fe9-825e-be4e6e496b2d/volumes
+	dir := kvh.kubelet.getPodVolumeDir(podUID, pluginName, volumeName)
+	if runtime.GOOS == "windows" {
+		dir = util.GetWindowsPath(dir)
+	}
+	return dir
+}
+func (kvh *kubeletVolumeHost) NewWrapperUnmounter(volName string, spec volume.Spec, podUID types.UID) (volume.Unmounter, error) {
+	// The name of wrapper volume is set to "wrapped_{wrapped_volume_name}"
+	wrapperVolumeName := "wrapped_" + volName
+	if spec.Volume != nil {
+		spec.Volume.Name = wrapperVolumeName
+	}
+
+	plugin, err := kvh.kubelet.volumePluginMgr.FindPluginBySpec(&spec)
+	if err != nil {
+		return nil, err
+	}
+
+	return plugin.NewUnmounter(spec.Name(), podUID)
+}
+
+func (kvh *kubeletVolumeHost) GetServiceAccountTokenFunc() func(namespace, name string, tr *authenticationv1.TokenRequest) (*authenticationv1.TokenRequest, error) {
+	return kvh.tokenManager.GetServiceAccountToken
 }

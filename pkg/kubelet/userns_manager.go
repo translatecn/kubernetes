@@ -459,7 +459,7 @@ func (m *usernsManager) CleanupOrphanedPodUsernsAllocations(pods []*v1.Pod, runn
 
 	// Lets remove all the pods "found" that are not known.
 	for _, podUID := range found {
-		// pods和runningPods 没有，但在磁盘上还有的pod对应的数据
+		// pods和runningPods 没有,但在磁盘上还有的pod对应的数据
 		if allPods.Has(string(podUID)) {
 			continue
 		}

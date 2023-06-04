@@ -37,18 +37,9 @@ import (
 // Manager manages Kubernetes secrets. This includes retrieving
 // secrets or registering/unregistering them via Pods.
 type Manager interface {
-	// Get secret by secret namespace and name.
 	GetSecret(namespace, name string) (*v1.Secret, error)
-
-	// WARNING: Register/UnregisterPod functions should be efficient,
-	// i.e. should not block on network operations.
-
-	// RegisterPod registers all secrets from a given pod.
-	RegisterPod(pod *v1.Pod)
-
-	// UnregisterPod unregisters secrets from a given pod that are not
-	// used by any other registered pod.
-	UnregisterPod(pod *v1.Pod)
+	RegisterPod(pod *v1.Pod)   // 应该高效,幂等
+	UnregisterPod(pod *v1.Pod) // 应该高效,幂等
 }
 
 // simpleSecretManager implements SecretManager interfaces with

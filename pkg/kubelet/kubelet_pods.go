@@ -414,101 +414,11 @@ func (kl *Kubelet) getHostIDsForPod(pod *v1.Pod, containerUID, containerGID *int
 	return kl.usernsManager.getHostIDsForPod(pod, containerUID, containerGID)
 }
 
-// GeneratePodHostNameAndDomain creates a hostname and domain name for a pod,
-// given that pod's spec and annotations or returns an error.
-func (kl *Kubelet) GeneratePodHostNameAndDomain(pod *v1.Pod) (string, string, error) {
-	clusterDomain := kl.dnsConfigurer.ClusterDomain
-
-	hostname := pod.Name
-	if len(pod.Spec.Hostname) > 0 {
-		if msgs := utilvalidation.IsDNS1123Label(pod.Spec.Hostname); len(msgs) != 0 {
-			return "", "", fmt.Errorf("pod Hostname %q is not a valid DNS label: %s", pod.Spec.Hostname, strings.Join(msgs, ";"))
-		}
-		hostname = pod.Spec.Hostname
-	}
-
-	hostname, err := truncatePodHostnameIfNeeded(pod.Name, hostname)
-	if err != nil {
-		return "", "", err
-	}
-
-	hostDomain := ""
-	if len(pod.Spec.Subdomain) > 0 {
-		if msgs := utilvalidation.IsDNS1123Label(pod.Spec.Subdomain); len(msgs) != 0 {
-			return "", "", fmt.Errorf("pod Subdomain %q is not a valid DNS label: %s", pod.Spec.Subdomain, strings.Join(msgs, ";"))
-		}
-		hostDomain = fmt.Sprintf("%s.%s.svc.%s", pod.Spec.Subdomain, pod.Namespace, clusterDomain)
-	}
-
-	return hostname, hostDomain, nil
-}
-
 // GetPodCgroupParent gets pod cgroup parent from container manager.
 func (kl *Kubelet) GetPodCgroupParent(pod *v1.Pod) string {
 	pcm := kl.containerManager.NewPodContainerManager()
 	_, cgroupParent := pcm.GetPodContainerName(pod)
 	return cgroupParent
-}
-
-// GenerateRunContainerOptions generates the RunContainerOptions, which can be used by
-// the container runtime to set parameters for launching a container.
-func (kl *Kubelet) GenerateRunContainerOptions(ctx context.Context, pod *v1.Pod, container *v1.Container, podIP string, podIPs []string) (*kubecontainer.RunContainerOptions, func(), error) {
-	opts, err := kl.containerManager.GetResources(pod, container)
-	if err != nil {
-		return nil, nil, err
-	}
-	// The value of hostname is the short host name and it is sent to makeMounts to create /etc/hosts file.
-	hostname, hostDomainName, err := kl.GeneratePodHostNameAndDomain(pod)
-	if err != nil {
-		return nil, nil, err
-	}
-	// nodename will be equals to hostname if SetHostnameAsFQDN is nil or false. If SetHostnameFQDN
-	// is true and hostDomainName is defined, nodename will be the FQDN (hostname.hostDomainName)
-	nodename, err := util.GetNodenameForKernel(hostname, hostDomainName, pod.Spec.SetHostnameAsFQDN)
-	if err != nil {
-		return nil, nil, err
-	}
-	opts.Hostname = nodename
-	podName := volumeutil.GetUniquePodName(pod)
-	volumes := kl.volumeManager.GetMountedVolumesForPod(podName)
-
-	blkutil := volumepathhandler.NewBlockVolumePathHandler()
-	blkVolumes, err := kl.makeBlockVolumes(pod, container, volumes, blkutil)
-	if err != nil {
-		return nil, nil, err
-	}
-	opts.Devices = append(opts.Devices, blkVolumes...)
-
-	envs, err := kl.makeEnvironmentVariables(pod, container, podIP, podIPs)
-	if err != nil {
-		return nil, nil, err
-	}
-	opts.Envs = append(opts.Envs, envs...)
-
-	// only podIPs is sent to makeMounts, as podIPs is populated even if dual-stack feature flag is not enabled.
-	mounts, cleanupAction, err := makeMounts(pod, kl.getPodDir(pod.UID), container, hostname, hostDomainName, podIPs, volumes, kl.hostutil, kl.subpather, opts.Envs)
-	if err != nil {
-		return nil, cleanupAction, err
-	}
-	opts.Mounts = append(opts.Mounts, mounts...)
-
-	// adding TerminationMessagePath on Windows is only allowed if ContainerD is used. Individual files cannot
-	// be mounted as volumes using Docker for Windows.
-	if len(container.TerminationMessagePath) != 0 {
-		p := kl.getPodContainerDir(pod.UID, container.Name)
-		if err := os.MkdirAll(p, 0750); err != nil {
-			klog.ErrorS(err, "Error on creating dir", "path", p)
-		} else {
-			opts.PodContainerDir = p
-		}
-	}
-
-	// only do this check if the experimental behavior is enabled, otherwise allow it to default to false
-	if kl.experimentalHostUserNamespaceDefaulting {
-		opts.EnableHostUserNamespace = kl.enableHostUserNamespace(ctx, pod)
-	}
-
-	return opts, cleanupAction, nil
 }
 
 // Make the environment variables for a pod in the given namespace.
@@ -818,7 +728,7 @@ func (kl *Kubelet) getPullSecretsForPod(pod *v1.Pod) []v1.Secret {
 	return pullSecrets
 }
 
-func countRunningContainerStatus(status v1.PodStatus) int {
+func countRunningContainerStatus(status v1.PodStatus) int { // ✅
 	var runningContainers int
 	for _, c := range status.InitContainerStatuses {
 		if c.State.Running != nil {
@@ -858,26 +768,27 @@ func (kl *Kubelet) PodCouldHaveRunningContainers(pod *v1.Pod) bool { // ✅
 	return false
 }
 
-// PodResourcesAreReclaimed 用于检查 kubelet 是否已回收 Pod 正在使用的所有必需的节点级资源。在删除 Pod 之前，必须确保 kubelet 已回收所有这些资源，否则可能会导致资源泄漏。
-// 如果 kubelet 已回收所有必需的节点级资源，则该方法返回 true；否则返回 false。
-func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bool {
-	if kl.podWorkers.CouldHaveRunningContainers(pod.UID) {
+// PodResourcesAreReclaimed 用于检查 kubelet 是否已回收 Pod 正在使用的所有必需的节点级资源.
+// 在删除 Pod 之前,必须确保 kubelet 已回收所有这些资源,否则可能会导致资源泄漏.
+// 如果 kubelet 已回收所有必需的节点级资源,则该方法返回 true;否则返回 false.
+func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bool { // ✅
+	if kl.podWorkers.CouldHaveRunningContainers(pod.UID) { // ✅
 		// We shouldn't delete pods that still have running containers
 		klog.V(3).InfoS("Pod is terminated, but some containers are still running", "pod", klog.KObj(pod))
 		return false
 	}
-	if count := countRunningContainerStatus(status); count > 0 {
+	if count := countRunningContainerStatus(status); count > 0 { // ✅
 		// We shouldn't delete pods until the reported pod status contains no more running containers (the previous
 		// check ensures no more status can be generated, this check verifies we have seen enough of the status)
 		klog.V(3).InfoS("Pod is terminated, but some container status has not yet been reported", "pod", klog.KObj(pod), "running", count)
 		return false
 	}
-	if kl.podVolumesExist(pod.UID) && !kl.keepTerminatedPodVolumes {
+	if kl.podVolumesExist(pod.UID) && !kl.keepTerminatedPodVolumes { // 是否保留已终止 Pod 的卷挂载.
 		// We shouldn't delete pods whose volumes have not been cleaned up if we are not keeping terminated pod volumes
 		klog.V(3).InfoS("Pod is terminated, but some volumes have not been cleaned up", "pod", klog.KObj(pod))
 		return false
 	}
-	if kl.kubeletConfiguration.CgroupsPerQOS {
+	if kl.kubeletConfiguration.CgroupsPerQOS { // ✅ 默认true
 		pcm := kl.containerManager.NewPodContainerManager()
 		if pcm.Exists(pod) {
 			klog.V(3).InfoS("Pod is terminated, but pod cgroup sandbox has not been cleaned up", "pod", klog.KObj(pod))
@@ -894,12 +805,12 @@ func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bo
 }
 
 // podResourcesAreReclaimed simply calls PodResourcesAreReclaimed with the most up-to-date status.
-func (kl *Kubelet) podResourcesAreReclaimed(pod *v1.Pod) bool {
+func (kl *Kubelet) podResourcesAreReclaimed(pod *v1.Pod) bool { // ✅
 	status, ok := kl.statusManager.GetPodStatus(pod.UID)
 	if !ok {
 		status = pod.Status
 	}
-	return kl.PodResourcesAreReclaimed(pod, status)
+	return kl.PodResourcesAreReclaimed(pod, status) // ✅
 }
 
 // removeOrphanedPodStatuses removes obsolete entries in podStatus where
@@ -1434,18 +1345,6 @@ func (kl *Kubelet) RunInContainer(ctx context.Context, podFullName string, podUI
 	return kl.runner.RunInContainer(ctx, container.ID, cmd, 0)
 }
 
-// GetExec gets the URL the exec will be served from, or nil if the Kubelet will serve it.
-func (kl *Kubelet) GetExec(ctx context.Context, podFullName string, podUID types.UID, containerName string, cmd []string, streamOpts remotecommandserver.Options) (*url.URL, error) {
-	container, err := kl.findContainer(ctx, podFullName, podUID, containerName)
-	if err != nil {
-		return nil, err
-	}
-	if container == nil {
-		return nil, fmt.Errorf("container not found (%q)", containerName)
-	}
-	return kl.streamingRuntime.GetExec(ctx, container.ID, cmd, streamOpts.Stdin, streamOpts.Stdout, streamOpts.Stderr, streamOpts.TTY)
-}
-
 // GetAttach gets the URL the attach will be served from, or nil if the Kubelet will serve it.
 func (kl *Kubelet) GetAttach(ctx context.Context, podFullName string, podUID types.UID, containerName string, streamOpts remotecommandserver.Options) (*url.URL, error) {
 	container, err := kl.findContainer(ctx, podFullName, podUID, containerName)
@@ -1571,9 +1470,9 @@ func (kl *Kubelet) hasHostMountPVC(ctx context.Context, pod *v1.Pod) bool {
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-// HandlePodCleanups 清理 Pod 工作器、杀死不需要的 Pod，并删除孤立的卷和 Pod 目录.在执行此方法时不会向 Pod 工作器发送配置更改，这意味着不会出现新的 Pod。
+// HandlePodCleanups 清理 Pod 工作器、杀死不需要的 Pod,并删除孤立的卷和 Pod 目录.在执行此方法时不会向 Pod 工作器发送配置更改,这意味着不会出现新的 Pod.
 func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
-	// 由于 kubelet 缺乏检查点功能，因此我们需要在检查 pod 管理器中的 pod 集合之前 检查 cgroup 树中的 pod 集合。这可以确保我们的 cgroup 树视图不会错误地观察到事后添加的 pod。
+	// 由于 kubelet 缺乏检查点功能,因此我们需要在检查 pod 管理器中的 pod 集合之前 检查 cgroup 树中的 pod 集合.这可以确保我们的 cgroup 树视图不会错误地观察到事后添加的 pod.
 	var (
 		cgroupPods map[types.UID]cm.CgroupName
 		err        error
@@ -1587,14 +1486,14 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 	}
 
 	allPods, mirrorPods := kl.mirrorPodManager.GetPodsAndMirrorPods() // 读取缓存里的数据
-	//Pod 的阶段（phase）是单调递增的。一旦 Pod 达到了最终状态，无论重启策略如何，它都不应该离开这个状态。这些 Pod 的状态不应该被更改，也没有必要同步它们。
-	//但是，这段代码还存在两种情况无法处理：
-	//	1、如果容器在死亡后立即被删除，kubelet 可能无法生成正确的状态，更不用说正确地过滤了。
-	//	2、如果 kubelet 在将 Pod 的终止状态写入 API 服务器之前重新启动，它仍然可能重新启动已终止的 Pod（即使 API 服务器不认为该 Pod 已终止）。
-	//为了解决这些问题，需要使用检查点功能对 kubelet 进行检查点。检查点是一种保存应用程序状态的机制，可以在应用程序崩溃或重启后恢复状态。
-	//在 Kubernetes 中，检查点可以用于保存 kubelet 的状态，以便在 kubelet 崩溃或重启后恢复状态，并避免上述问题的发生。
+	//Pod 的阶段（phase）是单调递增的.一旦 Pod 达到了最终状态,无论重启策略如何,它都不应该离开这个状态.这些 Pod 的状态不应该被更改,也没有必要同步它们.
+	//但是,这段代码还存在两种情况无法处理：
+	//	1、如果容器在死亡后立即被删除,kubelet 可能无法生成正确的状态,更不用说正确地过滤了.
+	//	2、如果 kubelet 在将 Pod 的终止状态写入 API 服务器之前重新启动,它仍然可能重新启动已终止的 Pod（即使 API 服务器不认为该 Pod 已终止）.
+	//为了解决这些问题,需要使用检查点功能对 kubelet 进行检查点.检查点是一种保存应用程序状态的机制,可以在应用程序崩溃或重启后恢复状态.
+	//在 Kubernetes 中,检查点可以用于保存 kubelet 的状态,以便在 kubelet 崩溃或重启后恢复状态,并避免上述问题的发生.
 
-	// 停止已终止 但不在配置源中的 Pod。
+	// 停止已终止 但不在配置源中的 Pod.
 	klog.V(3).InfoS("Clean up pod workers for terminated pods")
 	workingPods := kl.podWorkers.SyncKnownPods(allPods)
 
@@ -1657,7 +1556,7 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 	klog.V(3).InfoS("Clean up orphaned pod statuses")
 	kl.removeOrphanedPodStatuses(allPods, mirrorPods) // 移除孤儿 pod status     statusManager.RemoveOrphanedStatuses
 
-	// 注意，我们刚刚杀死了不需要的pod。这可能没有反映在缓存中。我们需要绕过缓存来获取最新的运行pod集来清理卷。
+	// 注意,我们刚刚杀死了不需要的pod.这可能没有反映在缓存中.我们需要绕过缓存来获取最新的运行pod集来清理卷.
 	// TODO: Evaluate the performance impact of bypassing the runtime cache.
 	runningRuntimePods, err = kl.containerRuntime.GetPods(ctx, false)
 	if err != nil {
@@ -1672,7 +1571,7 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 	}
 
 	klog.V(3).InfoS("Clean up orphaned pod directories")
-	err = kl.cleanupOrphanedPodDirs(allPods, runningRuntimePods) // 删除不应该运行且没有容器运行的pod卷。注意，我们在这里roll up 日志，因为它在主循环中运行。
+	err = kl.cleanupOrphanedPodDirs(allPods, runningRuntimePods) // 删除不应该运行且没有容器运行的pod卷.注意,我们在这里roll up 日志,因为它在主循环中运行.
 	if err != nil {
 		// We want all cleanup tasks to be run even if one of them failed. So
 		// we just log an error here and continue other cleanup tasks.
@@ -1701,33 +1600,33 @@ func (kl *Kubelet) HandlePodCleanups(ctx context.Context) error {
 	// container start are mitigated. In general only static pods will ever reuse UIDs
 	// since the apiserver uses randomly generated UUIDv4 UIDs with a very low
 	// probability of collision.
-	// 如果在短时间内观察到具有相同 UID 的两个 Pod，则需要在第一个 Pod 完成后重新同步 Pod 工作程序，并决定是否重新启动 Pod。
-	// 这是最后发生的，以避免混淆其他组件中的期望状态，并增加在容器启动期间缓解瞬态操作系统故障的可能性。通常，只有静态 Pod 才会重用 UID，因为 apiserver 使用具有非常低碰撞概率的随机生成的 UUIDv4 UID。
+	// 如果在短时间内观察到具有相同 UID 的两个 Pod,则需要在第一个 Pod 完成后重新同步 Pod 工作程序,并决定是否重新启动 Pod.
+	// 这是最后发生的,以避免混淆其他组件中的期望状态,并增加在容器启动期间缓解瞬态操作系统故障的可能性.通常,只有静态 Pod 才会重用 UID,因为 apiserver 使用具有非常低碰撞概率的随机生成的 UUIDv4 UID.
 
-	// 在某些情况下，可能会出现具有相同 UID 的 Pod，例如在重新启动节点或重新部署 Pod 时。
+	// 在某些情况下,可能会出现具有相同 UID 的 Pod,例如在重新启动节点或重新部署 Pod 时.
 	//
 	//
-	// 如果在短时间内观察到具有相同 UID 的两个 Pod，则说明可能存在某些问题，例如 Pod 状态不一致或节点故障。
-	// 因此，需要重新同步 Pod 工作程序，并决定是否重新启动 Pod。这个过程是最后发生的，以避免混淆其他组件中的期望状态，并增加在容器启动期间缓解瞬态操作系统故障的可能性。
+	// 如果在短时间内观察到具有相同 UID 的两个 Pod,则说明可能存在某些问题,例如 Pod 状态不一致或节点故障.
+	// 因此,需要重新同步 Pod 工作程序,并决定是否重新启动 Pod.这个过程是最后发生的,以避免混淆其他组件中的期望状态,并增加在容器启动期间缓解瞬态操作系统故障的可能性.
 	for uid := range restartablePods {
 		pod, ok := allPodsByUID[uid]
 		if !ok {
 			continue
 		}
 		if kl.isAdmittedPodTerminal(pod) { // 判断一个已经被准许的 Pod 是否已经达到终止阶段
-			klog.V(3).InfoS("由于UID重用，Pod在终止后可以重新启动，但是Pod阶段是终止的", "pod", klog.KObj(pod), "podUID", pod.UID)
+			klog.V(3).InfoS("由于UID重用,Pod在终止后可以重新启动,但是Pod阶段是终止的", "pod", klog.KObj(pod), "podUID", pod.UID)
 			continue
 		}
 		start := kl.clock.Now()
 		mirrorPod, _ := kl.mirrorPodManager.GetMirrorPodByPod(pod)
-		klog.V(3).InfoS("由于UID重用，Pod在终止后可重新启动", "pod", klog.KObj(pod), "podUID", pod.UID)
+		klog.V(3).InfoS("由于UID重用,Pod在终止后可重新启动", "pod", klog.KObj(pod), "podUID", pod.UID)
 		kl.dispatchWork(pod, kubetypes.SyncPodCreate, mirrorPod, start)
 	}
 
 	return nil
 }
 
-// 返回未处于终止阶段 或 已知已完全终止的pod。
+// 返回未处于终止阶段 或 已知已完全终止的pod.
 func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
 	filteredPods := make([]*v1.Pod, 0, len(pods))
 	// activePods 列表只包含被准许且仍然存活的 Pod
@@ -1739,7 +1638,7 @@ func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
 		// pod 没有被完全终止
 
 		// terminal pods are considered inactive UNLESS they are actively terminating
-		// 终止中的 Pod 被视为非活动状态，除非它们正在主动终止。
+		// 终止中的 Pod 被视为非活动状态,除非它们正在主动终止.
 		if kl.isAdmittedPodTerminal(p) && !kl.podWorkers.IsPodTerminationRequested(p.UID) {
 			// pod 已结束 且 pod 不在终止中
 			continue
@@ -1764,7 +1663,7 @@ func (kl *Kubelet) isAdmittedPodTerminal(pod *v1.Pod) bool {
 	return false
 }
 
-// 检查孤儿镜像pod killer是否已经完成。如果pod终止完成，将调用podmanager.deletemirorpod()从API服务器上删除镜像pod
+// 检查孤儿镜像pod killer是否已经完成.如果pod终止完成,将调用podmanager.deletemirorpod()从API服务器上删除镜像pod
 func (kl *Kubelet) deleteOrphanedMirrorPods() {
 	mirrorPods := kl.mirrorPodManager.GetOrphanedMirrorPodNames()
 	for _, podFullname := range mirrorPods {
@@ -1784,7 +1683,7 @@ func (kl *Kubelet) cleanupOrphanedPodCgroups(pcm cm.PodContainerManager, cgroupP
 	// Iterate over all the found pods to verify if they should be running
 	for uid, val := range cgroupPods {
 		// if the pod is in the running set, its not a candidate for cleanup
-		// 如果pod在running set 中，它就不是清理的候选对象
+		// 如果pod在running set 中,它就不是清理的候选对象
 		if _, ok := possiblyRunningPods[uid]; ok {
 			continue
 		}
@@ -1796,10 +1695,10 @@ func (kl *Kubelet) cleanupOrphanedPodCgroups(pcm cm.PodContainerManager, cgroupP
 		// is configured to keep terminated volumes, we will delete the cgroup and not block.
 		if podVolumesExist := kl.podVolumesExist(uid); podVolumesExist && !kl.keepTerminatedPodVolumes {
 			klog.V(3).InfoS("Orphaned pod found, but volumes not yet removed.  Reducing cpu to minimum", "podUID", uid)
-			// kubelet 无法减少等待清理卷的 Pod 的 CPU 时间。
-			// 可能因为该 Pod 正在进行一些长时间运行的操作，例如文件系统清理、网络连接清理等。这些操作可能需要大量的 CPU 时间，并且可能会阻塞 kubelet 的操作。
+			// kubelet 无法减少等待清理卷的 Pod 的 CPU 时间.
+			// 可能因为该 Pod 正在进行一些长时间运行的操作,例如文件系统清理、网络连接清理等.这些操作可能需要大量的 CPU 时间,并且可能会阻塞 kubelet 的操作.
 			if err := pcm.ReduceCPULimits(val); err != nil {
-				klog.InfoS("无法减少等待清理卷的 Pod 的 CPU 时间。 Failed to reduce cpu time for pod pending volume cleanup", "podUID", uid, "err", err)
+				klog.InfoS("无法减少等待清理卷的 Pod 的 CPU 时间. Failed to reduce cpu time for pod pending volume cleanup", "podUID", uid, "err", err)
 			}
 			continue
 		}
@@ -2007,7 +1906,7 @@ func (kl *Kubelet) getServiceEnvVarMap(ns string, enableServiceLinks bool) (map[
 		serviceMap = make(map[string]*v1.Service)
 		m          = make(map[string]string)
 	)
-	// 从主服务器获取所有 service 资源(通过缓存)，并将它们填充到服务环境变量中。
+	// 从主服务器获取所有 service 资源(通过缓存),并将它们填充到服务环境变量中.
 	if kl.serviceLister == nil {
 		// Kubelets without masters (e.g. plain GCE ContainerVM) don't set env vars.
 		return m, nil
@@ -2061,4 +1960,106 @@ func (kl *Kubelet) findContainer(ctx context.Context, podFullName string, podUID
 	podUID = types.UID(kl.mirrorPodManager.TranslatePodUID(podUID))
 	pod := kubecontainer.Pods(pods).FindPod(podFullName, podUID)
 	return pod.FindContainerByName(containerName), nil
+}
+
+// GetExec gets the URL the exec will be served from, or nil if the Kubelet will serve it.
+func (kl *Kubelet) GetExec(ctx context.Context, podFullName string, podUID types.UID, containerName string, cmd []string, streamOpts remotecommandserver.Options) (*url.URL, error) {
+	container, err := kl.findContainer(ctx, podFullName, podUID, containerName)
+	if err != nil {
+		return nil, err
+	}
+	if container == nil {
+		return nil, fmt.Errorf("container not found (%q)", containerName)
+	}
+	return kl.streamingRuntime.GetExec(ctx, container.ID, cmd, streamOpts.Stdin, streamOpts.Stdout, streamOpts.Stderr, streamOpts.TTY)
+}
+
+// GenerateRunContainerOptions generates the RunContainerOptions, which can be used by
+// the container runtime to set parameters for launching a container.
+func (kl *Kubelet) GenerateRunContainerOptions(ctx context.Context, pod *v1.Pod, container *v1.Container, podIP string, podIPs []string) (*kubecontainer.RunContainerOptions, func(), error) {
+	opts, err := kl.containerManager.GetResources(pod, container)
+	if err != nil {
+		return nil, nil, err
+	}
+	// The value of hostname is the short host name and it is sent to makeMounts to create /etc/hosts file.
+	hostname, hostDomainName, err := kl.GeneratePodHostNameAndDomain(pod)
+	if err != nil {
+		return nil, nil, err
+	}
+	// nodename will be equals to hostname if SetHostnameAsFQDN is nil or false. If SetHostnameFQDN
+	// is true and hostDomainName is defined, nodename will be the FQDN (hostname.hostDomainName)
+	nodename, err := util.GetNodenameForKernel(hostname, hostDomainName, pod.Spec.SetHostnameAsFQDN)
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Hostname = nodename
+	podName := volumeutil.GetUniquePodName(pod)
+	volumes := kl.volumeManager.GetMountedVolumesForPod(podName)
+
+	blkutil := volumepathhandler.NewBlockVolumePathHandler()
+	blkVolumes, err := kl.makeBlockVolumes(pod, container, volumes, blkutil)
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Devices = append(opts.Devices, blkVolumes...)
+
+	envs, err := kl.makeEnvironmentVariables(pod, container, podIP, podIPs)
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Envs = append(opts.Envs, envs...)
+
+	// only podIPs is sent to makeMounts, as podIPs is populated even if dual-stack feature flag is not enabled.
+	mounts, cleanupAction, err := makeMounts(pod, kl.getPodDir(pod.UID), container, hostname, hostDomainName, podIPs, volumes, kl.hostutil, kl.subpather, opts.Envs)
+	if err != nil {
+		return nil, cleanupAction, err
+	}
+	opts.Mounts = append(opts.Mounts, mounts...)
+
+	// adding TerminationMessagePath on Windows is only allowed if ContainerD is used. Individual files cannot
+	// be mounted as volumes using Docker for Windows.
+	if len(container.TerminationMessagePath) != 0 {
+		p := kl.getPodContainerDir(pod.UID, container.Name)
+		if err := os.MkdirAll(p, 0750); err != nil {
+			klog.ErrorS(err, "Error on creating dir", "path", p)
+		} else {
+			opts.PodContainerDir = p
+		}
+	}
+
+	// only do this check if the experimental behavior is enabled, otherwise allow it to default to false
+	if kl.experimentalHostUserNamespaceDefaulting {
+		opts.EnableHostUserNamespace = kl.enableHostUserNamespace(ctx, pod)
+	}
+
+	return opts, cleanupAction, nil
+}
+
+// GeneratePodHostNameAndDomain creates a hostname and domain name for a pod,
+// given that pod's spec and annotations or returns an error.
+func (kl *Kubelet) GeneratePodHostNameAndDomain(pod *v1.Pod) (string, string, error) {
+	clusterDomain := kl.dnsConfigurer.ClusterDomain
+
+	hostname := pod.Name
+	if len(pod.Spec.Hostname) > 0 {
+		if msgs := utilvalidation.IsDNS1123Label(pod.Spec.Hostname); len(msgs) != 0 {
+			return "", "", fmt.Errorf("pod Hostname %q is not a valid DNS label: %s", pod.Spec.Hostname, strings.Join(msgs, ";"))
+		}
+		hostname = pod.Spec.Hostname
+	}
+
+	hostname, err := truncatePodHostnameIfNeeded(pod.Name, hostname)
+	if err != nil {
+		return "", "", err
+	}
+
+	hostDomain := ""
+	if len(pod.Spec.Subdomain) > 0 {
+		if msgs := utilvalidation.IsDNS1123Label(pod.Spec.Subdomain); len(msgs) != 0 {
+			return "", "", fmt.Errorf("pod Subdomain %q is not a valid DNS label: %s", pod.Spec.Subdomain, strings.Join(msgs, ";"))
+		}
+		hostDomain = fmt.Sprintf("%s.%s.svc.%s", pod.Spec.Subdomain, pod.Namespace, clusterDomain)
+	}
+
+	return hostname, hostDomain, nil
 }

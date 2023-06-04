@@ -32,6 +32,9 @@ import (
 // mounted volumes are left out probably during kubelet restart. This process will reconstruct
 // the volumes and update the actual and desired states. For the volumes that cannot support reconstruction,
 // it will try to clean up the mount paths with operation executor.
+// - sync进程试图通过扫描磁盘上所有pod的卷目录来观察现实node上的状态 ,目录位置  /var/lib/kubelet/pods/
+// - 如果实际状态和期望状态不一致,这意味着装载的卷可能在kubelet重新启动期间被忽略.这一过程将重构volume
+// - sync会更新实际状态和期望状态
 func (rc *reconciler) sync() {
 	defer rc.updateLastSyncTime()
 	rc.syncStates(rc.kubeletPodsDir)
@@ -57,10 +60,12 @@ func (rc *reconciler) syncStates(kubeletPodDir string) {
 			// There is nothing to reconstruct
 			continue
 		}
+		// 代表本地磁盘和desiredStateOfWorld是否一致
 		volumeInDSW := rc.desiredStateOfWorld.VolumeExistsWithSpecName(volume.podName, volume.volumeSpecName)
 
 		reconstructedVolume, err := rc.reconstructVolume(volume)
 		if err != nil {
+			// 重构volume如果出错、和desiredStateOfWorld不一致就清理
 			if volumeInDSW {
 				// Some pod needs the volume, don't clean it up and hope that
 				// reconcile() calls SetUp and reconstructs the volume in ASW.

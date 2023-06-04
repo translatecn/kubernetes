@@ -39,7 +39,7 @@ func (c *csiPlugin) RequiresFSResize() bool {
 
 func (c *csiPlugin) NodeExpand(resizeOptions volume.NodeResizeOptions) (bool, error) {
 	klog.V(4).Infof(log("Expander.NodeExpand(%s)", resizeOptions.DeviceMountPath))
-	csiSource, err := getCSISourceFromSpec(resizeOptions.VolumeSpec)
+	csiSource, err := getCSISourceFromSpec(resizeOptions.VolumeSpec) // pv csi
 	if err != nil {
 		return false, errors.New(log("Expander.NodeExpand failed to get CSI persistent source: %v", err))
 	}

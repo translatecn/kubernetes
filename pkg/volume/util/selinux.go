@@ -30,15 +30,8 @@ import (
 
 // SELinuxLabelTranslator translates v1.SELinuxOptions of a process to SELinux file label.
 type SELinuxLabelTranslator interface {
-	// SELinuxOptionsToFileLabel returns SELinux file label for given SELinuxOptions
-	// of a container process.
-	// When Role, User or Type are empty, they're read from the system defaults.
-	// It returns "" and no error on platforms that do not have SELinux enabled
-	// or don't support SELinux at all.
-	SELinuxOptionsToFileLabel(opts *v1.SELinuxOptions) (string, error)
-
-	// SELinuxEnabled returns true when the OS has enabled SELinux support.
-	SELinuxEnabled() bool
+	SELinuxOptionsToFileLabel(opts *v1.SELinuxOptions) (string, error) // 用于获取容器进程的 SELinux 文件标签的
+	SELinuxEnabled() bool                                              // 检查操作系统是否已经启用了 SELinux 支持
 }
 
 // Real implementation of the interface.
@@ -73,9 +66,8 @@ func (l *translator) SELinuxOptionsToFileLabel(opts *v1.SELinuxOptions) (string,
 		// and all options returned by contextOptions are known.
 		return "", err
 	}
-	// InitLabels() may allocate a new unique SELinux label in kubelet memory. The label is *not* allocated
-	// in the container runtime. Clear it to avoid memory problems.
-	// ReleaseLabel on non-allocated label is NOOP.
+	// 该函数是用于在 kubelet 内存中分配一个新的唯一 SELinux 标签.
+	// 该标签并没有在容器运行时中分配.为了避免内存问题,需要清除该标签.如果没有分配该标签,则 ReleaseLabel 函数不会执行任何操作.
 	selinux.ReleaseLabel(processLabel)
 
 	return fileLabel, nil
@@ -156,16 +148,6 @@ func (l *fakeTranslator) SELinuxEnabled() bool {
 	return true
 }
 
-// SupportsSELinuxContextMount checks if the given volumeSpec supports with mount -o context
-func SupportsSELinuxContextMount(volumeSpec *volume.Spec, volumePluginMgr *volume.VolumePluginMgr) (bool, error) {
-	plugin, _ := volumePluginMgr.FindPluginBySpec(volumeSpec)
-	if plugin != nil {
-		return plugin.SupportsSELinuxContextMount(volumeSpec)
-	}
-
-	return false, nil
-}
-
 // VolumeSupportsSELinuxMount returns true if given volume access mode can support mount with SELinux mount options.
 func VolumeSupportsSELinuxMount(volumeSpec *volume.Spec) bool {
 	// Right now, SELinux mount is supported only for ReadWriteOncePod volumes.
@@ -195,4 +177,14 @@ func AddSELinuxMountOption(options []string, seLinuxContext string) []string {
 	// Use double quotes to support a comma "," in the SELinux context string.
 	// For example: dirsync,context="system_u:object_r:container_file_t:s0:c15,c25",noatime
 	return append(options, fmt.Sprintf("context=%q", seLinuxContext))
+}
+
+// SupportsSELinuxContextMount checks if the given volumeSpec supports with mount -o context
+func SupportsSELinuxContextMount(volumeSpec *volume.Spec, volumePluginMgr *volume.VolumePluginMgr) (bool, error) {
+	plugin, _ := volumePluginMgr.FindPluginBySpec(volumeSpec)
+	if plugin != nil {
+		return plugin.SupportsSELinuxContextMount(volumeSpec)
+	}
+
+	return false, nil
 }

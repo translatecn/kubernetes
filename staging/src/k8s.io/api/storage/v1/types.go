@@ -110,10 +110,7 @@ const (
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// VolumeAttachment captures the intent to attach or detach the specified volume
-// to/from the specified node.
-//
-// VolumeAttachment objects are non-namespaced.
+// VolumeAttachment  将指定卷附加或从指定节点分离的意图,non-namespaced.
 type VolumeAttachment struct {
 	metav1.TypeMeta `json:",inline"`
 

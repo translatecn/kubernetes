@@ -20,8 +20,6 @@ import "os"
 
 // Interface defines the set of methods all subpathers must implement
 type Interface interface {
-	// CleanSubPaths removes any bind-mounts created by PrepareSafeSubpath in given
-	// pod volume directory.
 	CleanSubPaths(poodDir string, volumeName string) error
 
 	// PrepareSafeSubpath does everything that's necessary to prepare a subPath

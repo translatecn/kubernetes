@@ -77,8 +77,8 @@ type ManagerImpl struct {
 
 	// unhealthyDevices contains all of the unhealthy devices and their exported device IDs.
 	unhealthyDevices  map[string]sets.String
-	allocatedDevices  map[string]sets.String // 可分配的资源  ，key:resourceName
-	podDevices        *podDevices            // 包含pod到已分配设备的映射。
+	allocatedDevices  map[string]sets.String // 可分配的资源  ,key:resourceName
+	podDevices        *podDevices            // 包含pod到已分配设备的映射.
 	checkpointManager checkpointmanager.CheckpointManager
 
 	// List of NUMA Nodes available on the underlying machine
@@ -330,14 +330,14 @@ func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
 	return nil
 }
 
-// UpdatePluginResources 基于已经分配给pod的设备信息 更新节点资源。
+// UpdatePluginResources 基于已经分配给pod的设备信息 更新节点资源.
 func (m *ManagerImpl) UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error {
 	pod := attrs.Pod
 
 	if !m.podDevices.hasPod(string(pod.UID)) {
 		return nil
 	}
-	// 刚创建时，不会走
+	// 刚创建时,不会走
 	m.sanitizeNodeAllocatable(node)
 	return nil
 }
@@ -946,12 +946,12 @@ func (m *ManagerImpl) callGetPreferredAllocationIfAvailable(podUID, contName, re
 	return sets.NewString(), nil
 }
 
-// sanitizeNodeAllocatable在设备管理器中扫描allocatedDevices，
-// 如果有必要，更新nodeInfo中的allocatableResource，使其至少等于已分配的容量。
-// 这允许已经在节点上调度的pod即使在设备插件失败时也能通过GeneralPredicates准入检查。
+// sanitizeNodeAllocatable在设备管理器中扫描allocatedDevices,
+// 如果有必要,更新nodeInfo中的allocatableResource,使其至少等于已分配的容量.
+// 这允许已经在节点上调度的pod即使在设备插件失败时也能通过GeneralPredicates准入检查.
 func (m *ManagerImpl) sanitizeNodeAllocatable(node *schedulerframework.NodeInfo) {
 	var newAllocatableResource *schedulerframework.Resource
-	allocatableResource := node.Allocatable // 表示节点可用于调度的资源。
+	allocatableResource := node.Allocatable // 表示节点可用于调度的资源.
 	if allocatableResource.ScalarResources == nil {
 		allocatableResource.ScalarResources = make(map[v1.ResourceName]int64)
 	}

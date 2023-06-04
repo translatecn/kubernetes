@@ -49,7 +49,7 @@ type csiClient interface {
 	// The caller is responsible for checking whether the driver supports
 	// applying FSGroup by calling NodeSupportsVolumeMountGroup().
 	// If the driver does not, fsGroup must be set to nil.
-	NodePublishVolume(
+	NodePublishVolume( // 用于将 Volume 挂载到容器内的目标路径
 		ctx context.Context,
 		volumeid string,
 		readOnly bool,
@@ -65,7 +65,7 @@ type csiClient interface {
 	) error
 
 	NodeExpandVolume(ctx context.Context, rsOpts csiResizeOptions) (resource.Quantity, error)
-	NodeUnpublishVolume(
+	NodeUnpublishVolume( // 用于从容器中卸载Volume 等等
 		ctx context.Context,
 		volID string,
 		targetPath string,
@@ -133,41 +133,6 @@ type nodeV1ClientCreator func(addr csiAddr, metricsManager *MetricsManager) (
 )
 
 type nodeV1AccessModeMapper func(am api.PersistentVolumeAccessMode) csipbv1.VolumeCapability_AccessMode_Mode
-
-// newV1NodeClient creates a new NodeClient with the internally used gRPC
-// connection set up. It also returns a closer which must be called to close
-// the gRPC connection when the NodeClient is not used anymore.
-// This is the default implementation for the nodeV1ClientCreator, used in
-// newCsiDriverClient.
-func newV1NodeClient(addr csiAddr, metricsManager *MetricsManager) (nodeClient csipbv1.NodeClient, closer io.Closer, err error) {
-	var conn *grpc.ClientConn
-	conn, err = newGrpcConn(addr, metricsManager)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	nodeClient = csipbv1.NewNodeClient(conn)
-	return nodeClient, conn, nil
-}
-
-func newCsiDriverClient(driverName csiDriverName) (*csiDriverClient, error) {
-	if driverName == "" {
-		return nil, fmt.Errorf("driver name is empty")
-	}
-
-	existingDriver, driverExists := csiDrivers.Get(string(driverName))
-	if !driverExists {
-		return nil, fmt.Errorf("driver name %s not found in the list of registered CSI drivers", driverName)
-	}
-
-	nodeV1ClientCreator := newV1NodeClient
-	return &csiDriverClient{
-		driverName:          driverName,
-		addr:                csiAddr(existingDriver.endpoint),
-		nodeV1ClientCreator: nodeV1ClientCreator,
-		metricsManager:      NewCSIMetricsManager(string(driverName)),
-	}, nil
-}
 
 func (c *csiDriverClient) NodeGetInfo(ctx context.Context) (
 	nodeID string,
@@ -726,4 +691,41 @@ func isFinalError(err error) bool {
 	// All other errors mean that operation either did not
 	// even start or failed. It is for sure not in progress.
 	return true
+}
+
+// ----------------------------------------------------------------------------------------------------
+
+// newV1NodeClient creates a new NodeClient with the internally used gRPC
+// connection set up. It also returns a closer which must be called to close
+// the gRPC connection when the NodeClient is not used anymore.
+// This is the default implementation for the nodeV1ClientCreator, used in
+// newCsiDriverClient.
+func newV1NodeClient(addr csiAddr, metricsManager *MetricsManager) (nodeClient csipbv1.NodeClient, closer io.Closer, err error) {
+	var conn *grpc.ClientConn
+	conn, err = newGrpcConn(addr, metricsManager)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nodeClient = csipbv1.NewNodeClient(conn)
+	return nodeClient, conn, nil
+}
+
+func newCsiDriverClient(driverName csiDriverName) (*csiDriverClient, error) {
+	if driverName == "" {
+		return nil, fmt.Errorf("driver name is empty")
+	}
+
+	existingDriver, driverExists := csiDrivers.Get(string(driverName))
+	if !driverExists {
+		return nil, fmt.Errorf("driver name %s not found in the list of registered CSI drivers", driverName)
+	}
+
+	nodeV1ClientCreator := newV1NodeClient
+	return &csiDriverClient{
+		driverName:          driverName,
+		addr:                csiAddr(existingDriver.endpoint),
+		nodeV1ClientCreator: nodeV1ClientCreator,
+		metricsManager:      NewCSIMetricsManager(string(driverName)),
+	}, nil
 }

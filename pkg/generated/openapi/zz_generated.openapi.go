@@ -8092,7 +8092,7 @@ func schema_k8sio_api_authentication_v1_TokenRequestSpec(ref common.ReferenceCal
 					},
 					"expirationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ExpirationSeconds is the requested duration of validity of the request. The token issuer may return a token with a different validity duration so a client needs to check the 'expiration' field in a response.",
+							Description: "ExpirationSeconds 求有效期的期望持续时间.令牌发行者可能会返回一个具有不同有效期的令牌,因此客户端需要在响应中检查“过期”字段.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -8129,7 +8129,7 @@ func schema_k8sio_api_authentication_v1_TokenRequestStatus(ref common.ReferenceC
 					},
 					"expirationTimestamp": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ExpirationTimestamp is the time of expiration of the returned token.",
+							Description: "ExpirationTimestamp 返回令牌的过期时间.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
@@ -15518,7 +15518,7 @@ func schema_k8sio_api_coordination_v1_LeaseSpec(ref common.ReferenceCallback) co
 					},
 					"leaseTransitions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "leaseTransitions 是承租人之间的租赁转换次数。",
+							Description: "leaseTransitions 是承租人之间的租赁转换次数.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -15720,24 +15720,24 @@ func schema_k8sio_api_core_v1_Affinity(ref common.ReferenceCallback) common.Open
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Affinity 是一组亲和性调度规则。",
+				Description: "Affinity 是一组亲和性调度规则.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"nodeAffinity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "描述pod的节点亲和性调度规则。",
+							Description: "描述pod的节点亲和性调度规则.",
 							Ref:         ref("k8s.io/api/core/v1.NodeAffinity"),
 						},
 					},
 					"podAffinity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "描述pod关联调度规则(例如，将此pod与其他pod一起放置在相同的节点、区域等)。",
+							Description: "描述pod关联调度规则(例如,将此pod与其他pod一起放置在相同的节点、区域等).",
 							Ref:         ref("k8s.io/api/core/v1.PodAffinity"),
 						},
 					},
 					"podAntiAffinity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "描述pod反亲和调度规则(例如，避免将此pod与其他pod放在相同的节点、区域等)。",
+							Description: "描述pod反亲和调度规则(例如,避免将此pod与其他pod放在相同的节点、区域等).",
 							Ref:         ref("k8s.io/api/core/v1.PodAntiAffinity"),
 						},
 					},
@@ -15995,12 +15995,11 @@ func schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Represents storage that is managed by an external CSI volume driver (Beta feature)",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"driver": {
 						SchemaProps: spec.SchemaProps{
-							Description: "driver is the name of the driver to use for this volume. Required.",
+							Description: "卷驱动程序的名称. Required.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -16008,7 +16007,7 @@ func schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref common.ReferenceCall
 					},
 					"volumeHandle": {
 						SchemaProps: spec.SchemaProps{
-							Description: "volumeHandle is the unique volume name returned by the CSI volume plugin’s CreateVolume to refer to the volume on all subsequent calls. Required.",
+							Description: "CSI卷插件的CreateVolume返回的唯一卷名,用于在所有后续调用中引用该卷. Required.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -17093,7 +17092,7 @@ func schema_k8sio_api_core_v1_Container(ref common.ReferenceCallback) common.Ope
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "volumeDevices is the list of block devices to be used by the container.",
+							Description: "容器要使用的块设备列表.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -17276,7 +17275,7 @@ func schema_k8sio_api_core_v1_ContainerState(ref common.ReferenceCallback) commo
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ContainerState 容器状态，只可能是其中一种，默认是Waiting",
+				Description: "ContainerState 容器状态,只可能是其中一种,默认是Waiting",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"waiting": {
@@ -17426,7 +17425,7 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "This must be a DNS_LABEL. Each container in a pod must have a unique name. Cannot be updated.",
+							Description: "容器名称",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -17434,21 +17433,21 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 					},
 					"state": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details about the container's current condition.",
+							Description: "当前状态",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/api/core/v1.ContainerState"),
 						},
 					},
 					"lastState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details about the container's last termination condition.",
+							Description: "容器上一次终止的情况",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/api/core/v1.ContainerState"),
 						},
 					},
 					"ready": {
 						SchemaProps: spec.SchemaProps{
-							Description: "容器是否已通过其就绪探测。",
+							Description: "容器是否已通过其就绪探测.",
 							Default:     false,
 							Type:        []string{"boolean"},
 							Format:      "",
@@ -17456,7 +17455,7 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 					},
 					"restartCount": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The number of times the container has been restarted.",
+							Description: "重启的次数",
 							Default:     0,
 							Type:        []string{"integer"},
 							Format:      "int32",
@@ -17480,14 +17479,14 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 					},
 					"containerID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "容器的ID，格式：'<type>://<container_id>'.",
+							Description: "容器的ID,格式：'<type>://<container_id>'.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"started": {
 						SchemaProps: spec.SchemaProps{
-							Description: "指示容器是否完成了启动探针的检测，在容器重新启动或 kubelet 暂时丢失状态时重置为 false。",
+							Description: "指示容器是否完成了启动探针的检测,在容器重新启动或 kubelet 暂时丢失状态时重置为 false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -18027,7 +18026,7 @@ func schema_k8sio_api_core_v1_EphemeralContainer(ref common.ReferenceCallback) c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "An EphemeralContainer is a temporary container that you may add to an existing Pod for user-initiated activities such as debugging. Ephemeral containers have no resource or scheduling guarantees, and they will not be restarted when they exit or when a Pod is removed or restarted. The kubelet may evict a Pod if an ephemeral container causes the Pod to exceed its resource allocation.\n\nTo add an ephemeral container, use the ephemeralcontainers subresource of an existing Pod. Ephemeral containers may not be removed or restarted.",
+				Description: "EphemeralContainer 临时容器,它可以被添加到现有的 Pod 中,用于用户发起的活动（例如调试）. Ephemeral 容器没有资源或调度保证,并且它们不会在退出或 Pod 被删除或重启时重新启动.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
@@ -18176,7 +18175,7 @@ func schema_k8sio_api_core_v1_EphemeralContainer(ref common.ReferenceCallback) c
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "volumeDevices is the list of block devices to be used by the container.",
+							Description: "volumeDevices字段用于指定容器使用的块设备列表.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -18214,14 +18213,14 @@ func schema_k8sio_api_core_v1_EphemeralContainer(ref common.ReferenceCallback) c
 					},
 					"terminationMessagePath": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Optional: Path at which the file to which the container's termination message will be written is mounted into the container's filesystem. Message written is intended to be brief final status, such as an assertion failure message. Will be truncated by the node if greater than 4096 bytes. The total message length across all containers will be limited to 12kb. Defaults to /dev/termination-log. Cannot be updated.",
+							Description: "可选项：将容器终止消息写入容器文件系统中挂载的文件的路径. 写入的消息应该是简短的最终状态,例如断言失败消息. 如果大于4096字节,将被节点截断.在所有容器中,总消息长度将被限制为12kb. 默认为/dev/termination-log. 不能更新.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"terminationMessagePolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.\n\nPossible enum values:\n - `\"FallbackToLogsOnError\"` will read the most recent contents of the container logs for the container status message when the container exits with an error and the terminationMessagePath has no contents.\n - `\"File\"` is the default behavior and will set the container status message to the contents of the container's terminationMessagePath when the container exits.",
+							Description: "指示如何填充终止消息.File将使用terminationMessagePath的内容来填充容器状态消息（无论成功或失败）. FallbackToLogsOnError将在终止消息文件为空且容器以错误退出时使用容器日志输出的最后一块. 日志输出限制为2048字节或80行,以较小者为准. 默认为File. 不能更新.\n\nPossible enum values:\n - `\"FallbackToLogsOnError\"` will read the most recent contents of the container logs for the container status message when the container exits with an error and the terminationMessagePath has no contents.\n - `\"File\"` is the default behavior and will set the container status message to the contents of the container's terminationMessagePath when the container exits.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"FallbackToLogsOnError", "File"}},
@@ -18241,28 +18240,28 @@ func schema_k8sio_api_core_v1_EphemeralContainer(ref common.ReferenceCallback) c
 					},
 					"stdin": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether this container should allocate a buffer for stdin in the container runtime. If this is not set, reads from stdin in the container will always result in EOF. Default is false.",
+							Description: "交互式容器的变量,这些变量具有非常特殊的用途（例如调试）,不应用于通用容器. 此容器是否应在容器运行时为stdin分配缓冲区.如果未设置此项,则从容器中的stdin读取将始终导致EOF. 默认值为false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"stdinOnce": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether the container runtime should close the stdin channel after it has been opened by a single attach. When stdin is true the stdin stream will remain open across multiple attach sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the first client attaches to stdin, and then remains open and accepts data until the client disconnects, at which time stdin is closed and remains closed until the container is restarted. If this flag is false, a container processes that reads from stdin will never receive an EOF. Default is false",
+							Description: "容器运行时是否应在单个附加后关闭stdin通道.当stdin为true时,stdin流将在多个附加会话中保持打开状态. 如果stdinOnce设置为true,则在容器启动时打开stdin,直到第一个客户端连接到stdin之前为空,然后保持打开状态并接受数据,直到客户端断开连接, 此时stdin被关闭并保持关闭状态,直到容器重新启动.如果此标志为false,则从stdin读取的容器进程永远不会收到EOF. 默认值为false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"tty": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. Default is false.",
+							Description: "这个容器是否应该为自己分配一个 TTY,需要 'stdin' 也为 true.默认值为 false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"targetContainerName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "If set, the name of the container from PodSpec that this ephemeral container targets. The ephemeral container will be run in the namespaces (IPC, PID, etc) of this container. If not set then the ephemeral container uses the namespaces configured in the Pod spec.\n\nThe container runtime must implement support for this feature. If the runtime does not support namespace targeting then the result of setting this field is undefined.",
+							Description: "容器将在这个容器的命名空间（IPC、PID 等）中运行.如果未设置此字段,则 Ephemeral 容器将使用 Pod spec 中配置的命名空间.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -18429,7 +18428,7 @@ func schema_k8sio_api_core_v1_EphemeralContainerCommon(ref common.ReferenceCallb
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "volumeDevices is the list of block devices to be used by the container.",
+							Description: "volumeDevices字段用于指定容器使用的块设备列表.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -18467,14 +18466,14 @@ func schema_k8sio_api_core_v1_EphemeralContainerCommon(ref common.ReferenceCallb
 					},
 					"terminationMessagePath": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Optional: Path at which the file to which the container's termination message will be written is mounted into the container's filesystem. Message written is intended to be brief final status, such as an assertion failure message. Will be truncated by the node if greater than 4096 bytes. The total message length across all containers will be limited to 12kb. Defaults to /dev/termination-log. Cannot be updated.",
+							Description: "可选项：将容器终止消息写入容器文件系统中挂载的文件的路径. 写入的消息应该是简短的最终状态,例如断言失败消息. 如果大于4096字节,将被节点截断.在所有容器中,总消息长度将被限制为12kb. 默认为/dev/termination-log. 不能更新.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"terminationMessagePolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Indicate how the termination message should be populated. File will use the contents of terminationMessagePath to populate the container status message on both success and failure. FallbackToLogsOnError will use the last chunk of container log output if the termination message file is empty and the container exited with an error. The log output is limited to 2048 bytes or 80 lines, whichever is smaller. Defaults to File. Cannot be updated.\n\nPossible enum values:\n - `\"FallbackToLogsOnError\"` will read the most recent contents of the container logs for the container status message when the container exits with an error and the terminationMessagePath has no contents.\n - `\"File\"` is the default behavior and will set the container status message to the contents of the container's terminationMessagePath when the container exits.",
+							Description: "指示如何填充终止消息.File将使用terminationMessagePath的内容来填充容器状态消息（无论成功或失败）. FallbackToLogsOnError将在终止消息文件为空且容器以错误退出时使用容器日志输出的最后一块. 日志输出限制为2048字节或80行,以较小者为准. 默认为File. 不能更新.\n\nPossible enum values:\n - `\"FallbackToLogsOnError\"` will read the most recent contents of the container logs for the container status message when the container exits with an error and the terminationMessagePath has no contents.\n - `\"File\"` is the default behavior and will set the container status message to the contents of the container's terminationMessagePath when the container exits.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"FallbackToLogsOnError", "File"}},
@@ -18494,21 +18493,21 @@ func schema_k8sio_api_core_v1_EphemeralContainerCommon(ref common.ReferenceCallb
 					},
 					"stdin": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether this container should allocate a buffer for stdin in the container runtime. If this is not set, reads from stdin in the container will always result in EOF. Default is false.",
+							Description: "交互式容器的变量,这些变量具有非常特殊的用途（例如调试）,不应用于通用容器. 此容器是否应在容器运行时为stdin分配缓冲区.如果未设置此项,则从容器中的stdin读取将始终导致EOF. 默认值为false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"stdinOnce": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether the container runtime should close the stdin channel after it has been opened by a single attach. When stdin is true the stdin stream will remain open across multiple attach sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the first client attaches to stdin, and then remains open and accepts data until the client disconnects, at which time stdin is closed and remains closed until the container is restarted. If this flag is false, a container processes that reads from stdin will never receive an EOF. Default is false",
+							Description: "容器运行时是否应在单个附加后关闭stdin通道.当stdin为true时,stdin流将在多个附加会话中保持打开状态. 如果stdinOnce设置为true,则在容器启动时打开stdin,直到第一个客户端连接到stdin之前为空,然后保持打开状态并接受数据,直到客户端断开连接, 此时stdin被关闭并保持关闭状态,直到容器重新启动.如果此标志为false,则从stdin读取的容器进程永远不会收到EOF. 默认值为false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"tty": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. Default is false.",
+							Description: "这个容器是否应该为自己分配一个 TTY,需要 'stdin' 也为 true.默认值为 false.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -18601,21 +18600,21 @@ func schema_k8sio_api_core_v1_Event(ref common.ReferenceCallback) common.OpenAPI
 					},
 					"firstTimestamp": {
 						SchemaProps: spec.SchemaProps{
-							Description: "事件被记录的时间。 （服务器接收时间在 TypeMeta 中。）",
+							Description: "事件被记录的时间. （服务器接收时间在 TypeMeta 中.）",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"lastTimestamp": {
 						SchemaProps: spec.SchemaProps{
-							Description: "最近一次发生此事件被记录的时间。",
+							Description: "最近一次发生此事件被记录的时间.",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"count": {
 						SchemaProps: spec.SchemaProps{
-							Description: "这个事件发生的次数。",
+							Description: "这个事件发生的次数.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -19616,7 +19615,7 @@ func schema_k8sio_api_core_v1_Lifecycle(ref common.ReferenceCallback) common.Ope
 				Properties: map[string]spec.Schema{
 					"postStart": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PostStart is called immediately after a container is created. If the handler fails, the container is terminated and restarted according to its restart policy. Other management of the container blocks until the hook completes. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks",
+							Description: "创建容器后立即调用PostStart.如果处理程序失败,则终止容器并根据其重启策略重新启动.在钩子完成之前,容器的其他管理阻塞.\n\nMore info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks",
 							Ref:         ref("k8s.io/api/core/v1.LifecycleHandler"),
 						},
 					},
@@ -20419,13 +20418,13 @@ func schema_k8sio_api_core_v1_NodeAffinity(ref common.ReferenceCallback) common.
 				Properties: map[string]spec.Schema{
 					"requiredDuringSchedulingIgnoredDuringExecution": {
 						SchemaProps: spec.SchemaProps{
-							Description: "调度时需要，执行时忽略。 如果在调度时不满足指定的亲和性要求，则不会将该pod调度到该节点。 在pod执行期间的某个时刻，亲和性不在满足。系统 可能会也可能不会  尝试最终从其节点中退出pod。",
+							Description: "调度时需要,执行时忽略. 如果在调度时不满足指定的亲和性要求,则不会将该pod调度到该节点. 在pod执行期间的某个时刻,亲和性不在满足.系统 可能会也可能不会  尝试最终从其节点中退出pod.",
 							Ref:         ref("k8s.io/api/core/v1.NodeSelector"),
 						},
 					},
 					"preferredDuringSchedulingIgnoredDuringExecution": {
 						SchemaProps: spec.SchemaProps{
-							Description: "调度时首选，执行时忽略；优选 调度策略，用于挑选合适的节点",
+							Description: "调度时首选,执行时忽略;优选 调度策略,用于挑选合适的节点",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -20939,7 +20938,7 @@ func schema_k8sio_api_core_v1_NodeStatus(ref common.ReferenceCallback) common.Op
 					},
 					"allocatable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "表示节点可用于调度的资源。",
+							Description: "表示节点可用于调度的资源.",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -21044,7 +21043,7 @@ func schema_k8sio_api_core_v1_NodeStatus(ref common.ReferenceCallback) common.Op
 					},
 					"volumesAttached": {
 						SchemaProps: spec.SchemaProps{
-							Description: "List of volumes that are attached to the node.",
+							Description: "VolumesAttached 已附加到节点的卷列表.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -21559,7 +21558,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"phase": {
 						SchemaProps: spec.SchemaProps{
-							Description: "phase represents the current phase of PersistentVolumeClaim.\n\nPossible enum values:\n - `\"Bound\"` used for PersistentVolumeClaims that are bound\n - `\"Lost\"` used for PersistentVolumeClaims that lost their underlying PersistentVolume. The claim was bound to a PersistentVolume and this volume does not exist any longer and all data on it was lost.\n - `\"Pending\"` used for PersistentVolumeClaims that are not yet bound",
+							Description: "phase represents the current phase of PersistentVolumeClaim.\n\nPossible enum values:\n - `\"Bound\"` 正在等待绑定的状态\n - `\"Lost\"` 已绑定的状态\n - `\"Pending\"`",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"Bound", "Lost", "Pending"}},
@@ -21631,7 +21630,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref common.ReferenceCa
 					},
 					"resizeStatus": {
 						SchemaProps: spec.SchemaProps{
-							Description: "resizeStatus stores status of resize operation. ResizeStatus is not set by default but when expansion is complete resizeStatus is set to empty string by resize controller or kubelet. This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
+							Description: "ResizeStatus 未设置,但是当扩展完成时,resizeStatus 由 resize 控制器或 kubelet 设置为空字符串.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -21682,7 +21681,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"claimName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "pvc的名称，将使用该名称创建volume More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
+							Description: "pvc的名称,将使用该名称创建volume More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -21757,61 +21756,61 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PersistentVolumeSource is similar to VolumeSource but meant for the administrator who creates PVs. Exactly one of its members must be set.",
+				Description: "PersistentVolumeSource 是 Kubernetes 中用于表示持久卷源的对象.与 VolumeSource 类似,它也包含了多种不同类型的卷源,如 NFS、iSCSI、Ceph 等, 但是 PersistentVolumeSource 主要是面向 Kubernetes 集群管理员,用于创建持久卷（PV）时使用的. 因此,PersistentVolumeSource 中的成员必须且只能设置其中的一个",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"gcePersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+							Description: "使用 Google Compute Engine 的持久磁盘作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 							Ref:         ref("k8s.io/api/core/v1.GCEPersistentDiskVolumeSource"),
 						},
 					},
 					"awsElasticBlockStore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+							Description: "使用 Amazon Web Services 的 Elastic Block Store 作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
 							Ref:         ref("k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource"),
 						},
 					},
 					"hostPath": {
 						SchemaProps: spec.SchemaProps{
-							Description: "hostPath represents a directory on the host. Provisioned by a developer or tester. This is useful for single-node development and testing only! On-host storage is not supported in any way and WILL NOT WORK in a multi-node cluster. More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath",
+							Description: "使用节点上的本地路径作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath",
 							Ref:         ref("k8s.io/api/core/v1.HostPathVolumeSource"),
 						},
 					},
 					"glusterfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "glusterfs represents a Glusterfs volume that is attached to a host and exposed to the pod. Provisioned by an admin. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
+							Description: "使用 GlusterFS 分布式文件系统作为卷 More info: https://examples.k8s.io/volumes/glusterfs/README.md",
 							Ref:         ref("k8s.io/api/core/v1.GlusterfsPersistentVolumeSource"),
 						},
 					},
 					"nfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "nfs represents an NFS mount on the host. Provisioned by an admin. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs",
+							Description: "使用网络文件系统作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs",
 							Ref:         ref("k8s.io/api/core/v1.NFSVolumeSource"),
 						},
 					},
 					"rbd": {
 						SchemaProps: spec.SchemaProps{
-							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md",
+							Description: "使用 Ceph 块设备作为卷 More info: https://examples.k8s.io/volumes/rbd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.RBDPersistentVolumeSource"),
+						},
+					},
+					"cephfs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "使用 Ceph 文件系统作为卷",
+							Ref:         ref("k8s.io/api/core/v1.CephFSPersistentVolumeSource"),
 						},
 					},
 					"iscsi": {
 						SchemaProps: spec.SchemaProps{
-							Description: "iscsi represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin.",
+							Description: "使用 iSCSI 协议连接存储设备作为卷",
 							Ref:         ref("k8s.io/api/core/v1.ISCSIPersistentVolumeSource"),
 						},
 					},
 					"cinder": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+							Description: "使用 OpenStack Cinder 块存储作为卷 More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.CinderPersistentVolumeSource"),
-						},
-					},
-					"cephfs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
-							Ref:         ref("k8s.io/api/core/v1.CephFSPersistentVolumeSource"),
 						},
 					},
 					"fc": {
@@ -21822,13 +21821,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSource(ref common.ReferenceCallbac
 					},
 					"flocker": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running",
+							Description: "使用 Flocker 管理的卷作为卷",
 							Ref:         ref("k8s.io/api/core/v1.FlockerVolumeSource"),
 						},
 					},
 					"flexVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin.",
+							Description: "使用 FlexVolume 插件作为卷",
 							Ref:         ref("k8s.io/api/core/v1.FlexPersistentVolumeSource"),
 						},
 					},
@@ -21909,7 +21908,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 				Properties: map[string]spec.Schema{
 					"capacity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "capacity is the description of the persistent volume's resources and capacity. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity",
+							Description: "存储设备的可用空间大小. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -21924,56 +21923,56 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"gcePersistentDisk": {
 						SchemaProps: spec.SchemaProps{
-							Description: "gcePersistentDisk represents a GCE Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
+							Description: "使用 Google Compute Engine 的持久磁盘作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk",
 							Ref:         ref("k8s.io/api/core/v1.GCEPersistentDiskVolumeSource"),
 						},
 					},
 					"awsElasticBlockStore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "awsElasticBlockStore represents an AWS Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
+							Description: "使用 Amazon Web Services 的 Elastic Block Store 作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore",
 							Ref:         ref("k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource"),
 						},
 					},
 					"hostPath": {
 						SchemaProps: spec.SchemaProps{
-							Description: "hostPath represents a directory on the host. Provisioned by a developer or tester. This is useful for single-node development and testing only! On-host storage is not supported in any way and WILL NOT WORK in a multi-node cluster. More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath",
+							Description: "使用节点上的本地路径作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath",
 							Ref:         ref("k8s.io/api/core/v1.HostPathVolumeSource"),
 						},
 					},
 					"glusterfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "glusterfs represents a Glusterfs volume that is attached to a host and exposed to the pod. Provisioned by an admin. More info: https://examples.k8s.io/volumes/glusterfs/README.md",
+							Description: "使用 GlusterFS 分布式文件系统作为卷 More info: https://examples.k8s.io/volumes/glusterfs/README.md",
 							Ref:         ref("k8s.io/api/core/v1.GlusterfsPersistentVolumeSource"),
 						},
 					},
 					"nfs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "nfs represents an NFS mount on the host. Provisioned by an admin. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs",
+							Description: "使用网络文件系统作为卷 More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs",
 							Ref:         ref("k8s.io/api/core/v1.NFSVolumeSource"),
 						},
 					},
 					"rbd": {
 						SchemaProps: spec.SchemaProps{
-							Description: "rbd represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md",
+							Description: "使用 Ceph 块设备作为卷 More info: https://examples.k8s.io/volumes/rbd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.RBDPersistentVolumeSource"),
+						},
+					},
+					"cephfs": {
+						SchemaProps: spec.SchemaProps{
+							Description: "使用 Ceph 文件系统作为卷",
+							Ref:         ref("k8s.io/api/core/v1.CephFSPersistentVolumeSource"),
 						},
 					},
 					"iscsi": {
 						SchemaProps: spec.SchemaProps{
-							Description: "iscsi represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. Provisioned by an admin.",
+							Description: "使用 iSCSI 协议连接存储设备作为卷",
 							Ref:         ref("k8s.io/api/core/v1.ISCSIPersistentVolumeSource"),
 						},
 					},
 					"cinder": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
+							Description: "使用 OpenStack Cinder 块存储作为卷 More info: https://examples.k8s.io/mysql-cinder-pd/README.md",
 							Ref:         ref("k8s.io/api/core/v1.CinderPersistentVolumeSource"),
-						},
-					},
-					"cephfs": {
-						SchemaProps: spec.SchemaProps{
-							Description: "cephFS represents a Ceph FS mount on the host that shares a pod's lifetime",
-							Ref:         ref("k8s.io/api/core/v1.CephFSPersistentVolumeSource"),
 						},
 					},
 					"fc": {
@@ -21984,13 +21983,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"flocker": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running",
+							Description: "使用 Flocker 管理的卷作为卷",
 							Ref:         ref("k8s.io/api/core/v1.FlockerVolumeSource"),
 						},
 					},
 					"flexVolume": {
 						SchemaProps: spec.SchemaProps{
-							Description: "flexVolume represents a generic volume resource that is provisioned/attached using an exec based plugin.",
+							Description: "使用 FlexVolume 插件作为卷",
 							Ref:         ref("k8s.io/api/core/v1.FlexPersistentVolumeSource"),
 						},
 					},
@@ -22056,7 +22055,7 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"accessModes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "accessModes contains all ways the volume can be mounted. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes",
+							Description: "该卷可以被挂载的所有方式 More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22076,13 +22075,13 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "claimRef is part of a bi-directional binding between PersistentVolume and PersistentVolumeClaim. Expected to be non-nil when bound. claim.VolumeName is the authoritative bind between PV and PVC. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#binding",
+							Description: "这段代码的作用是描述PV（Persistent Volume）和PVC（Persistent Volume Claim）之间的双向绑定关系. 其中,claimRef是这种绑定关系的一部分,它通常是一个指向PVC的引用. 在这种绑定关系中,claim.VolumeName是PV和PVC之间的权威绑定关系. 这个绑定关系的作用是确保PV只能被一个PVC绑定,而且只能被一个PVC绑定. 如果存在多个PVC绑定同一个PV,那么这些PVC将共享PV的存储空间. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#binding",
 							Ref:         ref("k8s.io/api/core/v1.ObjectReference"),
 						},
 					},
 					"persistentVolumeReclaimPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "persistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim. Valid options are Retain (default for manually created PersistentVolumes), Delete (default for dynamically provisioned PersistentVolumes), and Recycle (deprecated). Recycle must be supported by the volume plugin underlying this PersistentVolume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming\n\nPossible enum values:\n - `\"Delete\"` means the volume will be deleted from Kubernetes on release from its claim. The volume plugin must support Deletion.\n - `\"Recycle\"` means the volume will be recycled back into the pool of unbound persistent volumes on release from its claim. The volume plugin must support Recycling.\n - `\"Retain\"` means the volume will be left in its current phase (Released) for manual reclamation by the administrator. The default policy is Retain.",
+							Description: "persistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim. Valid options are Retain (default for manually created PersistentVolumes), Delete (default for dynamically provisioned PersistentVolumes), and Recycle (deprecated). Recycle must be supported by the volume plugin underlying this PersistentVolume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming\n\nPossible enum values:\n - `\"Delete\"` 表示在持久卷被释放时,它将从Kubernetes中删除.卷插件必须支持删除.\n - `\"Recycle\"` 表示在持久卷被释放时,它将被回收到未绑定的持久卷池中.卷插件必须支持回收.\n - `\"Retain\"` 表示持久卷将被保留在其当前阶段（已释放）中,以便管理员手动回收.默认策略是Retain.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"Delete", "Recycle", "Retain"}},
@@ -22111,14 +22110,14 @@ func schema_k8sio_api_core_v1_PersistentVolumeSpec(ref common.ReferenceCallback)
 					},
 					"volumeMode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "volumeMode defines if a volume is intended to be used with a formatted filesystem or to remain in raw block state. Value of Filesystem is implied when not included in spec.",
+							Description: "volumeMode 定义卷是否打算与格式化的文件系统一起使用,还是保持原始块状态.如果未包含在 spec 中,则 FileSystem 的值是默认的.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"nodeAffinity": {
 						SchemaProps: spec.SchemaProps{
-							Description: "nodeAffinity defines constraints that limit what nodes this volume can be accessed from. This field influences the scheduling of pods that use this volume.",
+							Description: "nodeAffinity 限制可以从哪些节点访问该卷.",
 							Ref:         ref("k8s.io/api/core/v1.VolumeNodeAffinity"),
 						},
 					},
@@ -22290,12 +22289,12 @@ func schema_k8sio_api_core_v1_PodAffinityTerm(ref common.ReferenceCallback) comm
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodAffinityTerm 定义一组pod(即相对于给定的命名空间匹配labelSelector的pod)，该pod应该与之共存(亲和)或不共存(反亲和)，其中共存定义为运行在一个节点上，",
+				Description: "PodAffinityTerm 定义一组pod(即相对于给定的命名空间匹配labelSelector的pod),该pod应该与之共存(亲和)或不共存(反亲和),其中共存定义为运行在一个节点上,",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"labelSelector": {
 						SchemaProps: spec.SchemaProps{
-							Description: "对一组资源(在本例中是pod)的标签查询。",
+							Description: "对一组资源(在本例中是pod)的标签查询.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector"),
 						},
 					},
@@ -22446,7 +22445,7 @@ func schema_k8sio_api_core_v1_PodCondition(ref common.ReferenceCallback) common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodCondition 包含此pod当前状态的详细信息。",
+				Description: "PodCondition 包含此pod当前状态的详细信息.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"type": {
@@ -22505,12 +22504,12 @@ func schema_k8sio_api_core_v1_PodDNSConfig(ref common.ReferenceCallback) common.
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodDNSConfig defines the DNS parameters of a pod in addition to those generated from DNSPolicy.",
+				Description: "PodDNSConfig 定义了 Pod 的 DNS 参数,除了从 DNSPolicy 生成的参数之外.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"nameservers": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A list of DNS name server IP addresses. This will be appended to the base nameservers generated from DNSPolicy. Duplicated nameservers will be removed.",
+							Description: "DNS 服务器 IP 地址列表. 这将会添加到从 DNSPolicy 生成的基本 DNS 服务器列表中. 重复的 DNS 服务器将被删除.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22525,7 +22524,7 @@ func schema_k8sio_api_core_v1_PodDNSConfig(ref common.ReferenceCallback) common.
 					},
 					"searches": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A list of DNS search domains for host-name lookup. This will be appended to the base search paths generated from DNSPolicy. Duplicated search paths will be removed.",
+							Description: "主机名查询 DNS 搜索域列表. 这将会添加到从 DNSPolicy 生成的基本搜索路径列表中. 重复的搜索路径将被删除.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22540,7 +22539,7 @@ func schema_k8sio_api_core_v1_PodDNSConfig(ref common.ReferenceCallback) common.
 					},
 					"options": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A list of DNS resolver options. This will be merged with the base options generated from DNSPolicy. Duplicated entries will be removed. Resolution options given in Options will override those that appear in the base DNSPolicy.",
+							Description: "DNS 解析选项列表. 这将会与从 DNSPolicy 生成的基本选项列表合并. 重复的选项将被删除. 在 Options 中给出的解析选项将覆盖出现在基本 DNSPolicy 中的选项.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22564,12 +22563,12 @@ func schema_k8sio_api_core_v1_PodDNSConfigOption(ref common.ReferenceCallback) c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodDNSConfigOption defines DNS resolver options of a pod.",
+				Description: "PodDNSConfigOption 定义了 Pod 的 DNS 解析器选项.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required.",
+							Description: "必需的字段.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -22830,7 +22829,7 @@ func schema_k8sio_api_core_v1_PodOS(ref common.ReferenceCallback) common.OpenAPI
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "PodOS 定义pod的操作系统参数。",
+				Description: "PodOS 定义pod的操作系统参数.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
@@ -23013,13 +23012,13 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 					},
 					"windowsOptions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The Windows specific settings applied to all containers. If unspecified, the options within a container's SecurityContext will be used. If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence. Note that this field cannot be set when spec.os.name is linux.",
+							Description: "适用于所有容器的Windows特定设置. 如果未指定,则将使用容器的SecurityContext中的选项. 如果在SecurityContext和PodSecurityContext中都设置了该值,则SecurityContext中指定的值优先. 请注意,当spec.os.name为linux时,无法设置此字段.",
 							Ref:         ref("k8s.io/api/core/v1.WindowsSecurityContextOptions"),
 						},
 					},
 					"runAsUser": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The UID to run the entrypoint of the container process. Defaults to user specified in image metadata if unspecified. May also be set in SecurityContext.  If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence for that container. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "指定容器进程的运行用户 ID（UID）.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -23038,7 +23037,7 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 					},
 					"supplementalGroups": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A list of groups applied to the first process run in each container, in addition to the container's primary GID, the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process. If unspecified, no additional groups are added to any container. Note that group memberships defined in the container image for the uid of the container process are still effective, even if they are not included in this list. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "在每个容器中运行的第一个进程中应用的一组组,除了容器的主GID、fsGroup（如果已指定）和容器进程的uid在容器映像中定义的组成员之外. 如果未指定,则不会向任何容器添加其他组.请注意,在容器映像中为容器进程的uid定义的组成员仍然有效,即使它们未包含在此列表中. 请注意,当spec.os.name为windows时,无法设置此字段.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23053,14 +23052,14 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 					},
 					"fsGroup": {
 						SchemaProps: spec.SchemaProps{
-							Description: "A special supplemental group that applies to all containers in a pod. Some volume types allow the Kubelet to change the ownership of that volume to be owned by the pod:\n\n1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw----\n\nIf unset, the Kubelet will not modify the ownership and permissions of any volume. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "适用于Pod中所有容器的特殊辅助组. 一些卷类型允许Kubelet更改该卷的所有权,以由Pod拥有：\n\n1. 拥有的GID将是FSGroup 2. 设置了setgid位（在卷中创建的新文件将由FSGroup拥有） 3. 权限位与rw-rw----进行或运算\n\n如果未设置,则Kubelet不会修改任何卷的所有权和权限. 请注意,当spec.os.name为windows时,无法设置此字段.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"sysctls": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported sysctls (by the container runtime) might fail to launch. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "Sysctls字段用于存储Pod所使用的命名空间Sysctls列表.如果容器运行时不支持Pod中使用的Sysctls,则Pod可能无法启动.需要注意的是,当spec.os.name为windows时,无法设置此字段.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23074,14 +23073,14 @@ func schema_k8sio_api_core_v1_PodSecurityContext(ref common.ReferenceCallback) c
 					},
 					"fsGroupChangePolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "fsGroupChangePolicy defines behavior of changing ownership and permission of the volume before being exposed inside Pod. This field will only apply to volume types which support fsGroup based ownership(and permissions). It will have no effect on ephemeral volume types such as: secret, configmaps and emptydir. Valid values are \"OnRootMismatch\" and \"Always\". If not specified, \"Always\" is used. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "fsGroupChangePolicy字段定义在将卷暴露在Pod内部之前更改所有权和权限的行为. 此字段仅适用于支持基于fsGroup的所有权（和权限）的卷类型. 它对于如secret、configmaps和emptydir等临时卷类型没有影响. 有效值为\"OnRootMismatch\"和\"Always\".如果未指定,则使用\"Always\".需要注意的是,当spec.os.name为windows时,无法设置此字段.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"seccompProfile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The seccomp options to use by the containers in this pod. Note that this field cannot be set when spec.os.name is windows.",
+							Description: "seccompOptions字段用于指定该Pod中的容器使用的Seccomp选项.需要注意的是,当spec.os.name为windows时,无法设置此字段.",
 							Ref:         ref("k8s.io/api/core/v1.SeccompProfile"),
 						},
 					},
@@ -23189,7 +23188,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Ephemeral Containers 是在 Pod 中运行的临时容器列表。可以在现有的 Pod 中运行临时容器，以执行用户启动的操作，例如调试。 创建 Pod 时不能指定此列表，也不能通过更新 Pod 规范来修改此列表。要向现有 Pod 添加临时容器，请使用 Pod 的 ephemeralcontainers 子资源。\n\nEphemeral Containers 是 Kubernetes 1.16 中引入的新功能。它允许用户在运行中的 Pod 中添加临时容器，以便进行调试或其他任务。 与常规容器不同，临时容器不会在 Pod 的生命周期中一直存在，而是在任务完成后自动删除。因此，它们只能用于临时任务，而不能用于长期运行的服务。",
+							Description: "Ephemeral Containers 是在 Pod 中运行的临时容器列表.可以在现有的 Pod 中运行临时容器,以执行用户启动的操作,例如调试. 创建 Pod 时不能指定此列表,也不能通过更新 Pod 规范来修改此列表.要向现有 Pod 添加临时容器,请使用 Pod 的 ephemeralcontainers 子资源.\n\nEphemeral Containers 是 Kubernetes 1.16 中引入的新功能.它允许用户在运行中的 Pod 中添加临时容器,以便进行调试或其他任务. 与常规容器不同,临时容器不会在 Pod 的生命周期中一直存在,而是在任务完成后自动删除.因此,它们只能用于临时任务,而不能用于长期运行的服务.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23320,7 +23319,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod",
+							Description: "它指向同一名称空间中的secret More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23497,7 +23496,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"os": {
 						SchemaProps: spec.SchemaProps{
-							Description: "指定pod中容器的操作系统。\n\nIf the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions\n\nIf the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup",
+							Description: "指定pod中容器的操作系统.\n\nIf the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions\n\nIf the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup",
 							Ref:         ref("k8s.io/api/core/v1.PodOS"),
 						},
 					},
@@ -23574,7 +23573,7 @@ func schema_k8sio_api_core_v1_PodStatus(ref common.ReferenceCallback) common.Ope
 				Properties: map[string]spec.Schema{
 					"phase": {
 						SchemaProps: spec.SchemaProps{
-							Description: "pod的阶段 Pending、Running、Succeeded、Failed、Unknown More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-phase\n\nPossible enum values:\n - `\"Failed\"` 表示该 Pod 中的所有容器都已经自愿终止，并且系统不会重新启动这些容器。\n - `\"Pending\"`\n - `\"Running\"` 表示该 Pod 已被系统接受，但一个或多个容器尚未启动。这包括绑定到节点之前的时间，以及在主机上拉取镜像的时间。\n - `\"Succeeded\"` 表示该 Pod 已经绑定到节点，并且所有容器都已经启动。至少有一个容器仍在运行或正在重新启动过程中。\n - `\"Unknown\"` 表示该 Pod 中的所有容器都已经终止，并且至少有一个容器在失败中终止（以非零退出代码退出或被系统停止）。",
+							Description: "pod的阶段 Pending、Running、Succeeded、Failed、Unknown More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-phase\n\nPossible enum values:\n - `\"Failed\"` 表示该 Pod 中的所有容器都已经自愿终止,并且系统不会重新启动这些容器.\n - `\"Pending\"`\n - `\"Running\"` 表示该 Pod 已被系统接受,但一个或多个容器尚未启动.这包括绑定到节点之前的时间,以及在主机上拉取镜像的时间.\n - `\"Succeeded\"` 表示该 Pod 已经绑定到节点,并且所有容器都已经启动.至少有一个容器仍在运行或正在重新启动过程中.\n - `\"Unknown\"` 表示该 Pod 中的所有容器都已经终止,并且至少有一个容器在失败中终止（以非零退出代码退出或被系统停止）.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"Failed", "Pending", "Running", "Succeeded", "Unknown"}},
@@ -23587,7 +23586,7 @@ func schema_k8sio_api_core_v1_PodStatus(ref common.ReferenceCallback) common.Ope
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "pod的历史服务状态。 More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions",
+							Description: "pod的历史服务状态. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -24034,7 +24033,7 @@ func schema_k8sio_api_core_v1_Probe(ref common.ReferenceCallback) common.OpenAPI
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Probe 健康检查 ，以判断是否ready 以及接受流量",
+				Description: "Probe 健康检查 ,以判断是否ready 以及接受流量",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"exec": {
@@ -24063,14 +24062,14 @@ func schema_k8sio_api_core_v1_Probe(ref common.ReferenceCallback) common.OpenAPI
 					},
 					"initialDelaySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "在启动活动探针之前，容器启动后的秒数。 More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+							Description: "在启动活动探针之前,容器启动后的秒数. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"timeoutSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "探测超时，默认1s More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
+							Description: "探测超时,默认1s More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -24084,14 +24083,14 @@ func schema_k8sio_api_core_v1_Probe(ref common.ReferenceCallback) common.OpenAPI
 					},
 					"successThreshold": {
 						SchemaProps: spec.SchemaProps{
-							Description: "连续成功一定次数内, 保持探针状态不变 ，默认1 // 偶尔成功一次，不算",
+							Description: "连续成功一定次数内, 保持探针状态不变 ,默认1 // 偶尔成功一次,不算",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"failureThreshold": {
 						SchemaProps: spec.SchemaProps{
-							Description: "连续失败一定次数内, 保持探针状态不变 ，默认 3 // 偶尔失败一次，不算",
+							Description: "连续失败一定次数内, 保持探针状态不变 ,默认 3 // 偶尔失败一次,不算",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -24614,19 +24613,19 @@ func schema_k8sio_api_core_v1_ReplicationControllerSpec(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ReplicationControllerSpec is the specification of a replication controller.",
+				Description: "ReplicationControllerSpec 是一个复制控制器的规范.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas is the number of desired replicas. This is a pointer to distinguish between explicit zero and unspecified. Defaults to 1. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller",
+							Description: "Replicas 是期望的副本数. 这是一个指针,用于区分显式的零和未指定的情况. 默认为 1. 更多信息：https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"minReadySeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Minimum number of seconds for which a newly created pod should be ready without any of its container crashing, for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready)",
+							Description: "新创建的 Pod 在没有任何容器崩溃的情况下应准备好的最短时间（秒数）, 以便将其视为可用.默认为 0（一旦准备好就将 Pod 视为可用）.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -24638,7 +24637,7 @@ func schema_k8sio_api_core_v1_ReplicationControllerSpec(ref common.ReferenceCall
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Selector is a label query over pods that should match the Replicas count. If Selector is empty, it is defaulted to the labels present on the Pod template. Label keys and values that must match in order to be controlled by this replication controller, if empty defaulted to labels on Pod template. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors",
+							Description: "Selector 是一个标签查询,用于匹配副本数. 如果 Selector 为空,则默认为 Pod 模板上的标签. 必须匹配的标签键和值才能由此复制控制器控制,如果为空,则默认为 Pod 模板上的标签. 更多信息：https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -24654,7 +24653,7 @@ func schema_k8sio_api_core_v1_ReplicationControllerSpec(ref common.ReferenceCall
 					},
 					"template": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Template is the object that describes the pod that will be created if insufficient replicas are detected. This takes precedence over a TemplateRef. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template",
+							Description: "Template 是描述在检测到不足的副本时将创建的 Pod 的对象. 如果指定了 Template,则优先于 TemplateRef. 更多信息：https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template",
 							Ref:         ref("k8s.io/api/core/v1.PodTemplateSpec"),
 						},
 					},
@@ -25076,7 +25075,7 @@ func schema_k8sio_api_core_v1_SELinuxOptions(ref common.ReferenceCallback) commo
 				Properties: map[string]spec.Schema{
 					"user": {
 						SchemaProps: spec.SchemaProps{
-							Description: "User is a SELinux user label that applies to the container.",
+							Description: "User UID",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -25432,7 +25431,7 @@ func schema_k8sio_api_core_v1_Secret(ref common.ReferenceCallback) common.OpenAP
 					},
 					"immutable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Immutable, if set to true, ensures that data stored in the Secret cannot be updated (only object metadata can be modified). If not set to true, the field can be modified at any time. Defaulted to nil.",
+							Description: "如果设置为true,确保存储在Secret中的数据不能被更新(只有对象元数据可以被修改). 如果不设置为true,该字段可以随时修改.默认为nil.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -27176,7 +27175,7 @@ func schema_k8sio_api_core_v1_Volume(ref common.ReferenceCallback) common.OpenAP
 					},
 					"ephemeral": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ephemeral represents a volume that is handled by a cluster storage driver. The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts, and deleted when the pod is removed.\n\nUse this if: a) the volume is only needed while the pod runs, b) features of normal volumes like restoring from snapshot or capacity\n   tracking are needed,\nc) the storage driver is specified through a storage class, and d) the storage driver supports dynamic volume provisioning through\n   a PersistentVolumeClaim (see EphemeralVolumeSource for more\n   information on the connection between this volume type\n   and PersistentVolumeClaim).\n\nUse PersistentVolumeClaim or one of the vendor-specific APIs for volumes that persist for longer than the lifecycle of an individual pod.\n\nUse CSI for light-weight local ephemeral volumes if the CSI driver is meant to be used that way - see the documentation of the driver for more information.\n\nA pod can use both types of ephemeral volumes and persistent volumes at the same time.",
+							Description: "由集群存储驱动程序处理的卷\n  volumes:\n   - name: my-ephemeral-volume\n     ephemeral:\n       volumeClaimTemplate:\n         spec:\n           accessModes: [ReadWriteOnce]\n           storageClassName: fast-storage\n           resources:\n             requests:\n               storage: 1Gi\nPersistentVolumeClaim (PVC) 和 Ephemeral volume 都是 Kubernetes 中的卷,但它们有明显的区别：\n 1. 生命周期：PVC 的生命周期与 Pod 是分开的,即使 Pod 被删除,PVC 中的数据也可以保存.而 Ephemeral volume 只能在 Pod 存在期间存在,当 Pod 删除后,Ephemeral volume 中的数据也会被删除.\n 2. 使用场景：PVC 适用于需要持久化存储的应用场景,比如数据库.而 Ephemeral volume 适用于那些只需要在短时间内存在的应用场景,比如一次性任务.\n 3. 配额申请方式：PVC 可以静态或动态配额申请,而 Ephemeral volume 只能通过动态配额申请来使用.\n 4. 存储驱动：PVC 可以使用多种存储驱动来进行存储,而 Ephemeral volume 只能使用集群存储驱动进行存储.\n综上所述,PVC 适用于需要长期存储数据的应用场景,而 Ephemeral volume 适用于短暂存储数据的应用场景.",
 							Ref:         ref("k8s.io/api/core/v1.EphemeralVolumeSource"),
 						},
 					},
@@ -27281,7 +27280,7 @@ func schema_k8sio_api_core_v1_VolumeNodeAffinity(ref common.ReferenceCallback) c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "VolumeNodeAffinity defines constraints that limit what nodes this volume can be accessed from.",
+				Description: "VolumeNodeAffinity 限制可以从哪些节点访问该卷.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"required": {
@@ -27514,7 +27513,7 @@ func schema_k8sio_api_core_v1_VolumeSource(ref common.ReferenceCallback) common.
 					},
 					"ephemeral": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ephemeral represents a volume that is handled by a cluster storage driver. The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts, and deleted when the pod is removed.\n\nUse this if: a) the volume is only needed while the pod runs, b) features of normal volumes like restoring from snapshot or capacity\n   tracking are needed,\nc) the storage driver is specified through a storage class, and d) the storage driver supports dynamic volume provisioning through\n   a PersistentVolumeClaim (see EphemeralVolumeSource for more\n   information on the connection between this volume type\n   and PersistentVolumeClaim).\n\nUse PersistentVolumeClaim or one of the vendor-specific APIs for volumes that persist for longer than the lifecycle of an individual pod.\n\nUse CSI for light-weight local ephemeral volumes if the CSI driver is meant to be used that way - see the documentation of the driver for more information.\n\nA pod can use both types of ephemeral volumes and persistent volumes at the same time.",
+							Description: "由集群存储驱动程序处理的卷\n  volumes:\n   - name: my-ephemeral-volume\n     ephemeral:\n       volumeClaimTemplate:\n         spec:\n           accessModes: [ReadWriteOnce]\n           storageClassName: fast-storage\n           resources:\n             requests:\n               storage: 1Gi\nPersistentVolumeClaim (PVC) 和 Ephemeral volume 都是 Kubernetes 中的卷,但它们有明显的区别：\n 1. 生命周期：PVC 的生命周期与 Pod 是分开的,即使 Pod 被删除,PVC 中的数据也可以保存.而 Ephemeral volume 只能在 Pod 存在期间存在,当 Pod 删除后,Ephemeral volume 中的数据也会被删除.\n 2. 使用场景：PVC 适用于需要持久化存储的应用场景,比如数据库.而 Ephemeral volume 适用于那些只需要在短时间内存在的应用场景,比如一次性任务.\n 3. 配额申请方式：PVC 可以静态或动态配额申请,而 Ephemeral volume 只能通过动态配额申请来使用.\n 4. 存储驱动：PVC 可以使用多种存储驱动来进行存储,而 Ephemeral volume 只能使用集群存储驱动进行存储.\n综上所述,PVC 适用于需要长期存储数据的应用场景,而 Ephemeral volume 适用于短暂存储数据的应用场景.",
 							Ref:         ref("k8s.io/api/core/v1.EphemeralVolumeSource"),
 						},
 					},
@@ -43262,7 +43261,7 @@ func schema_k8sio_api_storage_v1_VolumeAttachment(ref common.ReferenceCallback) 
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "VolumeAttachment captures the intent to attach or detach the specified volume to/from the specified node.\n\nVolumeAttachment objects are non-namespaced.",
+				Description: "VolumeAttachment  将指定卷附加或从指定节点分离的意图,non-namespaced.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -48833,7 +48832,7 @@ func schema_pkg_apis_meta_v1_ObjectMeta(ref common.ReferenceCallback) common.Ope
 					},
 					"generateName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "一个可选的前缀，由服务器用于生成唯一名称，仅在未提供 Name 字段时使用。 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
+							Description: "一个可选的前缀,由服务器用于生成唯一名称,仅在未提供 Name 字段时使用. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -58141,7 +58140,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"podPidsLimit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "pod中pid的最大数目。Default: -1",
+							Description: "pod中pid的最大数目.Default: -1",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -58477,7 +58476,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"volumePluginDir": {
 						SchemaProps: spec.SchemaProps{
-							Description: "volumePluginDir is the full path of the directory in which to search for additional third party volume plugins. Default: \"/usr/libexec/kubernetes/kubelet-plugins/volume/exec/\"",
+							Description: "volumePluginDir 要搜索其他第三方卷插件的完整目录路径. Default: \"/usr/libexec/kubernetes/kubelet-plugins/volume/exec/\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},

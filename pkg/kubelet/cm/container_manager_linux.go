@@ -105,9 +105,9 @@ type ContainerManagerImpl struct {
 	recorder            record.EventRecorder    // 事件记录器接口.
 	qosContainerManager QOSContainerManager     // QoS cgroup 管理的接口.
 	DeviceManager       devicemanager.Manager   // 设备插件 报告的设备的 导出和分配的接口.
-	cpuManager          cpumanager.Manager      // CPU 亲和性管理的接口.
-	memoryManager       memorymanager.Manager   // 内存亲和性管理的接口.
-	TopologyManager     topologymanager.Manager // 拓扑资源协调的接口. ✅
+	cpuManager          cpumanager.Manager      // cpu管理器
+	memoryManager       memorymanager.Manager   // 内存管理器
+	TopologyManager     topologymanager.Manager // numa 拓扑管理器 ✅
 	draManager          dra.Manager             // 动态资源分配管理的接口.
 }
 
@@ -183,13 +183,13 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 }
 
 // NewContainerManager TODO(vmarmol): 为系统容器添加限制
-// 获取指定容器的绝对名称。
-// 空容器名禁用使用指定的容器。
+// 获取指定容器的绝对名称.
+// 空容器名禁用使用指定的容器.
 func NewContainerManager(
 	mountUtil mount.Interface,
 	cadvisorInterface cadvisor.Interface,
 	nodeConfig NodeConfig,
-	failSwapOn bool, // 告诉Kubelet，如果在节点上启用了swap，则启动失败。
+	failSwapOn bool, // 告诉Kubelet,如果在节点上启用了swap,则启动失败.
 	recorder record.EventRecorder,
 	kubeClient clientset.Interface,
 ) (ContainerManager, error) {
@@ -198,8 +198,8 @@ func NewContainerManager(
 		return nil, fmt.Errorf("failed to get mounted cgroup subsystems: %v", err)
 	}
 
-	if failSwapOn {
-		// 检查swap是否开启。Kubelet不支持在启用swap的情况下运行。
+	if failSwapOn { // swap开启时,kubelet不能运行,检查一下
+		// 检查swap是否开启.Kubelet不支持在启用swap的情况下运行.
 		swapFile := "/proc/swaps"
 		swapData, err := os.ReadFile(swapFile)
 		if err != nil {
@@ -220,6 +220,7 @@ func NewContainerManager(
 		}
 	}
 
+	// 通过cadvisorInterface提供的获取节点信息的方法获取machineInfo,从中获取资源的容量信息,遍历后取值
 	var internalCapacity = v1.ResourceMap{}
 	// It is safe to invoke `MachineInfo` on cAdvisor before logically initializing cAdvisor here because
 	// machine info is computed and cached once as part of cAdvisor object creation.
@@ -554,7 +555,8 @@ func (cm *ContainerManagerImpl) Start(node *v1.Node,
 	sourcesReady config.SourcesReady,
 	podStatusProvider status.PodStatusProvider,
 	runtimeService internalapi.RuntimeService,
-	localStorageCapacityIsolation bool) error {
+	localStorageCapacityIsolation bool,
+) error {
 	ctx := context.Background()
 
 	// Initialize CPU manager
@@ -653,6 +655,7 @@ func (cm *ContainerManagerImpl) GetResources(pod *v1.Pod, container *v1.Containe
 	}
 	// Allocate should already be called during predicateAdmitHandler.Admit(),
 	// just try to fetch device runtime information from cached state here
+	// admit() 期间应该已经调用了Allocate,只是尝试从这里的缓存状态获取设备运行时信息
 	devOpts, err := cm.DeviceManager.GetDeviceRunContainerOptions(pod, container)
 	if err != nil {
 		return nil, err

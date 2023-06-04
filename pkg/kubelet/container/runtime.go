@@ -79,24 +79,11 @@ type Runtime interface {
 	APIVersion() (Version, error)
 	Status(ctx context.Context) (*RuntimeStatus, error)    // 返回运行时的状态.
 	GetPods(ctx context.Context, all bool) ([]*Pod, error) // 否会所有pod, all=true会返回已经死亡的容器
-	// GarbageCollect removes dead containers using the specified container gc policy
-	// If allSourcesReady is not true, it means that kubelet doesn't have the
-	// complete list of pods from all available sources (e.g., apiserver, http,
-	// file). In this case, garbage collector should refrain itself from aggressive
-	// behavior such as removing all containers of unrecognized pods (yet).
-	// If evictNonDeletedPods is set to true, containers and sandboxes belonging to pods
-	// that are terminated, but not deleted will be evicted.  Otherwise, only deleted pods
-	// will be GC'd.
-	// TODO: Revisit this method and make it cleaner.
 	GarbageCollect(ctx context.Context, gcPolicy GCPolicy, allSourcesReady bool, evictNonDeletedPods bool) error
-	// SyncPod syncs the running pod into the desired pod.
+	// SyncPod 将运行的pod同步到所需的pod.
 	SyncPod(ctx context.Context, pod *v1.Pod, podStatus *PodStatus, pullSecrets []v1.Secret, backOff *flowcontrol.Backoff) PodSyncResult
-	// KillPod kills all the containers of a pod. Pod may be nil, running pod must not be.
-	// TODO(random-liu): Return PodSyncResult in KillPod.
-	// gracePeriodOverride if specified allows the caller to override the pod default grace period.
-	// only hard kill paths are allowed to specify a gracePeriodOverride in the kubelet in order to not corrupt user data.
-	// it is useful when doing SIGKILL for hard eviction scenarios, or max grace period during soft eviction scenarios.
-	KillPod(ctx context.Context, pod *v1.Pod, runningPod Pod, gracePeriodOverride *int64) error
+
+	KillPod(ctx context.Context, pod *v1.Pod, runningPod Pod, gracePeriodOverride *int64) error // KillPod杀死pod的所有容器.Pod可以是nil, running Pod不能是.
 	// GetPodStatus retrieves the status of the pod, including the
 	// information of all containers in the pod that are visible in Runtime.
 	GetPodStatus(ctx context.Context, uid types.UID, name, namespace string) (*PodStatus, error)
@@ -116,11 +103,11 @@ type Runtime interface {
 	CheckpointContainer(ctx context.Context, options *runtimeapi.CheckpointContainerRequest) error // 让容器运行时创建检查点
 	// Generate pod status from the CRI event
 	GeneratePodStatus(event *runtimeapi.ContainerEventResponse) (*PodStatus, error)
-	// ListMetricDescriptors 获取ListPodSandboxMetrics中返回的指标的描述符。
-	// 这个列表在启动时应该是静态的:当添加或删除指标描述符时，要么客户端和服务器一起重启，要么它们不应该改变。
-	// 换句话说，如果ListPodSandboxMetrics引用了一个在初始ListMetricDescriptors调用中没有描述的名称，那么指标将不会被广播。
+	// ListMetricDescriptors 获取ListPodSandboxMetrics中返回的指标的描述符.
+	// 这个列表在启动时应该是静态的:当添加或删除指标描述符时,要么客户端和服务器一起重启,要么它们不应该改变.
+	// 换句话说,如果ListPodSandboxMetrics引用了一个在初始ListMetricDescriptors调用中没有描述的名称,那么指标将不会被广播.
 	ListMetricDescriptors(ctx context.Context) ([]*runtimeapi.MetricDescriptor, error)  //
-	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error) // 检索所有pod沙箱的指标。
+	ListPodSandboxMetrics(ctx context.Context) ([]*runtimeapi.PodSandboxMetrics, error) // 检索所有pod沙箱的指标.
 }
 
 // StreamingRuntime is the interface implemented by runtimes that handle the serving of the
@@ -137,7 +124,7 @@ type ImageService interface {
 	// PullImage pulls an image from the network to local storage using the supplied
 	// secrets if necessary. It returns a reference (digest or ID) to the pulled image.
 	PullImage(ctx context.Context, image ImageSpec, pullSecrets []v1.Secret, podSandboxConfig *runtimeapi.PodSandboxConfig) (string, error)
-	GetImageRef(ctx context.Context, image ImageSpec) (string, error) // 获取已经存在于本地存储中的图像的引用(摘要或ID)。如果图像不在本地存储中，则返回(""，nil)。
+	GetImageRef(ctx context.Context, image ImageSpec) (string, error) // 获取已经存在于本地存储中的图像的引用(摘要或ID).如果图像不在本地存储中,则返回("",nil).
 	// ListImages gets all images currently on the machine.
 	ListImages(ctx context.Context) ([]Image, error)
 	// RemoveImage removes the specified image.
@@ -152,17 +139,17 @@ type Attacher interface {
 }
 
 type CommandRunner interface {
-	RunInContainer(ctx context.Context, id ContainerID, cmd []string, timeout time.Duration) ([]byte, error) // 在容器中同步执行命令，并返回输出。 如果命令以非0退出代码结束，则 k8s.io/utils/exec.ExitError 将被返回。
+	RunInContainer(ctx context.Context, id ContainerID, cmd []string, timeout time.Duration) ([]byte, error) // 在容器中同步执行命令,并返回输出. 如果命令以非0退出代码结束,则 k8s.io/utils/exec.ExitError 将被返回.
 }
 
 // Pod is a group of containers.
 type Pod struct {
-	ID         types.UID    // Pod 的唯一标识符，可用于从 GetPods() 返回的 Pod 列表中检索特定的 Pod。
+	ID         types.UID    // Pod 的唯一标识符,可用于从 GetPods() 返回的 Pod 列表中检索特定的 Pod.
 	Name       string       //
 	Namespace  string       //
-	CreatedAt  uint64       // Pod 的创建时间戳，以纳秒为单位。
-	Containers []*Container // 属于此 Pod 的容器列表。它可能仅包含正在运行的容器，也可能包含已经停止的容器（当使用 GetPods(true) 时）。
-	Sandboxes  []*Container // 与此 Pod 关联的沙盒列表。为了避免对其他组件造成重大影响，沙盒被临时转换为容器。这仅由 kuberuntime 填充。需要注意的是，这个字段不是 Kubernetes 标准 API 的一部分，而是用于特定的容器运行时实现。
+	CreatedAt  uint64       // Pod 的创建时间戳,以纳秒为单位.
+	Containers []*Container // 属于此 Pod 的容器列表.它可能仅包含正在运行的容器,也可能包含已经停止的容器（当使用 GetPods(true) 时）.
+	Sandboxes  []*Container // 与此 Pod 关联的沙盒列表.为了避免对其他组件造成重大影响,沙盒被临时转换为容器.这仅由 kuberuntime 填充.需要注意的是,这个字段不是 Kubernetes 标准 API 的一部分,而是用于特定的容器运行时实现.
 }
 
 // PodPair contains both runtime#Pod and api#Pod
@@ -242,8 +229,7 @@ func (id DockerID) ContainerID() ContainerID {
 type State string
 
 const (
-	// ContainerStateCreated indicates a container that has been created (e.g. with docker create) but not started.
-	ContainerStateCreated State = "created"
+	ContainerStateCreated State = "created" // 已经创建但没有启动
 	// ContainerStateRunning indicates a currently running container.
 	ContainerStateRunning State = "running"
 	// ContainerStateExited indicates a container that ran and completed ("stopped" in other contexts, although a created container is technically also "stopped").
@@ -286,7 +272,7 @@ type Status struct {
 	// Creation time of the container.
 	CreatedAt time.Time
 	// Start time of the container.
-	StartedAt time.Time
+	StartedAt time.Time // 容器运行的时间
 	// Finish time of the container.
 	FinishedAt time.Time
 	// Exit code of the container.
@@ -408,9 +394,7 @@ type RunContainerOptions struct {
 	// These annotations are generated by other components (i.e.,
 	// not users). Currently, only device plugins populate the annotations.
 	Annotations []Annotation
-	// If the container has specified the TerminationMessagePath, then
-	// this directory will be used to create and mount the log file to
-	// container.TerminationMessagePath
+	// 如果容器指定了TerminationMessagePath,则该目录将用于创建日志文件并将其挂载到容器.
 	PodContainerDir string
 	// The type of container rootfs
 	ReadOnly bool

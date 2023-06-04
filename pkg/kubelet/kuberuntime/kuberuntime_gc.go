@@ -114,7 +114,7 @@ func (a sandboxByCreated) Less(i, j int) bool { return a[i].createTime.After(a[j
 // enforceMaxContainersPerEvictUnit enforces MaxPerPodContainer for each evictUnit.
 func (cgc *containerGC) enforceMaxContainersPerEvictUnit(ctx context.Context, evictUnits containersByEvictUnit, MaxContainers int) {
 	for key := range evictUnits {
-		toRemove := len(evictUnits[key]) - MaxContainers
+		toRemove := len(evictUnits[key]) - MaxContainers // 可以存在的
 
 		if toRemove > 0 {
 			evictUnits[key] = cgc.removeOldestN(ctx, evictUnits[key], toRemove)
@@ -122,7 +122,7 @@ func (cgc *containerGC) enforceMaxContainersPerEvictUnit(ctx context.Context, ev
 	}
 }
 
-// removeOldestN removes the oldest toRemove containers and returns the resulting slice.
+// removeOldestN removeOldestN中先把unknown状态的容器kill再remove
 func (cgc *containerGC) removeOldestN(ctx context.Context, containers []containerGCInfo, toRemove int) []containerGCInfo {
 	// Remove from oldest to newest (last to first).
 	numToKeep := len(containers) - toRemove
@@ -182,10 +182,9 @@ func (cgc *containerGC) removeSandbox(ctx context.Context, sandboxID string) {
 	}
 }
 
-// evictableContainers gets all containers that are evictable. Evictable containers are: not running
-// and created more than MinAge ago.
+// evictableContainers 获取所有可驱逐的容器.可驱逐容器:不运行并且创建于MinAge之前.
 func (cgc *containerGC) evictableContainers(ctx context.Context, minAge time.Duration) (containersByEvictUnit, error) {
-	containers, err := cgc.manager.getKubeletContainers(ctx, true)
+	containers, err := cgc.manager.getKubeletContainers(ctx, true) // 首先就是通过 runtime获取 kubelet上的所有容器
 	if err != nil {
 		return containersByEvictUnit{}, err
 	}
@@ -194,15 +193,16 @@ func (cgc *containerGC) evictableContainers(ctx context.Context, minAge time.Dur
 	newestGCTime := time.Now().Add(-minAge)
 	for _, container := range containers {
 		// Prune out running containers.
+		// 遍历获得的容器列表,排除running的容器
 		if container.State == runtimeapi.ContainerState_CONTAINER_RUNNING {
 			continue
 		}
-
+		// 排除age小于 回收策略的minAge的容器
 		createdAt := time.Unix(0, container.CreatedAt)
 		if newestGCTime.Before(createdAt) {
 			continue
 		}
-
+		// 将符合条件的容器加入evictUnits map中 [要删除的]
 		labeledInfo := getContainerInfoFromLabels(container.Labels)
 		containerInfo := containerGCInfo{
 			id:         container.Id,
@@ -223,29 +223,34 @@ func (cgc *containerGC) evictableContainers(ctx context.Context, minAge time.Dur
 // evict all containers that are evictable
 func (cgc *containerGC) evictContainers(ctx context.Context, gcPolicy kubecontainer.GCPolicy, allSourcesReady bool, evictNonDeletedPods bool) error {
 	// Separate containers by evict units.
-	evictUnits, err := cgc.evictableContainers(ctx, gcPolicy.MinAge)
+	evictUnits, err := cgc.evictableContainers(ctx, gcPolicy.MinAge) // ✅将符合条件的容器加入evictUnits map中 [要删除的]
 	if err != nil {
 		return err
 	}
 
 	// Remove deleted pod containers if all sources are ready.
+	//同时需要判断下是否可以删除,要么pod被设置为evicted,要么删除了pod处于terminated状态
 	if allSourcesReady {
 		for key, unit := range evictUnits {
-			if cgc.podStateProvider.ShouldPodContentBeRemoved(key.uid) || (evictNonDeletedPods && cgc.podStateProvider.ShouldPodRuntimeBeRemoved(key.uid)) {
-				cgc.removeOldestN(ctx, unit, len(unit)) // Remove all.
+			if cgc.podStateProvider.ShouldPodContentBeRemoved(key.uid) || //
+				( //
+				evictNonDeletedPods && cgc.podStateProvider.ShouldPodRuntimeBeRemoved(key.uid)) {
+				cgc.removeOldestN(ctx, unit, len(unit)) // removeOldestN中先把unknown状态的容器kill再remove
 				delete(evictUnits, key)
 			}
 		}
 	}
 
-	// Enforce max containers per evict unit.
+	// 是每个 pod 内允许存在的死亡容器的最大数量
 	if gcPolicy.MaxPerPodContainer >= 0 {
 		cgc.enforceMaxContainersPerEvictUnit(ctx, evictUnits, gcPolicy.MaxPerPodContainer)
 	}
 
 	// Enforce max total number of containers.
+	//触发条件是evictUnits剩余的大于配置的MaxContainers的
 	if gcPolicy.MaxContainers >= 0 && evictUnits.NumContainers() > gcPolicy.MaxContainers {
 		// Leave an equal number of containers per evict unit (min: 1).
+		// 计算一个待删除的平均值 ,用这个平均值去删除
 		numContainersPerEvictUnit := gcPolicy.MaxContainers / evictUnits.NumEvictUnits()
 		if numContainersPerEvictUnit < 1 {
 			numContainersPerEvictUnit = 1
@@ -253,6 +258,7 @@ func (cgc *containerGC) evictContainers(ctx context.Context, gcPolicy kubecontai
 		cgc.enforceMaxContainersPerEvictUnit(ctx, evictUnits, numContainersPerEvictUnit)
 
 		// If we still need to evict, evict oldest first.
+		//如果还有剩余就按照创建时间删除
 		numContainers := evictUnits.NumContainers()
 		if numContainers > gcPolicy.MaxContainers {
 			flattened := make([]containerGCInfo, 0, numContainers)
@@ -396,19 +402,18 @@ func (cgc *containerGC) evictPodLogsDirectories(ctx context.Context, allSourcesR
 	return nil
 }
 
-// GarbageCollect removes dead containers using the specified container gc policy.
-// Note that gc policy is not applied to sandboxes. Sandboxes are only removed when they are
-// not ready and containing no containers.
+// GarbageCollect 是一个用于清理无用容器的操作,它根据指定的容器垃圾回收策略来进行清理.需要注意的是,垃圾回收策略不适用于沙盒（sandbox）,沙盒只有在不可用且不包含任何容器时才会被删除.
 //
-// GarbageCollect consists of the following steps:
-// * gets evictable containers which are not active and created more than gcPolicy.MinAge ago.
-// * removes oldest dead containers for each pod by enforcing gcPolicy.MaxPerPodContainer.
-// * removes oldest dead containers by enforcing gcPolicy.MaxContainers.
-// * gets evictable sandboxes which are not ready and contains no containers.
-// * removes evictable sandboxes.
+// GarbageCollect的步骤如下：
+//
+// 获取可驱逐的容器,这些容器不活动,并且创建时间比gcPolicy.MinAge早.
+// 按照 gcPolicy.MaxPerPodContainer 的规定,删除每个Pod中最旧的无用容器.
+// 按照 gcPolicy.MaxContainers 的规定,删除最旧的无用容器.
+// 获取不可用且不包含任何容器的可驱逐沙盒.
+// 删除可驱逐的沙盒.
 func (cgc *containerGC) GarbageCollect(ctx context.Context, gcPolicy kubecontainer.GCPolicy, allSourcesReady bool, evictNonDeletedPods bool) error {
 	errors := []error{}
-	// Remove evictable containers
+	// 删除可驱逐的容器
 	if err := cgc.evictContainers(ctx, gcPolicy, allSourcesReady, evictNonDeletedPods); err != nil {
 		errors = append(errors, err)
 	}

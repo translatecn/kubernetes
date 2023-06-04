@@ -364,7 +364,7 @@ func (i *RealFsInfo) GetLabelsForDevice(device string) ([]string, error) {
 	return labels, nil
 }
 
-func (i *RealFsInfo) GetMountpointForDevice(dev string) (string, error) {
+func (i *RealFsInfo) GetMountpointForDevice(dev string) (string, error) { // ✅
 	p, ok := i.partitions[dev]
 	if !ok {
 		return "", fmt.Errorf("no partition info for device %q", dev)
@@ -561,7 +561,7 @@ func (i *RealFsInfo) mountInfoFromDir(dir string) (*mount.Info, bool) {
 	return &mnt, found
 }
 
-func (i *RealFsInfo) GetDirFsDevice(dir string) (*DeviceInfo, error) {
+func (i *RealFsInfo) GetDirFsDevice(dir string) (*DeviceInfo, error) { // ✅
 	buf := new(syscall.Stat_t)
 	err := syscall.Stat(dir, buf)
 	if err != nil {

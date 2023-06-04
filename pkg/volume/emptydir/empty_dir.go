@@ -202,11 +202,8 @@ func (plugin *emptyDirPlugin) ConstructVolumeSpec(volName, mountPath string) (vo
 
 // mountDetector abstracts how to find what kind of mount a path is backed by.
 type mountDetector interface {
-	// GetMountMedium determines what type of medium a given path is backed
-	// by and whether that path is a mount point.  For example, if this
-	// returns (v1.StorageMediumMemory, false, nil), the caller knows that the path is
-	// on a memory FS (tmpfs on Linux) but is not the root mountpoint of
-	// that tmpfs.
+	// GetMountMedium 这段代码的作用是确定给定路径由什么类型的介质支持,并且该路径是否是挂载点.
+	// 例如,如果返回值为(v1.StorageMediumMemory, false, nil),则调用者知道该路径在内存文件系统上（Linux上的tmpfs）,但不是该tmpfs的根挂载点.
 	GetMountMedium(path string, requestedMedium v1.StorageMedium) (v1.StorageMedium, bool, *resource.Quantity, error)
 }
 
@@ -476,6 +473,8 @@ func (ed *emptyDir) setupDir(dir string) error {
 	return nil
 }
 
+// --------------------------------------------------------------------------------------------------------------------
+
 func (ed *emptyDir) GetPath() string {
 	return getPath(ed.pod.UID, ed.volName, ed.plugin.host)
 }
@@ -487,7 +486,7 @@ func (ed *emptyDir) TearDown() error {
 
 // TearDownAt simply discards everything in the directory.
 func (ed *emptyDir) TearDownAt(dir string) error {
-	// First remove ready dir which created in SetUp func
+	// /var/lib/kubelet/pods/4260b74b-42b1-4eaa-9255-9f75e602a64a/plugins/kubernetes.io~empty-dir/wrapped_kube-api-access-zqgpp
 	readyDir := ed.getMetaDir()
 	if removeErr := os.RemoveAll(readyDir); removeErr != nil && !os.IsNotExist(removeErr) {
 		return fmt.Errorf("failed to remove ready dir [%s]: %v", readyDir, removeErr)
@@ -500,7 +499,8 @@ func (ed *emptyDir) TearDownAt(dir string) error {
 		return nil
 	}
 
-	// Figure out the medium.
+	// 这段代码的作用是确定给定路径由什么类型的介质支持,并且该路径是否是挂载点.
+	// 例如,如果返回值为(v1.StorageMediumMemory, false, nil),则调用者知道该路径在内存文件系统上（Linux上的tmpfs）,但不是该tmpfs的根挂载点.
 	medium, isMnt, _, err := ed.mountDetector.GetMountMedium(dir, ed.medium)
 	if err != nil {
 		return err
@@ -520,6 +520,7 @@ func (ed *emptyDir) TearDownAt(dir string) error {
 
 func (ed *emptyDir) teardownDefault(dir string) error {
 	// Remove any quota
+	// /var/lib/kubelet/pods/95c7980e-a567-47b3-b058-48a49c241e03/volumes/kubernetes.io~empty-dir/tmp-dir
 	err := fsquota.ClearQuota(ed.mounter, dir)
 	if err != nil {
 		klog.Warningf("Warning: Failed to clear quota on %s: %v", dir, err)

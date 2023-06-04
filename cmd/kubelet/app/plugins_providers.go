@@ -20,24 +20,17 @@ limitations under the License.
 package app
 
 import (
+	"k8s.io/component-base/featuregate"
+	"k8s.io/csi-translation-lib/plugins"
+	"k8s.io/klog/v2"
 	// Credential providers
 	_ "k8s.io/kubernetes/pkg/credentialprovider/aws"
 	_ "k8s.io/kubernetes/pkg/credentialprovider/azure"
 	_ "k8s.io/kubernetes/pkg/credentialprovider/gcp"
-
-	"k8s.io/component-base/featuregate"
-	"k8s.io/csi-translation-lib/plugins"
-	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/volume"
-	"k8s.io/kubernetes/pkg/volume/awsebs"
-	"k8s.io/kubernetes/pkg/volume/azure_file"
-	"k8s.io/kubernetes/pkg/volume/azuredd"
 	"k8s.io/kubernetes/pkg/volume/csimigration"
-	"k8s.io/kubernetes/pkg/volume/gcepd"
 	"k8s.io/kubernetes/pkg/volume/portworx"
-	"k8s.io/kubernetes/pkg/volume/rbd"
-	"k8s.io/kubernetes/pkg/volume/vsphere_volume"
 )
 
 type probeFn func() []volume.VolumePlugin
@@ -46,7 +39,7 @@ func appendPluginBasedOnFeatureFlags(plugins []volume.VolumePlugin, inTreePlugin
 	featureGate featuregate.FeatureGate, pluginInfo pluginInfo) ([]volume.VolumePlugin, error) {
 	_, err := csimigration.CheckMigrationFeatureFlags(featureGate, pluginInfo.pluginMigrationFeature, pluginInfo.pluginUnregisterFeature)
 	if err != nil {
-		klog.InfoS("Unexpected CSI Migration Feature Flags combination detected, CSI Migration may not take effect", "err", err)
+		klog.InfoS("检测到意外的CSI Migration功能标志组合,CSI Migration可能不会生效.", "err", err)
 		// TODO: fail and return here once alpha only tests can set the feature flags for a plugin correctly
 	}
 
@@ -62,20 +55,14 @@ func appendPluginBasedOnFeatureFlags(plugins []volume.VolumePlugin, inTreePlugin
 }
 
 type pluginInfo struct {
-	pluginMigrationFeature  featuregate.Feature
-	pluginUnregisterFeature featuregate.Feature
-	pluginProbeFunction     probeFn
+	pluginMigrationFeature  featuregate.Feature // 表示插件的CSI Migration功能标志.
+	pluginUnregisterFeature featuregate.Feature // 表示插件的CSI注销功能标志.
+	pluginProbeFunction     probeFn             // 检测插件是否可用
 }
 
 func appendLegacyProviderVolumes(allPlugins []volume.VolumePlugin, featureGate featuregate.FeatureGate) ([]volume.VolumePlugin, error) {
 	pluginMigrationStatus := make(map[string]pluginInfo)
-	pluginMigrationStatus[plugins.AWSEBSInTreePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationAWS, pluginUnregisterFeature: features.InTreePluginAWSUnregister, pluginProbeFunction: awsebs.ProbeVolumePlugins}
-	pluginMigrationStatus[plugins.GCEPDInTreePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationGCE, pluginUnregisterFeature: features.InTreePluginGCEUnregister, pluginProbeFunction: gcepd.ProbeVolumePlugins}
-	pluginMigrationStatus[plugins.AzureDiskInTreePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationAzureDisk, pluginUnregisterFeature: features.InTreePluginAzureDiskUnregister, pluginProbeFunction: azuredd.ProbeVolumePlugins}
-	pluginMigrationStatus[plugins.AzureFileInTreePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationAzureFile, pluginUnregisterFeature: features.InTreePluginAzureFileUnregister, pluginProbeFunction: azure_file.ProbeVolumePlugins}
-	pluginMigrationStatus[plugins.VSphereInTreePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationvSphere, pluginUnregisterFeature: features.InTreePluginvSphereUnregister, pluginProbeFunction: vsphere_volume.ProbeVolumePlugins}
 	pluginMigrationStatus[plugins.PortworxVolumePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationPortworx, pluginUnregisterFeature: features.InTreePluginPortworxUnregister, pluginProbeFunction: portworx.ProbeVolumePlugins}
-	pluginMigrationStatus[plugins.RBDVolumePluginName] = pluginInfo{pluginMigrationFeature: features.CSIMigrationRBD, pluginUnregisterFeature: features.InTreePluginRBDUnregister, pluginProbeFunction: rbd.ProbeVolumePlugins}
 	var err error
 	for pluginName, pluginInfo := range pluginMigrationStatus {
 		allPlugins, err = appendPluginBasedOnFeatureFlags(allPlugins, pluginName, featureGate, pluginInfo)

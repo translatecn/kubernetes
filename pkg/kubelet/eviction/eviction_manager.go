@@ -227,13 +227,13 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	}
 
 	klog.V(3).InfoS("Eviction manager: synchronize housekeeping")
-	if m.dedicatedImageFs == nil {
+	if m.dedicatedImageFs == nil { // 指示imagefs是否位于与rootfs不同的设备上
 		// 如果imagefs与rootfs在不同的设备上,则返回true. 是否有专用的 image fs
-		hasImageFs, ok := diskInfoProvider.HasDedicatedImageFs(ctx)
+		hasImageFs, ok := diskInfoProvider.HasDedicatedImageFs(ctx) // ✅
 		if ok != nil {
 			return nil
 		}
-		m.dedicatedImageFs = &hasImageFs //
+		m.dedicatedImageFs = &hasImageFs // 指示imagefs是否位于与rootfs不同的设备上
 		// 注册各个eviction signal所对应的资源排序方法    // 将资源->排名函数.
 		m.signalToRankFunc = buildSignalToRankFunc(hasImageFs)
 		// 将资源->如何回收该资源的有序函数列表.
@@ -543,7 +543,7 @@ func (m *ManagerImpl) containerEphemeralStorageLimitEviction(podStats statsapi.P
 
 	for _, containerStat := range podStats.Containers {
 		containerUsed := diskUsage(containerStat.Logs)
-		if !*m.dedicatedImageFs {
+		if !*m.dedicatedImageFs { // 没有专用的 imagefs 存储盘
 			containerUsed.Add(*diskUsage(containerStat.Rootfs))
 		}
 

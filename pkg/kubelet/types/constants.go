@@ -47,5 +47,5 @@ const (
 // entries here should be moved to staging/src/k8s.io.api/core/v1/types.go
 // once the feature managing the condition graduates to Beta.
 const (
-	PodHasNetwork = "PodHasNetwork" // 表示已成功为pod配置网络并分配IP地址。在此条件为真之后，可以提取pod规范中指定的容器的映像，并启动容器。
+	PodHasNetwork = "PodHasNetwork" // 表示已成功为pod配置网络并分配IP地址.在此条件为真之后,可以提取pod规范中指定的容器的映像,并启动容器.
 )

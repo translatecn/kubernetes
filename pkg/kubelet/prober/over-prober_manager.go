@@ -37,7 +37,7 @@ var ProberResults = metrics.NewCounterVec(
 	&metrics.CounterOpts{
 		Subsystem:      "prober",
 		Name:           "probe_total",
-		Help:           "按结果统计容器的存活探针、就绪探针或启动探针的累计次数。",
+		Help:           "按结果统计容器的存活探针、就绪探针或启动探针的累计次数.",
 		StabilityLevel: metrics.ALPHA,
 	},
 	[]string{"probe_type",
@@ -77,7 +77,7 @@ type Manager interface {
 	// RemovePod handles cleaning up the removed pod state, including terminating probe workers and
 	// deleting cached results.
 	RemovePod(pod *v1.Pod)
-	CleanupPods(desiredPods map[types.UID]sets.Empty) // 清理不在desiredPods 里的探测worker。  desiredPods[运行中，可能在运行的]
+	CleanupPods(desiredPods map[types.UID]sets.Empty) // 清理不在desiredPods 里的探测worker.  desiredPods[运行中,可能在运行的]
 
 	// UpdatePodStatus modifies the given PodStatus with the appropriate Ready state for each
 	// container based on container running status, cached probe results and worker states.

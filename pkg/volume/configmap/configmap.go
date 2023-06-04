@@ -193,7 +193,7 @@ func (b *configMapVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterA
 	}
 
 	optional := b.source.Optional != nil && *b.source.Optional
-	configMap, err := b.getConfigMap(b.pod.Namespace, b.source.Name)
+	configMap, err := b.getConfigMap(b.pod.Namespace, b.source.Name) // 在SetUpAt中首先就是获取configMap
 	if err != nil {
 		if !(errors.IsNotFound(err) && optional) {
 			klog.Errorf("Couldn't get configMap %v/%v: %v", b.pod.Namespace, b.source.Name, err)
@@ -214,7 +214,7 @@ func (b *configMapVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterA
 		len(configMap.Data)+len(configMap.BinaryData),
 		totalBytes)
 
-	payload, err := MakePayload(b.source.Items, configMap, b.source.DefaultMode, optional)
+	payload, err := MakePayload(b.source.Items, configMap, b.source.DefaultMode, optional) // 然后就是从configMap中提取payload
 	if err != nil {
 		return err
 	}
@@ -223,6 +223,7 @@ func (b *configMapVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterA
 	if err := wrapped.SetUpAt(dir, mounterArgs); err != nil {
 		return err
 	}
+	// 创建pod的configMap目录,比如我们上面的/var/lib/kubelet/pods/d475ecaf-ce2e-4eac-af41-2d13bda6e0ec/volumes/kubernetes.io~configmap/config-volume
 	if err := volumeutil.MakeNestedMountpoints(b.volName, dir, b.pod); err != nil {
 		return err
 	}
@@ -243,7 +244,7 @@ func (b *configMapVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterA
 	}()
 
 	writerContext := fmt.Sprintf("pod %v/%v volume %v", b.pod.Namespace, b.pod.Name, b.volName)
-	writer, err := volumeutil.NewAtomicWriter(dir, writerContext)
+	writer, err := volumeutil.NewAtomicWriter(dir, writerContext) // ✅
 	if err != nil {
 		klog.Errorf("Error creating atomic writer: %v", err)
 		return err

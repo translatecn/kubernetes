@@ -158,10 +158,6 @@ type projectedVolume struct {
 
 var _ volume.Volume = &projectedVolume{}
 
-func (sv *projectedVolume) GetPath() string {
-	return getPath(sv.podUID, sv.volName, sv.plugin.host)
-}
-
 type projectedVolumeMounter struct {
 	*projectedVolume
 
@@ -364,6 +360,8 @@ type projectedVolumeUnmounter struct {
 
 var _ volume.Unmounter = &projectedVolumeUnmounter{}
 
+// ----------------------------------------------------------------------------------------------------------------
+
 func (c *projectedVolumeUnmounter) TearDown() error {
 	return c.TearDownAt(c.GetPath())
 }
@@ -371,7 +369,7 @@ func (c *projectedVolumeUnmounter) TearDown() error {
 func (c *projectedVolumeUnmounter) TearDownAt(dir string) error {
 	klog.V(3).Infof("Tearing down volume %v for pod %v at %v", c.volName, c.podUID, dir)
 
-	wrapped, err := c.plugin.host.NewWrapperUnmounter(c.volName, wrappedVolumeSpec(), c.podUID)
+	wrapped, err := c.plugin.host.NewWrapperUnmounter(c.volName, wrappedVolumeSpec(), c.podUID) // 内存形式的 emptydir
 	if err != nil {
 		return err
 	}
@@ -379,7 +377,7 @@ func (c *projectedVolumeUnmounter) TearDownAt(dir string) error {
 		return err
 	}
 
-	c.plugin.deleteServiceAccountToken(c.podUID)
+	c.plugin.deleteServiceAccountToken(c.podUID) // just clean cache
 	return nil
 }
 
@@ -389,4 +387,8 @@ func getVolumeSource(spec *volume.Spec) (*v1.ProjectedVolumeSource, bool, error)
 	}
 
 	return nil, false, fmt.Errorf("Spec does not reference a projected volume type")
+}
+
+func (sv *projectedVolume) GetPath() string {
+	return getPath(sv.podUID, sv.volName, sv.plugin.host)
 }

@@ -26,19 +26,13 @@ import (
 type Signal string
 
 const (
-	SignalMemoryAvailable            Signal = "memory.available"
-	SignalAllocatableMemoryAvailable Signal = "allocatableMemory.available"
-
-	// SignalNodeFsAvailable is amount of storage available on filesystem that kubelet uses for volumes, daemon logs, etc.
-	SignalNodeFsAvailable Signal = "nodefs.available"
-	// SignalNodeFsInodesFree is amount of inodes available on filesystem that kubelet uses for volumes, daemon logs, etc.
-	SignalNodeFsInodesFree Signal = "nodefs.inodesFree"
-	// SignalImageFsAvailable is amount of storage available on filesystem that container runtime uses for storing images and container writable layers.
-	SignalImageFsAvailable Signal = "imagefs.available"
-	// SignalImageFsInodesFree is amount of inodes available on filesystem that container runtime uses for storing images and container writable layers.
-	SignalImageFsInodesFree Signal = "imagefs.inodesFree"
-	// SignalPIDAvailable is amount of PID available for pod allocation
-	SignalPIDAvailable Signal = "pid.available"
+	SignalMemoryAvailable            Signal = "memory.available"            // 可用内存量,已经被使用的内存量与总内存量之差
+	SignalAllocatableMemoryAvailable Signal = "allocatableMemory.available" // 可分配的内存量,节点上已经被预留或分配给Kubernetes集群中的其他对象（如Pod、容器等）的内存量之差.这个值是在节点加入集群时由Kubernetes控制平面计算得出的,并且在节点运行时不会改变.
+	SignalNodeFsAvailable            Signal = "nodefs.available"            // 节点文件系统上可用的存储量
+	SignalNodeFsInodesFree           Signal = "nodefs.inodesFree"           // 节点文件系统上可用的inode数量
+	SignalImageFsAvailable           Signal = "imagefs.available"           // 容器运行时使用的文件系统上可用的存储量
+	SignalImageFsInodesFree          Signal = "imagefs.inodesFree"          // 容器运行时使用的文件系统上可用的inode数量
+	SignalPIDAvailable               Signal = "pid.available"               // 可用的PID数量,用于分配给Pod
 )
 
 // ThresholdOperator is the operator used to express a Threshold.

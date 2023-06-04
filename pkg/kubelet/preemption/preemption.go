@@ -63,14 +63,14 @@ func (c *CriticalPodAdmissionHandler) HandleAdmissionFailure( // ✅
 	admitPod *v1.Pod,
 	failureReasons []lifecycle.PredicateFailureReason,
 ) ([]lifecycle.PredicateFailureReason, error) {
-	// pod 资源准入失败后的回调，这可能是由于多种原因导致的，例如网络故障、磁盘空间不足、权限问题等。例如释放一些资源 重试
+	// pod 资源准入失败后的回调,这可能是由于多种原因导致的,例如网络故障、磁盘空间不足、权限问题等.例如释放一些资源 重试
 
 	if !kubetypes.IsCriticalPod(admitPod) {
 		return failureReasons, nil
 	}
 	// 重要的pod 需要处理
 
-	// InsufficientResourceError 不能成为拒绝一个关键 pod 的理由。
+	// InsufficientResourceError 不能成为拒绝一个关键 pod 的理由.
 	nonResourceReasons := []lifecycle.PredicateFailureReason{}
 	resourceReasons := []*admissionRequirement{}
 	for _, reason := range failureReasons {
@@ -84,16 +84,16 @@ func (c *CriticalPodAdmissionHandler) HandleAdmissionFailure( // ✅
 		}
 	}
 	if len(nonResourceReasons) > 0 {
-		// 只返回与资源无关的原因，因为关键pod不能因为资源原因导致准入失败。
+		// 只返回与资源无关的原因,因为关键pod不能因为资源原因导致准入失败.
 		return nonResourceReasons, nil
 	}
 	err := c.evictPodsToFreeRequests(admitPod, admissionRequirementList(resourceReasons)) // ✅
-	// 如果没有返回错误，则抢占成功，pod可以安全接受。
+	// 如果没有返回错误,则抢占成功,pod可以安全接受.
 	return nil, err
 }
 
 // 驱逐pod,来释放资源
-// 尝试根据请求驱逐pod来释放这些资源。例如，如果唯一不足的资源是200Mb内存，则该函数可以驱逐request=250Mb的pod。
+// 尝试根据请求驱逐pod来释放这些资源.例如,如果唯一不足的资源是200Mb内存,则该函数可以驱逐request=250Mb的pod.
 func (c *CriticalPodAdmissionHandler) evictPodsToFreeRequests(admitPod *v1.Pod, insufficientResources admissionRequirementList) error {
 	podsToPreempt, err := getPodsToPreempt(admitPod, c.getPodsFunc(), insufficientResources) // 获取能满足需求的 要释放的pod列表 ✅
 	if err != nil {
@@ -157,7 +157,7 @@ func getPodsToPreempt(pod *v1.Pod, pods []*v1.Pod, requirements admissionRequire
 // 对pod的驱逐排序
 func getPodsToPreemptByDistance(pods []*v1.Pod, requirements admissionRequirementList) ([]*v1.Pod, error) {
 	podsToEvict := []*v1.Pod{}
-	// 以离剩余需求最近的距离驱逐pod，每轮更新需求。
+	// 以离剩余需求最近的距离驱逐pod,每轮更新需求.
 	for len(requirements) > 0 {
 		if len(pods) == 0 {
 			return nil, fmt.Errorf("no set of running pods found to reclaim resources: %v", requirements.toString())
@@ -235,7 +235,7 @@ func (a admissionRequirementList) toString() string {
 // 返回可以被抢占的 三种pod 列表
 func sortPodsByQOS(preemptor *v1.Pod, pods []*v1.Pod) (bestEffort, burstable, guaranteed []*v1.Pod) {
 	for _, pod := range pods {
-		if kubetypes.Preemptable(preemptor, pod) { // 比较pod重要性 ，优先级
+		if kubetypes.Preemptable(preemptor, pod) { // 比较pod重要性 ,优先级
 			switch v1qos.GetPodQOS(pod) {
 			case v1.PodQOSBestEffort:
 				bestEffort = append(bestEffort, pod)

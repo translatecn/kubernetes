@@ -19,6 +19,7 @@ package reconciler
 import (
 	"fmt"
 	"io/fs"
+	"k8s.io/kubernetes/pkg/volume/util/operationexecutor"
 	"os"
 	"path"
 	"path/filepath"
@@ -31,7 +32,6 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/config"
 	volumepkg "k8s.io/kubernetes/pkg/volume"
 	"k8s.io/kubernetes/pkg/volume/util"
-	"k8s.io/kubernetes/pkg/volume/util/operationexecutor"
 	volumetypes "k8s.io/kubernetes/pkg/volume/util/types"
 	utilpath "k8s.io/utils/path"
 	utilstrings "k8s.io/utils/strings"
@@ -84,24 +84,6 @@ func (gvi *globalVolumeInfo) addPodVolume(rcv *reconstructedVolume) {
 		gvi.podVolumes = map[volumetypes.UniquePodName]*reconstructedVolume{}
 	}
 	gvi.podVolumes[rcv.podName] = rcv
-}
-
-func (rc *reconciler) cleanupMounts(volume podVolume) {
-	klog.V(2).InfoS("Reconciler sync states: could not find volume information in desired state, clean up the mount points", "podName", volume.podName, "volumeSpecName", volume.volumeSpecName)
-	mountedVolume := operationexecutor.MountedVolume{
-		PodName:             volume.podName,
-		VolumeName:          v1.UniqueVolumeName(volume.volumeSpecName),
-		InnerVolumeSpecName: volume.volumeSpecName,
-		PluginName:          volume.pluginName,
-		PodUID:              types.UID(volume.podName),
-	}
-	// TODO: Currently cleanupMounts only includes UnmountVolume operation. In the next PR, we will add
-	// to unmount both volume and device in the same routine.
-	err := rc.operationExecutor.UnmountVolume(mountedVolume, rc.actualStateOfWorld, rc.kubeletPodsDir)
-	if err != nil {
-		klog.ErrorS(err, mountedVolume.GenerateErrorDetailed("volumeHandler.UnmountVolumeHandler for UnmountVolume failed", err).Error())
-		return
-	}
 }
 
 // getDeviceMountPath returns device mount path for block volume which
@@ -322,4 +304,22 @@ func (rc *reconciler) reconstructVolume(volume podVolume) (*reconstructedVolume,
 		seLinuxMountContext: reconstructed.SELinuxMountContext,
 	}
 	return reconstructedVolume, nil
+}
+
+func (rc *reconciler) cleanupMounts(volume podVolume) {
+	klog.V(2).InfoS("Reconciler sync states: could not find volume information in desired state, clean up the mount points", "podName", volume.podName, "volumeSpecName", volume.volumeSpecName)
+	mountedVolume := operationexecutor.MountedVolume{
+		PodName:             volume.podName,
+		VolumeName:          v1.UniqueVolumeName(volume.volumeSpecName),
+		InnerVolumeSpecName: volume.volumeSpecName,
+		PluginName:          volume.pluginName,
+		PodUID:              types.UID(volume.podName),
+	}
+	// TODO: Currently cleanupMounts only includes UnmountVolume operation. In the next PR, we will add
+	// to unmount both volume and device in the same routine.
+	err := rc.operationExecutor.UnmountVolume(mountedVolume, rc.actualStateOfWorld, rc.kubeletPodsDir) // ✅
+	if err != nil {
+		klog.ErrorS(err, mountedVolume.GenerateErrorDetailed("volumeHandler.UnmountVolumeHandler for UnmountVolume failed", err).Error())
+		return
+	}
 }

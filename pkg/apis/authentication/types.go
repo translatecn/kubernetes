@@ -137,7 +137,7 @@ type TokenRequestSpec struct {
 type TokenRequestStatus struct {
 	// Token is the opaque bearer token.
 	Token string `datapolicy:"token"`
-	// ExpirationTimestamp is the time of expiration of the returned token.
+	// ExpirationTimestamp 返回令牌的过期时间.
 	ExpirationTimestamp metav1.Time
 }
 

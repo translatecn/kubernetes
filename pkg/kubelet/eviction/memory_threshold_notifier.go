@@ -46,10 +46,10 @@ type memoryThresholdNotifier struct {
 
 var _ ThresholdNotifier = &memoryThresholdNotifier{}
 
-// NewMemoryThresholdNotifier creates a ThresholdNotifier which is designed to respond to the given threshold.
-// UpdateThreshold must be called once before the threshold will be active.
+// NewMemoryThresholdNotifier 创建一个ThresholdNotifier,用于响应给定的阈值.
+// UpdateThreshold必须在阈值激活之前被调用一次.
 func NewMemoryThresholdNotifier(threshold evictionapi.Threshold, cgroupRoot string, factory NotifierFactory, handler func(string)) (ThresholdNotifier, error) {
-	cgroups, err := cm.GetCgroupSubsystems()
+	cgroups, err := cm.GetCgroupSubsystems() // 支持的 cgroup 子系统
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +57,9 @@ func NewMemoryThresholdNotifier(threshold evictionapi.Threshold, cgroupRoot stri
 	if !found || len(cgpath) == 0 {
 		return nil, fmt.Errorf("memory cgroup mount point not found")
 	}
-	if isAllocatableEvictionThreshold(threshold) {
+	if isAllocatableEvictionThreshold(threshold) { // 节点上可供Kubernetes分配给Pod和容器使用的资源量,例如CPU、内存、存储等
 		// for allocatable thresholds, point the cgroup notifier at the allocatable cgroup
-		cgpath += cgroupRoot
+		cgpath += cgroupRoot // kubepods.slice
 	}
 	return &memoryThresholdNotifier{
 		threshold:  threshold,

@@ -25,7 +25,7 @@ import (
 var processStartTime = NewGaugeVec(
 	&GaugeOpts{
 		Name:           "process_start_time_seconds",
-		Help:           "进程从unix纪元开始的时间(以秒为单位)。",
+		Help:           "进程从unix纪元开始的时间(以秒为单位).",
 		StabilityLevel: ALPHA,
 	},
 	[]string{},

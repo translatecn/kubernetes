@@ -36,58 +36,18 @@ import (
 	"k8s.io/mount-utils"
 )
 
-// Reconciler runs a periodic loop to reconcile the desired state of the world
-// with the actual state of the world by triggering attach, detach, mount, and
-// unmount operations.
-// Note: This is distinct from the Reconciler implemented by the attach/detach
-// controller. This reconciles state for the kubelet volume manager. That
-// reconciles state for the attach/detach controller.
+// Reconciler （协调器）会定期运行循环,通过触发附加、分离、挂载和卸载操作来协调世界的期望状态和实际状态.
+// 需要注意的是,这与attach/detach控制器实现的Reconciler不同.
+// 这个Reconciler是为kubelet卷管理器协调状态的,而那个是为attach/detach控制器协调状态的.
 type Reconciler interface {
-	// Starts running the reconciliation loop which executes periodically, checks
-	// if volumes that should be mounted are mounted and volumes that should
-	// be unmounted are unmounted. If not, it will trigger mount/unmount
-	// operations to rectify.
-	// If attach/detach management is enabled, the manager will also check if
-	// volumes that should be attached are attached and volumes that should
-	// be detached are detached and trigger attach/detach operations as needed.
+	// Run 启动运行协调循环,周期性地检查应该挂载的卷是否已经挂载,应该卸载的卷是否已经卸载.
+	// 如果没有,它会触发挂载/卸载操作来纠正.
+	// 如果启用了attach/detach管理,管理器还会检查应该附加的卷是否已经附加,应该分离的卷是否已经分离,并根据需要触发附加/分离操作.
 	Run(stopCh <-chan struct{})
-
-	// StatesHasBeenSynced returns true only after syncStates process starts to sync
-	// states at least once after kubelet starts
+	// StatesHasBeenSynced kubelet启动后至少运行一次
 	StatesHasBeenSynced() bool
 }
 
-// NewReconciler returns a new instance of Reconciler.
-//
-// controllerAttachDetachEnabled - if true, indicates that the attach/detach
-//
-//	controller is responsible for managing the attach/detach operations for
-//	this node, and therefore the volume manager should not
-//
-// loopSleepDuration - the amount of time the reconciler loop sleeps between
-//
-//	successive executions
-//
-// waitForAttachTimeout - the amount of time the Mount function will wait for
-//
-//	the volume to be attached
-//
-// nodeName - the Name for this node, used by Attach and Detach methods
-// desiredStateOfWorld - cache containing the desired state of the world
-// actualStateOfWorld - cache containing the actual state of the world
-// populatorHasAddedPods - checker for whether the populator has finished
-//
-//	adding pods to the desiredStateOfWorld cache at least once after sources
-//	are all ready (before sources are ready, pods are probably missing)
-//
-// operationExecutor - used to trigger attach/detach/mount/unmount operations
-//
-//	safely (prevents more than one operation from being triggered on the same
-//	volume)
-//
-// mounter - mounter passed in from kubelet, passed down unmount path
-// hostutil - hostutil passed in from kubelet
-// volumePluginMgr - volume plugin manager passed from kubelet
 func NewReconciler(
 	kubeClient clientset.Interface,
 	controllerAttachDetachEnabled bool,
@@ -105,7 +65,7 @@ func NewReconciler(
 	return &reconciler{
 		kubeClient:                    kubeClient,
 		controllerAttachDetachEnabled: controllerAttachDetachEnabled,
-		loopSleepDuration:             loopSleepDuration,
+		loopSleepDuration:             loopSleepDuration, // 100ms
 		waitForAttachTimeout:          waitForAttachTimeout,
 		nodeName:                      nodeName,
 		desiredStateOfWorld:           desiredStateOfWorld,
@@ -126,14 +86,14 @@ func NewReconciler(
 
 type reconciler struct {
 	kubeClient                    clientset.Interface
-	controllerAttachDetachEnabled bool
-	loopSleepDuration             time.Duration
-	waitForAttachTimeout          time.Duration
+	controllerAttachDetachEnabled bool          // 如果为true,则表示attach/detach控制器负责管理此节点的attach/detach操作,因此卷管理器不应该.
+	loopSleepDuration             time.Duration // 循环执行之间的睡眠时间
+	waitForAttachTimeout          time.Duration // Mount函数将等待卷附加的时间
 	nodeName                      types.NodeName
 	desiredStateOfWorld           cache.DesiredStateOfWorld
 	actualStateOfWorld            cache.ActualStateOfWorld
-	populatorHasAddedPods         func() bool
-	operationExecutor             operationexecutor.OperationExecutor
+	populatorHasAddedPods         func() bool                         // 检查器,用于检查populator是否已经至少一次将pod添加到desiredStateOfWorld缓存中（在源准备就绪之前,可能会缺少pod）.
+	operationExecutor             operationexecutor.OperationExecutor // 用于安全地触发attach/detach/mount/unmount操作（防止在同一卷上触发多个操作）
 	mounter                       mount.Interface
 	hostutil                      hostutil.HostUtils
 	volumePluginMgr               *volumepkg.VolumePluginMgr
@@ -150,125 +110,8 @@ func (rc *reconciler) Run(stopCh <-chan struct{}) {
 		rc.runNew(stopCh)
 		return
 	}
-
+	//go vm.reconciler.Run(stopCh)
 	rc.runOld(stopCh)
-}
-
-func (rc *reconciler) unmountVolumes() {
-	// Ensure volumes that should be unmounted are unmounted.
-	for _, mountedVolume := range rc.actualStateOfWorld.GetAllMountedVolumes() {
-		if !rc.desiredStateOfWorld.PodExistsInVolume(mountedVolume.PodName, mountedVolume.VolumeName, mountedVolume.SELinuxMountContext) {
-			// Volume is mounted, unmount it
-			klog.V(5).InfoS(mountedVolume.GenerateMsgDetailed("Starting operationExecutor.UnmountVolume", ""))
-			err := rc.operationExecutor.UnmountVolume(
-				mountedVolume.MountedVolume, rc.actualStateOfWorld, rc.kubeletPodsDir)
-			if err != nil && !isExpectedError(err) {
-				klog.ErrorS(err, mountedVolume.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.UnmountVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error())
-			}
-			if err == nil {
-				klog.InfoS(mountedVolume.GenerateMsgDetailed("operationExecutor.UnmountVolume started", ""))
-			}
-		}
-	}
-}
-
-func (rc *reconciler) mountOrAttachVolumes() {
-	// Ensure volumes that should be attached/mounted are attached/mounted.
-	for _, volumeToMount := range rc.desiredStateOfWorld.GetVolumesToMount() {
-		volMounted, devicePath, err := rc.actualStateOfWorld.PodExistsInVolume(volumeToMount.PodName, volumeToMount.VolumeName, volumeToMount.PersistentVolumeSize, volumeToMount.SELinuxLabel)
-		volumeToMount.DevicePath = devicePath
-		if cache.IsSELinuxMountMismatchError(err) {
-			// The volume is mounted, but with an unexpected SELinux context.
-			// It will get unmounted in unmountVolumes / unmountDetachDevices and
-			// then removed from actualStateOfWorld.
-			rc.desiredStateOfWorld.AddErrorToPod(volumeToMount.PodName, err.Error())
-			continue
-		} else if cache.IsVolumeNotAttachedError(err) {
-			rc.waitForVolumeAttach(volumeToMount)
-		} else if !volMounted || cache.IsRemountRequiredError(err) {
-			rc.mountAttachedVolumes(volumeToMount, err)
-		} else if cache.IsFSResizeRequiredError(err) {
-			fsResizeRequiredErr, _ := err.(cache.FsResizeRequiredError)
-			rc.expandVolume(volumeToMount, fsResizeRequiredErr.CurrentSize)
-		}
-	}
-}
-
-func (rc *reconciler) expandVolume(volumeToMount cache.VolumeToMount, currentSize resource.Quantity) {
-	klog.V(4).InfoS(volumeToMount.GenerateMsgDetailed("Starting operationExecutor.ExpandInUseVolume", ""), "pod", klog.KObj(volumeToMount.Pod))
-	err := rc.operationExecutor.ExpandInUseVolume(volumeToMount.VolumeToMount, rc.actualStateOfWorld, currentSize)
-
-	if err != nil && !isExpectedError(err) {
-		klog.ErrorS(err, volumeToMount.GenerateErrorDetailed("operationExecutor.ExpandInUseVolume failed", err).Error(), "pod", klog.KObj(volumeToMount.Pod))
-	}
-
-	if err == nil {
-		klog.V(4).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.ExpandInUseVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
-	}
-}
-
-func (rc *reconciler) mountAttachedVolumes(volumeToMount cache.VolumeToMount, podExistError error) {
-	// Volume is not mounted, or is already mounted, but requires remounting
-	remountingLogStr := ""
-	isRemount := cache.IsRemountRequiredError(podExistError)
-	if isRemount {
-		remountingLogStr = "Volume is already mounted to pod, but remount was requested."
-	}
-	klog.V(4).InfoS(volumeToMount.GenerateMsgDetailed("Starting operationExecutor.MountVolume", remountingLogStr), "pod", klog.KObj(volumeToMount.Pod))
-	err := rc.operationExecutor.MountVolume(
-		rc.waitForAttachTimeout,
-		volumeToMount.VolumeToMount,
-		rc.actualStateOfWorld,
-		isRemount)
-	if err != nil && !isExpectedError(err) {
-		klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.MountVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
-	}
-	if err == nil {
-		if remountingLogStr == "" {
-			klog.V(1).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.MountVolume started", remountingLogStr), "pod", klog.KObj(volumeToMount.Pod))
-		} else {
-			klog.V(5).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.MountVolume started", remountingLogStr), "pod", klog.KObj(volumeToMount.Pod))
-		}
-	}
-}
-
-func (rc *reconciler) waitForVolumeAttach(volumeToMount cache.VolumeToMount) {
-	if rc.controllerAttachDetachEnabled || !volumeToMount.PluginIsAttachable {
-		//// lets not spin a goroutine and unnecessarily trigger exponential backoff if this happens
-		if volumeToMount.PluginIsAttachable && !volumeToMount.ReportedInUse {
-			klog.V(5).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.VerifyControllerAttachedVolume failed", " volume not marked in-use"), "pod", klog.KObj(volumeToMount.Pod))
-			return
-		}
-		// Volume is not attached (or doesn't implement attacher), kubelet attach is disabled, wait
-		// for controller to finish attaching volume.
-		klog.V(5).InfoS(volumeToMount.GenerateMsgDetailed("Starting operationExecutor.VerifyControllerAttachedVolume", ""), "pod", klog.KObj(volumeToMount.Pod))
-		err := rc.operationExecutor.VerifyControllerAttachedVolume(
-			volumeToMount.VolumeToMount,
-			rc.nodeName,
-			rc.actualStateOfWorld)
-		if err != nil && !isExpectedError(err) {
-			klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.VerifyControllerAttachedVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
-		}
-		if err == nil {
-			klog.InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.VerifyControllerAttachedVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
-		}
-	} else {
-		// Volume is not attached to node, kubelet attach is enabled, volume implements an attacher,
-		// so attach it
-		volumeToAttach := operationexecutor.VolumeToAttach{
-			VolumeName: volumeToMount.VolumeName,
-			VolumeSpec: volumeToMount.VolumeSpec,
-			NodeName:   rc.nodeName,
-		}
-		klog.V(5).InfoS(volumeToAttach.GenerateMsgDetailed("Starting operationExecutor.AttachVolume", ""), "pod", klog.KObj(volumeToMount.Pod))
-		err := rc.operationExecutor.AttachVolume(volumeToAttach, rc.actualStateOfWorld)
-		if err != nil && !isExpectedError(err) {
-			klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.AttachVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
-		}
-		if err == nil {
-			klog.InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.AttachVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
-		}
-	}
 }
 
 func (rc *reconciler) unmountDetachDevices() {
@@ -307,6 +150,127 @@ func (rc *reconciler) unmountDetachDevices() {
 				}
 			}
 		}
+	}
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+
+func (rc *reconciler) mountAttachedVolumes(volumeToMount cache.VolumeToMount, podExistError error) { // ✅
+	// 卷没有被挂载,或者已经被挂载,但需要重新挂载.
+	remountingLogStr := ""
+	isRemount := cache.IsRemountRequiredError(podExistError)
+	if isRemount {
+		remountingLogStr = "Volume is already mounted to pod, but remount was requested."
+	}
+	klog.V(4).InfoS(volumeToMount.GenerateMsgDetailed("Starting operationExecutor.MountVolume", remountingLogStr), "pod", klog.KObj(volumeToMount.Pod))
+	err := rc.operationExecutor.MountVolume(rc.waitForAttachTimeout, volumeToMount.VolumeToMount, rc.actualStateOfWorld, isRemount)
+	if err != nil && !isExpectedError(err) {
+		klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.MountVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
+	}
+	if err == nil {
+		if remountingLogStr == "" {
+			klog.V(1).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.MountVolume started", remountingLogStr), "pod", klog.KObj(volumeToMount.Pod))
+		} else {
+			klog.V(5).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.MountVolume started", remountingLogStr), "pod", klog.KObj(volumeToMount.Pod))
+		}
+	}
+}
+
+func (rc *reconciler) unmountVolumes() { // ✅
+	//在挂载之前触发卸载操作,这样一个卷如果被一个被删除的pod所引用,现在又被另一个pod所引用,
+	//那么它会先从第一个pod中卸载,然后再挂载到新的pod中.这是为了避免数据损坏或数据丢失的情况.
+
+	// Ensure volumes that should be unmounted are unmounted.
+	for _, mountedVolume := range rc.actualStateOfWorld.GetAllMountedVolumes() {
+		if !rc.desiredStateOfWorld.PodExistsInVolume(mountedVolume.PodName, mountedVolume.VolumeName, mountedVolume.SELinuxMountContext) {
+			// Volume is mounted, unmount it
+			klog.V(5).InfoS(mountedVolume.GenerateMsgDetailed("Starting operationExecutor.UnmountVolume", ""))
+			// /var/lib/kubelet/pods
+			err := rc.operationExecutor.UnmountVolume(mountedVolume.MountedVolume, rc.actualStateOfWorld, rc.kubeletPodsDir) // ✅
+			if err != nil && !isExpectedError(err) {
+				klog.ErrorS(err, mountedVolume.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.UnmountVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error())
+			}
+			if err == nil {
+				klog.InfoS(mountedVolume.GenerateMsgDetailed("operationExecutor.UnmountVolume started", ""))
+			}
+		}
+	}
+}
+
+func (rc *reconciler) mountOrAttachVolumes() {
+	// Ensure volumes that should be attached/mounted are attached/mounted.
+	for _, volumeToMount := range rc.desiredStateOfWorld.GetVolumesToMount() {
+		volMounted, devicePath, err := rc.actualStateOfWorld.PodExistsInVolume(
+			volumeToMount.PodName,
+			volumeToMount.VolumeName,
+			volumeToMount.PersistentVolumeSize,
+			volumeToMount.SELinuxLabel,
+		)
+		volumeToMount.DevicePath = devicePath
+		if cache.IsSELinuxMountMismatchError(err) {
+			// The volume is mounted, but with an unexpected SELinux context.
+			// It will get unmounted in unmountVolumes / unmountDetachDevices and
+			// then removed from actualStateOfWorld.
+			rc.desiredStateOfWorld.AddErrorToPod(volumeToMount.PodName, err.Error())
+			continue
+		} else if cache.IsVolumeNotAttachedError(err) { // 挂载失败
+			rc.waitForVolumeAttach(volumeToMount) // ✅
+		} else if !volMounted || cache.IsRemountRequiredError(err) { // 没有挂载、需要重新挂载
+			rc.mountAttachedVolumes(volumeToMount, err) // ✅ 卷没有被挂载,或者已经被挂载,但需要重新挂载.
+		} else if cache.IsFSResizeRequiredError(err) { // 需要重新调整卷大小
+			fsResizeRequiredErr, _ := err.(cache.FsResizeRequiredError)
+			rc.expandVolume(volumeToMount, fsResizeRequiredErr.CurrentSize) // ✅
+		}
+	}
+}
+
+func (rc *reconciler) waitForVolumeAttach(volumeToMount cache.VolumeToMount) { // ✅
+	// controllerAttachDetachEnabled 就是true
+	if rc.controllerAttachDetachEnabled || !volumeToMount.PluginIsAttachable {
+		// lets not spin a goroutine and unnecessarily trigger exponential backoff if this happens
+		if volumeToMount.PluginIsAttachable && !volumeToMount.ReportedInUse {
+			klog.V(5).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.VerifyControllerAttachedVolume failed", " volume not marked in-use"), "pod", klog.KObj(volumeToMount.Pod))
+			return
+		}
+		// Volume is not attached (or doesn't implement attacher), kubelet attach is disabled, wait
+		// for controller to finish attaching volume.
+		klog.V(5).InfoS(volumeToMount.GenerateMsgDetailed("Starting operationExecutor.VerifyControllerAttachedVolume", ""), "pod", klog.KObj(volumeToMount.Pod))
+		err := rc.operationExecutor.VerifyControllerAttachedVolume(volumeToMount.VolumeToMount, rc.nodeName, rc.actualStateOfWorld) // ✅
+		if err != nil && !isExpectedError(err) {
+			klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.VerifyControllerAttachedVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
+		}
+		if err == nil {
+			klog.InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.VerifyControllerAttachedVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
+		}
+	} else {
+		// Volume is not attached to node, kubelet attach is enabled, volume implements an attacher,
+		// so attach it
+		volumeToAttach := operationexecutor.VolumeToAttach{
+			VolumeName: volumeToMount.VolumeName,
+			VolumeSpec: volumeToMount.VolumeSpec,
+			NodeName:   rc.nodeName,
+		}
+		klog.V(5).InfoS(volumeToAttach.GenerateMsgDetailed("Starting operationExecutor.AttachVolume", ""), "pod", klog.KObj(volumeToMount.Pod))
+		err := rc.operationExecutor.AttachVolume(volumeToAttach, rc.actualStateOfWorld) // ✅
+		if err != nil && !isExpectedError(err) {
+			klog.ErrorS(err, volumeToMount.GenerateErrorDetailed(fmt.Sprintf("operationExecutor.AttachVolume failed (controllerAttachDetachEnabled %v)", rc.controllerAttachDetachEnabled), err).Error(), "pod", klog.KObj(volumeToMount.Pod))
+		}
+		if err == nil {
+			klog.InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.AttachVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
+		}
+	}
+}
+
+func (rc *reconciler) expandVolume(volumeToMount cache.VolumeToMount, currentSize resource.Quantity) {
+	klog.V(4).InfoS(volumeToMount.GenerateMsgDetailed("Starting operationExecutor.ExpandInUseVolume", ""), "pod", klog.KObj(volumeToMount.Pod))
+	err := rc.operationExecutor.ExpandInUseVolume(volumeToMount.VolumeToMount, rc.actualStateOfWorld, currentSize)
+
+	if err != nil && !isExpectedError(err) {
+		klog.ErrorS(err, volumeToMount.GenerateErrorDetailed("operationExecutor.ExpandInUseVolume failed", err).Error(), "pod", klog.KObj(volumeToMount.Pod))
+	}
+
+	if err == nil {
+		klog.V(4).InfoS(volumeToMount.GenerateMsgDetailed("operationExecutor.ExpandInUseVolume started", ""), "pod", klog.KObj(volumeToMount.Pod))
 	}
 }
 

@@ -378,12 +378,12 @@ type ImageStateSummary struct {
 type NodeInfo struct {
 	node                         *v1.Node     //
 	Pods                         []*PodInfo   // 正在运行的pod信息
-	PodsWithAffinity             []*PodInfo   // 反亲和性的pod的子集。
-	PodsWithRequiredAntiAffinity []*PodInfo   // 必须满足 反亲和性的pod的子集。
+	PodsWithAffinity             []*PodInfo   // 反亲和性的pod的子集.
+	PodsWithRequiredAntiAffinity []*PodInfo   // 必须满足 反亲和性的pod的子集.
 	UsedPorts                    HostPortInfo // 分配的节点 ip\proto\port
 	Requested                    *Resource    // 表示节点 已经 requests 的资源
-	NonZeroRequested             *Resource    // 此节点上所有pod请求的总资源，并对每个容器的CPU和内存请求应用最小值。这并不反映该节点的实际资源请求，但用于避免将许多零请求pod调度到一个节点上。
-	Allocatable                  *Resource    // 表示节点可用于调度的资源。
+	NonZeroRequested             *Resource    // 此节点上所有pod请求的总资源,并对每个容器的CPU和内存请求应用最小值.这并不反映该节点的实际资源请求,但用于避免将许多零请求pod调度到一个节点上.
+	Allocatable                  *Resource    // 表示节点可用于调度的资源.
 
 	// ImageStates holds the entry of an image if and only if this image is on the node. The entry can be used for
 	// checking an image's existence and advanced usage (e.g., image locality scheduling policy) based on the image
@@ -429,7 +429,7 @@ func (r *Resource) Add(rl v1.ResourceMap) {
 			r.MilliCPU += rQuant.MilliValue()
 		case v1.ResourceMemory:
 			r.Memory += rQuant.Value()
-		case v1.ResourcePods: // 啥意思？
+		case v1.ResourcePods: // 啥意思?
 			r.AllowedPodNumber += int(rQuant.Value())
 		case v1.ResourceEphemeralStorage:
 			r.EphemeralStorage += rQuant.Value()
@@ -753,7 +753,7 @@ func (n *NodeInfo) updatePVCRefCounts(pod *v1.Pod, add bool) {
 // SetNode sets the overall node information.
 func (n *NodeInfo) SetNode(node *v1.Node) {
 	n.node = node
-	n.Allocatable = NewResource(node.Status.Allocatable) // 表示节点可用于调度的资源。
+	n.Allocatable = NewResource(node.Status.Allocatable) // 表示节点可用于调度的资源.
 	n.Generation = nextGeneration()
 }
 

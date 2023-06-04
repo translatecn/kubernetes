@@ -106,10 +106,10 @@ func (c *PodConfig) Sync() {
 // available, then this object should be considered authoritative.
 type podStorage struct {
 	podLock    sync.RWMutex
-	pods       map[string]map[types.UID]*v1.Pod // 分类， {api:{},file:{},url:{}}
+	pods       map[string]map[types.UID]*v1.Pod // 分类, {api:{},file:{},url:{}}
 	mode       PodConfigNotificationMode        // 事件通知的类型
 	updateLock sync.Mutex
-	updates    chan<- kubetypes.PodUpdate // 用于发送给监听者，处理事件的变更
+	updates    chan<- kubetypes.PodUpdate // 用于发送给监听者,处理事件的变更
 	// contains the set of all sources that have sent at least one SET
 	sourcesSeenLock    sync.RWMutex
 	sourcesSeen        sets.String
@@ -404,11 +404,11 @@ func podsDifferSemantically(existing, ref *v1.Pod) bool { // ✅
 }
 
 // checkAndUpdatePod更新现有的;
-// -如果ref做了一个有意义的更改，返回needUpdate=true
-// -如果ref做了一个有意义的改变，并且这个改变是优雅的删除，返回 needGracefulDelete=true
-// -如果ref没有做任何有意义的改变，但是改变了pod的状态，返回   needReconcile=true
+// -如果ref做了一个有意义的更改,返回needUpdate=true
+// -如果ref做了一个有意义的改变,并且这个改变是优雅的删除,返回 needGracefulDelete=true
+// -如果ref没有做任何有意义的改变,但是改变了pod的状态,返回   needReconcile=true
 // - else返回全部false
-// 现在，needUpdate, needGracefulDelete和needReconcile不应该同时为真
+// 现在,needUpdate, needGracefulDelete和needReconcile不应该同时为真
 func checkAndUpdatePod(existing, ref *v1.Pod) (needUpdate, needReconcile, needGracefulDelete bool) {
 
 	// 1. this is a reconcile
@@ -416,7 +416,7 @@ func checkAndUpdatePod(existing, ref *v1.Pod) (needUpdate, needReconcile, needGr
 	//       like the source annotation or the UID (to ensure safety)
 	if !podsDifferSemantically(existing, ref) { // pod在语义上是否不同
 		// 在语义上一样
-		// 这不是一个更新。只有当它不是更新时才检查调和，因为如果pod要更新，那么额外的调和是不必要的
+		// 这不是一个更新.只有当它不是更新时才检查调和,因为如果pod要更新,那么额外的调和是不必要的
 		// this is not an update
 		// Only check reconcile when it is not an update, because if the pod is going to
 		// be updated, an extra reconcile is unnecessary

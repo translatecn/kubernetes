@@ -24,7 +24,7 @@ import (
 
 // DevicesProvider knows how to provide the devices used by the given container
 type DevicesProvider interface {
-	UpdateAllocatedDevices()                                                     // 释放任何绑定到终止pod的设备。
+	UpdateAllocatedDevices()                                                     // 释放任何绑定到终止pod的设备.
 	GetDevices(podUID, containerName string) []*podresourcesapi.ContainerDevices // 返回分配到容器的设备信息
 	GetAllocatableDevices() []*podresourcesapi.ContainerDevices                  // 返回可以分配的设备信息
 }

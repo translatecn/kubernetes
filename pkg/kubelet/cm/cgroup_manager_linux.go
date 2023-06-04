@@ -136,7 +136,7 @@ type CgroupSubsystems struct {
 // It relies on runc/libcontainer cgroup managers.
 type cgroupManagerImpl struct {
 	subsystems *CgroupSubsystems //
-	useSystemd bool              // 是否应该使用 systemd cgroup 管理器。
+	useSystemd bool              // 是否应该使用 systemd cgroup 管理器.
 }
 
 // Make sure that cgroupManagerImpl implements the CgroupManager interface
@@ -368,9 +368,9 @@ func (m *cgroupManagerImpl) toResources(resourceConfig *ResourceConfig) *libcont
 
 	m.maybeSetHugetlb(resourceConfig, resources) // ✅
 
-	//理想情况下，在cgroup v2上运行时，所有的资源都是统一的。
-	//这对内存没有影响。最大限制，但对于例如CPU控制器
-	//你可以指定正确的设置，而不依赖于OCI运行时执行的转换。
+	//理想情况下,在cgroup v2上运行时,所有的资源都是统一的.
+	//这对内存没有影响.最大限制,但对于例如CPU控制器
+	//你可以指定正确的设置,而不依赖于OCI运行时执行的转换.
 	if resourceConfig.Unified != nil && libcontainercgroups.IsCgroup2UnifiedMode() {
 		resources.Unified = make(map[string]string)
 		for k, v := range resourceConfig.Unified {
@@ -517,7 +517,7 @@ func (m *cgroupManagerImpl) Pids(name CgroupName) []int {
 	return pidsToKill.List()
 }
 
-// ReduceCPULimits 将CPU CFS值减少到最小的共享数量。用于限制进程使用CPU的时间
+// ReduceCPULimits 将CPU CFS值减少到最小的共享数量.用于限制进程使用CPU的时间
 func (m *cgroupManagerImpl) ReduceCPULimits(cgroupName CgroupName) error {
 	// Set lowest possible CpuShares value for the cgroup
 	minimumCPUShares := uint64(MinShares)

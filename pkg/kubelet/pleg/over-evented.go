@@ -60,16 +60,16 @@ func setEventedPLEGUsage(enable bool) {
 }
 
 type EventedPLEG struct {
-	runtime                     kubecontainer.Runtime      // 容器运行时，用于管理容器和 Pod。
-	runtimeService              internalapi.RuntimeService // 运行时服务，用于与容器运行时交互。
-	eventChannel                chan *PodLifecycleEvent    // 事件通道，用于监听 Pod 生命周期事件。
-	cache                       kubecontainer.Cache        // 缓存，用于存储运行时状态，以便同步 Pod 状态。
+	runtime                     kubecontainer.Runtime      // 容器运行时,用于管理容器和 Pod.
+	runtimeService              internalapi.RuntimeService // 运行时服务,用于与容器运行时交互.
+	eventChannel                chan *PodLifecycleEvent    // 事件通道,用于监听 Pod 生命周期事件.
+	cache                       kubecontainer.Cache        // 缓存,用于存储运行时状态,以便同步 Pod 状态.
 	clock                       clock.Clock                //
-	genericPleg                 PodLifecycleEventGenerator // 通用 Pod 生命周期事件生成器，用于强制重新列出。
-	eventedPlegMaxStreamRetries int                        // 最大重试次数，用于获取容器事件。
-	relistDuration              *RelistDuration            // 重新列出周期，用于定期重新列出 Pod。
-	stopCh                      chan struct{}              // 停止通道，用于停止 Evented PLEG。
-	stopCacheUpdateCh           chan struct{}              // 停止缓存更新通道，用于停止缓存的定期更新。
+	genericPleg                 PodLifecycleEventGenerator // 通用 Pod 生命周期事件生成器,用于强制重新列出.
+	eventedPlegMaxStreamRetries int                        // 最大重试次数,用于获取容器事件.
+	relistDuration              *RelistDuration            // 重新列出周期,用于定期重新列出 Pod.
+	stopCh                      chan struct{}              // 停止通道,用于停止 Evented PLEG.
+	stopCacheUpdateCh           chan struct{}              // 停止缓存更新通道,用于停止缓存的定期更新.
 	runningMu                   sync.Mutex                 //
 }
 
@@ -192,7 +192,7 @@ func (e *EventedPLEG) watchEventsChannel() {
 }
 
 func (e *EventedPLEG) processCRIEvents(containerEventsResponseCh chan *runtimeapi.ContainerEventResponse) {
-	//遍历pod中的容器对比缓存中的状态，生成状态变化事件交给syncloop事件循环处理
+	//遍历pod中的容器对比缓存中的状态,生成状态变化事件交给syncloop事件循环处理
 	for event := range containerEventsResponseCh {
 		// Ignore the event if PodSandboxStatus is nil.
 		// This might happen under some race condition where the podSandbox has

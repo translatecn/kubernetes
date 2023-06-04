@@ -960,6 +960,7 @@ func isHardEvictionThreshold(threshold evictionapi.Threshold) bool {
 	return threshold.GracePeriod == time.Duration(0)
 }
 
+// 是否可分配的驱逐阈值
 func isAllocatableEvictionThreshold(threshold evictionapi.Threshold) bool {
 	return threshold.Signal == evictionapi.SignalAllocatableMemoryAvailable
 }

@@ -30,7 +30,7 @@ import (
 
 // SummaryProvider provides summaries of the stats from Kubelet.
 type SummaryProvider interface {
-	Get(ctx context.Context, updateStats bool) (*statsapi.Summary, error) // 返回kubelet的状态，并更新状态
+	Get(ctx context.Context, updateStats bool) (*statsapi.Summary, error) // 返回kubelet的状态,并更新状态
 	GetCPUAndMemoryStats(ctx context.Context) (*statsapi.Summary, error)  // 返回 cpu\mem的状态
 }
 

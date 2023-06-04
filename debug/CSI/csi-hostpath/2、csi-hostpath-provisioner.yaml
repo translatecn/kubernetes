@@ -1,0 +1,135 @@
+# RBAC 相关配置
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-provisioner
+  # replace with non-default name space name
+  namespace: default
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: external-provisioner-runner
+rules:
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get", "list"]
+    - apiGroups: [""]
+      resources: ["persistentvolumes"]
+      verbs: ["get","list","watch","create", "delete"]
+    - apiGroups: [""]
+      resources: ["persistentvolumeclaims"]
+      verbs: ["get","list","watch", "update"]
+    - apiGroups: ["storage.k8s.io"]
+      resources: ["storageclasses"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["list","watch", "create", "update","patch"]
+    - apiGroups: ["snapshot.storage. k8s.io"]
+      resources: ["volumesnapshots"]
+      verbs: ["get", "list"]
+    - apiGroups: ["snapshot.storage.k8s.io"]
+      resources: ["volumesnapshotcontents"]
+      verbs: ["get", "list"]
+    - apiGroups: ["csi.storage.k8s.io"]
+      resources: ["csinodein fos"]
+      verbs: ["get", "list","watch"]
+    - apiGroups: [""]
+      resources: ["nodes"]
+      verbs: ["get","list", "watch"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-provisioner-role
+subjects:
+  - kind: ServiceAccount
+    name: csi-provisioner
+    # replace with non-default namespace name
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: external-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: external-provisioner-cfg
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get","watch","list","delete","update","create"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-provisioner-role-cfg
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: csi-provisioner
+    namespace: default
+roleRef:
+    kind: Role
+    name: external-provisioner-cfg
+    apiGroup: rbac.authorization.k8s.io
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: csi-hostpath-provisioner
+  labels:
+    app: csi-hostpath-provisioner
+spec:
+  selector:
+    app: csi-hostpath-provisioner
+  ports:
+      - name: dummy
+        port: 12345
+
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: csi-hostpath-provisioner
+spec:
+  serviceName: "csi-hostpath-provisioner"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-hostpath-provisioner
+  template:
+    metadata:
+      labels:
+        app: csi-hostpath-provisioner
+    spec:
+      serviceAccountName: csi-provisioner
+      containers:
+        - name: csi-provisioner
+          image: quay.io/k8scsi/csi-provisioner:v1.1.0
+#           git@github.com:kubernetes-csi/external-provisioner.git
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--provisioner=csi-hostpath"
+            - "--csi-address=$(ADDRESS)"
+            - "--connection-timeout=15s"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/plugins/csi-hostpath
+            type: DirectoryOrCreate
+          name: socket-dir

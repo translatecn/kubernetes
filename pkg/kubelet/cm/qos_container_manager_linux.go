@@ -167,7 +167,7 @@ func (m *qosContainerManagerImpl) setHugePagesConfig(configs map[v1.PodQOSClass]
 }
 
 func (m *qosContainerManagerImpl) setCPUCgroupConfig(configs map[v1.PodQOSClass]*CgroupConfig) error {
-	pods := m.activePods()
+	pods := m.activePods() // 从 mirrorPodManager 中过滤掉不活跃的pod
 	burstablePodCPURequest := int64(0)
 	for i := range pods {
 		pod := pods[i]
@@ -332,8 +332,7 @@ func (m *qosContainerManagerImpl) UpdateCgroups() error {
 	}
 
 	// update the qos level cgrougs v2 settings of memory qos if feature enabled
-	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.MemoryQoS) &&
-		libcontainercgroups.IsCgroup2UnifiedMode() {
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.MemoryQoS) && libcontainercgroups.IsCgroup2UnifiedMode() {
 		m.setMemoryQoS(qosConfigs)
 	}
 

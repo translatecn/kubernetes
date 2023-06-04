@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/storage"
-	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	storageinformers "k8s.io/client-go/informers/storage/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -40,10 +39,8 @@ import (
 	"k8s.io/component-helpers/storage/ephemeral"
 	"k8s.io/component-helpers/storage/volume"
 	csitrans "k8s.io/csi-translation-lib"
-	csiplugins "k8s.io/csi-translation-lib/plugins"
 	"k8s.io/klog/v2"
 	v1helper "k8s.io/kubernetes/pkg/apis/core/v1/helper"
-	"k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/volumebinding/metrics"
 )
 
@@ -1003,20 +1000,6 @@ func (a byPVCSize) Less(i, j int) bool {
 
 // isCSIMigrationOnForPlugin checks if CSI migration is enabled for a given plugin.
 func isCSIMigrationOnForPlugin(pluginName string) bool {
-	switch pluginName {
-	case csiplugins.AWSEBSInTreePluginName:
-		return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAWS)
-	case csiplugins.GCEPDInTreePluginName:
-		return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationGCE)
-	case csiplugins.AzureDiskInTreePluginName:
-		return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAzureDisk)
-	case csiplugins.CinderInTreePluginName:
-		return true
-	case csiplugins.PortworxVolumePluginName:
-		return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationPortworx)
-	case csiplugins.RBDVolumePluginName:
-		return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationRBD)
-	}
 	return false
 }
 

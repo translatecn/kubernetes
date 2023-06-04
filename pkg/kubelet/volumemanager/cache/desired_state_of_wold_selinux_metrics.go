@@ -58,13 +58,13 @@ var (
 	seLinuxVolumeContextMismatchWarnings = compbasemetrics.NewGauge(
 		&compbasemetrics.GaugeOpts{
 			Name:           "volume_manager_selinux_volume_context_mismatch_warnings_total",
-			Help:           "Number of errors when a Pod uses a volume that is already mounted with a different SELinux context than the Pod needs. They are not errors yet, but they will become real errors when SELinuxMountReadWriteOncePod feature is expanded to all volume access modes.",
+			Help:           "当一个 Pod 使用一个已经挂载了与 Pod 需要的不同 SELinux 上下文的卷时,会发生的错误数量.",
 			StabilityLevel: compbasemetrics.ALPHA,
 		})
 	seLinuxVolumesAdmitted = compbasemetrics.NewGauge(
 		&compbasemetrics.GaugeOpts{
 			Name:           "volume_manager_selinux_volumes_admitted_total",
-			Help:           "Number of volumes whose SELinux context was fine and will be mounted with mount -o context option.",
+			Help:           "SELinux 上下文正确的卷的数量,并将使用 mount -o context 选项挂载.",
 			StabilityLevel: compbasemetrics.ALPHA,
 		})
 

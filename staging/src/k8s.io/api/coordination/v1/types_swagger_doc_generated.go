@@ -53,7 +53,7 @@ var map_LeaseSpec = map[string]string{
 	"leaseDurationSeconds": "leaseDurationSeconds是租约候选者需要等待强制获取它的持续时间.这是针对上次观察到的更新时间的度量.",
 	"acquireTime":          "acquireTime是获取当前租约的时间.",
 	"renewTime":            "renewTime 当前租约持有者最近一次更新租约的时间",
-	"leaseTransitions":     "leaseTransitions 是承租人之间的租赁转换次数。",
+	"leaseTransitions":     "leaseTransitions 是承租人之间的租赁转换次数.",
 }
 
 func (LeaseSpec) SwaggerDoc() map[string]string {

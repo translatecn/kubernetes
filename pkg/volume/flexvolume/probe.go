@@ -32,9 +32,12 @@ import (
 	utilstrings "k8s.io/utils/strings"
 )
 
+// Flexvolume是Kubernetes中的一种插件式卷驱动程序接口,它可以使用户使用不同的存储后端来实现卷的挂载.
+// 与内置的卷插件不同,Flexvolume是一种基于脚本的驱动程序接口,这意味着用户可以使用自己的脚本来实现卷的挂载,而不必依赖于Kubernetes内置的卷插件.
+// Flexvolume驱动程序可以在每个节点上运行,并且可以与Kubernetes的Flexvolume插件进行交互,从而实现卷的挂载和卸载.
 type flexVolumeProber struct {
 	mutex          sync.Mutex
-	pluginDir      string         // Flexvolume driver directory
+	pluginDir      string         // 指用于存储 Flexvolume 驱动程序的目录
 	runner         exec.Interface // Interface to use for execing flex calls
 	watcher        utilfs.FSWatcher
 	factory        PluginFactory

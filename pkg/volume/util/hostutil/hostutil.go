@@ -59,7 +59,7 @@ type HostUtils interface {
 	// PathExists tests if the given path already exists
 	// Error is returned on any other error than "file not found".
 	PathExists(pathname string) (bool, error)
-	// EvalHostSymlinks returns the path name after evaluating symlinks.
+	// EvalHostSymlinks 在计算符号链接后返回路径名.
 	EvalHostSymlinks(pathname string) (string, error)
 	// GetOwner returns the integer ID for the user and group of the given path
 	GetOwner(pathname string) (int64, int64, error)

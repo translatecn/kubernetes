@@ -54,12 +54,12 @@ type worker struct {
 	spec                                 *v1.Probe
 	probeType                            probeType
 	initialValue                         results.Result            // 初始延迟期间的探测默认值
-	resultsManager                       results.Manager           // 存储 这个worker的结果，具体可以是 startupManager、readinessManager、livenessManager
+	resultsManager                       results.Manager           // 存储 这个worker的结果,具体可以是 startupManager、readinessManager、livenessManager
 	probeManager                         *manager                  //
-	containerID                          kubecontainer.ContainerID // 此worker的最后一个已知容器ID。
+	containerID                          kubecontainer.ContainerID // 此worker的最后一个已知容器ID.
 	lastResult                           results.Result            //
-	resultRun                            int                       // 当前状态，持续检测了多少次
-	onHold                               bool                      // 如何设置了，跳过本次探测
+	resultRun                            int                       // 当前状态,持续检测了多少次
+	onHold                               bool                      // 如何设置了,跳过本次探测
 	proberResultsSuccessfulMetricLabels  metrics.Labels
 	proberResultsFailedMetricLabels      metrics.Labels
 	proberResultsUnknownMetricLabels     metrics.Labels
@@ -131,8 +131,8 @@ func (w *worker) run() {
 	probeTickerPeriod := time.Duration(w.spec.PeriodSeconds) * time.Second
 
 	if probeTickerPeriod > time.Since(w.probeManager.start) {
-		// 当 kubelet 重新启动时，探针可能会在短时间内连续启动，导致负载过大或者产生其他问题。
-		// 为了避免这种情况，需要让 worker 在一定时间内随机等待一段时间，然后再进行探测。这个等待时间是 tickerPeriod 的随机部分，用于平滑探针的启动。
+		// 当 kubelet 重新启动时,探针可能会在短时间内连续启动,导致负载过大或者产生其他问题.
+		// 为了避免这种情况,需要让 worker 在一定时间内随机等待一段时间,然后再进行探测.这个等待时间是 tickerPeriod 的随机部分,用于平滑探针的启动.
 		time.Sleep(time.Duration(rand.Float64() * float64(probeTickerPeriod)))
 	}
 
@@ -175,7 +175,7 @@ func (w *worker) stop() {
 	}
 }
 
-// 对容器进行一次探测并记录结果。告诉worker是否应该继续。
+// 对容器进行一次探测并记录结果.告诉worker是否应该继续.
 func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
 	defer runtime.HandleCrash(func(_ interface{}) { keepGoing = true })
@@ -202,19 +202,19 @@ func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 			"pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		return true // Wait for more information.
 	}
-	// 比如说，某个pod 重建了 退出码不是0
+	// 比如说,某个pod 重建了 退出码不是0
 	if w.containerID.String() != c.ContainerID { // 判断是不是启动了一个新的容器
 		if !w.containerID.IsEmpty() {
 			w.resultsManager.Remove(w.containerID)
 		}
 		w.containerID = kubecontainer.ParseContainerID(c.ContainerID)
 		w.resultsManager.Set(w.containerID, w.initialValue, w.pod)
-		// 我们有一个新的容器;继续探索。
+		// 我们有一个新的容器;继续探索.
 		w.onHold = false
 	}
 
 	if w.onHold {
-		// worker 被搁置，直到有一个新的container
+		// worker 被搁置,直到有一个新的container
 		return true
 	}
 
@@ -229,7 +229,7 @@ func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 
 	// Graceful shutdown of the pod.
 	if w.pod.ObjectMeta.DeletionTimestamp != nil && (w.probeType == liveness || w.probeType == startup) {
-		klog.V(3).InfoS("请求删除Pod，将探测结果设置为成功", "probeType", w.probeType, "pod", klog.KObj(w.pod), "containerName", w.container.Name)
+		klog.V(3).InfoS("请求删除Pod,将探测结果设置为成功", "probeType", w.probeType, "pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		if w.probeType == startup {
 			klog.InfoS("在容器完全启动之前请求删除Pod", "pod", klog.KObj(w.pod), "containerName", w.container.Name)
 		}
@@ -245,13 +245,13 @@ func (w *worker) doProbe(ctx context.Context) (keepGoing bool) {
 	}
 
 	if c.Started != nil && *c.Started {
-		// 一旦容器启动，停止 探测 启动。
-		// 我们让它继续运行，以确保它可以为重启的容器工作。
+		// 一旦容器启动,停止 探测 启动.
+		// 我们让它继续运行,以确保它可以为重启的容器工作.
 		if w.probeType == startup {
 			return true
 		}
 	} else {
-		// 禁止其他探测，直到 启动
+		// 禁止其他探测,直到 启动
 		if w.probeType != startup {
 			return true
 		}

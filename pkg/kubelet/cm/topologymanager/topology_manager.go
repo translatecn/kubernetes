@@ -51,7 +51,7 @@ func (e TopologyAffinityError) Type() string {
 	return ErrorTopologyAffinity
 }
 
-// Manager 用于管理节点的拓扑结构信息，用来优化容器中应用在高性能服务器上的性能
+// Manager 用于管理节点的拓扑结构信息,用来优化容器中应用在高性能服务器上的性能
 type Manager interface {
 	// PodAdmitHandler is implemented by Manager
 	lifecycle.PodAdmitHandler

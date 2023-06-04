@@ -27,18 +27,18 @@ import (
 )
 
 type backoffEntry struct {
-	backoff    time.Duration // 回退时间间隔,下一次重试的等待时间。
-	lastUpdate time.Time     // 上次更新回退时间间隔的时间戳。
+	backoff    time.Duration // 回退时间间隔,下一次重试的等待时间.
+	lastUpdate time.Time     // 上次更新回退时间间隔的时间戳.
 }
 
 type Backoff struct {
 	sync.RWMutex
-	Clock           clock.Clock              // 用于获取当前时间。
-	defaultDuration time.Duration            // 默认的回退时间间隔。
-	maxDuration     time.Duration            // 最大的回退时间间隔。
-	perItemBackoff  map[string]*backoffEntry // 每个项目的回退时间间隔，以项目名称为键，backoffEntry 结构体为值。
-	rand            *rand.Rand               // 随机数生成器，用于添加随机因素到回退时间间隔中。
-	maxJitterFactor float64                  // 最大的抖动因子，用于在回退时间间隔中添加随机因素。
+	Clock           clock.Clock              // 用于获取当前时间.
+	defaultDuration time.Duration            // 默认的回退时间间隔.
+	maxDuration     time.Duration            // 最大的回退时间间隔.
+	perItemBackoff  map[string]*backoffEntry // 每个项目的回退时间间隔,以项目名称为键,backoffEntry 结构体为值.
+	rand            *rand.Rand               // 随机数生成器,用于添加随机因素到回退时间间隔中.
+	maxJitterFactor float64                  // 最大的抖动因子,用于在回退时间间隔中添加随机因素.
 }
 
 func newBackoff(clock clock.Clock, initial, max time.Duration, maxJitterFactor float64) *Backoff {
@@ -74,9 +74,9 @@ func (p *Backoff) Next(id string, eventTime time.Time) {
 
 // Returns True if the elapsed time since eventTime is smaller than the current backoff window
 func (p *Backoff) IsInBackOffSince(id string, eventTime time.Time) bool {
-	// 如果自事件时间以来的经过时间小于当前的回退窗口，则说明还没有到达下一次重试的时间，可以继续等待。
+	// 如果自事件时间以来的经过时间小于当前的回退窗口,则说明还没有到达下一次重试的时间,可以继续等待.
 	//
-	// 如果经过时间大于或等于当前的回退窗口，则说明可以进行下一次重试，返回 False。
+	// 如果经过时间大于或等于当前的回退窗口,则说明可以进行下一次重试,返回 False.
 	p.RLock()
 	defer p.RUnlock()
 	entry, ok := p.perItemBackoff[id]

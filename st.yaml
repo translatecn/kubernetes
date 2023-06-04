@@ -1,0 +1,12 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-pod
+spec:
+  containers:
+    - name: test-pod
+      image: centos:7
+      command:
+        - "/bin/sh"
+        - "-c"
+        - "sleep 10 && rm a.txt"

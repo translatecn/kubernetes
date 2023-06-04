@@ -33,14 +33,6 @@ FieldTags:
 
 # This preliminary collection of source types should be removed once
 # KEP-1753 adds tags to the relevant fields.
-Sources:
-# The following fields are tagged in #95994
-- PackageRE: "k8s.io/kubernetes/test/e2e/storage/vsphere"
-  TypeRE: "Config"
-  FieldRE: "Password"
-- PackageRE: "k8s.io/kubernetes/test/e2e/storage/vsphere"
-  TypeRE: "ConfigFile"
-  FieldRE: "Global"  # Global is of unnamed type, contains the field Password.
 
 # The following fields are tagged in #95997
 - PackageRE: "k8s.io/kubelet/config/v1beta1"
@@ -105,9 +97,6 @@ Sources:
   FieldRE: " Token"
 
 # The following fields are tagged in #96007
-- PackageRE: "k8s.io/kubernetes/pkg/credentialprovider/azure"
-  TypeRE: "acrAuthResponse"
-  FieldRE: "RefreshToken"
 - PackageRE: "k8s.io/kubernetes/pkg/credentialprovider"
   TypeRE: "DockerConfigEntry"
   FieldRE: "Password"
@@ -117,9 +106,6 @@ Sources:
 - PackageRE: "k8s.io/kubernetes/pkg/credentialprovider"
   TypeRE: "dockerConfigEntryWithAuth"
   FieldRE: "Password|Auth"
-- PackageRE: "k8s.io/kubernetes/pkg/credentialprovider/gcp"
-  TypeRE: "tokenBlob"
-  FieldRE: "AccessToken"
 - PackageRE: "k8s.io/kubernetes/pkg/credentialprovider"
   TypeRE: "AuthConfig"
   FieldRE: "Password|Auth|IdentityToken|RegistryToken"

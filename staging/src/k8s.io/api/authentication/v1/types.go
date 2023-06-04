@@ -138,9 +138,7 @@ type TokenRequestSpec struct {
 	// trust between the target audiences.
 	Audiences []string `json:"audiences" protobuf:"bytes,1,rep,name=audiences"`
 
-	// ExpirationSeconds is the requested duration of validity of the request. The
-	// token issuer may return a token with a different validity duration so a
-	// client needs to check the 'expiration' field in a response.
+	//ExpirationSeconds 求有效期的期望持续时间.令牌发行者可能会返回一个具有不同有效期的令牌,因此客户端需要在响应中检查“过期”字段.
 	// +optional
 	ExpirationSeconds *int64 `json:"expirationSeconds" protobuf:"varint,4,opt,name=expirationSeconds"`
 
@@ -157,7 +155,7 @@ type TokenRequestSpec struct {
 type TokenRequestStatus struct {
 	// Token is the opaque bearer token.
 	Token string `json:"token" protobuf:"bytes,1,opt,name=token"`
-	// ExpirationTimestamp is the time of expiration of the returned token.
+	// ExpirationTimestamp 返回令牌的过期时间.
 	ExpirationTimestamp metav1.Time `json:"expirationTimestamp" protobuf:"bytes,2,opt,name=expirationTimestamp"`
 }
 

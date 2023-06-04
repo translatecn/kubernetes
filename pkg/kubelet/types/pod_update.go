@@ -42,7 +42,7 @@ const (
 	DELETE
 	REMOVE
 	UPDATE
-	RECONCILE // 表示这些 Pod 在源中有意外的状态，kubelet 应该使用此源协调状态。
+	RECONCILE // 表示这些 Pod 在源中有意外的状态,kubelet 应该使用此源协调状态.
 )
 
 // These constants identify the sources of pods.
@@ -103,10 +103,10 @@ func GetPodSource(pod *v1.Pod) (string, error) {
 type SyncPodType int
 
 const (
-	SyncPodSync   SyncPodType = iota // 当 Pod 被同步以确保期望状态时。
-	SyncPodUpdate                    // 当 Pod 从源更新时。
-	SyncPodCreate                    // 当从源创建 Pod 时。
-	SyncPodKill                      // 当 Pod 应该没有运行的容器时。以这种方式停止的 Pod 可能会由于配置更改在将来重新启动。
+	SyncPodSync   SyncPodType = iota // 当 Pod 被同步以确保期望状态时.
+	SyncPodUpdate                    // 当 Pod 从源更新时.
+	SyncPodCreate                    // 当从源创建 Pod 时.
+	SyncPodKill                      // 当 Pod 应该没有运行的容器时.以这种方式停止的 Pod 可能会由于配置更改在将来重新启动.
 )
 
 func (sp SyncPodType) String() string {

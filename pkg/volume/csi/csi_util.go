@@ -90,10 +90,6 @@ func loadVolumeData(dir string, fileName string) (map[string]string, error) {
 	return data, nil
 }
 
-func getCSISourceFromSpec(spec *volume.Spec) (*api.CSIPersistentVolumeSource, error) {
-	return getPVSourceFromSpec(spec)
-}
-
 func getReadOnlyFromSpec(spec *volume.Spec) (bool, error) {
 	if spec.PersistentVolume != nil &&
 		spec.PersistentVolume.Spec.CSI != nil {
@@ -141,57 +137,9 @@ func hasReadWriteOnce(modes []api.PersistentVolumeAccessMode) bool {
 	return false
 }
 
-// getSourceFromSpec returns either CSIVolumeSource or CSIPersistentVolumeSource, but not both
-func getSourceFromSpec(spec *volume.Spec) (*api.CSIVolumeSource, *api.CSIPersistentVolumeSource, error) {
-	if spec == nil {
-		return nil, nil, fmt.Errorf("volume.Spec nil")
-	}
-	if spec.Volume != nil && spec.PersistentVolume != nil {
-		return nil, nil, fmt.Errorf("volume.Spec has both volume and persistent volume sources")
-	}
-	if spec.Volume != nil && spec.Volume.CSI != nil {
-		return spec.Volume.CSI, nil, nil
-	}
-	if spec.PersistentVolume != nil &&
-		spec.PersistentVolume.Spec.CSI != nil {
-		return nil, spec.PersistentVolume.Spec.CSI, nil
-	}
-
-	return nil, nil, fmt.Errorf("volume source not found in volume.Spec")
-}
-
-// getPVSourceFromSpec ensures only CSIPersistentVolumeSource is present in volume.Spec
-func getPVSourceFromSpec(spec *volume.Spec) (*api.CSIPersistentVolumeSource, error) {
-	volSrc, pvSrc, err := getSourceFromSpec(spec)
-	if err != nil {
-		return nil, err
-	}
-	if volSrc != nil {
-		return nil, fmt.Errorf("unexpected api.CSIVolumeSource found in volume.Spec")
-	}
-	return pvSrc, nil
-}
-
 // GetCSIMounterPath returns the mounter path given the base path.
 func GetCSIMounterPath(path string) string {
 	return filepath.Join(path, "/mount")
-}
-
-// GetCSIDriverName returns the csi driver name
-func GetCSIDriverName(spec *volume.Spec) (string, error) {
-	volSrc, pvSrc, err := getSourceFromSpec(spec)
-	if err != nil {
-		return "", err
-	}
-
-	switch {
-	case volSrc != nil:
-		return volSrc.Driver, nil
-	case pvSrc != nil:
-		return pvSrc.Driver, nil
-	default:
-		return "", errors.New(log("volume source not found in volume.Spec"))
-	}
 }
 
 func createCSIOperationContext(volumeSpec *volume.Spec, timeout time.Duration) (context.Context, context.CancelFunc) {
@@ -213,4 +161,57 @@ func getPodInfoAttrs(pod *api.Pod, volumeMode storage.VolumeLifecycleMode) map[s
 		"csi.storage.k8s.io/ephemeral":           strconv.FormatBool(volumeMode == storage.VolumeLifecycleEphemeral),
 	}
 	return attrs
+}
+
+// ------------------------------------------------------------------------------------------------------------
+
+func getCSISourceFromSpec(spec *volume.Spec) (*api.CSIPersistentVolumeSource, error) {
+	return getPVSourceFromSpec(spec)
+}
+
+// getPVSourceFromSpec ensures only CSIPersistentVolumeSource is present in volume.Spec
+func getPVSourceFromSpec(spec *volume.Spec) (*api.CSIPersistentVolumeSource, error) {
+	volSrc, pvSrc, err := getSourceFromSpec(spec)
+	if err != nil {
+		return nil, err
+	}
+	if volSrc != nil {
+		return nil, fmt.Errorf("unexpected api.CSIVolumeSource found in volume.Spec")
+	}
+	return pvSrc, nil
+}
+
+// getSourceFromSpec returns either CSIVolumeSource or CSIPersistentVolumeSource, but not both
+func getSourceFromSpec(spec *volume.Spec) (*api.CSIVolumeSource, *api.CSIPersistentVolumeSource, error) {
+	if spec == nil {
+		return nil, nil, fmt.Errorf("volume.Spec nil")
+	}
+	if spec.Volume != nil && spec.PersistentVolume != nil {
+		return nil, nil, fmt.Errorf("volume.Spec has both volume and persistent volume sources")
+	}
+	if spec.Volume != nil && spec.Volume.CSI != nil {
+		return spec.Volume.CSI, nil, nil
+	}
+	if spec.PersistentVolume != nil && spec.PersistentVolume.Spec.CSI != nil {
+		return nil, spec.PersistentVolume.Spec.CSI, nil
+	}
+
+	return nil, nil, fmt.Errorf("volume source not found in volume.Spec")
+}
+
+// GetCSIDriverName returns the csi driver name
+func GetCSIDriverName(spec *volume.Spec) (string, error) {
+	volSrc, pvSrc, err := getSourceFromSpec(spec)
+	if err != nil {
+		return "", err
+	}
+
+	switch {
+	case volSrc != nil:
+		return volSrc.Driver, nil
+	case pvSrc != nil:
+		return pvSrc.Driver, nil
+	default:
+		return "", errors.New(log("volume source not found in volume.Spec"))
+	}
 }

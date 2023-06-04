@@ -137,7 +137,7 @@ func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, er
 	currentParts = currentParts[1:]
 	if !r.GrouplessAPIPrefixes.Has(requestInfo.APIPrefix) {
 		// apis 进来
-		// 一个部分（APIPrefix）已经被使用,所以这实际上是“我们有四个部分吗？”
+		// 一个部分（APIPrefix）已经被使用,所以这实际上是“我们有四个部分吗?”
 		if len(currentParts) < 3 {
 			// 没有group、version
 			// return a non-resource request

@@ -58,106 +58,6 @@ func HasWindowsHostProcessRequest(pod *v1.Pod, container *v1.Container) bool {
 	return *effectiveSc.WindowsOptions.HostProcess
 }
 
-// DetermineEffectiveSecurityContext 返回一个合成的SecurityContext,用于从提供的pod和容器的安全上下文中读取有效配置.在两者都设置的情况下,容器的字段优先
-func DetermineEffectiveSecurityContext(pod *v1.Pod, container *v1.Container) *v1.SecurityContext {
-	effectiveSc := securityContextFromPodSecurityContext(pod)
-	containerSc := container.SecurityContext
-
-	if effectiveSc == nil && containerSc == nil {
-		return &v1.SecurityContext{}
-	}
-	if effectiveSc != nil && containerSc == nil {
-		return effectiveSc
-	}
-	if effectiveSc == nil && containerSc != nil {
-		return containerSc
-	}
-
-	if containerSc.SELinuxOptions != nil {
-		effectiveSc.SELinuxOptions = new(v1.SELinuxOptions)
-		*effectiveSc.SELinuxOptions = *containerSc.SELinuxOptions
-	}
-
-	if containerSc.WindowsOptions != nil {
-		// only override fields that are set at the container level, not the whole thing
-		if effectiveSc.WindowsOptions == nil {
-			effectiveSc.WindowsOptions = &v1.WindowsSecurityContextOptions{}
-		}
-		if containerSc.WindowsOptions.GMSACredentialSpecName != nil || containerSc.WindowsOptions.GMSACredentialSpec != nil {
-			// both GMSA fields go hand in hand
-			effectiveSc.WindowsOptions.GMSACredentialSpecName = containerSc.WindowsOptions.GMSACredentialSpecName
-			effectiveSc.WindowsOptions.GMSACredentialSpec = containerSc.WindowsOptions.GMSACredentialSpec
-		}
-		if containerSc.WindowsOptions.RunAsUserName != nil {
-			effectiveSc.WindowsOptions.RunAsUserName = containerSc.WindowsOptions.RunAsUserName
-		}
-		if containerSc.WindowsOptions.HostProcess != nil {
-			effectiveSc.WindowsOptions.HostProcess = containerSc.WindowsOptions.HostProcess
-		}
-	}
-
-	if containerSc.Capabilities != nil {
-		effectiveSc.Capabilities = new(v1.Capabilities)
-		*effectiveSc.Capabilities = *containerSc.Capabilities
-	}
-
-	if containerSc.Privileged != nil {
-		effectiveSc.Privileged = new(bool)
-		*effectiveSc.Privileged = *containerSc.Privileged
-	}
-
-	if containerSc.RunAsUser != nil {
-		effectiveSc.RunAsUser = new(int64)
-		*effectiveSc.RunAsUser = *containerSc.RunAsUser
-	}
-
-	if containerSc.RunAsGroup != nil {
-		effectiveSc.RunAsGroup = new(int64)
-		*effectiveSc.RunAsGroup = *containerSc.RunAsGroup
-	}
-
-	if containerSc.RunAsNonRoot != nil {
-		effectiveSc.RunAsNonRoot = new(bool)
-		*effectiveSc.RunAsNonRoot = *containerSc.RunAsNonRoot
-	}
-
-	if containerSc.ReadOnlyRootFilesystem != nil {
-		effectiveSc.ReadOnlyRootFilesystem = new(bool)
-		*effectiveSc.ReadOnlyRootFilesystem = *containerSc.ReadOnlyRootFilesystem
-	}
-
-	if containerSc.AllowPrivilegeEscalation != nil {
-		effectiveSc.AllowPrivilegeEscalation = new(bool)
-		*effectiveSc.AllowPrivilegeEscalation = *containerSc.AllowPrivilegeEscalation
-	}
-
-	if containerSc.ProcMount != nil {
-		effectiveSc.ProcMount = new(v1.ProcMountType)
-		*effectiveSc.ProcMount = *containerSc.ProcMount
-	}
-
-	return effectiveSc
-}
-
-// DetermineEffectiveRunAsUser returns a pointer of UID from the provided pod's
-// and container's security context and a bool value to indicate if it is absent.
-// Container's runAsUser take precedence in cases where both are set.
-func DetermineEffectiveRunAsUser(pod *v1.Pod, container *v1.Container) (*int64, bool) {
-	var runAsUser *int64
-	if pod.Spec.SecurityContext != nil && pod.Spec.SecurityContext.RunAsUser != nil {
-		runAsUser = new(int64)
-		*runAsUser = *pod.Spec.SecurityContext.RunAsUser
-	}
-	if container.SecurityContext != nil && container.SecurityContext.RunAsUser != nil {
-		runAsUser = new(int64)
-		*runAsUser = *container.SecurityContext.RunAsUser
-	}
-	if runAsUser == nil {
-		return nil, false
-	}
-	return runAsUser, true
-}
-
 // 容器级别的安全上下文
 func securityContextFromPodSecurityContext(pod *v1.Pod) *v1.SecurityContext {
 	if pod.Spec.SecurityContext == nil {
@@ -256,4 +156,106 @@ func ConvertToRuntimeReadonlyPaths(opt *v1.ProcMountType) []string {
 
 	// Otherwise, add the default readonly paths to the runtime security context.
 	return defaultReadonlyPaths
+}
+
+//  ----------------------------------------------------------------------------------------------------------------
+
+// DetermineEffectiveSecurityContext 返回一个合成的SecurityContext,用于从提供的pod和容器的安全上下文中读取有效配置.在两者都设置的情况下,容器的字段优先
+func DetermineEffectiveSecurityContext(pod *v1.Pod, container *v1.Container) *v1.SecurityContext {
+	effectiveSc := securityContextFromPodSecurityContext(pod) // 容器级别的安全上下文
+	containerSc := container.SecurityContext
+
+	if effectiveSc == nil && containerSc == nil {
+		return &v1.SecurityContext{}
+	}
+	if effectiveSc != nil && containerSc == nil {
+		return effectiveSc
+	}
+	if effectiveSc == nil && containerSc != nil {
+		return containerSc
+	}
+
+	if containerSc.SELinuxOptions != nil {
+		effectiveSc.SELinuxOptions = new(v1.SELinuxOptions)
+		*effectiveSc.SELinuxOptions = *containerSc.SELinuxOptions
+	}
+
+	if containerSc.WindowsOptions != nil {
+		// only override fields that are set at the container level, not the whole thing
+		if effectiveSc.WindowsOptions == nil {
+			effectiveSc.WindowsOptions = &v1.WindowsSecurityContextOptions{}
+		}
+		if containerSc.WindowsOptions.GMSACredentialSpecName != nil || containerSc.WindowsOptions.GMSACredentialSpec != nil {
+			// both GMSA fields go hand in hand
+			effectiveSc.WindowsOptions.GMSACredentialSpecName = containerSc.WindowsOptions.GMSACredentialSpecName
+			effectiveSc.WindowsOptions.GMSACredentialSpec = containerSc.WindowsOptions.GMSACredentialSpec
+		}
+		if containerSc.WindowsOptions.RunAsUserName != nil {
+			effectiveSc.WindowsOptions.RunAsUserName = containerSc.WindowsOptions.RunAsUserName
+		}
+		if containerSc.WindowsOptions.HostProcess != nil {
+			effectiveSc.WindowsOptions.HostProcess = containerSc.WindowsOptions.HostProcess
+		}
+	}
+
+	if containerSc.Capabilities != nil {
+		effectiveSc.Capabilities = new(v1.Capabilities)
+		*effectiveSc.Capabilities = *containerSc.Capabilities
+	}
+
+	if containerSc.Privileged != nil {
+		effectiveSc.Privileged = new(bool)
+		*effectiveSc.Privileged = *containerSc.Privileged
+	}
+
+	if containerSc.RunAsUser != nil {
+		effectiveSc.RunAsUser = new(int64)
+		*effectiveSc.RunAsUser = *containerSc.RunAsUser
+	}
+
+	if containerSc.RunAsGroup != nil {
+		effectiveSc.RunAsGroup = new(int64)
+		*effectiveSc.RunAsGroup = *containerSc.RunAsGroup
+	}
+
+	if containerSc.RunAsNonRoot != nil {
+		effectiveSc.RunAsNonRoot = new(bool)
+		*effectiveSc.RunAsNonRoot = *containerSc.RunAsNonRoot
+	}
+
+	if containerSc.ReadOnlyRootFilesystem != nil {
+		effectiveSc.ReadOnlyRootFilesystem = new(bool)
+		*effectiveSc.ReadOnlyRootFilesystem = *containerSc.ReadOnlyRootFilesystem
+	}
+
+	if containerSc.AllowPrivilegeEscalation != nil {
+		effectiveSc.AllowPrivilegeEscalation = new(bool)
+		*effectiveSc.AllowPrivilegeEscalation = *containerSc.AllowPrivilegeEscalation
+	}
+
+	if containerSc.ProcMount != nil {
+		effectiveSc.ProcMount = new(v1.ProcMountType)
+		*effectiveSc.ProcMount = *containerSc.ProcMount
+	}
+
+	return effectiveSc
+}
+
+// DetermineEffectiveRunAsUser returns a pointer of UID from the provided pod's
+// and container's security context and a bool value to indicate if it is absent.
+// Container's runAsUser take precedence in cases where both are set.
+func DetermineEffectiveRunAsUser(pod *v1.Pod, container *v1.Container) (*int64, bool) {
+	var runAsUser *int64
+	if pod.Spec.SecurityContext != nil && pod.Spec.SecurityContext.RunAsUser != nil {
+		runAsUser = new(int64)
+		*runAsUser = *pod.Spec.SecurityContext.RunAsUser
+	}
+	if container.SecurityContext != nil && container.SecurityContext.RunAsUser != nil {
+		runAsUser = new(int64)
+		*runAsUser = *container.SecurityContext.RunAsUser
+	}
+	if runAsUser == nil {
+		return nil, false
+	}
+	return runAsUser, true
 }

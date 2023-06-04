@@ -49,8 +49,7 @@ func GetPersistentVolumeClass(volume *v1.PersistentVolume) string {
 	return volume.Spec.StorageClassName
 }
 
-// CheckNodeAffinity looks at the PV node affinity, and checks if the node has the same corresponding labels
-// This ensures that we don't mount a volume that doesn't belong to this node
+// CheckNodeAffinity 检查pv 是否可以被这个节点访问
 func CheckNodeAffinity(pv *v1.PersistentVolume, nodeLabels map[string]string) error {
 	if pv.Spec.NodeAffinity == nil {
 		return nil

@@ -111,8 +111,8 @@ func NewAttachDetachController(
 	pvcInformer coreinformers.PersistentVolumeClaimInformer,
 	pvInformer coreinformers.PersistentVolumeInformer,
 	csiNodeInformer storageinformersv1.CSINodeInformer,
-	csiDriverInformer storageinformersv1.CSIDriverInformer,
-	volumeAttachmentInformer storageinformersv1.VolumeAttachmentInformer,
+	csiDriverInformer storageinformersv1.CSIDriverInformer, // ✅
+	volumeAttachmentInformer storageinformersv1.VolumeAttachmentInformer, // ✅
 	cloud cloudprovider.Interface,
 	plugins []volume.VolumePlugin,
 	prober volume.DynamicPluginProber,
@@ -140,10 +140,10 @@ func NewAttachDetachController(
 	adc.csiNodeLister = csiNodeInformer.Lister()
 	adc.csiNodeSynced = csiNodeInformer.Informer().HasSynced
 
-	adc.csiDriverLister = csiDriverInformer.Lister()
+	adc.csiDriverLister = csiDriverInformer.Lister() // ✅
 	adc.csiDriversSynced = csiDriverInformer.Informer().HasSynced
 
-	adc.volumeAttachmentLister = volumeAttachmentInformer.Lister()
+	adc.volumeAttachmentLister = volumeAttachmentInformer.Lister() // ✅
 	adc.volumeAttachmentSynced = volumeAttachmentInformer.Informer().HasSynced
 
 	if err := adc.volumePluginMgr.InitPlugins(plugins, prober, adc); err != nil {
@@ -250,16 +250,13 @@ type attachDetachController struct {
 	csiNodeLister storagelistersv1.CSINodeLister
 	csiNodeSynced kcache.InformerSynced
 
-	// csiDriverLister is the shared CSIDriver lister used to fetch and store
-	// CSIDriver objects from the API server. It is shared with other controllers
-	// and therefore the CSIDriver objects in its store should be treated as immutable.
-	csiDriverLister  storagelistersv1.CSIDriverLister
+	csiDriverLister  storagelistersv1.CSIDriverLister // ✅
 	csiDriversSynced kcache.InformerSynced
 
 	// volumeAttachmentLister is the shared volumeAttachment lister used to fetch and store
 	// VolumeAttachment objects from the API server. It is shared with other controllers
 	// and therefore the VolumeAttachment objects in its store should be treated as immutable.
-	volumeAttachmentLister storagelistersv1.VolumeAttachmentLister
+	volumeAttachmentLister storagelistersv1.VolumeAttachmentLister // ✅
 	volumeAttachmentSynced kcache.InformerSynced
 
 	// cloud provider used by volume host
@@ -785,10 +782,6 @@ func (adc *attachDetachController) CSINodeLister() storagelistersv1.CSINodeListe
 	return adc.csiNodeLister
 }
 
-func (adc *attachDetachController) CSIDriverLister() storagelistersv1.CSIDriverLister {
-	return adc.csiDriverLister
-}
-
 func (adc *attachDetachController) IsAttachDetachController() bool {
 	return true
 }
@@ -931,5 +924,9 @@ func (adc *attachDetachController) GetFilteredDialOptions() *proxyutil.FilteredD
 }
 
 func (adc *attachDetachController) GetCSIDriverLister() storagelistersv1.CSIDriverLister {
+	return adc.csiDriverLister
+}
+
+func (adc *attachDetachController) CSIDriverLister() storagelistersv1.CSIDriverLister {
 	return adc.csiDriverLister
 }

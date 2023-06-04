@@ -23,6 +23,6 @@ import (
 var (
 	// Registry exposes the SLI registry so that additional SLIs can be
 	// added on a per-component basis.
-	// 公开SLI注册表，以便可以在每个组件的基础上添加额外的SLI。
+	// 公开SLI注册表,以便可以在每个组件的基础上添加额外的SLI.
 	Registry = metrics.NewKubeRegistry()
 )

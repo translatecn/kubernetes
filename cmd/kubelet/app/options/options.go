@@ -78,10 +78,10 @@ type KubeletFlags struct {
 	NodeLabels                                         map[string]string // Node Labels是在注册节点时添加的节点标签.
 	LockFilePath                                       string            // lockFilePath是kubelet用来作为锁文件的路径.它使用该文件作为锁,与可能正在运行的其他kubelet进程同步.
 	ExitOnLockContention                               bool              // 另一个进程试图打开该文件时释放锁并退出.
-	MinimumGCAge                                       metav1.Duration   // 一个容器在被垃圾收集之前的最小年龄.已弃用
+	MinimumGCAge                                       metav1.Duration   // 完成的容器在被垃圾回收之前的最小年龄,默认是 0 分钟. 这意味着每个完成的容器都会被执行垃圾回收.已弃用
 
-	// 在 Kubernetes 中，可以使用 rolling update 策略来更新 Pod 中的容器。rolling update 策略会逐步将旧容器替换为新容器，以避免在更新期间出现中断。在 rolling update 过程中，可以指定每个容器保留的旧实例的最大数量，以控制磁盘空间的使用量。
-	MaxPerPodContainerCount  int32  // 每个容器保留的旧实例的最大数量。每个容器都占用一些磁盘空间，因此需要限制容器保留的旧实例数量，以避免磁盘空间不足。.
+	// 在 Kubernetes 中,可以使用 rolling update 策略来更新 Pod 中的容器.rolling update 策略会逐步将旧容器替换为新容器,以避免在更新期间出现中断.在 rolling update 过程中,可以指定每个容器保留的旧实例的最大数量,以控制磁盘空间的使用量.
+	MaxPerPodContainerCount  int32  // 每个容器保留的旧实例的最大数量.每个容器都占用一些磁盘空间,因此需要限制容器保留的旧实例数量,以避免磁盘空间不足..
 	MaxContainerCount        int32  // 容器最大数量
 	MasterServiceNamespace   string // 主服务会放到这个名称空间里
 	RegisterSchedulable      bool   // 告诉kubelet将节点注册为可调度的.如果register-node为false,则不起任何作用. //已弃用:使用registerWithTaints代替
@@ -281,20 +281,20 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 	fs.BoolVar(&f.SeccompDefault, "seccomp-default", f.SeccompDefault, "<Warning: Beta feature> Enable the use of `RuntimeDefault` as the default seccomp profile for all workloads. The SeccompDefault feature gate must be enabled to allow this flag, which is disabled per default.")
 
 	// DEPRECATED FLAGS
-	fs.DurationVar(&f.MinimumGCAge.Duration, "minimum-container-ttl-duration", f.MinimumGCAge.Duration, "Minimum age for a finished container before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'")
+	fs.DurationVar(&f.MinimumGCAge.Duration, "minimum-container-ttl-duration", f.MinimumGCAge.Duration, "完成的容器在被垃圾回收之前的最小年龄,默认是 0 分钟. 这意味着每个完成的容器都会被执行垃圾回收.  Examples: '300ms', '10s' or '2h45m'")
 	fs.MarkDeprecated("minimum-container-ttl-duration", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
-	fs.Int32Var(&f.MaxPerPodContainerCount, "maximum-dead-containers-per-container", f.MaxPerPodContainerCount, "每个容器保留的旧实例的最大数量。每个容器都占用一些磁盘空间，因此需要限制容器保留的旧实例数量，以避免磁盘空间不足。")
+	fs.Int32Var(&f.MaxPerPodContainerCount, "maximum-dead-containers-per-container", f.MaxPerPodContainerCount, "每个image保留的死亡container的最大数量.每个容器都占用一些磁盘空间,因此需要限制容器保留的旧实例数量,以避免磁盘空间不足.")
 	fs.MarkDeprecated("maximum-dead-containers-per-container", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
-	fs.Int32Var(&f.MaxContainerCount, "maximum-dead-containers", f.MaxContainerCount, "Maximum number of old instances of containers to retain globally.  Each container takes up some disk space. To disable, set to a negative number.")
+	fs.Int32Var(&f.MaxContainerCount, "maximum-dead-containers", f.MaxContainerCount, "要全局保留的dead container的最大数量. 默认值是 -1,意味着没有全局限制.  每个容器都占用一些磁盘空间")
 	fs.MarkDeprecated("maximum-dead-containers", "Use --eviction-hard or --eviction-soft instead. Will be removed in a future version.")
 	fs.StringVar(&f.MasterServiceNamespace, "master-service-namespace", f.MasterServiceNamespace, "将kubernetes主服务注入pod的命名空间")
 	fs.MarkDeprecated("master-service-namespace", "将被移除")
 	fs.BoolVar(&f.RegisterSchedulable, "register-schedulable", f.RegisterSchedulable, "Register the node as schedulable. Won't have any effect if register-node is false.")
 	fs.MarkDeprecated("register-schedulable", "will be removed in a future version")
-	fs.BoolVar(&f.KeepTerminatedPodVolumes, "keep-terminated-pod-volumes", f.KeepTerminatedPodVolumes, "在pod终止后，保持已终止的pod卷挂载到节点上。可用于调试与卷相关的问题。")
+	fs.BoolVar(&f.KeepTerminatedPodVolumes, "keep-terminated-pod-volumes", f.KeepTerminatedPodVolumes, "在pod终止后,保持已终止的pod卷挂载到节点上.可用于调试与卷相关的问题.")
 	fs.MarkDeprecated("keep-terminated-pod-volumes", "will be removed in a future version")
-	fs.StringVar(&f.ExperimentalMounterPath, "experimental-mounter-path", f.ExperimentalMounterPath, "[Experimental] Path of mounter binary. Leave empty to use the default mount.")
-	fs.MarkDeprecated("experimental-mounter-path", "will be removed in 1.25 or later. in favor of using CSI.")
+	fs.StringVar(&f.ExperimentalMounterPath, "experimental-mounter-path", f.ExperimentalMounterPath, "[实验性功能] mount 二进制文件的路径.留空以使用默认的挂载器.")
+	fs.MarkDeprecated("experimental-mounter-path", "此功能将在1.25或之后的版本中被删除,推荐使用CSI.")
 	fs.StringVar(&f.CloudProvider, "cloud-provider", f.CloudProvider, "The provider for cloud services. Set to empty string for running with no cloud provider. If set, the cloud provider determines the name of the node (consult cloud provider documentation to determine if and how the hostname is used).")
 	fs.MarkDeprecated("cloud-provider", "will be removed in 1.25 or later, in favor of removing cloud provider code from Kubelet.")
 	fs.StringVar(&f.CloudConfigFile, "cloud-config", f.CloudConfigFile, "The path to the cloud provider configuration file. Empty string for no configuration file.")
@@ -400,13 +400,13 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.Int32Var(&c.OOMScoreAdj, "oom-score-adj", c.OOMScoreAdj, "The oom-score-adj value for kubelet process. Values must be within the range [-1000, 1000]")
 	fs.StringVar(&c.ClusterDomain, "cluster-domain", c.ClusterDomain, "Domain for this cluster.  If set, kubelet will configure all containers to search this domain in addition to the host's search domains")
 
-	fs.StringVar(&c.VolumePluginDir, "volume-plugin-dir", c.VolumePluginDir, "The full path of the directory in which to search for additional third party volume plugins")
-	fs.StringSliceVar(&c.ClusterDNS, "cluster-dns", c.ClusterDNS, "逗号分隔的 DNS 服务器 IP 地址列表，用于配置 Kubernetes 中的 DNS。\"dnsPolicy=ClusterFirst\".")
+	fs.StringVar(&c.VolumePluginDir, "volume-plugin-dir", c.VolumePluginDir, "要搜索其他第三方卷插件的完整目录路径")
+	fs.StringSliceVar(&c.ClusterDNS, "cluster-dns", c.ClusterDNS, "逗号分隔的 DNS 服务器 IP 地址列表,用于配置 Kubernetes 中的 DNS.\"dnsPolicy=ClusterFirst\".")
 	fs.DurationVar(&c.StreamingConnectionIdleTimeout.Duration, "streaming-connection-idle-timeout", c.StreamingConnectionIdleTimeout.Duration, "Maximum time a streaming connection can be idle before the connection is automatically closed. 0 indicates no timeout. Example: '5m'. Note: All connections to the kubelet server have a maximum duration of 4 hours.")
 	fs.DurationVar(&c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率.", c.NodeStatusUpdateFrequency.Duration, "指定kubelet向master发送节点状态的频率.注意:修改该常数时要谨慎,必须与 nodecontroller 中的nodeMonitorGracePeriod配合使用.")
 	fs.DurationVar(&c.ImageMinimumGCAge.Duration, "minimum-image-ttl-duration", c.ImageMinimumGCAge.Duration, "Minimum age for an unused image before it is garbage collected.  Examples: '300ms', '10s' or '2h45m'.")
-	fs.Int32Var(&c.ImageGCHighThresholdPercent, "image-gc-high-threshold", c.ImageGCHighThresholdPercent, "The percent of disk usage after which image garbage collection is always run. Values must be within the range [0, 100], To disable image garbage collection, set to 100. ")
-	fs.Int32Var(&c.ImageGCLowThresholdPercent, "image-gc-low-threshold", c.ImageGCLowThresholdPercent, "The percent of disk usage before which image garbage collection is never run. Lowest disk usage to garbage collect to. Values must be within the range [0, 100] and should not be larger than that of --image-gc-high-threshold.")
+	fs.Int32Var(&c.ImageGCHighThresholdPercent, "image-gc-high-threshold", c.ImageGCHighThresholdPercent, "运行image GC的磁盘使用百分比.取值范围为[0,100],不启用image gcc回收,设置为100.")
+	fs.Int32Var(&c.ImageGCLowThresholdPercent, "image-gc-low-threshold", c.ImageGCLowThresholdPercent, "在此之前从未运行image GC的磁盘使用百分比.要进行垃圾收集的磁盘使用率最低.取值必须在[0,100]范围内,且不能大于--image-gc-high-threshold")
 	fs.DurationVar(&c.VolumeStatsAggPeriod.Duration, "volume-stats-agg-period", c.VolumeStatsAggPeriod.Duration, "Specifies interval for kubelet to calculate and cache the volume disk usage for all pods and volumes.  To disable volume calculations, set to a negative number.")
 	fs.Var(cliflag.NewMapStringBool(&c.FeatureGates), "feature-gates", "一组键值对,用于描述alpha/experimental特性的开关 . "+
 		"Options are:\n"+strings.Join(utilfeature.DefaultFeatureGate.KnownFeatures(), "\n"))
@@ -428,21 +428,21 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.Int32Var(&c.MaxPods, "max-pods", c.MaxPods, "可以在Kubelet上运行的pod的数量.")
 
 	fs.StringVar(&c.PodCIDR, "pod-cidr", c.PodCIDR, "The CIDR to use for pod IP addresses, only used in standalone mode.  In cluster mode, this is obtained from the master. For IPv6, the maximum number of IP's allocated is 65536")
-	fs.Int64Var(&c.PodPidsLimit, "pod-max-pids", c.PodPidsLimit, "设置每个pod的最大进程数。如果是-1,kubelet默认为节点可分配的pid容量。")
+	fs.Int64Var(&c.PodPidsLimit, "pod-max-pids", c.PodPidsLimit, "设置每个pod的最大进程数.如果是-1,kubelet默认为节点可分配的pid容量.")
 
 	fs.StringVar(&c.ResolverConfig, "resolv-conf", c.ResolverConfig, "Resolver configuration file used as the basis for the container DNS resolution configuration.")
 
-	fs.BoolVar(&c.RunOnce, "runonce", c.RunOnce, "如果为true，则在从静态pod文件或远程url生成pod后退出。")
+	fs.BoolVar(&c.RunOnce, "runonce", c.RunOnce, "如果为true,则在从静态pod文件或远程url生成pod后退出.")
 
 	fs.BoolVar(&c.CPUCFSQuota, "cpu-cfs-quota", c.CPUCFSQuota, "Enable CPU CFS quota enforcement for containers that specify CPU limits")
 	fs.DurationVar(&c.CPUCFSQuotaPeriod.Duration, "cpu-cfs-quota-period", c.CPUCFSQuotaPeriod.Duration, "Sets CPU CFS quota period value, cpu.cfs_period_us, defaults to Linux Kernel default")
 	fs.BoolVar(&c.EnableControllerAttachDetach, "enable-controller-attach-detach", c.EnableControllerAttachDetach, "Enables the Attach/Detach controller to manage attachment/detachment of volumes scheduled to this node, and disables kubelet from executing any attach/detach operations")
-	fs.BoolVar(&c.MakeIPTablesUtilChains, "make-iptables-util-chains", c.MakeIPTablesUtilChains, "如果为true, kubelet将确保主机上存在iptables实用程序规则。")
+	fs.BoolVar(&c.MakeIPTablesUtilChains, "make-iptables-util-chains", c.MakeIPTablesUtilChains, "如果为true, kubelet将确保主机上存在iptables实用程序规则.")
 	fs.Int32Var(&c.IPTablesMasqueradeBit, "iptables-masquerade-bit", c.IPTablesMasqueradeBit, "The bit of the fwmark space to mark packets for SNAT. Must be within the range [0, 31]. Please match this parameter with corresponding parameter in kube-proxy.")
 	fs.Int32Var(&c.IPTablesDropBit, "iptables-drop-bit", c.IPTablesDropBit, "The bit of the fwmark space to mark packets for dropping. Must be within the range [0, 31].")
 	fs.StringVar(&c.ContainerLogMaxSize, "container-log-max-size", c.ContainerLogMaxSize, "<Warning: Beta feature> Set the maximum size (e.g. 10Mi) of container log file before it is rotated. This flag can only be used with --container-runtime=remote.")
 	fs.Int32Var(&c.ContainerLogMaxFiles, "container-log-max-files", c.ContainerLogMaxFiles, "<Warning: Beta feature> Set the maximum number of container log files that can be present for a container. The number must be >= 2. This flag can only be used with --container-runtime=remote.")
-	fs.StringSliceVar(&c.AllowedUnsafeSysctls, "allowed-unsafe-sysctls", c.AllowedUnsafeSysctls, "被允许的 sysctl 不安全指令；这些系统设置了名称空间，但默认情况下不允许。 `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`. 使用这些风险由您自己承担。")
+	fs.StringSliceVar(&c.AllowedUnsafeSysctls, "allowed-unsafe-sysctls", c.AllowedUnsafeSysctls, "被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`. 使用这些风险由您自己承担.")
 
 	fs.Int32Var(&c.NodeStatusMaxImages, "node-status-max-images", c.NodeStatusMaxImages, "The maximum number of images to report in Node.Status.Images. If -1 is specified, no cap will be applied.")
 	fs.BoolVar(&c.KernelMemcgNotification, "kernel-memcg-notification", c.KernelMemcgNotification, "如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.")

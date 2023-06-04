@@ -413,8 +413,8 @@ type EventCorrelator struct {
 
 // EventCorrelateResult is the result of a Correlate
 type EventCorrelateResult struct {
-	Event *v1.Event // 经过关联后的事件。
-	Patch []byte    // 如果提供，则在更新服务器上的记录时执行patch
+	Event *v1.Event // 经过关联后的事件.
+	Patch []byte    // 如果提供,则在更新服务器上的记录时执行patch
 	// if true, do no further processing of the event
 	Skip bool
 }

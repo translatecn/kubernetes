@@ -50,7 +50,7 @@ type LeaseSpec struct {
 	// renewTime 当前租约持有者最近一次更新租约的时间
 	// +optional
 	RenewTime *metav1.MicroTime `json:"renewTime,omitempty" protobuf:"bytes,4,opt,name=renewTime"`
-	// leaseTransitions 是承租人之间的租赁转换次数。
+	// leaseTransitions 是承租人之间的租赁转换次数.
 	// +optional
 	LeaseTransitions *int32 `json:"leaseTransitions,omitempty" protobuf:"varint,5,opt,name=leaseTransitions"`
 }

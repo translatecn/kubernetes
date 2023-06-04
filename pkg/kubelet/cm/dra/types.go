@@ -24,16 +24,13 @@ import (
 
 // Manager manages all the DRA resource plugins running on a node.
 type Manager interface {
-	// PrepareResources prepares resources for a container in a pod.
-	// It communicates with the DRA resource plugin to prepare resources and
-	// returns resource info to trigger CDI injection by the runtime.
+	// PrepareResources 为pod中的容器准备资源.它与DRA资源插件通信,准备资源并返回资源信息,以便在运行时触发CDI注入.
 	PrepareResources(pod *v1.Pod, container *v1.Container) (*ContainerInfo, error)
 
-	// UnprepareResources calls NodeUnprepareResource GRPC from DRA plugin to unprepare pod resources
+	// UnprepareResources 从DRA插件中调用NodeUnprepareResource GRPC来取消准备pod资源
 	UnprepareResources(pod *v1.Pod) error
 
-	// PodMightNeedToUnprepareResources returns true if the pod with the given UID
-	// might need to unprepare resources.
+	// PodMightNeedToUnprepareResources 如果具有给定UID的pod可能需要准备资源,则返回true.
 	PodMightNeedToUnprepareResources(UID types.UID) bool
 }
 

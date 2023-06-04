@@ -25,23 +25,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// Volume represents a directory used by pods or hosts on a node. All method
-// implementations of methods in the volume interface must be idempotent.
-type Volume interface {
-	// GetPath returns the path to which the volume should be mounted for the
-	// pod.
-	GetPath() string
-
-	// MetricsProvider embeds methods for exposing metrics (e.g.
-	// used, available space).
+type Volume interface { // 节点上Pod或主机使用的目录
+	GetPath() string // pod 的volume 应该挂载到那个目录
 	MetricsProvider
 }
 
 // BlockVolume interface provides methods to generate global map path
 // and pod device map path.
 type BlockVolume interface {
-	// GetGlobalMapPath returns a global map path which contains
-	// bind mount associated to a block device.
+	// GetGlobalMapPath 返回一个全局映射路径,其中包含与块设备相关联的绑定挂载.这意味着返回一个包含块设备绑定挂载的全局路径.
 	// ex. plugins/kubernetes.io/{PluginName}/{DefaultKubeletVolumeDevicesDirName}/{volumePluginDependentPath}/{pod uuid}
 	GetGlobalMapPath(spec *Spec) (string, error)
 	// GetPodDeviceMapPath returns a pod device map path
@@ -120,16 +112,12 @@ type Attributes struct {
 	SELinuxRelabel bool
 }
 
-// MounterArgs provides more easily extensible arguments to Mounter
 type MounterArgs struct {
-	// When FsUser is set, the ownership of the volume will be modified to be
-	// owned and writable by FsUser. Otherwise, there is no side effects.
-	// Currently only supported with projected service account tokens.
 	FsUser              *int64
 	FsGroup             *int64
-	FSGroupChangePolicy *v1.PodFSGroupChangePolicy
-	DesiredSize         *resource.Quantity
-	SELinuxLabel        string
+	FSGroupChangePolicy *v1.PodFSGroupChangePolicy // 指定是否允许在运行时修改文件系统的组 ID（GID）,以及何时允许进行修改.可选的值包括 Never、OnRootMismatch 和 Always.
+	DesiredSize         *resource.Quantity         // 指定挂载卷的期望大小,以便在挂载前进行预分配空间.
+	SELinuxLabel        string                     // 指定挂载卷后文件系统的 SELinux 标签,用于控制访问权限和安全策略.
 }
 
 // Mounter interface provides methods to set up/mount the volume.
@@ -160,15 +148,10 @@ type Mounter interface {
 	GetAttributes() Attributes
 }
 
-// Unmounter interface provides methods to cleanup/unmount the volumes.
 type Unmounter interface {
 	Volume
-	// TearDown unmounts the volume from a self-determined directory and
-	// removes traces of the SetUp procedure.
-	TearDown() error
-	// TearDown unmounts the volume from the specified directory and
-	// removes traces of the SetUp procedure.
-	TearDownAt(dir string) error
+	TearDown() error             // 从自行确定的目录卸载卷,并删除SetUp过程的痕迹.
+	TearDownAt(dir string) error // 从指定的目录卸载卷,并删除SetUp过程的痕迹.
 }
 
 // BlockVolumeMapper interface is a mapper interface for block volume.
@@ -185,12 +168,7 @@ type CustomBlockVolumeMapper interface {
 	// This may be called more than once, so implementations must be idempotent.
 	// SetUpDevice returns stagingPath if device setup was successful
 	SetUpDevice() (stagingPath string, err error)
-
-	// MapPodDevice maps the block device to a path and return the path.
-	// Unique device path across kubelet node reboot is required to avoid
-	// unexpected block volume destruction.
-	// If empty string is returned, the path returned by attacher.Attach() and
-	// attacher.WaitForAttach() will be used.
+	// MapPodDevice 将块设备映射到一个路径并返回该路径.为了避免意外的块卷销毁,需要在 kubelet 节点重新启动时保证设备路径的唯一性.
 	MapPodDevice() (publishPath string, err error)
 
 	// GetStagingPath returns path that was used for staging the volume
@@ -240,25 +218,12 @@ type Deleter interface {
 	Delete() error
 }
 
-// Attacher can attach a volume to a node.
+// Attacher 将卷挂载到一个节点上
 type Attacher interface {
 	DeviceMounter
-
-	// Attaches the volume specified by the given spec to the node with the given Name.
-	// On success, returns the device path where the device was attached on the
-	// node.
-	Attach(spec *Spec, nodeName types.NodeName) (string, error)
-
-	// VolumesAreAttached checks whether the list of volumes still attached to the specified
-	// node. It returns a map which maps from the volume spec to the checking result.
-	// If an error is occurred during checking, the error will be returned
-	VolumesAreAttached(specs []*Spec, nodeName types.NodeName) (map[*Spec]bool, error)
-
-	// WaitForAttach blocks until the device is attached to this
-	// node. If it successfully attaches, the path to the device
-	// is returned. Otherwise, if the device does not attach after
-	// the given timeout period, an error will be returned.
-	WaitForAttach(spec *Spec, devicePath string, pod *v1.Pod, timeout time.Duration) (string, error)
+	Attach(spec *Spec, nodeName types.NodeName) (string, error)                                      // 将卷连接到指定名称的节点上.连接成功后,返回设备连接到节点上的设备路径.
+	VolumesAreAttached(specs []*Spec, nodeName types.NodeName) (map[*Spec]bool, error)               // 检查指定节点上仍连接的卷列表.
+	WaitForAttach(spec *Spec, devicePath string, pod *v1.Pod, timeout time.Duration) (string, error) // 阻塞直到设备连接到此节点.如果它成功连接,将返回设备的路径.否则,如果在给定的超时期间内设备未连接,则会返回错误.
 }
 
 // DeviceMounterArgs provides auxiliary, optional arguments to DeviceMounter.
@@ -267,20 +232,11 @@ type DeviceMounterArgs struct {
 	SELinuxLabel string
 }
 
-// DeviceMounter can mount a block volume to a global path.
+// DeviceMounter 挂载的是设备,例如磁盘或分区,它可以将设备挂载到主机的文件系统中.
 type DeviceMounter interface {
-	// GetDeviceMountPath returns a path where the device should
-	// be mounted after it is attached. This is a global mount
-	// point which should be bind mounted for individual volumes.
+	// GetDeviceMountPath 获取设备挂载的路径,当设备附加后应该挂载到哪个目录下.这个路径是全局的,需要为每个卷进行绑定挂载.
 	GetDeviceMountPath(spec *Spec) (string, error)
-
-	// MountDevice mounts the disk to a global path which
-	// individual pods can then bind mount
-	// Note that devicePath can be empty if the volume plugin does not implement any of Attach and WaitForAttach methods.
-	// It could return following types of errors:
-	//   - TransientOperationFailure
-	//   - UncertainProgressError
-	//   - Error of any other type should be considered a final error
+	// MountDevice 将磁盘挂载到全局路径上,然后让每个 Pod 将其绑定挂载到自己的目录下.
 	MountDevice(spec *Spec, devicePath string, deviceMountPath string, deviceMounterArgs DeviceMounterArgs) error
 }
 

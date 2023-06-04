@@ -59,40 +59,40 @@ type PodStartupLatencyStateHelper interface {
 	DeletePodStartupState(podUID types.UID)
 }
 
-// Manager 接口是 kubelet Pod 状态的真实来源，应该随着最新的 v1.PodStatus 保持更新。它还将更新同步回 API 服务器。
+// Manager 接口是 kubelet Pod 状态的真实来源,应该随着最新的 v1.PodStatus 保持更新.它还将更新同步回 API 服务器.
 type Manager interface {
 	PodStatusProvider
-	Start()                                                                                    // 启动API服务器状态同步循环。
-	SetPodStatus(pod *v1.Pod, status v1.PodStatus)                                             // 更新给定 Pod 的缓存状态，并触发状态更新。
-	SetContainerReadiness(podUID types.UID, containerID kubecontainer.ContainerID, ready bool) // 使用给定的 readiness 更新缓存的容器状态，并触发状态更新。
-	SetContainerStartup(podUID types.UID, containerID kubecontainer.ContainerID, started bool) // 使用给定的 startup 更新缓存的容器状态，并触发状态更新。
-	TerminatePod(pod *v1.Pod)                                                                  // 将提供的 Pod 的容器状态重置为终止状态，并触发状态更新。
-	RemoveOrphanedStatuses(podUIDs map[types.UID]bool)                                         // 扫描状态缓存并删除未包含在提供的 podUIDs 中的 Pod 的任何条目。
+	Start()                                                                                    // 启动API服务器状态同步循环.
+	SetPodStatus(pod *v1.Pod, status v1.PodStatus)                                             // 设置pod.status,同时触发一次sync动作
+	SetContainerReadiness(podUID types.UID, containerID kubecontainer.ContainerID, ready bool) // 检查pod的containerStatus是否ready,不是触发sync
+	SetContainerStartup(podUID types.UID, containerID kubecontainer.ContainerID, started bool) // 设置pod的containerStatus是否完成startUp,不是触发sync
+	TerminatePod(pod *v1.Pod)                                                                  // 设置pod的container和init containers的状态为terminated
+	RemoveOrphanedStatuses(podUIDs map[types.UID]bool)                                         // 删除statusManager中缓存的无用数据
 }
 
 // Updates pod statuses in apiserver. Writes only when new status has changed.
 // All methods are thread-safe.'
-// Manager 接口是 kubelet Pod 状态的真实来源，应该随着最新的 v1.PodStatus 保持更新。它还将更新同步回 API 服务器。
+// Manager 接口是 kubelet Pod 状态的真实来源,应该随着最新的 v1.PodStatus 保持更新.它还将更新同步回 API 服务器.
 type manager struct {
 	kubeClient              clientset.Interface               //
-	podManager              kubepod.Manager                   // 用于管理 Pod 的管理器。
-	podStatuses             map[types.UID]versionedPodStatus  // 从 Pod UID 到相应 Pod 同步状态的映射。它用于跟踪每个 Pod 的状态，并确保只在状态发生变化时写入 API 服务器。
+	podManager              kubepod.Manager                   // 用于管理 Pod 的管理器.
+	podStatuses             map[types.UID]versionedPodStatus  // 从 Pod UID 到相应 Pod 同步状态的映射.它用于跟踪每个 Pod 的状态,并确保只在状态发生变化时写入 API 服务器.
 	podStatusesLock         sync.RWMutex                      //
 	podStatusChannel        chan podStatusSyncRequest         // 用于在状态变化时触发同步请求
-	apiStatusVersions       map[kubetypes.MirrorPodUID]uint64 // 一个从Pod UID 到最新状态版本的映射，成功发送到 API 服务器。apiStatusVersions 只能从同步线程访问。# todo 是不是镜像、常规uid 都会记录
+	apiStatusVersions       map[kubetypes.MirrorPodUID]uint64 // 一个从Pod UID 到最新状态版本的映射,成功发送到 API 服务器.apiStatusVersions 只能从同步线程访问.# todo 是不是镜像、常规uid 都会记录
 	podDeletionSafety       PodDeletionSafetyProvider         // 用于确保在删除 Pod 时不会丢失状态
-	podStartupLatencyHelper PodStartupLatencyStateHelper      // 用于跟踪 Pod 启动延迟。
+	podStartupLatencyHelper PodStartupLatencyStateHelper      // 用于跟踪 Pod 启动延迟.
 }
 
 var _ Manager = &manager{}
 
-// 是 v1.PodStatus 的包装器，包括一个版本号，用于强制确保不会向 API 服务器发送过期的 Pod 状态。
+// 是 v1.PodStatus 的包装器,包括一个版本号,用于强制确保不会向 API 服务器发送过期的 Pod 状态.
 type versionedPodStatus struct {
-	version      uint64       // 一个单调递增的版本号，用于跟踪 Pod 的状态版本。
+	version      uint64       // 一个单调递增的版本号,用于跟踪 Pod 的状态版本.
 	podName      string       //
 	podNamespace string       //
 	at           time.Time    // 最近更新的时间
-	status       v1.PodStatus // 一个 v1.PodStatus 类型的变量，表示 要更新的Pod状态。
+	status       v1.PodStatus // 一个 v1.PodStatus 类型的变量,表示 要更新的Pod状态.
 }
 
 type podStatusSyncRequest struct {
@@ -193,8 +193,8 @@ func hasPodInitialized(pod *v1.Pod) bool {
 	return false
 }
 
-// 返回除了处于等待状态的容器之外所有容器，等待状态的容器是那些已经尝试启动至少一次的容器。
-// 如果所有容器都处于等待状态，则始终返回第一个容器。
+// 返回除了处于等待状态的容器之外所有容器,等待状态的容器是那些已经尝试启动至少一次的容器.
+// 如果所有容器都处于等待状态,则始终返回第一个容器.
 func initializedContainers(containers []v1.ContainerStatus) []v1.ContainerStatus {
 	for i := len(containers) - 1; i >= 0; i-- {
 		// 重启之后
@@ -209,9 +209,10 @@ func initializedContainers(containers []v1.ContainerStatus) []v1.ContainerStatus
 	return nil
 }
 
-// syncPod 将给定的状态与API服务器同步。调用者不能持有锁。
+// syncPod 将给定的状态与API服务器同步.调用者不能持有锁.
 func (m *manager) syncPod(uid types.UID, status versionedPodStatus) {
 	//uid 是新的podID
+	//判断要不要更新,不需要更新直接return
 	if !m.needsUpdate(uid, status) { // 不需要更新✅   ,版本后是旧的
 		klog.V(1).InfoS("Status for oldPod is up-to-date; skipping", "podUID", uid)
 		return
@@ -234,11 +235,11 @@ func (m *manager) syncPod(uid types.UID, status versionedPodStatus) {
 			"err", err)
 		return
 	}
-	// 返回 Pod 的实际 UID。如果 UID 属于镜像 Pod，则返回其静态 Pod 的 UID。否则，返回原始 UID。
+	// 返回 Pod 的实际 UID.如果 UID 属于镜像 Pod,则返回其静态 Pod 的 UID.否则,返回原始 UID.
 	translatedUID := m.podManager.TranslatePodUID(oldPod.UID)
 	// Type convert original uid just for the purpose of comparison.
 	if len(translatedUID) > 0 && translatedUID != kubetypes.ResolvedPodUID(uid) {
-		klog.V(2).InfoS("Pod被删除，然后重新创建，跳过状态更新",
+		klog.V(2).InfoS("Pod被删除,然后重新创建,跳过状态更新",
 			"oldPod", klog.KObj(oldPod),
 			"oldPodUID", uid,
 			"podUID", translatedUID)
@@ -275,10 +276,10 @@ func (m *manager) syncPod(uid types.UID, status versionedPodStatus) {
 	m.apiStatusVersions[kubetypes.MirrorPodUID(oldPod.UID)] = status.version
 
 	if m.canBeDeleted(oldPod, status.status) {
-		// 常规pod的优雅删除。
+		// 常规pod的优雅删除.
 		deleteOptions := metav1.DeleteOptions{
 			GracePeriodSeconds: new(int64), // 立即
-			//使用oldPod UID作为删除的前提条件，以防止删除新创建的具有相同名称和命名空间的oldPod。
+			//使用oldPod UID作为删除的前提条件,以防止删除新创建的具有相同名称和命名空间的oldPod.
 			Preconditions: metav1.NewUIDPreconditions(string(oldPod.UID)),
 		}
 		err = m.kubeClient.CoreV1().Pods(oldPod.Namespace).Delete(context.TODO(), oldPod.Name, deleteOptions)
@@ -300,6 +301,7 @@ func (m *manager) syncPod(uid types.UID, status versionedPodStatus) {
 // now the pod manager only supports getting mirror pod by static pod, so we have to pass
 // static pod uid here.
 // TODO(random-liu): Simplify the logic when mirror pod manager is added.
+// 主要检查pod.status.conditions内容是否一致
 func (m *manager) needsReconcile(uid types.UID, status v1.PodStatus) bool {
 	// The pod could be a static pod, so we should translate first.
 	pod, ok := m.podManager.GetPodByUID(uid)
@@ -382,8 +384,8 @@ func (m *manager) TerminatePod(pod *v1.Pod) {
 // --------------------------------------------------------------------------------------------------------
 
 // NeedToReconcilePodReadiness 检查 Pod 的就绪状态是否需要重新协调
-// Pod 的就绪状态是指所有容器都已经启动并准备好接收流量。kubelet 组件会定期检查 Pod 的就绪状态，并与期望状态进行比较。
-// 如果发现 Pod 的就绪状态与期望状态不一致，kubelet 组件会重新协调 Pod 的就绪状态，以确保其状态正确。
+// Pod 的就绪状态是指所有容器都已经启动并准备好接收流量.kubelet 组件会定期检查 Pod 的就绪状态,并与期望状态进行比较.
+// 如果发现 Pod 的就绪状态与期望状态不一致,kubelet 组件会重新协调 Pod 的就绪状态,以确保其状态正确.
 func NeedToReconcilePodReadiness(pod *v1.Pod) bool { // ✅
 	if len(pod.Spec.ReadinessGates) == 0 {
 		return false
@@ -395,7 +397,7 @@ func NeedToReconcilePodReadiness(pod *v1.Pod) bool { // ✅
 		pod.Status.Phase,
 	) // pod 是否ready, 以及没就绪的原因
 	i, curCondition := podutil.GetPodConditionFromList(pod.Status.Conditions, v1.PodReady) // ✅
-	// 有过ready状态，且是当前状态
+	// 有过ready状态,且是当前状态
 	if i >= 0 && (curCondition.Status != podReadyCondition.Status || curCondition.Message != podReadyCondition.Message) {
 		return true
 	}
@@ -631,7 +633,7 @@ func (m *manager) updateStatusInternal(pod *v1.Pod, status v1.PodStatus, forceUp
 		klogV.InfoS("updateStatusInternal", "version", cachedStatus.version+1, "pod", klog.KObj(pod), "podUID", pod.UID, "containers", strings.Join(containers, " "))
 	}
 
-	// 这样做的目的是为了防止并发更新pod状态时互相干扰，从而使pod的阶段单调地进行。
+	// 这样做的目的是为了防止并发更新pod状态时互相干扰,从而使pod的阶段单调地进行.
 	if isCached && isPodStatusByKubeletEqual(&cachedStatus.status, &status) && !forceUpdate {
 		klog.V(3).InfoS("Ignoring same status for pod", "pod", klog.KObj(pod), "status", status)
 		return false // No new status.
@@ -844,7 +846,7 @@ func (m *manager) Start() { // ✅
 // merges oldPodStatus and newPodStatus to preserve where pod conditions
 // not owned by kubelet and to ensure terminal phase transition only happens after all
 // running containers have terminated. This method does not modify the old status.
-// 合并oldPodStatus和newPodStatus 以保留不属于kubelet的pod 条件，并确保终端阶段转换仅在所有正在运行的容器终止后发生。此方法不修改旧状态。
+// 合并oldPodStatus和newPodStatus 以保留不属于kubelet的pod 条件,并确保终端阶段转换仅在所有正在运行的容器终止后发生.此方法不修改旧状态.
 func mergePodStatus(oldPodStatus, newPodStatus v1.PodStatus, couldHaveRunningContainers bool) v1.PodStatus { // ✅
 	podConditions := make([]v1.PodCondition, 0, len(oldPodStatus.Conditions)+len(newPodStatus.Conditions))
 
@@ -917,7 +919,7 @@ func mergePodStatus(oldPodStatus, newPodStatus v1.PodStatus, couldHaveRunningCon
 
 // 返回pod 状态是否已经稳定
 func (m *manager) needsUpdate(uid types.UID, status versionedPodStatus) bool {
-	latest, ok := m.apiStatusVersions[kubetypes.MirrorPodUID(uid)] // 如果这个id 不存在，需要更新
+	latest, ok := m.apiStatusVersions[kubetypes.MirrorPodUID(uid)] // 如果这个id 不存在,需要更新
 	if !ok || latest < status.version {
 		return true
 	}
@@ -932,5 +934,5 @@ func (m *manager) canBeDeleted(pod *v1.Pod, status v1.PodStatus) bool {
 	if pod.DeletionTimestamp == nil || kubetypes.IsMirrorPod(pod) { // 标记为删除、镜像pod 都不会更新
 		return false
 	}
-	return m.podDeletionSafety.PodResourcesAreReclaimed(pod, status)
+	return m.podDeletionSafety.PodResourcesAreReclaimed(pod, status) // ✅ 如果 kubelet 已回收所有必需的节点级资源,则该方法返回 true;否则返回 false.
 }

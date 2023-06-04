@@ -50,26 +50,26 @@ import (
 // guarantee that kubelet can handle missing container events, it is
 // recommended to set the relist period short and have an auxiliary, longer
 // periodic sync in kubelet as the safety net.
-// 这段代码是关于 GenericPLEG 的说明。GenericPLEG 是一个非常简单的通用 PLEG，仅依靠定期列出来发现容器的更改。
-// 它应该作为临时替代品使用，因为某些容器运行时尚未支持适当的事件生成器。
+// 这段代码是关于 GenericPLEG 的说明.GenericPLEG 是一个非常简单的通用 PLEG,仅依靠定期列出来发现容器的更改.
+// 它应该作为临时替代品使用,因为某些容器运行时尚未支持适当的事件生成器.
 //
-// 需要注意的是，GenericPLEG 假设一个容器不会在一个relist周期内被创建、终止和垃圾回收。
-// 如果发生这样的事件，GenericPLEG 将会错过所有关于这个容器的事件。如果relist失败，则窗口可能会变得更长。
-// 需要注意的是，这个假设并不是独特的 -- 许多 kubelet 内部组件都依赖于终止的容器作为墓碑（tombstones）进行簿记。
-// 垃圾回收器被实现为适应这种情况。但是，为了保证 kubelet 能够处理缺失的容器事件，建议将relist周期设置短一些，并在 kubelet 中设置一个辅助的、更长的定期同步作为安全措施。
+// 需要注意的是,GenericPLEG 假设一个容器不会在一个relist周期内被创建、终止和垃圾回收.
+// 如果发生这样的事件,GenericPLEG 将会错过所有关于这个容器的事件.如果relist失败,则窗口可能会变得更长.
+// 需要注意的是,这个假设并不是独特的 -- 许多 kubelet 内部组件都依赖于终止的容器作为墓碑（tombstones）进行簿记.
+// 垃圾回收器被实现为适应这种情况.但是,为了保证 kubelet 能够处理缺失的容器事件,建议将relist周期设置短一些,并在 kubelet 中设置一个辅助的、更长的定期同步作为安全措施.
 type GenericPLEG struct {
-	runtime         kubecontainer.Runtime            // 容器运行时，用于管理容器的生命周期。
-	eventChannel    chan *PodLifecycleEvent          // 用于接收生命周期事件的通道。
-	podRecords      podRecords                       // 用于存储 Pod 和容器信息的内部缓存。
-	relistTime      atomic.Value                     // 上次relist的时间。
-	cache           kubecontainer.Cache              // 缓存runtime状态以用于同步 Pod。
+	runtime         kubecontainer.Runtime            // 容器运行时,用于管理容器的生命周期.
+	eventChannel    chan *PodLifecycleEvent          // 用于接收生命周期事件的通道.
+	podRecords      podRecords                       // 用于存储 Pod 和容器信息的内部缓存.
+	relistTime      atomic.Value                     // 上次relist的时间.
+	cache           kubecontainer.Cache              // 缓存runtime状态以用于同步 Pod.
 	clock           clock.Clock                      //
-	podsToReinspect map[types.UID]*kubecontainer.Pod // 在relist期间未能检索到其状态的 Pod 列表，这些 Pod 将在下一次relist时重试。
-	stopCh          chan struct{}                    // 用于停止 Generic PLEG 的通道。
+	podsToReinspect map[types.UID]*kubecontainer.Pod // 在relist期间未能检索到其状态的 Pod 列表,这些 Pod 将在下一次relist时重试.
+	stopCh          chan struct{}                    // 用于停止 Generic PLEG 的通道.
 	relistLock      sync.Mutex                       //
-	isRunning       bool                             // 指示 Generic PLEG 是否正在运行。
-	runningMu       sync.Mutex                       // 用于锁定 启动/停止 操作的互斥锁。
-	relistDuration  *RelistDuration                  // 重新列出相关参数的指示。
+	isRunning       bool                             // 指示 Generic PLEG 是否正在运行.
+	runningMu       sync.Mutex                       // 用于锁定 启动/停止 操作的互斥锁.
+	relistDuration  *RelistDuration                  // 重新列出相关参数的指示.
 }
 
 // plegContainerState has a one-to-one mapping to the
@@ -111,8 +111,8 @@ type podRecords map[types.UID]*podRecord
 // 使用轮询机制来监视容器的状态
 func NewGenericPLEG(
 	runtime kubecontainer.Runtime, // 代表容器运行时
-	eventChannel chan *PodLifecycleEvent, // 代表接受pod lifecycle events的队列长度，默认为1000
-	relistDuration *RelistDuration, // relist间隔，默认为1秒
+	eventChannel chan *PodLifecycleEvent, // 代表接受pod lifecycle events的队列长度,默认为1000
+	relistDuration *RelistDuration, // relist间隔,默认为1秒
 	cache kubecontainer.Cache, // 代表pod的缓存
 	clock clock.Clock, // 获取当前时间
 ) PodLifecycleEventGenerator {
@@ -212,7 +212,7 @@ func (g *GenericPLEG) updateRelistTime(timestamp time.Time) {
 	g.relistTime.Store(timestamp)
 }
 
-// Relist kubelet 定期从容器运行时中获取 Pod/容器列表的过程。✅
+// Relist kubelet 定期从容器运行时中获取 Pod/容器列表的过程.✅
 func (g *GenericPLEG) Relist() { // ✅
 	g.relistLock.Lock()
 	defer g.relistLock.Unlock()
@@ -243,7 +243,7 @@ func (g *GenericPLEG) Relist() { // ✅
 	updateRunningPodAndContainerMetrics(pods)
 	g.podRecords.setCurrent(pods)
 
-	// 比较旧的和当前的 Pod，并生成事件。
+	// 比较旧的和当前的 Pod,并生成事件.
 	eventsByPodID := map[types.UID][]*PodLifecycleEvent{}
 	for pid := range g.podRecords {
 		oldPod := g.podRecords.getOld(pid)
@@ -310,7 +310,7 @@ func (g *GenericPLEG) Relist() { // ✅
 			case g.eventChannel <- events[i]:
 			default:
 				metrics.PLEGDiscardEvents.Inc()
-				klog.ErrorS(nil, "事件通道已满，无法再处理更多的事件，因此需要丢弃当前的 relist() 循环事件")
+				klog.ErrorS(nil, "事件通道已满,无法再处理更多的事件,因此需要丢弃当前的 relist() 循环事件")
 			}
 			// Log exit code of containers when they finished in a particular event
 			if events[i].Type == ContainerDied {
@@ -334,7 +334,7 @@ func (g *GenericPLEG) Relist() { // ✅
 	}
 
 	if g.cacheEnabled() {
-		//在上一次 relist（重新列出）中未能通过检查的 Pod，需要在下一次 relist 中重新检查（reinspect）。
+		//在上一次 relist（重新列出）中未能通过检查的 Pod,需要在下一次 relist 中重新检查（reinspect）.
 		if len(g.podsToReinspect) > 0 {
 			klog.V(5).InfoS("GenericPLEG: Reinspecting pods that previously failed inspection")
 			for pid, pod := range g.podsToReinspect {

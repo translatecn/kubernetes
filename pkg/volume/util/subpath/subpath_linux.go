@@ -54,10 +54,6 @@ func New(mounter mount.Interface) Interface {
 	}
 }
 
-func (sp *subpath) CleanSubPaths(podDir string, volumeName string) error {
-	return doCleanSubPaths(sp.mounter, podDir, volumeName)
-}
-
 func (sp *subpath) SafeMakeDir(subdir string, base string, perm os.FileMode) error {
 	realBase, err := filepath.EvalSymlinks(base)
 	if err != nil {
@@ -235,92 +231,6 @@ func doBindSubPath(mounter mount.Interface, subpath Subpath) (hostPath string, e
 
 	klog.V(3).Infof("Bound SubPath %s into %s", subpath.Path, bindPathTarget)
 	return bindPathTarget, nil
-}
-
-// This implementation is shared between Linux and NsEnter
-func doCleanSubPaths(mounter mount.Interface, podDir string, volumeName string) error {
-	// scan /var/lib/kubelet/pods/<uid>/volume-subpaths/<volume>/*
-	subPathDir := filepath.Join(podDir, containerSubPathDirectoryName, volumeName)
-	klog.V(4).Infof("Cleaning up subpath mounts for %s", subPathDir)
-
-	containerDirs, err := ioutil.ReadDir(subPathDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return fmt.Errorf("error reading %s: %s", subPathDir, err)
-	}
-
-	for _, containerDir := range containerDirs {
-		if !containerDir.IsDir() {
-			klog.V(4).Infof("Container file is not a directory: %s", containerDir.Name())
-			continue
-		}
-		klog.V(4).Infof("Cleaning up subpath mounts for container %s", containerDir.Name())
-
-		// scan /var/lib/kubelet/pods/<uid>/volume-subpaths/<volume>/<container name>/*
-		fullContainerDirPath := filepath.Join(subPathDir, containerDir.Name())
-		// The original traversal method here was ReadDir, which was not so robust to handle some error such as "stale NFS file handle",
-		// so it was replaced with filepath.Walk in a later patch, which can pass through error and handled by the callback WalkFunc.
-		// After go 1.16, WalkDir was introduced, it's more effective than Walk because the callback WalkDirFunc is called before
-		// reading a directory, making it save some time when a container's subPath contains lots of dirs.
-		// See https://github.com/kubernetes/kubernetes/pull/71804 and https://github.com/kubernetes/kubernetes/issues/107667 for more details.
-		err = filepath.WalkDir(fullContainerDirPath, func(path string, info os.DirEntry, _ error) error {
-			if path == fullContainerDirPath {
-				// Skip top level directory
-				return nil
-			}
-
-			// pass through errors and let doCleanSubPath handle them
-			if err = doCleanSubPath(mounter, fullContainerDirPath, filepath.Base(path)); err != nil {
-				return err
-			}
-
-			// We need to check that info is not nil. This may happen when the incoming err is not nil due to stale mounts or permission errors.
-			if info != nil && info.IsDir() {
-				// skip subdirs of the volume: it only matters the first level to unmount, otherwise it would try to unmount subdir of the volume
-				return filepath.SkipDir
-			}
-
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("error processing %s: %s", fullContainerDirPath, err)
-		}
-
-		// Whole container has been processed, remove its directory.
-		if err := os.Remove(fullContainerDirPath); err != nil {
-			return fmt.Errorf("error deleting %s: %s", fullContainerDirPath, err)
-		}
-		klog.V(5).Infof("Removed %s", fullContainerDirPath)
-	}
-	// Whole pod volume subpaths have been cleaned up, remove its subpath directory.
-	if err := os.Remove(subPathDir); err != nil {
-		return fmt.Errorf("error deleting %s: %s", subPathDir, err)
-	}
-	klog.V(5).Infof("Removed %s", subPathDir)
-
-	// Remove entire subpath directory if it's the last one
-	podSubPathDir := filepath.Join(podDir, containerSubPathDirectoryName)
-	if err := os.Remove(podSubPathDir); err != nil && !os.IsExist(err) {
-		return fmt.Errorf("error deleting %s: %s", podSubPathDir, err)
-	}
-	klog.V(5).Infof("Removed %s", podSubPathDir)
-	return nil
-}
-
-// doCleanSubPath tears down the single subpath bind mount
-func doCleanSubPath(mounter mount.Interface, fullContainerDirPath, subPathIndex string) error {
-	// process /var/lib/kubelet/pods/<uid>/volume-subpaths/<volume>/<container name>/<subPathName>
-	klog.V(4).Infof("Cleaning up subpath mounts for subpath %v", subPathIndex)
-	fullSubPath := filepath.Join(fullContainerDirPath, subPathIndex)
-
-	if err := mount.CleanupMountPoint(fullSubPath, mounter, true); err != nil {
-		return fmt.Errorf("error cleaning subpath mount %s: %s", fullSubPath, err)
-	}
-
-	klog.V(4).Infof("Successfully cleaned subpath directory %s", fullSubPath)
-	return nil
 }
 
 // cleanSubPath will teardown the subpath bind mount and any remove any directories if empty
@@ -606,4 +516,96 @@ func doSafeOpen(pathname string, base string) (int, error) {
 	parentFD = -1
 
 	return finalFD, nil
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+
+func (sp *subpath) CleanSubPaths(podDir string, volumeName string) error {
+	return doCleanSubPaths(sp.mounter, podDir, volumeName)
+}
+
+// doCleanSubPath tears down the single subpath bind mount
+func doCleanSubPath(mounter mount.Interface, fullContainerDirPath, subPathIndex string) error {
+	// process /var/lib/kubelet/pods/<uid>/volume-subpaths/<volume>/<container name>/<subPathName>
+	klog.V(4).Infof("Cleaning up subpath mounts for subpath %v", subPathIndex)
+	fullSubPath := filepath.Join(fullContainerDirPath, subPathIndex)
+
+	if err := mount.CleanupMountPoint(fullSubPath, mounter, true); err != nil {
+		return fmt.Errorf("error cleaning subpath mount %s: %s", fullSubPath, err)
+	}
+
+	klog.V(4).Infof("Successfully cleaned subpath directory %s", fullSubPath)
+	return nil
+}
+
+// This implementation is shared between Linux and NsEnter
+func doCleanSubPaths(mounter mount.Interface, podDir string, volumeName string) error {
+	// scan /var/lib/kubelet/pods/<uid>/volume-subpaths/<volume>/*
+	subPathDir := filepath.Join(podDir, containerSubPathDirectoryName, volumeName)
+	klog.V(4).Infof("Cleaning up subpath mounts for %s", subPathDir)
+
+	containerDirs, err := ioutil.ReadDir(subPathDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("error reading %s: %s", subPathDir, err)
+	}
+
+	for _, containerDir := range containerDirs {
+		if !containerDir.IsDir() {
+			klog.V(4).Infof("Container file is not a directory: %s", containerDir.Name())
+			continue
+		}
+		klog.V(4).Infof("Cleaning up subpath mounts for container %s", containerDir.Name())
+
+		// scan /var/lib/kubelet/pods/<uid>/volume-subpaths/<volume>/<container name>/*
+		fullContainerDirPath := filepath.Join(subPathDir, containerDir.Name())
+		// The original traversal method here was ReadDir, which was not so robust to handle some error such as "stale NFS file handle",
+		// so it was replaced with filepath.Walk in a later patch, which can pass through error and handled by the callback WalkFunc.
+		// After go 1.16, WalkDir was introduced, it's more effective than Walk because the callback WalkDirFunc is called before
+		// reading a directory, making it save some time when a container's subPath contains lots of dirs.
+		// See https://github.com/kubernetes/kubernetes/pull/71804 and https://github.com/kubernetes/kubernetes/issues/107667 for more details.
+		err = filepath.WalkDir(fullContainerDirPath, func(path string, info os.DirEntry, _ error) error {
+			if path == fullContainerDirPath {
+				// Skip top level directory
+				return nil
+			}
+
+			// pass through errors and let doCleanSubPath handle them
+			if err = doCleanSubPath(mounter, fullContainerDirPath, filepath.Base(path)); err != nil {
+				return err
+			}
+
+			// We need to check that info is not nil. This may happen when the incoming err is not nil due to stale mounts or permission errors.
+			if info != nil && info.IsDir() {
+				// skip subdirs of the volume: it only matters the first level to unmount, otherwise it would try to unmount subdir of the volume
+				return filepath.SkipDir
+			}
+
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("error processing %s: %s", fullContainerDirPath, err)
+		}
+
+		// Whole container has been processed, remove its directory.
+		if err := os.Remove(fullContainerDirPath); err != nil {
+			return fmt.Errorf("error deleting %s: %s", fullContainerDirPath, err)
+		}
+		klog.V(5).Infof("Removed %s", fullContainerDirPath)
+	}
+	// Whole pod volume subpaths have been cleaned up, remove its subpath directory.
+	if err := os.Remove(subPathDir); err != nil {
+		return fmt.Errorf("error deleting %s: %s", subPathDir, err)
+	}
+	klog.V(5).Infof("Removed %s", subPathDir)
+
+	// Remove entire subpath directory if it's the last one
+	podSubPathDir := filepath.Join(podDir, containerSubPathDirectoryName)
+	if err := os.Remove(podSubPathDir); err != nil && !os.IsExist(err) {
+		return fmt.Errorf("error deleting %s: %s", podSubPathDir, err)
+	}
+	klog.V(5).Infof("Removed %s", podSubPathDir)
+	return nil
 }

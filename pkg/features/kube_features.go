@@ -200,10 +200,10 @@ const (
 	// Enables container Checkpoint support in the kubelet
 	ContainerCheckpoint featuregate.Feature = "ContainerCheckpoint"
 
-	// owner: @bhcleek @wzshiming
+	// ConsistentHTTPGetHandlers owner: @bhcleek @wzshiming
 	// GA: v1.25
 	//
-	// Normalize HttpGet URL and Header passing for lifecycle handlers with probers.
+	// 规范化HttpGet URL和头传递与探测器的生命周期处理程序.
 	ConsistentHTTPGetHandlers featuregate.Feature = "ConsistentHTTPGetHandlers"
 
 	// owner: @jiahuif
@@ -277,7 +277,7 @@ const (
 	// kep: http://kep.k8s.io/3063
 	// alpha: v1.26
 	//
-	// 支持具有自定义参数和独立于Pod的生命周期的资源。
+	// 支持具有自定义参数和独立于Pod的生命周期的资源.
 	DynamicResourceAllocation featuregate.Feature = "DynamicResourceAllocation"
 
 	// owner: @andrewsykim
@@ -301,7 +301,7 @@ const (
 	// kep: http://kep.k8s.io/3386
 	// alpha: v1.25
 	//
-	// 使用事件驱动机制来监视容器的状态，并生成有关 Pod 生命周期事件的信息。
+	// 使用事件驱动机制来监视容器的状态,并生成有关 Pod 生命周期事件的信息.
 	EventedPLEG featuregate.Feature = "EventedPLEG"
 
 	// owner: @andrewsykim @SergeyKanzhelev
@@ -358,7 +358,7 @@ const (
 	// GracefulNodeShutdown owner: @bobbypage
 	// alpha: v1.20
 	// beta:  v1.21
-	// 增加了对kubelet的支持，以检测node关闭并在节点关闭之前优雅地终止pod。
+	// 增加了对kubelet的支持,以检测node关闭并在节点关闭之前优雅地终止pod.
 	GracefulNodeShutdown featuregate.Feature = "GracefulNodeShutdown"
 
 	// owner: @wzshiming
@@ -543,11 +543,10 @@ const (
 	// Support local ephemeral storage types for local storage capacity isolation feature.
 	LocalStorageCapacityIsolation featuregate.Feature = "LocalStorageCapacityIsolation"
 
-	// owner: @RobertKrawitz
+	// LocalStorageCapacityIsolationFSQuotaMonitoring owner: @RobertKrawitz
 	// alpha: v1.15
 	//
-	// Allow use of filesystems for ephemeral storage monitoring.
-	// Only applies if LocalStorageCapacityIsolation is set.
+	// 允许使用文件系统进行临时存储监控
 	LocalStorageCapacityIsolationFSQuotaMonitoring featuregate.Feature = "LocalStorageCapacityIsolationFSQuotaMonitoring"
 
 	// owner: @damemi
@@ -577,11 +576,11 @@ const (
 	// 在这种情况下,该函数允许为容器分配特定的 NUMA 节点,以确保容器能够访问最佳的内存资源.
 	MemoryManager featuregate.Feature = "MemoryManager"
 
-	// owner: @xiaoxubeii
+	// MemoryQoS owner: @xiaoxubeii
 	// kep: https://kep.k8s.io/2570
 	// alpha: v1.22
 	//
-	// Enables kubelet to support memory QoS with cgroups v2.
+	// 使kubelet支持cgroups v2的内存QoS.
 	MemoryQoS featuregate.Feature = "MemoryQoS"
 
 	// owner: @sanposhiho
@@ -656,8 +655,8 @@ const (
 	// kep: https://kep.k8s.io/2364
 	// alpha: v1.23
 	//
-	//配置Kubelet使用CRI来填充pod和容器的统计信息，而不是从cAdvisor补充统计信息。
-	//要求CRI实现支持提供所需的统计信息。
+	//配置Kubelet使用CRI来填充pod和容器的统计信息,而不是从cAdvisor补充统计信息.
+	//要求CRI实现支持提供所需的统计信息.
 	PodAndContainerStatsFromCRI featuregate.Feature = "PodAndContainerStatsFromCRI"
 
 	// owner: @ahg-g
@@ -672,8 +671,8 @@ const (
 	// alpha: v1.25
 	// beta: v1.26
 	//
-	// 在 Kubernetes 中，Pod 可能会由于各种原因被删除，例如节点故障、调度器故障、手动删除等等。
-	// 在某些情况下，Pod 的删除可能会影响到应用程序的可用性，因此需要在删除过程中进行一些额外的处理。
+	// 在 Kubernetes 中,Pod 可能会由于各种原因被删除,例如节点故障、调度器故障、手动删除等等.
+	// 在某些情况下,Pod 的删除可能会影响到应用程序的可用性,因此需要在删除过程中进行一些额外的处理.
 	// 指示该 Pod 正在由于干扰而被删除
 	PodDisruptionConditions featuregate.Feature = "PodDisruptionConditions"
 
@@ -727,17 +726,17 @@ const (
 	// bursting into resources requested at higher QoS levels (memory only for now)
 	QOSReserved featuregate.Feature = "QOSReserved"
 
-	// owner: @chrishenzie
+	// ReadWriteOncePod owner: @chrishenzie
 	// alpha: v1.22
 	//
-	// Enables usage of the ReadWriteOncePod PersistentVolume access mode.
+	// 在同一时刻,只有一个Pod可以使用该卷
 	ReadWriteOncePod featuregate.Feature = "ReadWriteOncePod"
 
-	// owner: @gnufied
+	// RecoverVolumeExpansionFailure owner: @gnufied
 	// kep: https://kep.k8s.io/1790
 	// alpha: v1.23
 	//
-	// Allow users to recover from volume expansion failure
+	// 允许用户从卷扩展失败中恢复.
 	RecoverVolumeExpansionFailure featuregate.Feature = "RecoverVolumeExpansionFailure"
 
 	// owner: @RomanBednar
@@ -751,7 +750,7 @@ const (
 	// alpha: v1.7
 	// beta: v1.12
 	//
-	// 从证书签名请求 API 获取 kubelet 的服务器证书，而不是生成一个自签名的证书，并在证书过期接近时自动进行轮换。
+	// 从证书签名请求 API 获取 kubelet 的服务器证书,而不是生成一个自签名的证书,并在证书过期接近时自动进行轮换.
 	RotateKubeletServerCertificate featuregate.Feature = "RotateKubeletServerCertificate"
 
 	// owner: @saschagrunert
@@ -854,7 +853,7 @@ const (
 	// kep: https://kep.k8s.io/127
 	// alpha: v1.25
 	//
-	// 为无状态pod启用用户命名空间支持。
+	// 为无状态pod启用用户命名空间支持.
 	UserNamespacesStatelessPodsSupport featuregate.Feature = "UserNamespacesStatelessPodsSupport"
 
 	// owner: @cofyc
@@ -898,12 +897,13 @@ const (
 	// calculating pod topology spread skew.
 	NodeInclusionPolicyInPodTopologySpread featuregate.Feature = "NodeInclusionPolicyInPodTopologySpread"
 
-	// owner: @jsafrane
+	// SELinuxMountReadWriteOncePod owner: @jsafrane
 	// kep: https://kep.k8s.io/1710
 	// alpha: v1.25
 	// Speed up container startup by mounting volumes with the correct SELinux label
 	// instead of changing each file on the volumes recursively.
 	// Initial implementation focused on ReadWriteOncePod volumes.
+	// 通过使用正确的SELinux标签挂载卷,而不是递归地更改卷上的每个文件,加快容器启动速度.最初的实现集中在读写oncepod卷上.
 	SELinuxMountReadWriteOncePod featuregate.Feature = "SELinuxMountReadWriteOncePod"
 )
 

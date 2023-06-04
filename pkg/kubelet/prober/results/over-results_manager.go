@@ -27,9 +27,9 @@ import (
 // Manager provides a probe results cache and channel of updates.
 type Manager interface {
 	Get(kubecontainer.ContainerID) (Result, bool)   //
-	Set(kubecontainer.ContainerID, Result, *v1.Pod) // 设置探测结果 ， pod只在更新中设置
+	Set(kubecontainer.ContainerID, Result, *v1.Pod) // 设置探测结果 , pod只在更新中设置
 	Remove(kubecontainer.ContainerID)               // 移除缓存的容器探测结果
-	Updates() <-chan Update                         // 创建一个通道，该通道在其 探测结果更改时 接收Update事件
+	Updates() <-chan Update                         // 创建一个通道,该通道在其 探测结果更改时 接收Update事件
 }
 
 type Result int // probe 探测的结果

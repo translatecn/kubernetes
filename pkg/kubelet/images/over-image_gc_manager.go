@@ -71,12 +71,12 @@ type ImageGCPolicy struct {
 	// Any usage below this threshold will never trigger garbage collection.
 	// This is the lowest threshold we will try to garbage collect to.
 	LowThresholdPercent int
-	MinAge              time.Duration // 允许垃圾存在的时间
+	MinAge              time.Duration // 是容器可以被执行垃圾回收的最小生命周期
 }
 
 type realImageGCManager struct {
 	runtime          container.Runtime
-	imageRecords     map[string]*imageRecord // 记录本地所有镜像的检测状态，相当于是一份缓存
+	imageRecords     map[string]*imageRecord // 记录本地所有镜像的检测状态,相当于是一份缓存
 	imageRecordsLock sync.Mutex              //
 
 	// The image garbage collection policy in use.
@@ -94,7 +94,7 @@ type realImageGCManager struct {
 	// Track initialization
 	initialized  bool
 	imageCache   imageCache // runtime 当前的镜像
-	sandboxImage string     // 沙箱镜像，不GC
+	sandboxImage string     // 沙箱镜像,不GC
 }
 
 // imageCache caches latest result of ListImages.
@@ -146,7 +146,7 @@ func NewImageGCManager(runtime container.Runtime, statsProvider StatsProvider, r
 	if policy.LowThresholdPercent > policy.HighThresholdPercent {
 		return nil, fmt.Errorf("LowThresholdPercent %d can not be higher than HighThresholdPercent %d", policy.LowThresholdPercent, policy.HighThresholdPercent)
 	}
-	im := &realImageGCManager{
+	im := &realImageGCManager{ // ✅
 		runtime:       runtime,
 		policy:        policy,
 		imageRecords:  make(map[string]*imageRecord),
@@ -193,11 +193,11 @@ func (im *realImageGCManager) GetImageList() ([]container.Image, error) {
 	return im.imageCache.get(), nil
 }
 
-// 更新缓存，并返回使用中的镜像
+// 更新缓存,并返回使用中的镜像
 func (im *realImageGCManager) detectImages(ctx context.Context, detectTime time.Time) (sets.String, error) {
 	imagesInUse := sets.NewString()
 
-	// 获取已经存在于本地存储中的图像的引用(摘要或ID)。如果图像不在本地存储中，则返回(""，nil)。
+	// 获取已经存在于本地存储中的图像的引用(摘要或ID).如果图像不在本地存储中,则返回("",nil).
 	imageRef, err := im.runtime.GetImageRef(ctx, container.ImageSpec{Image: im.sandboxImage}) // 默认 registry.k8s.io/pause:3.9
 	if err == nil && imageRef != "" {
 		imagesInUse.Insert(imageRef)

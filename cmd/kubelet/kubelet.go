@@ -16,7 +16,7 @@ limitations under the License.
 
 // The kubelet binary is responsible for maintaining a set of containers on a particular host VM.
 // It syncs data from both configuration file(s) as well as from a quorum of etcd servers.
-// It then communicates with the container runtime (or a CRI shim for the runtime) to see what is
+// It then communicates with the contatype DesiredStateOfWorld interface {iner runtime (or a CRI shim for the runtime) to see what is
 // currently running.  It synchronizes the configuration data, with the running set of containers
 // by starting or stopping containers.
 package main
@@ -44,6 +44,7 @@ func main() {
 	// curl -k -s --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt --header "Authorization: Bearer $TOKEN"  http://10.96.181.196:10250/stats/summary   |python -m json.tool
 
 	os.Args = kubelet.Init(os.Args)
+	// --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf --config=/var/lib/kubelet/config.yaml --container-runtime-endpoint=unix:///run/containerd/containerd.sock --pod-infra-container-image=registry.k8s.io/pause:3.9 --container-runtime=remote --pod-infra-container-image=sealos.hub:5000/pause:3.9 --runtime-request-timeout=15m --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock --image-service-endpoint=unix:///var/run/image-cri-shim.sock
 	command := app.NewKubeletCommand()
 	code := cli.Run(command)
 	os.Exit(code)

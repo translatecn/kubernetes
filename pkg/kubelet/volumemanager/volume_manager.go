@@ -53,100 +53,45 @@ import (
 )
 
 const (
-	// reconcilerLoopSleepPeriod is the amount of time the reconciler loop waits
-	// between successive executions
-	reconcilerLoopSleepPeriod = 100 * time.Millisecond
+	reconcilerLoopSleepPeriod                             = 100 * time.Millisecond // 调解器循环在执行之间等待的时间
+	desiredStateOfWorldPopulatorLoopSleepPeriod           = 100 * time.Millisecond // 循环在执行之间等待的时间
+	desiredStateOfWorldPopulatorGetPodStatusRetryDuration = 2 * time.Second        // 循环在调用containerruntime.GetPodStatus之间等待的时间,以防过于频繁地调用
 
-	// desiredStateOfWorldPopulatorLoopSleepPeriod is the amount of time the
-	// DesiredStateOfWorldPopulator loop waits between successive executions
-	desiredStateOfWorldPopulatorLoopSleepPeriod = 100 * time.Millisecond
+	// WaitForAttachAndMount 调用将等待指定的Pod中所有卷被附加和挂载的最长时间.
+	// 即使云操作可能需要几分钟才能完成,我们也将超时设置为2分钟,因为kubelet将在下一个同步迭代中重试.
+	// 如果需要（例如,对Pod的删除请求）,这将释放与Pod相关联的goroutine以处理更新.该值略微偏离2分钟,以使由于此常量而导致的超时可识别.
+	podAttachAndMountTimeout       = 2*time.Minute + 3*time.Second
+	podAttachAndMountRetryInterval = 300 * time.Millisecond // GetVolumesForPod调用等待重试的时间
 
-	// desiredStateOfWorldPopulatorGetPodStatusRetryDuration is the amount of
-	// time the DesiredStateOfWorldPopulator loop waits between successive pod
-	// cleanup calls (to prevent calling containerruntime.GetPodStatus too
-	// frequently).
-	desiredStateOfWorldPopulatorGetPodStatusRetryDuration = 2 * time.Second
-
-	// podAttachAndMountTimeout is the maximum amount of time the
-	// WaitForAttachAndMount call will wait for all volumes in the specified pod
-	// to be attached and mounted. Even though cloud operations can take several
-	// minutes to complete, we set the timeout to 2 minutes because kubelet
-	// will retry in the next sync iteration. This frees the associated
-	// goroutine of the pod to process newer updates if needed (e.g., a delete
-	// request to the pod).
-	// Value is slightly offset from 2 minutes to make timeouts due to this
-	// constant recognizable.
-	podAttachAndMountTimeout = 2*time.Minute + 3*time.Second
-
-	// podAttachAndMountRetryInterval is the amount of time the GetVolumesForPod
-	// call waits before retrying
-	podAttachAndMountRetryInterval = 300 * time.Millisecond
-
-	// waitForAttachTimeout is the maximum amount of time a
-	// operationexecutor.Mount call will wait for a volume to be attached.
-	// Set to 10 minutes because we've seen attach operations take several
-	// minutes to complete for some volume plugins in some cases. While this
-	// operation is waiting it only blocks other operations on the same device,
-	// other devices are not affected.
+	//operationexecutor.Mount 调用等待卷附加的最长时间.将其设置为10分钟,因为我们已经看到在某些情况下,某些卷插件的附加操作需要几分钟才能完成.
+	//在等待此操作期间,它仅会阻止同一设备上的其他操作,不会影响其他设备.
 	waitForAttachTimeout = 10 * time.Minute
 )
 
-// VolumeManager runs a set of asynchronous loops that figure out which volumes
-// need to be attached/mounted/unmounted/detached based on the pods scheduled on
-// this node and makes it so.
+// VolumeManager 是一个接口,运行一组异步循环,根据在此节点上调度的Pod确定哪些卷需要附加/挂载/卸载/分离并使其生效.
 type VolumeManager interface {
-	// Starts the volume manager and all the asynchronous loops that it controls
+	// Run 启动卷管理器及其控制的所有异步循环.
 	Run(sourcesReady config.SourcesReady, stopCh <-chan struct{})
-
-	// WaitForAttachAndMount processes the volumes referenced in the specified
-	// pod and blocks until they are all attached and mounted (reflected in
-	// actual state of the world).
-	// An error is returned if all volumes are not attached and mounted within
-	// the duration defined in podAttachAndMountTimeout.
+	// WaitForAttachAndMount 处理指定Pod中引用的卷并阻塞,直到它们全部附加和挂载（反映在世界的实际状态中）.
 	WaitForAttachAndMount(pod *v1.Pod) error
-
-	// WaitForUnmount processes the volumes referenced in the specified
-	// pod and blocks until they are all unmounted (reflected in the actual
-	// state of the world).
-	// An error is returned if all volumes are not unmounted within
-	// the duration defined in podAttachAndMountTimeout.
+	// WaitForUnmount 处理指定Pod中引用的卷并阻塞,直到它们全部卸载（反映在实际状态的世界中）.
 	WaitForUnmount(pod *v1.Pod) error
-
-	// GetMountedVolumesForPod returns a VolumeMap containing the volumes
-	// referenced by the specified pod that are successfully attached and
-	// mounted. The key in the map is the OuterVolumeSpecName (i.e.
-	// pod.Spec.Volumes[x].Name). It returns an empty VolumeMap if pod has no
-	// volumes.
+	// GetMountedVolumesForPod 返回一个 VolumeMap,其中包含指定Pod成功挂载的卷.映射中的键是 pod.Spec.Volumes[x].Name
+	// 如果Pod没有卷,则返回一个空的VolumeMap.
 	GetMountedVolumesForPod(podName types.UniquePodName) container.VolumeMap
-	// 返回一个VolumeMap，其中包含指定pod引用的卷，这些卷要么是成功附加和挂载的，要么是“不确定的”，即卷插件可能正在挂载它们。
-	// 映射中的键是OuterVolumeSpecName(即pod.Spec.Volumes[x].name)。如果pod没有卷，它返回一个空的VolumeMap。
+	// GetPossiblyMountedVolumesForPod 返回一个VolumeMap,其中包含指定Pod 已成功附加挂载或“不确定”的卷,即卷插件可能正在挂载它们.
+	// 映射中的键是 （即pod.Spec.Volumes[x].Name）.如果Pod没有卷,则返回一个空的VolumeMap.
 	GetPossiblyMountedVolumesForPod(podName types.UniquePodName) container.VolumeMap
-
-	// GetExtraSupplementalGroupsForPod returns a list of the extra
-	// supplemental groups for the Pod. These extra supplemental groups come
-	// from annotations on persistent volumes that the pod depends on.
+	// GetExtraSupplementalGroupsForPod 返回Pod的额外补充组列表.这些额外的补充组来自于Pod依赖的持久卷上的注释.
 	GetExtraSupplementalGroupsForPod(pod *v1.Pod) []int64
-
-	// GetVolumesInUse returns a list of all volumes that implement the volume.Attacher
-	// interface and are currently in use according to the actual and desired
-	// state of the world caches. A volume is considered "in use" as soon as it
-	// is added to the desired state of world, indicating it *should* be
-	// attached to this node and remains "in use" until it is removed from both
-	// the desired state of the world and the actual state of the world, or it
-	// has been unmounted (as indicated in actual state of world).
+	// GetVolumesInUse 返回所有实现volume.Attacher接口且根据世界的实际和期望状态缓存当前正在使用的卷列表.
+	// 一旦将卷添加到期望状态的世界中,表示它应该附加到此节点并保持“正在使用”,直到从期望状态和实际状态中同时删除或卸载为止（在实际状态中表示）.
 	GetVolumesInUse() []v1.UniqueVolumeName
-
-	// ReconcilerStatesHasBeenSynced returns true only after the actual states in reconciler
-	// has been synced at least once after kubelet starts so that it is safe to update mounted
-	// volume list retrieved from actual state.
+	// ReconcilerStatesHasBeenSynced 仅在调谐器中实际状态至少同步一次之后返回true,以便安全地更新从实际状态检索的已挂载卷列表.
 	ReconcilerStatesHasBeenSynced() bool
-
-	// VolumeIsAttached returns true if the given volume is attached to this
-	// node.
+	// VolumeIsAttached 如果给定卷已附加到此节点,则返回true.
 	VolumeIsAttached(volumeName v1.UniqueVolumeName) bool
-
-	// Marks the specified volume as having successfully been reported as "in
-	// use" in the nodes's volume status.
+	// MarkVolumesAsReportedInUse 将指定的卷  标记为已成功报告为“正在使用”节点的卷状态.
 	MarkVolumesAsReportedInUse(volumesReportedAsInUse []v1.UniqueVolumeName)
 }
 
@@ -156,16 +101,8 @@ type podStateProvider interface {
 	ShouldPodRuntimeBeRemoved(k8stypes.UID) bool
 }
 
-// NewVolumeManager returns a new concrete instance implementing the
-// VolumeManager interface.
-//
-// kubeClient - kubeClient is the kube API client used by DesiredStateOfWorldPopulator
-//
-//	to communicate with the API server to fetch PV and PVC objects
-//
-// volumePluginMgr - the volume plugin manager used to access volume plugins.
-//
-//	Must be pre-initialized.
+// NewVolumeManager kubeClient是DesiredStateOfWorldPopulator使用的kube API客户端,用于与API服务器通信以获取PV和PVC对象.
+// volumePluginMgr -  用于访问卷插件的卷插件管理器.必须预先初始化.
 func NewVolumeManager(
 	controllerAttachDetachEnabled bool,
 	nodeName k8stypes.NodeName,
@@ -184,12 +121,12 @@ func NewVolumeManager(
 	seLinuxTranslator := util.NewSELinuxLabelTranslator()
 	vm := &volumeManager{
 		kubeClient:          kubeClient,
-		volumePluginMgr:     volumePluginMgr,
+		volumePluginMgr:     volumePluginMgr, // ✅
 		desiredStateOfWorld: cache.NewDesiredStateOfWorld(volumePluginMgr, seLinuxTranslator),
 		actualStateOfWorld:  cache.NewActualStateOfWorld(nodeName, volumePluginMgr),
 		operationExecutor: operationexecutor.NewOperationExecutor(operationexecutor.NewOperationGenerator(
 			kubeClient,
-			volumePluginMgr,
+			volumePluginMgr, // ✅
 			recorder,
 			blockVolumePathHandler)),
 	}
@@ -232,66 +169,15 @@ func NewVolumeManager(
 
 // volumeManager implements the VolumeManager interface
 type volumeManager struct {
-	// kubeClient is the kube API client used by DesiredStateOfWorldPopulator to
-	// communicate with the API server to fetch PV and PVC objects
-	kubeClient clientset.Interface
-
-	// volumePluginMgr is the volume plugin manager used to access volume
-	// plugins. It must be pre-initialized.
-	volumePluginMgr *volume.VolumePluginMgr
-
-	// desiredStateOfWorld is a data structure containing the desired state of
-	// the world according to the volume manager: i.e. what volumes should be
-	// attached and which pods are referencing the volumes).
-	// The data structure is populated by the desired state of the world
-	// populator using the kubelet pod manager.
-	desiredStateOfWorld cache.DesiredStateOfWorld
-
-	// actualStateOfWorld is a data structure containing the actual state of
-	// the world according to the manager: i.e. which volumes are attached to
-	// this node and what pods the volumes are mounted to.
-	// The data structure is populated upon successful completion of attach,
-	// detach, mount, and unmount actions triggered by the reconciler.
-	actualStateOfWorld cache.ActualStateOfWorld
-
-	// operationExecutor is used to start asynchronous attach, detach, mount,
-	// and unmount operations.
-	operationExecutor operationexecutor.OperationExecutor
-
-	// reconciler runs an asynchronous periodic loop to reconcile the
-	// desiredStateOfWorld with the actualStateOfWorld by triggering attach,
-	// detach, mount, and unmount operations using the operationExecutor.
-	reconciler reconciler.Reconciler
-
-	// desiredStateOfWorldPopulator runs an asynchronous periodic loop to
-	// populate the desiredStateOfWorld using the kubelet PodManager.
-	desiredStateOfWorldPopulator populator.DesiredStateOfWorldPopulator
-
-	// csiMigratedPluginManager keeps track of CSI migration status of plugins
-	csiMigratedPluginManager csimigration.PluginManager
-
-	// intreeToCSITranslator translates in-tree volume specs to CSI
-	intreeToCSITranslator csimigration.InTreeToCSITranslator
-}
-
-func (vm *volumeManager) Run(sourcesReady config.SourcesReady, stopCh <-chan struct{}) {
-	defer runtime.HandleCrash()
-
-	if vm.kubeClient != nil {
-		// start informer for CSIDriver
-		go vm.volumePluginMgr.Run(stopCh)
-	}
-
-	go vm.desiredStateOfWorldPopulator.Run(sourcesReady, stopCh)
-	klog.V(2).InfoS("The desired_state_of_world populator starts")
-
-	klog.InfoS("Starting Kubelet Volume Manager")
-	go vm.reconciler.Run(stopCh)
-
-	metrics.Register(vm.actualStateOfWorld, vm.desiredStateOfWorld, vm.volumePluginMgr)
-
-	<-stopCh
-	klog.InfoS("Shutting down Kubelet Volume Manager")
+	kubeClient                   clientset.Interface                    // kube API客户端,用于与API服务器通信以获取PV和PVC对象
+	volumePluginMgr              *volume.VolumePluginMgr                // 用于访问卷插件的卷插件管理器.必须预先初始化.
+	desiredStateOfWorld          cache.DesiredStateOfWorld              // 预期状态,volume需要被attach,哪些pods引用这个volume
+	actualStateOfWorld           cache.ActualStateOfWorld               // 实际状态,volume已经被attach 哪个node,哪个pod mount volume
+	operationExecutor            operationexecutor.OperationExecutor    // 用于启动异步附加、分离、挂载和卸载操作.
+	reconciler                   reconciler.Reconciler                  // 运行异步周期性循环以通过使用operationExecutor触发附加、分离、挂载和卸载操作来协调desiredStateOfWorld和actualStateOfWorld.
+	desiredStateOfWorldPopulator populator.DesiredStateOfWorldPopulator // 运行异步周期性循环,使用kubelet PodManager填充desiredStateOfWorld.
+	csiMigratedPluginManager     csimigration.PluginManager             // 跟踪插件的CSI迁移状态.
+	intreeToCSITranslator        csimigration.InTreeToCSITranslator     // 将in-tree卷规范翻译为CSI.
 }
 
 func (vm *volumeManager) GetMountedVolumesForPod(podName types.UniquePodName) container.VolumeMap {
@@ -394,7 +280,7 @@ func (vm *volumeManager) WaitForAttachAndMount(pod *v1.Pod) error {
 		return nil
 	}
 
-	expectedVolumes := getExpectedVolumes(pod)
+	expectedVolumes := getExpectedVolumes(pod) // 获取pod 需要绑定哪些 volume
 	if len(expectedVolumes) == 0 {
 		// No volumes to verify
 		return nil
@@ -406,19 +292,18 @@ func (vm *volumeManager) WaitForAttachAndMount(pod *v1.Pod) error {
 	// Some pods expect to have Setup called over and over again to update.
 	// Remount plugins for which this is true. (Atomically updating volumes,
 	// like Downward API, depend on this to update the contents of the volume).
-	vm.desiredStateOfWorldPopulator.ReprocessPod(uniquePodName)
+	// 一些pod希望一次又一次地调用安装程序来更新.重新挂载符合此要求的插件.(自动更新卷,如 downloadAPI,依赖于此来更新卷的内容).
+	vm.desiredStateOfWorldPopulator.ReprocessPod(uniquePodName) // 标记m
 
 	err := wait.PollImmediate(
-		podAttachAndMountRetryInterval,
-		podAttachAndMountTimeout,
+		podAttachAndMountRetryInterval, // 300ms
+		podAttachAndMountTimeout,       // 2m + 3s
 		vm.verifyVolumesMountedFunc(uniquePodName, expectedVolumes))
 
 	if err != nil {
-		unmountedVolumes :=
-			vm.getUnmountedVolumes(uniquePodName, expectedVolumes)
+		unmountedVolumes := vm.getUnmountedVolumes(uniquePodName, expectedVolumes)
 		// Also get unattached volumes for error message
-		unattachedVolumes :=
-			vm.getUnattachedVolumes(expectedVolumes)
+		unattachedVolumes := vm.getUnattachedVolumes(expectedVolumes)
 
 		if len(unmountedVolumes) == 0 {
 			return nil
@@ -529,16 +414,16 @@ func filterUnmountedVolumes(mountedVolumes sets.String, expectedVolumes []string
 	return unmountedVolumes
 }
 
+// ----------------------------------------------------------------------------------------
+
 // getExpectedVolumes returns a list of volumes that must be mounted in order to
 // consider the volume setup step for this pod satisfied.
 func getExpectedVolumes(pod *v1.Pod) []string {
 	mounts, devices, _ := util.GetPodVolumeNames(pod)
-	return mounts.Union(devices).UnsortedList()
+	return mounts.Union(devices).UnsortedList() // 并集
 }
 
-// getExtraSupplementalGid returns the value of an extra supplemental GID as
-// defined by an annotation on a volume and a boolean indicating whether the
-// volume defined a GID that the pod doesn't already request.
+// getExtraSupplementalGid 函数返回一个额外的辅助 GID 的值,该 GID 由卷上的注释定义,并指示该卷是否定义了Pod尚未请求的GID.
 func getExtraSupplementalGid(volumeGidValue string, pod *v1.Pod) (int64, bool) {
 	if volumeGidValue == "" {
 		return 0, false
@@ -558,4 +443,24 @@ func getExtraSupplementalGid(volumeGidValue string, pod *v1.Pod) (int64, bool) {
 	}
 
 	return gid, true
+}
+func (vm *volumeManager) Run(sourcesReady config.SourcesReady, stopCh <-chan struct{}) {
+	defer runtime.HandleCrash()
+
+	if vm.kubeClient != nil {
+		// start informer for CSIDriver
+		go vm.volumePluginMgr.Run(stopCh) // ✅
+	}
+
+	go vm.desiredStateOfWorldPopulator.Run(sourcesReady, stopCh) // ✅ 从 apiserver 同步到的pod信息,来更新DesiredStateOfWorld
+
+	klog.V(2).InfoS("The desired_state_of_world populator starts")
+
+	klog.InfoS("Starting Kubelet Volume Manager")
+	go vm.reconciler.Run(stopCh) // ✅ 预期状态和实际状态的协调者,负责调整实际状态至预期状态
+
+	metrics.Register(vm.actualStateOfWorld, vm.desiredStateOfWorld, vm.volumePluginMgr)
+
+	<-stopCh
+	klog.InfoS("Shutting down Kubelet Volume Manager")
 }

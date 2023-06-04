@@ -341,7 +341,7 @@ func (rc *reconciler) attachDesiredVolumes() {
 
 		// Volume/Node doesn't exist, spawn a goroutine to attach it
 		klog.V(5).InfoS("Starting attacherDetacher.AttachVolume", "volume", volumeToAttach)
-		err := rc.attacherDetacher.AttachVolume(volumeToAttach.VolumeToAttach, rc.actualStateOfWorld)
+		err := rc.attacherDetacher.AttachVolume(volumeToAttach.VolumeToAttach, rc.actualStateOfWorld) // ✅
 		if err == nil {
 			klog.InfoS("attacherDetacher.AttachVolume started", "volume", volumeToAttach)
 		}

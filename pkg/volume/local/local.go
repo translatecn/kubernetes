@@ -663,13 +663,6 @@ func (m *localVolumeMapper) SetUpDevice() (string, error) {
 	return "", nil
 }
 
-// MapPodDevice provides physical device path for the local PV.
-func (m *localVolumeMapper) MapPodDevice() (string, error) {
-	globalPath := util.MakeAbsolutePath(runtime.GOOS, m.globalPath)
-	klog.V(4).Infof("MapPodDevice returning path %s", globalPath)
-	return globalPath, nil
-}
-
 // GetStagingPath returns
 func (m *localVolumeMapper) GetStagingPath() string {
 	return ""
@@ -702,4 +695,11 @@ func (l *localVolume) GetGlobalMapPath(spec *volume.Spec) (string, error) {
 func (l *localVolume) GetPodDeviceMapPath() (string, string) {
 	return l.plugin.host.GetPodVolumeDeviceDir(l.podUID,
 		utilstrings.EscapeQualifiedName(localVolumePluginName)), l.volName
+}
+
+// MapPodDevice 为 local pv 提供物理设备路径
+func (m *localVolumeMapper) MapPodDevice() (string, error) {
+	globalPath := util.MakeAbsolutePath(runtime.GOOS, m.globalPath)
+	klog.V(4).Infof("MapPodDevice returning path %s", globalPath)
+	return globalPath, nil
 }

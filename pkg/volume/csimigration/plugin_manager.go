@@ -27,10 +27,9 @@ import (
 	"k8s.io/kubernetes/pkg/volume"
 )
 
-// PluginNameMapper contains utility methods to retrieve names of plugins
-// that support a spec, map intree <=> migrated CSI plugin names, etc
+// PluginNameMapper 它包含一些实用方法,用于检索支持规范的插件名称,映射intree <=>迁移的CSI插件名称等.
 type PluginNameMapper interface {
-	GetInTreePluginNameFromSpec(pv *v1.PersistentVolume, vol *v1.Volume) (string, error)
+	GetInTreePluginNameFromSpec(pv *v1.PersistentVolume, vol *v1.Volume) (string, error) // 从给定的规范中获取intree插件的名称
 	GetCSINameFromInTreeName(pluginName string) (string, error)
 }
 
@@ -60,79 +59,61 @@ func (pm PluginManager) IsMigrationCompleteForPlugin(pluginName string) bool {
 	}
 
 	switch pluginName {
-	case csilibplugins.AWSEBSInTreePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginAWSUnregister)
-	case csilibplugins.GCEPDInTreePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginGCEUnregister)
-	case csilibplugins.AzureFileInTreePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginAzureFileUnregister)
-	case csilibplugins.AzureDiskInTreePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginAzureDiskUnregister)
-	case csilibplugins.CinderInTreePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginOpenStackUnregister)
-	case csilibplugins.VSphereInTreePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginvSphereUnregister)
 	case csilibplugins.PortworxVolumePluginName:
 		return pm.featureGate.Enabled(features.InTreePluginPortworxUnregister)
-	case csilibplugins.RBDVolumePluginName:
-		return pm.featureGate.Enabled(features.InTreePluginRBDUnregister)
 	default:
 		return false
 	}
 }
 
-// IsMigrationEnabledForPlugin indicates whether CSI migration has been enabled
-// for a particular storage plugin
+// InTreeToCSITranslator 将PV和Volume对象的Volume sources从引用in-tree插件转换为迁移的CSI插件
+type InTreeToCSITranslator interface {
+	TranslateInTreePVToCSI(pv *v1.PersistentVolume) (*v1.PersistentVolume, error)                          // 将一个持久化Volume对象转换为CSI插件
+	TranslateInTreeInlineVolumeToCSI(volume *v1.Volume, podNamespace string) (*v1.PersistentVolume, error) // 将一个内联Volume对象转换为CSI插件
+}
+
+// CheckMigrationFeatureFlags checks the configuration of feature flags related
+// to CSI Migration is valid. It will return whether the migration is complete
+// by looking up the pluginUnregister flag
+func CheckMigrationFeatureFlags(f featuregate.FeatureGate, pluginMigration,
+	pluginUnregister featuregate.Feature) (migrationComplete bool, err error) {
+	// This is for in-tree plugin that get migration finished
+	if f.Enabled(pluginMigration) && f.Enabled(pluginUnregister) {
+		return true, nil
+	}
+	return false, nil
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+// IsMigrationEnabledForPlugin 指示是否已为特定存储插件启用了CSI迁移.
 func (pm PluginManager) IsMigrationEnabledForPlugin(pluginName string) bool {
 	// CSIMigration feature should be enabled along with the plugin-specific one
 	// CSIMigration has been GA. It will be enabled by default.
 
 	switch pluginName {
-	case csilibplugins.AWSEBSInTreePluginName:
-		return pm.featureGate.Enabled(features.CSIMigrationAWS)
-	case csilibplugins.GCEPDInTreePluginName:
-		return pm.featureGate.Enabled(features.CSIMigrationGCE)
-	case csilibplugins.AzureFileInTreePluginName:
-		return pm.featureGate.Enabled(features.CSIMigrationAzureFile)
-	case csilibplugins.AzureDiskInTreePluginName:
-		return pm.featureGate.Enabled(features.CSIMigrationAzureDisk)
-	case csilibplugins.CinderInTreePluginName:
-		return true
-	case csilibplugins.VSphereInTreePluginName:
-		return pm.featureGate.Enabled(features.CSIMigrationvSphere)
+
 	case csilibplugins.PortworxVolumePluginName:
 		return pm.featureGate.Enabled(features.CSIMigrationPortworx)
-	case csilibplugins.RBDVolumePluginName:
-		return pm.featureGate.Enabled(features.CSIMigrationRBD)
 	default:
 		return false
 	}
 }
 
-// IsMigratable indicates whether CSI migration has been enabled for a volume
-// plugin that the spec refers to
+// IsMigratable 这段代码的作用是判断是否为指定的存储插件启用了CSI迁移
+// CSI迁移则是指将旧的存储插件接口迁移到CSI接口的过程
 func (pm PluginManager) IsMigratable(spec *volume.Spec) (bool, error) {
 	if spec == nil {
-		return false, fmt.Errorf("could not find if plugin is migratable because volume spec is nil")
+		return false, fmt.Errorf("")
 	}
 
-	pluginName, _ := pm.GetInTreePluginNameFromSpec(spec.PersistentVolume, spec.Volume)
+	pluginName, _ := pm.GetInTreePluginNameFromSpec(spec.PersistentVolume, spec.Volume) // 从给定的规范中获取intree插件的名称
 	if pluginName == "" {
 		return false, nil
 	}
 	// found an in-tree plugin that supports the spec
 	return pm.IsMigrationEnabledForPlugin(pluginName), nil
 }
-
-// InTreeToCSITranslator performs translation of Volume sources for PV and Volume objects
-// from references to in-tree plugins to migrated CSI plugins
-type InTreeToCSITranslator interface {
-	TranslateInTreePVToCSI(pv *v1.PersistentVolume) (*v1.PersistentVolume, error)
-	TranslateInTreeInlineVolumeToCSI(volume *v1.Volume, podNamespace string) (*v1.PersistentVolume, error)
-}
-
-// TranslateInTreeSpecToCSI translates a volume spec (either PV or inline volume)
-// supported by an in-tree plugin to CSI
 func TranslateInTreeSpecToCSI(spec *volume.Spec, podNamespace string, translator InTreeToCSITranslator) (*volume.Spec, error) {
 	var csiPV *v1.PersistentVolume
 	var err error
@@ -154,16 +135,4 @@ func TranslateInTreeSpecToCSI(spec *volume.Spec, podNamespace string, translator
 		ReadOnly:                        spec.ReadOnly,
 		InlineVolumeSpecForCSIMigration: inlineVolume,
 	}, nil
-}
-
-// CheckMigrationFeatureFlags checks the configuration of feature flags related
-// to CSI Migration is valid. It will return whether the migration is complete
-// by looking up the pluginUnregister flag
-func CheckMigrationFeatureFlags(f featuregate.FeatureGate, pluginMigration,
-	pluginUnregister featuregate.Feature) (migrationComplete bool, err error) {
-	// This is for in-tree plugin that get migration finished
-	if f.Enabled(pluginMigration) && f.Enabled(pluginUnregister) {
-		return true, nil
-	}
-	return false, nil
 }

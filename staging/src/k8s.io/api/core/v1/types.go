@@ -148,37 +148,29 @@ type VolumeSource struct {
 	// csi (Container Storage Interface) represents ephemeral storage that is handled by certain external CSI drivers (Beta feature).
 	// +optional
 	CSI *CSIVolumeSource `json:"csi,omitempty" protobuf:"bytes,28,opt,name=csi"`
-	// ephemeral represents a volume that is handled by a cluster storage driver.
-	// The volume's lifecycle is tied to the pod that defines it - it will be created before the pod starts,
-	// and deleted when the pod is removed.
-	//
-	// Use this if:
-	// a) the volume is only needed while the pod runs,
-	// b) features of normal volumes like restoring from snapshot or capacity
-	//    tracking are needed,
-	// c) the storage driver is specified through a storage class, and
-	// d) the storage driver supports dynamic volume provisioning through
-	//    a PersistentVolumeClaim (see EphemeralVolumeSource for more
-	//    information on the connection between this volume type
-	//    and PersistentVolumeClaim).
-	//
-	// Use PersistentVolumeClaim or one of the vendor-specific
-	// APIs for volumes that persist for longer than the lifecycle
-	// of an individual pod.
-	//
-	// Use CSI for light-weight local ephemeral volumes if the CSI driver is meant to
-	// be used that way - see the documentation of the driver for
-	// more information.
-	//
-	// A pod can use both types of ephemeral volumes and
-	// persistent volumes at the same time.
-	//
+	// 由集群存储驱动程序处理的卷
+	//   volumes:
+	//    - name: my-ephemeral-volume
+	//      ephemeral:
+	//        volumeClaimTemplate:
+	//          spec:
+	//            accessModes: [ReadWriteOnce]
+	//            storageClassName: fast-storage
+	//            resources:
+	//              requests:
+	//                storage: 1Gi
+	// PersistentVolumeClaim (PVC) 和 Ephemeral volume 都是 Kubernetes 中的卷,但它们有明显的区别：
+	//  1. 生命周期：PVC 的生命周期与 Pod 是分开的,即使 Pod 被删除,PVC 中的数据也可以保存.而 Ephemeral volume 只能在 Pod 存在期间存在,当 Pod 删除后,Ephemeral volume 中的数据也会被删除.
+	//  2. 使用场景：PVC 适用于需要持久化存储的应用场景,比如数据库.而 Ephemeral volume 适用于那些只需要在短时间内存在的应用场景,比如一次性任务.
+	//  3. 配额申请方式：PVC 可以静态或动态配额申请,而 Ephemeral volume 只能通过动态配额申请来使用.
+	//  4. 存储驱动：PVC 可以使用多种存储驱动来进行存储,而 Ephemeral volume 只能使用集群存储驱动进行存储.
+	// 综上所述,PVC 适用于需要长期存储数据的应用场景,而 Ephemeral volume 适用于短暂存储数据的应用场景.
 	// +optional
 	Ephemeral *EphemeralVolumeSource `json:"ephemeral,omitempty" protobuf:"bytes,29,opt,name=ephemeral"`
 }
 
 type PersistentVolumeClaimVolumeSource struct {
-	// pvc的名称，将使用该名称创建volume
+	// pvc的名称,将使用该名称创建volume
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	ClaimName string `json:"claimName" protobuf:"bytes,1,opt,name=claimName"`
 	// 在volume 挂载时设置read only
@@ -186,58 +178,51 @@ type PersistentVolumeClaimVolumeSource struct {
 	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"`
 }
 
-// PersistentVolumeSource is similar to VolumeSource but meant for the
-// administrator who creates PVs. Exactly one of its members must be set.
+// PersistentVolumeSource 是 Kubernetes 中用于表示持久卷源的对象.与 VolumeSource 类似,它也包含了多种不同类型的卷源,如 NFS、iSCSI、Ceph 等,
+// 但是 PersistentVolumeSource 主要是面向 Kubernetes 集群管理员,用于创建持久卷（PV）时使用的.
+// 因此,PersistentVolumeSource 中的成员必须且只能设置其中的一个
 type PersistentVolumeSource struct {
-	// gcePersistentDisk represents a GCE Disk resource that is attached to a
-	// kubelet's host machine and then exposed to the pod. Provisioned by an admin.
+	// 使用 Google Compute Engine 的持久磁盘作为卷
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 	// +optional
 	GCEPersistentDisk *GCEPersistentDiskVolumeSource `json:"gcePersistentDisk,omitempty" protobuf:"bytes,1,opt,name=gcePersistentDisk"`
-	// awsElasticBlockStore represents an AWS Disk resource that is attached to a
-	// kubelet's host machine and then exposed to the pod.
+	// 使用 Amazon Web Services 的 Elastic Block Store 作为卷
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
 	// +optional
 	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource `json:"awsElasticBlockStore,omitempty" protobuf:"bytes,2,opt,name=awsElasticBlockStore"`
-	// hostPath represents a directory on the host.
-	// Provisioned by a developer or tester.
-	// This is useful for single-node development and testing only!
-	// On-host storage is not supported in any way and WILL NOT WORK in a multi-node cluster.
+	// 使用节点上的本地路径作为卷
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
 	// +optional
 	HostPath *HostPathVolumeSource `json:"hostPath,omitempty" protobuf:"bytes,3,opt,name=hostPath"`
-	// glusterfs represents a Glusterfs volume that is attached to a host and
-	// exposed to the pod. Provisioned by an admin.
+	// 使用 GlusterFS 分布式文件系统作为卷
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md
 	// +optional
 	Glusterfs *GlusterfsPersistentVolumeSource `json:"glusterfs,omitempty" protobuf:"bytes,4,opt,name=glusterfs"`
-	// nfs represents an NFS mount on the host. Provisioned by an admin.
+	// 使用网络文件系统作为卷
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
 	// +optional
 	NFS *NFSVolumeSource `json:"nfs,omitempty" protobuf:"bytes,5,opt,name=nfs"`
-	// rbd represents a Rados Block Device mount on the host that shares a pod's lifetime.
+	// 使用 Ceph 块设备作为卷
 	// More info: https://examples.k8s.io/volumes/rbd/README.md
 	// +optional
 	RBD *RBDPersistentVolumeSource `json:"rbd,omitempty" protobuf:"bytes,6,opt,name=rbd"`
-	// iscsi represents an ISCSI Disk resource that is attached to a
-	// kubelet's host machine and then exposed to the pod. Provisioned by an admin.
+	// 使用 Ceph 文件系统作为卷
+	// +optional
+	CephFS *CephFSPersistentVolumeSource `json:"cephfs,omitempty" protobuf:"bytes,9,opt,name=cephfs"`
+	// 使用 iSCSI 协议连接存储设备作为卷
 	// +optional
 	ISCSI *ISCSIPersistentVolumeSource `json:"iscsi,omitempty" protobuf:"bytes,7,opt,name=iscsi"`
-	// cinder represents a cinder volume attached and mounted on kubelets host machine.
+	// 使用 OpenStack Cinder 块存储作为卷
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
 	Cinder *CinderPersistentVolumeSource `json:"cinder,omitempty" protobuf:"bytes,8,opt,name=cinder"`
-	// cephFS represents a Ceph FS mount on the host that shares a pod's lifetime
-	// +optional
-	CephFS *CephFSPersistentVolumeSource `json:"cephfs,omitempty" protobuf:"bytes,9,opt,name=cephfs"`
 	// fc represents a Fibre Channel resource that is attached to a kubelet's host machine and then exposed to the pod.
 	// +optional
 	FC *FCVolumeSource `json:"fc,omitempty" protobuf:"bytes,10,opt,name=fc"`
-	// flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running
+	// 使用 Flocker 管理的卷作为卷
 	// +optional
 	Flocker *FlockerVolumeSource `json:"flocker,omitempty" protobuf:"bytes,11,opt,name=flocker"`
-	// flexVolume represents a generic volume resource that is
-	// provisioned/attached using an exec based plugin.
+	// 使用 FlexVolume 插件作为卷
 	// +optional
 	FlexVolume *FlexPersistentVolumeSource `json:"flexVolume,omitempty" protobuf:"bytes,12,opt,name=flexVolume"`
 	// azureFile represents an Azure File Service mount on the host and bind mount to the pod.
@@ -311,19 +296,21 @@ type PersistentVolume struct {
 
 // PersistentVolumeSpec is the specification of a persistent volume.
 type PersistentVolumeSpec struct {
-	// capacity is the description of the persistent volume's resources and capacity.
+	// 存储设备的可用空间大小.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
 	// +optional
 	Capacity ResourceMap `json:"capacity,omitempty" protobuf:"bytes,1,rep,name=capacity,casttype=ResourceMap,castkey=ResourceName"`
 	// persistentVolumeSource is the actual volume backing the persistent volume.
 	PersistentVolumeSource `json:",inline" protobuf:"bytes,2,opt,name=persistentVolumeSource"`
-	// accessModes contains all ways the volume can be mounted.
+	// 该卷可以被挂载的所有方式
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
 	// +optional
 	AccessModes []PersistentVolumeAccessMode `json:"accessModes,omitempty" protobuf:"bytes,3,rep,name=accessModes,casttype=PersistentVolumeAccessMode"`
-	// claimRef is part of a bi-directional binding between PersistentVolume and PersistentVolumeClaim.
-	// Expected to be non-nil when bound.
-	// claim.VolumeName is the authoritative bind between PV and PVC.
+	// 这段代码的作用是描述PV（Persistent Volume）和PVC（Persistent Volume Claim）之间的双向绑定关系.
+	// 其中,claimRef是这种绑定关系的一部分,它通常是一个指向PVC的引用.
+	// 在这种绑定关系中,claim.VolumeName是PV和PVC之间的权威绑定关系.
+	// 这个绑定关系的作用是确保PV只能被一个PVC绑定,而且只能被一个PVC绑定.
+	// 如果存在多个PVC绑定同一个PV,那么这些PVC将共享PV的存储空间.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#binding
 	// +optional
 	// +structType=granular
@@ -344,17 +331,15 @@ type PersistentVolumeSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#mount-options
 	// +optional
 	MountOptions []string `json:"mountOptions,omitempty" protobuf:"bytes,7,opt,name=mountOptions"`
-	// volumeMode defines if a volume is intended to be used with a formatted filesystem
-	// or to remain in raw block state. Value of Filesystem is implied when not included in spec.
+	//volumeMode 定义卷是否打算与格式化的文件系统一起使用,还是保持原始块状态.如果未包含在 spec 中,则 FileSystem 的值是默认的.
 	// +optional
 	VolumeMode *PersistentVolumeMode `json:"volumeMode,omitempty" protobuf:"bytes,8,opt,name=volumeMode,casttype=PersistentVolumeMode"`
-	// nodeAffinity defines constraints that limit what nodes this volume can be accessed from.
-	// This field influences the scheduling of pods that use this volume.
+	// nodeAffinity 限制可以从哪些节点访问该卷.
 	// +optional
 	NodeAffinity *VolumeNodeAffinity `json:"nodeAffinity,omitempty" protobuf:"bytes,9,opt,name=nodeAffinity"`
 }
 
-// VolumeNodeAffinity defines constraints that limit what nodes this volume can be accessed from.
+// VolumeNodeAffinity 限制可以从哪些节点访问该卷.
 type VolumeNodeAffinity struct {
 	// required specifies hard node constraints that must be met.
 	Required *NodeSelector `json:"required,omitempty" protobuf:"bytes,1,opt,name=required"`
@@ -365,14 +350,11 @@ type VolumeNodeAffinity struct {
 type PersistentVolumeReclaimPolicy string
 
 const (
-	// PersistentVolumeReclaimRecycle means the volume will be recycled back into the pool of unbound persistent volumes on release from its claim.
-	// The volume plugin must support Recycling.
+	// PersistentVolumeReclaimRecycle 表示在持久卷被释放时,它将被回收到未绑定的持久卷池中.卷插件必须支持回收.
 	PersistentVolumeReclaimRecycle PersistentVolumeReclaimPolicy = "Recycle"
-	// PersistentVolumeReclaimDelete means the volume will be deleted from Kubernetes on release from its claim.
-	// The volume plugin must support Deletion.
+	// PersistentVolumeReclaimDelete 表示在持久卷被释放时,它将从Kubernetes中删除.卷插件必须支持删除.
 	PersistentVolumeReclaimDelete PersistentVolumeReclaimPolicy = "Delete"
-	// PersistentVolumeReclaimRetain means the volume will be left in its current phase (Released) for manual reclamation by the administrator.
-	// The default policy is Retain.
+	// PersistentVolumeReclaimRetain 表示持久卷将被保留在其当前阶段（已释放）中,以便管理员手动回收.默认策略是Retain.
 	PersistentVolumeReclaimRetain PersistentVolumeReclaimPolicy = "Retain"
 )
 
@@ -381,10 +363,8 @@ const (
 type PersistentVolumeMode string
 
 const (
-	// PersistentVolumeBlock means the volume will not be formatted with a filesystem and will remain a raw block device.
-	PersistentVolumeBlock PersistentVolumeMode = "Block"
-	// PersistentVolumeFilesystem means the volume will be or is formatted with a filesystem.
-	PersistentVolumeFilesystem PersistentVolumeMode = "Filesystem"
+	PersistentVolumeBlock      PersistentVolumeMode = "Block"      // 该卷不会使用文件系统进行格式化,而是保持原始块设备.
+	PersistentVolumeFilesystem PersistentVolumeMode = "Filesystem" // 该卷将使用文件系统进行格式化.
 )
 
 // PersistentVolumeStatus is the current status of a persistent volume.
@@ -540,30 +520,20 @@ type TypedObjectReference struct {
 type PersistentVolumeClaimConditionType string
 
 const (
-	// PersistentVolumeClaimResizing - a user trigger resize of pvc has been started
-	PersistentVolumeClaimResizing PersistentVolumeClaimConditionType = "Resizing"
-	// PersistentVolumeClaimFileSystemResizePending - controller resize is finished and a file system resize is pending on node
-	PersistentVolumeClaimFileSystemResizePending PersistentVolumeClaimConditionType = "FileSystemResizePending"
+	PersistentVolumeClaimResizing                PersistentVolumeClaimConditionType = "Resizing"                // 用户已经开始触发 PVC 调整.
+	PersistentVolumeClaimFileSystemResizePending PersistentVolumeClaimConditionType = "FileSystemResizePending" // 控制器的调整已经完成,但是在节点上仍有文件系统调整待处理.
 )
 
 // +enum
 type PersistentVolumeClaimResizeStatus string
 
 const (
-	// When expansion is complete, the empty string is set by resize controller or kubelet.
-	PersistentVolumeClaimNoExpansionInProgress PersistentVolumeClaimResizeStatus = ""
-	// State set when resize controller starts expanding the volume in control-plane
-	PersistentVolumeClaimControllerExpansionInProgress PersistentVolumeClaimResizeStatus = "ControllerExpansionInProgress"
-	// State set when expansion has failed in resize controller with a terminal error.
-	// Transient errors such as timeout should not set this status and should leave ResizeStatus
-	// unmodified, so as resize controller can resume the volume expansion.
-	PersistentVolumeClaimControllerExpansionFailed PersistentVolumeClaimResizeStatus = "ControllerExpansionFailed"
-	// State set when resize controller has finished expanding the volume but further expansion is needed on the node.
-	PersistentVolumeClaimNodeExpansionPending PersistentVolumeClaimResizeStatus = "NodeExpansionPending"
-	// State set when kubelet starts expanding the volume.
-	PersistentVolumeClaimNodeExpansionInProgress PersistentVolumeClaimResizeStatus = "NodeExpansionInProgress"
-	// State set when expansion has failed in kubelet with a terminal error. Transient errors don't set NodeExpansionFailed.
-	PersistentVolumeClaimNodeExpansionFailed PersistentVolumeClaimResizeStatus = "NodeExpansionFailed"
+	PersistentVolumeClaimNoExpansionInProgress         PersistentVolumeClaimResizeStatus = ""                              // 当扩展完成时,由 resize 控制器或 kubelet 设置为空字符串.
+	PersistentVolumeClaimControllerExpansionInProgress PersistentVolumeClaimResizeStatus = "ControllerExpansionInProgress" // 在控制平面中,resize 控制器开始扩展卷时设置的状态.
+	PersistentVolumeClaimControllerExpansionFailed     PersistentVolumeClaimResizeStatus = "ControllerExpansionFailed"     // 当扩展在 resize 控制器中失败时设置的状态,包括终端错误.暂时性错误（如超时）不应设置此状态,应将 ResizeStatus 保持不变,以便 resize 控制器可以恢复卷扩展.
+	PersistentVolumeClaimNodeExpansionPending          PersistentVolumeClaimResizeStatus = "NodeExpansionPending"          // 当 resize 控制器已经完成卷扩展,但是需要在节点上进一步扩展时设置的状态.
+	PersistentVolumeClaimNodeExpansionInProgress       PersistentVolumeClaimResizeStatus = "NodeExpansionInProgress"       // 在 kubelet 上开始扩展卷时设置的状态.
+	PersistentVolumeClaimNodeExpansionFailed           PersistentVolumeClaimResizeStatus = "NodeExpansionFailed"           // 当扩展在 kubelet 上失败时设置的状态,包括终端错误.暂时性错误不会设置 NodeExpansionFailed 状态.
 )
 
 // PersistentVolumeClaimCondition contails details about state of pvc
@@ -615,10 +585,7 @@ type PersistentVolumeClaimStatus struct {
 	// +featureGate=RecoverVolumeExpansionFailure
 	// +optional
 	AllocatedResources ResourceMap `json:"allocatedResources,omitempty" protobuf:"bytes,5,rep,name=allocatedResources,casttype=ResourceMap,castkey=ResourceName"`
-	// resizeStatus stores status of resize operation.
-	// ResizeStatus is not set by default but when expansion is complete resizeStatus is set to empty
-	// string by resize controller or kubelet.
-	// This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
+	// ResizeStatus 未设置,但是当扩展完成时,resizeStatus 由 resize 控制器或 kubelet 设置为空字符串.
 	// +featureGate=RecoverVolumeExpansionFailure
 	// +optional
 	ResizeStatus *PersistentVolumeClaimResizeStatus `json:"resizeStatus,omitempty" protobuf:"bytes,6,opt,name=resizeStatus,casttype=PersistentVolumeClaimResizeStatus"`
@@ -628,15 +595,10 @@ type PersistentVolumeClaimStatus struct {
 type PersistentVolumeAccessMode string
 
 const (
-	// can be mounted in read/write mode to exactly 1 host
-	ReadWriteOnce PersistentVolumeAccessMode = "ReadWriteOnce"
-	// can be mounted in read-only mode to many hosts
-	ReadOnlyMany PersistentVolumeAccessMode = "ReadOnlyMany"
-	// can be mounted in read/write mode to many hosts
-	ReadWriteMany PersistentVolumeAccessMode = "ReadWriteMany"
-	// can be mounted in read/write mode to exactly 1 pod
-	// cannot be used in combination with other access modes
-	ReadWriteOncePod PersistentVolumeAccessMode = "ReadWriteOncePod"
+	ReadWriteOnce    PersistentVolumeAccessMode = "ReadWriteOnce"    // 可以以读写模式挂载到一个节点上.
+	ReadOnlyMany     PersistentVolumeAccessMode = "ReadOnlyMany"     // 可以以只读模式挂载到多个节点上.
+	ReadWriteMany    PersistentVolumeAccessMode = "ReadWriteMany"    // 可以以读写模式挂载到多个节点上.
+	ReadWriteOncePod PersistentVolumeAccessMode = "ReadWriteOncePod" // 可以以读写模式挂载到一个Pod上,但不能与其他访问模式组合使用.
 )
 
 // +enum
@@ -661,15 +623,12 @@ const (
 // +enum
 type PersistentVolumeClaimPhase string
 
+//这是用于尚未绑定的PersistentVolumeClaims的枚举类型,包括：
+
 const (
-	// used for PersistentVolumeClaims that are not yet bound
-	ClaimPending PersistentVolumeClaimPhase = "Pending"
-	// used for PersistentVolumeClaims that are bound
-	ClaimBound PersistentVolumeClaimPhase = "Bound"
-	// used for PersistentVolumeClaims that lost their underlying
-	// PersistentVolume. The claim was bound to a PersistentVolume and this
-	// volume does not exist any longer and all data on it was lost.
-	ClaimLost PersistentVolumeClaimPhase = "Lost"
+	ClaimPending PersistentVolumeClaimPhase = "Pending" // 正在等待绑定的状态
+	ClaimBound   PersistentVolumeClaimPhase = "Bound"   // 已绑定的状态
+	ClaimLost    PersistentVolumeClaimPhase = "Lost"    // 已绑定的状态,但其底层PersistentVolume已经丢失,且所有数据都丢失了.
 )
 
 // +enum
@@ -989,7 +948,7 @@ type FlockerVolumeSource struct {
 type StorageMedium string
 
 const (
-	StorageMediumDefault         StorageMedium = ""           // use whatever the default is for the node, assume anything we don't explicitly handle is this
+	StorageMediumDefault         StorageMedium = ""           // 使用节点的默认值,假设我们没有明确处理的任何内容都是这个默认值.
 	StorageMediumMemory          StorageMedium = "Memory"     // use memory (e.g. tmpfs on linux)
 	StorageMediumHugePages       StorageMedium = "HugePages"  // use hugepages
 	StorageMediumHugePagesPrefix StorageMedium = "HugePages-" // prefix for full medium notation HugePages-<size>
@@ -1758,14 +1717,12 @@ type LocalVolumeSource struct {
 	FSType *string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"`
 }
 
-// Represents storage that is managed by an external CSI volume driver (Beta feature)
 type CSIPersistentVolumeSource struct {
-	// driver is the name of the driver to use for this volume.
+	// 卷驱动程序的名称.
 	// Required.
 	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"`
 
-	// volumeHandle is the unique volume name returned by the CSI volume
-	// plugin’s CreateVolume to refer to the volume on all subsequent calls.
+	// CSI卷插件的CreateVolume返回的唯一卷名,用于在所有后续调用中引用该卷.
 	// Required.
 	VolumeHandle string `json:"volumeHandle" protobuf:"bytes,2,opt,name=volumeHandle"`
 
@@ -2195,25 +2152,25 @@ type ExecAction struct {
 	Command []string `json:"command,omitempty" protobuf:"bytes,1,rep,name=command"`
 }
 
-// Probe 健康检查 ，以判断是否ready 以及接受流量
+// Probe 健康检查 ,以判断是否ready 以及接受流量
 type Probe struct {
 	// 如何判断ready的方式
 	ProbeHandler `json:",inline" protobuf:"bytes,1,opt,name=handler"`
-	// 在启动活动探针之前，容器启动后的秒数。
+	// 在启动活动探针之前,容器启动后的秒数.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty" protobuf:"varint,2,opt,name=initialDelaySeconds"`
-	// 探测超时，默认1s
+	// 探测超时,默认1s
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"`
 	// 探测间隔, 1-10 ,默认10s
 	// +optional
 	PeriodSeconds int32 `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"`
-	// 连续成功一定次数内, 保持探针状态不变 ，默认1 // 偶尔成功一次，不算
+	// 连续成功一定次数内, 保持探针状态不变 ,默认1 // 偶尔成功一次,不算
 	// +optional
 	SuccessThreshold int32 `json:"successThreshold,omitempty" protobuf:"varint,5,opt,name=successThreshold"`
-	// 连续失败一定次数内, 保持探针状态不变 ，默认 3 // 偶尔失败一次，不算
+	// 连续失败一定次数内, 保持探针状态不变 ,默认 3 // 偶尔失败一次,不算
 	// +optional
 	FailureThreshold int32 `json:"failureThreshold,omitempty" protobuf:"varint,6,opt,name=failureThreshold"`
 	// Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
@@ -2396,7 +2353,7 @@ type Container struct {
 	// +patchMergeKey=mountPath
 	// +patchStrategy=merge
 	VolumeMounts []VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,9,rep,name=volumeMounts"`
-	// volumeDevices is the list of block devices to be used by the container.
+	// 容器要使用的块设备列表.
 	// +patchMergeKey=devicePath
 	// +patchStrategy=merge
 	// +optional
@@ -2520,9 +2477,8 @@ type LifecycleHandler struct {
 // events. For the PostStart and PreStop lifecycle handlers, management of the container blocks
 // until the action is complete, unless the container process fails, in which case the handler is aborted.
 type Lifecycle struct {
-	// PostStart is called immediately after a container is created. If the handler fails,
-	// the container is terminated and restarted according to its restart policy.
-	// Other management of the container blocks until the hook completes.
+	// 创建容器后立即调用PostStart.如果处理程序失败,则终止容器并根据其重启策略重新启动.在钩子完成之前,容器的其他管理阻塞.
+	//
 	// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
 	// +optional
 	PostStart *LifecycleHandler `json:"postStart,omitempty" protobuf:"bytes,1,opt,name=postStart"`
@@ -2588,7 +2544,7 @@ type ContainerStateTerminated struct {
 	ContainerID string `json:"containerID,omitempty" protobuf:"bytes,7,opt,name=containerID"`
 }
 
-// ContainerState 容器状态，只可能是其中一种，默认是Waiting
+// ContainerState 容器状态,只可能是其中一种,默认是Waiting
 type ContainerState struct {
 	// +optional
 	Waiting *ContainerStateWaiting `json:"waiting,omitempty" protobuf:"bytes,1,opt,name=waiting"`
@@ -2608,7 +2564,7 @@ type ContainerStatus struct {
 	// 容器上一次终止的情况
 	// +optional
 	LastTerminationState ContainerState `json:"lastState,omitempty" protobuf:"bytes,3,opt,name=lastState"`
-	// 容器是否已通过其就绪探测。
+	// 容器是否已通过其就绪探测.
 	Ready bool `json:"ready" protobuf:"varint,4,opt,name=ready"`
 	// 重启的次数
 	RestartCount int32 `json:"restartCount" protobuf:"varint,5,opt,name=restartCount"`
@@ -2616,10 +2572,10 @@ type ContainerStatus struct {
 	Image string `json:"image" protobuf:"bytes,6,opt,name=image"`
 	// ImageID of the container's image.
 	ImageID string `json:"imageID" protobuf:"bytes,7,opt,name=imageID"`
-	// 容器的ID，格式：'<type>://<container_id>'.
+	// 容器的ID,格式：'<type>://<container_id>'.
 	// +optional
 	ContainerID string `json:"containerID,omitempty" protobuf:"bytes,8,opt,name=containerID"`
-	// 指示容器是否完成了启动探针的检测，在容器重新启动或 kubelet 暂时丢失状态时重置为 false。
+	// 指示容器是否完成了启动探针的检测,在容器重新启动或 kubelet 暂时丢失状态时重置为 false.
 	// +optional
 	Started *bool `json:"started,omitempty" protobuf:"varint,9,opt,name=started"`
 }
@@ -2629,11 +2585,11 @@ type ContainerStatus struct {
 type PodPhase string
 
 const (
-	PodPending   PodPhase = "Pending"   // 表示该 Pod 已被系统接受，但一个或多个容器尚未启动。这包括绑定到节点之前的时间，以及在主机上拉取镜像的时间。
-	PodRunning   PodPhase = "Running"   // 表示该 Pod 已经绑定到节点，并且所有容器都已经启动。至少有一个容器仍在运行或正在重新启动过程中。
-	PodSucceeded PodPhase = "Succeeded" // 表示该 Pod 中的所有容器都已经自愿终止，并且系统不会重新启动这些容器。
-	PodFailed    PodPhase = "Failed"    // 表示该 Pod 中的所有容器都已经终止，并且至少有一个容器在失败中终止（以非零退出代码退出或被系统停止）。
-	PodUnknown   PodPhase = "Unknown"   // 表示由于某种原因无法获取 Pod 的状态，通常是由于与 Pod 所在主机通信时发生错误。
+	PodPending   PodPhase = "Pending"   // 表示该 Pod 已被系统接受,但一个或多个容器尚未启动.这包括绑定到节点之前的时间,以及在主机上拉取镜像的时间.
+	PodRunning   PodPhase = "Running"   // 表示该 Pod 已经绑定到节点,并且所有容器都已经启动.至少有一个容器仍在运行或正在重新启动过程中.
+	PodSucceeded PodPhase = "Succeeded" // 表示该 Pod 中的所有容器都已经自愿终止,并且系统不会重新启动这些容器.
+	PodFailed    PodPhase = "Failed"    // 表示该 Pod 中的所有容器都已经终止,并且至少有一个容器在失败中终止（以非零退出代码退出或被系统停止）.
+	PodUnknown   PodPhase = "Unknown"   // 表示由于某种原因无法获取 Pod 的状态,通常是由于与 Pod 所在主机通信时发生错误.
 )
 
 // PodConditionType is a valid value for PodCondition.Type
@@ -2642,10 +2598,10 @@ type PodConditionType string
 // Pod 的内置条件
 const (
 	ContainersReady  PodConditionType = "ContainersReady"  // Pod 中所有容器都已就绪
-	PodInitialized   PodConditionType = "Initialized"      // 表示 Pod 中的所有 init 容器是否已经成功启动。
-	PodReady         PodConditionType = "Ready"            // 表示 Pod 能够服务请求，并且应该添加到所有匹配服务的负载均衡池中。
+	PodInitialized   PodConditionType = "Initialized"      // 表示 Pod 中的所有 init 容器是否已经成功启动.
+	PodReady         PodConditionType = "Ready"            // 表示 Pod 能够服务请求,并且应该添加到所有匹配服务的负载均衡池中.
 	PodScheduled     PodConditionType = "PodScheduled"     // Pod 已经被调度到某节点
-	DisruptionTarget PodConditionType = "DisruptionTarget" // 表示该 Pod 即将被终止，因为发生了某种干扰（例如抢占、逐出 API 或垃圾回收）。
+	DisruptionTarget PodConditionType = "DisruptionTarget" // 表示该 Pod 即将被终止,因为发生了某种干扰（例如抢占、逐出 API 或垃圾回收）.
 )
 
 // These are reasons for a pod's transition to a condition.
@@ -2689,7 +2645,7 @@ const (
 //      lastProbeTime: null
 //      lastTransitionTime: '2023-05-01T09:34:01Z'
 
-// PodCondition 包含此pod当前状态的详细信息。
+// PodCondition 包含此pod当前状态的详细信息.
 type PodCondition struct {
 	Type PodConditionType `json:"type" protobuf:"bytes,1,opt,name=type,casttype=PodConditionType"` //
 	//https://kubernetes.io/docs/user-guide/pod-states#pod-conditions
@@ -2829,15 +2785,15 @@ type TopologySelectorLabelRequirement struct {
 	Values []string `json:"values" protobuf:"bytes,2,rep,name=values"`
 }
 
-// Affinity 是一组亲和性调度规则。
+// Affinity 是一组亲和性调度规则.
 type Affinity struct {
-	// 描述pod的节点亲和性调度规则。
+	// 描述pod的节点亲和性调度规则.
 	// +optional
 	NodeAffinity *NodeAffinity `json:"nodeAffinity,omitempty" protobuf:"bytes,1,opt,name=nodeAffinity"`
-	// 描述pod关联调度规则(例如，将此pod与其他pod一起放置在相同的节点、区域等)。
+	// 描述pod关联调度规则(例如,将此pod与其他pod一起放置在相同的节点、区域等).
 	// +optional
 	PodAffinity *PodAffinity `json:"podAffinity,omitempty" protobuf:"bytes,2,opt,name=podAffinity"`
-	// 描述pod反亲和调度规则(例如，避免将此pod与其他pod放在相同的节点、区域等)。
+	// 描述pod反亲和调度规则(例如,避免将此pod与其他pod放在相同的节点、区域等).
 	// +optional
 	PodAntiAffinity *PodAntiAffinity `json:"podAntiAffinity,omitempty" protobuf:"bytes,3,opt,name=podAntiAffinity"`
 }
@@ -2925,9 +2881,9 @@ type WeightedPodAffinityTerm struct {
 // the label with key <topologyKey> matches that of any node on which
 // a pod of the set of pods is running
 
-// PodAffinityTerm 定义一组pod(即相对于给定的命名空间匹配labelSelector的pod)，该pod应该与之共存(亲和)或不共存(反亲和)，其中共存定义为运行在一个节点上，
+// PodAffinityTerm 定义一组pod(即相对于给定的命名空间匹配labelSelector的pod),该pod应该与之共存(亲和)或不共存(反亲和),其中共存定义为运行在一个节点上,
 type PodAffinityTerm struct {
-	// 对一组资源(在本例中是pod)的标签查询。
+	// 对一组资源(在本例中是pod)的标签查询.
 	// +optional
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" protobuf:"bytes,1,opt,name=labelSelector"`
 	// namespaces specifies a static list of namespace names that the term applies to.
@@ -2953,12 +2909,12 @@ type PodAffinityTerm struct {
 
 // NodeAffinity 节点亲和性调度规则
 type NodeAffinity struct {
-	// 调度时需要，执行时忽略。
-	// 如果在调度时不满足指定的亲和性要求，则不会将该pod调度到该节点。
-	// 在pod执行期间的某个时刻，亲和性不在满足。系统 可能会也可能不会  尝试最终从其节点中退出pod。
+	// 调度时需要,执行时忽略.
+	// 如果在调度时不满足指定的亲和性要求,则不会将该pod调度到该节点.
+	// 在pod执行期间的某个时刻,亲和性不在满足.系统 可能会也可能不会  尝试最终从其节点中退出pod.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution *NodeSelector `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,1,opt,name=requiredDuringSchedulingIgnoredDuringExecution"`
-	// 调度时首选，执行时忽略；优选 调度策略，用于挑选合适的节点
+	// 调度时首选,执行时忽略;优选 调度策略,用于挑选合适的节点
 	// +optional
 	PreferredDuringSchedulingIgnoredDuringExecution []PreferredSchedulingTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,2,rep,name=preferredDuringSchedulingIgnoredDuringExecution"`
 }
@@ -3004,7 +2960,7 @@ const (
 	// new pods onto the node, rather than prohibiting new pods from scheduling
 	// onto the node entirely. Enforced by the scheduler.
 	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule" //
-	TaintEffectNoExecute        TaintEffect = "NoExecute"        // 如果某个 Pod 不能容忍节点的污点，则需要将其驱逐出节点。这个过程由 NodeController 实现。
+	TaintEffectNoExecute        TaintEffect = "NoExecute"        // 如果某个 Pod 不能容忍节点的污点,则需要将其驱逐出节点.这个过程由 NodeController 实现.
 )
 
 // Toleration The pod this Toleration is attached to tolerates any taint that matches
@@ -3074,11 +3030,11 @@ type PodSpec struct {
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	Containers []Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,2,rep,name=containers"`
-	// Ephemeral Containers 是在 Pod 中运行的临时容器列表。可以在现有的 Pod 中运行临时容器，以执行用户启动的操作，例如调试。
-	// 创建 Pod 时不能指定此列表，也不能通过更新 Pod 规范来修改此列表。要向现有 Pod 添加临时容器，请使用 Pod 的 ephemeralcontainers 子资源。
+	// Ephemeral Containers 是在 Pod 中运行的临时容器列表.可以在现有的 Pod 中运行临时容器,以执行用户启动的操作,例如调试.
+	// 创建 Pod 时不能指定此列表,也不能通过更新 Pod 规范来修改此列表.要向现有 Pod 添加临时容器,请使用 Pod 的 ephemeralcontainers 子资源.
 	//
-	// Ephemeral Containers 是 Kubernetes 1.16 中引入的新功能。它允许用户在运行中的 Pod 中添加临时容器，以便进行调试或其他任务。
-	// 与常规容器不同，临时容器不会在 Pod 的生命周期中一直存在，而是在任务完成后自动删除。因此，它们只能用于临时任务，而不能用于长期运行的服务。
+	// Ephemeral Containers 是 Kubernetes 1.16 中引入的新功能.它允许用户在运行中的 Pod 中添加临时容器,以便进行调试或其他任务.
+	// 与常规容器不同,临时容器不会在 Pod 的生命周期中一直存在,而是在任务完成后自动删除.因此,它们只能用于临时任务,而不能用于长期运行的服务.
 	// +optional
 	// +patchMergeKey=name
 	// +patchStrategy=merge
@@ -3164,8 +3120,7 @@ type PodSpec struct {
 	// SecurityContext是Kubernetes中用于定义Pod和容器级别的安全属性和设置的对象.
 	// +optional
 	SecurityContext *PodSecurityContext `json:"securityContext,omitempty" protobuf:"bytes,14,opt,name=securityContext"`
-	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
-	// If specified, these secrets will be passed to individual puller implementations for them to use.
+	// 它指向同一名称空间中的secret
 	// More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
 	// +optional
 	// +patchMergeKey=name
@@ -3259,7 +3214,7 @@ type PodSpec struct {
 	// Default to false.
 	// +optional
 	SetHostnameAsFQDN *bool `json:"setHostnameAsFQDN,omitempty" protobuf:"varint,35,opt,name=setHostnameAsFQDN"`
-	// 指定pod中容器的操作系统。
+	// 指定pod中容器的操作系统.
 	//
 	// If the OS field is set to linux, the following fields must be unset:
 	// -securityContext.windowsOptions
@@ -3382,7 +3337,7 @@ const (
 	Windows OSName = "windows"
 )
 
-// PodOS 定义pod的操作系统参数。
+// PodOS 定义pod的操作系统参数.
 type PodOS struct {
 	// 操作系统名称 :linux、windows
 	// Additional value may be defined in future and can be one of:
@@ -3573,61 +3528,45 @@ const (
 type PodSecurityContext struct {
 	// +optional
 	SELinuxOptions *SELinuxOptions `json:"seLinuxOptions,omitempty" protobuf:"bytes,1,opt,name=seLinuxOptions"`
-	// The Windows specific settings applied to all containers.
-	// If unspecified, the options within a container's SecurityContext will be used.
-	// If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
-	// Note that this field cannot be set when spec.os.name is linux.
+	// 适用于所有容器的Windows特定设置.
+	// 如果未指定,则将使用容器的SecurityContext中的选项.
+	// 如果在SecurityContext和PodSecurityContext中都设置了该值,则SecurityContext中指定的值优先.
+	// 请注意,当spec.os.name为linux时,无法设置此字段.
 	// +optional
 	WindowsOptions *WindowsSecurityContextOptions `json:"windowsOptions,omitempty" protobuf:"bytes,8,opt,name=windowsOptions"`
-	// The UID to run the entrypoint of the container process.
-	// Defaults to user specified in image metadata if unspecified.
-	// May also be set in SecurityContext.  If set in both SecurityContext and
-	// PodSecurityContext, the value specified in SecurityContext takes precedence
-	// for that container.
-	// Note that this field cannot be set when spec.os.name is windows.
+	// 指定容器进程的运行用户 ID（UID）.
 	// +optional
 	RunAsUser *int64 `json:"runAsUser,omitempty" protobuf:"varint,2,opt,name=runAsUser"`
 	// +optional
 	RunAsGroup *int64 `json:"runAsGroup,omitempty" protobuf:"varint,6,opt,name=runAsGroup"`
 	// +optional
 	RunAsNonRoot *bool `json:"runAsNonRoot,omitempty" protobuf:"varint,3,opt,name=runAsNonRoot"`
-	// A list of groups applied to the first process run in each container, in addition
-	// to the container's primary GID, the fsGroup (if specified), and group memberships
-	// defined in the container image for the uid of the container process. If unspecified,
-	// no additional groups are added to any container. Note that group memberships
-	// defined in the container image for the uid of the container process are still effective,
-	// even if they are not included in this list.
-	// Note that this field cannot be set when spec.os.name is windows.
+	// 在每个容器中运行的第一个进程中应用的一组组,除了容器的主GID、fsGroup（如果已指定）和容器进程的uid在容器映像中定义的组成员之外.
+	// 如果未指定,则不会向任何容器添加其他组.请注意,在容器映像中为容器进程的uid定义的组成员仍然有效,即使它们未包含在此列表中.
+	// 请注意,当spec.os.name为windows时,无法设置此字段.
 	// +optional
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty" protobuf:"varint,4,rep,name=supplementalGroups"`
-	// A special supplemental group that applies to all containers in a pod.
-	// Some volume types allow the Kubelet to change the ownership of that volume
-	// to be owned by the pod:
+	// 适用于Pod中所有容器的特殊辅助组.
+	// 一些卷类型允许Kubelet更改该卷的所有权,以由Pod拥有：
 	//
-	// 1. The owning GID will be the FSGroup
-	// 2. The setgid bit is set (new files created in the volume will be owned by FSGroup)
-	// 3. The permission bits are OR'd with rw-rw----
+	// 1. 拥有的GID将是FSGroup
+	// 2. 设置了setgid位（在卷中创建的新文件将由FSGroup拥有）
+	// 3. 权限位与rw-rw----进行或运算
 	//
-	// If unset, the Kubelet will not modify the ownership and permissions of any volume.
-	// Note that this field cannot be set when spec.os.name is windows.
+	// 如果未设置,则Kubelet不会修改任何卷的所有权和权限.
+	// 请注意,当spec.os.name为windows时,无法设置此字段.
 	// +optional
 	FSGroup *int64 `json:"fsGroup,omitempty" protobuf:"varint,5,opt,name=fsGroup"`
-	// Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported
-	// sysctls (by the container runtime) might fail to launch.
-	// Note that this field cannot be set when spec.os.name is windows.
+	// Sysctls字段用于存储Pod所使用的命名空间Sysctls列表.如果容器运行时不支持Pod中使用的Sysctls,则Pod可能无法启动.需要注意的是,当spec.os.name为windows时,无法设置此字段.
 	// +optional
 	Sysctls []Sysctl `json:"sysctls,omitempty" protobuf:"bytes,7,rep,name=sysctls"`
-	// fsGroupChangePolicy defines behavior of changing ownership and permission of the volume
-	// before being exposed inside Pod. This field will only apply to
-	// volume types which support fsGroup based ownership(and permissions).
-	// It will have no effect on ephemeral volume types such as: secret, configmaps
-	// and emptydir.
-	// Valid values are "OnRootMismatch" and "Always". If not specified, "Always" is used.
-	// Note that this field cannot be set when spec.os.name is windows.
+	// fsGroupChangePolicy字段定义在将卷暴露在Pod内部之前更改所有权和权限的行为.
+	// 此字段仅适用于支持基于fsGroup的所有权（和权限）的卷类型.
+	// 它对于如secret、configmaps和emptydir等临时卷类型没有影响.
+	// 有效值为"OnRootMismatch"和"Always".如果未指定,则使用"Always".需要注意的是,当spec.os.name为windows时,无法设置此字段.
 	// +optional
 	FSGroupChangePolicy *PodFSGroupChangePolicy `json:"fsGroupChangePolicy,omitempty" protobuf:"bytes,9,opt,name=fsGroupChangePolicy"`
-	// The seccomp options to use by the containers in this pod.
-	// Note that this field cannot be set when spec.os.name is windows.
+	// seccompOptions字段用于指定该Pod中的容器使用的Seccomp选项.需要注意的是,当spec.os.name为windows时,无法设置此字段.
 	// +optional
 	SeccompProfile *SeccompProfile `json:"seccompProfile,omitempty" protobuf:"bytes,10,opt,name=seccompProfile"`
 }
@@ -3676,30 +3615,29 @@ const (
 	PodQOSBestEffort PodQOSClass = "BestEffort" // 最大努力型
 )
 
-// PodDNSConfig defines the DNS parameters of a pod in addition to
-// those generated from DNSPolicy.
+// PodDNSConfig 定义了 Pod 的 DNS 参数,除了从 DNSPolicy 生成的参数之外.
 type PodDNSConfig struct {
-	// A list of DNS name server IP addresses.
-	// This will be appended to the base nameservers generated from DNSPolicy.
-	// Duplicated nameservers will be removed.
+	// DNS 服务器 IP 地址列表.
+	// 这将会添加到从 DNSPolicy 生成的基本 DNS 服务器列表中.
+	// 重复的 DNS 服务器将被删除.
 	// +optional
 	Nameservers []string `json:"nameservers,omitempty" protobuf:"bytes,1,rep,name=nameservers"`
-	// A list of DNS search domains for host-name lookup.
-	// This will be appended to the base search paths generated from DNSPolicy.
-	// Duplicated search paths will be removed.
+	// 主机名查询 DNS 搜索域列表.
+	// 这将会添加到从 DNSPolicy 生成的基本搜索路径列表中.
+	// 重复的搜索路径将被删除.
 	// +optional
 	Searches []string `json:"searches,omitempty" protobuf:"bytes,2,rep,name=searches"`
-	// A list of DNS resolver options.
-	// This will be merged with the base options generated from DNSPolicy.
-	// Duplicated entries will be removed. Resolution options given in Options
-	// will override those that appear in the base DNSPolicy.
+	// DNS 解析选项列表.
+	// 这将会与从 DNSPolicy 生成的基本选项列表合并.
+	// 重复的选项将被删除.
+	// 在 Options 中给出的解析选项将覆盖出现在基本 DNSPolicy 中的选项.
 	// +optional
 	Options []PodDNSConfigOption `json:"options,omitempty" protobuf:"bytes,3,rep,name=options"`
 }
 
-// PodDNSConfigOption defines DNS resolver options of a pod.
+// PodDNSConfigOption 定义了 Pod 的 DNS 解析器选项.
 type PodDNSConfigOption struct {
-	// Required.
+	// 必需的字段.
 	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
 	// +optional
 	Value *string `json:"value,omitempty" protobuf:"bytes,2,opt,name=value"`
@@ -3783,7 +3721,7 @@ type EphemeralContainerCommon struct {
 	// +patchMergeKey=mountPath
 	// +patchStrategy=merge
 	VolumeMounts []VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"mountPath" protobuf:"bytes,9,rep,name=volumeMounts"`
-	// volumeDevices is the list of block devices to be used by the container.
+	// volumeDevices字段用于指定容器使用的块设备列表.
 	// +patchMergeKey=devicePath
 	// +patchStrategy=merge
 	// +optional
@@ -3800,22 +3738,18 @@ type EphemeralContainerCommon struct {
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" protobuf:"bytes,12,opt,name=lifecycle"`
-	// Optional: Path at which the file to which the container's termination message
-	// will be written is mounted into the container's filesystem.
-	// Message written is intended to be brief final status, such as an assertion failure message.
-	// Will be truncated by the node if greater than 4096 bytes. The total message length across
-	// all containers will be limited to 12kb.
-	// Defaults to /dev/termination-log.
-	// Cannot be updated.
+	// 可选项：将容器终止消息写入容器文件系统中挂载的文件的路径.
+	// 写入的消息应该是简短的最终状态,例如断言失败消息.
+	// 如果大于4096字节,将被节点截断.在所有容器中,总消息长度将被限制为12kb.
+	// 默认为/dev/termination-log.
+	// 不能更新.
 	// +optional
 	TerminationMessagePath string `json:"terminationMessagePath,omitempty" protobuf:"bytes,13,opt,name=terminationMessagePath"`
-	// Indicate how the termination message should be populated. File will use the contents of
-	// terminationMessagePath to populate the container status message on both success and failure.
-	// FallbackToLogsOnError will use the last chunk of container log output if the termination
-	// message file is empty and the container exited with an error.
-	// The log output is limited to 2048 bytes or 80 lines, whichever is smaller.
-	// Defaults to File.
-	// Cannot be updated.
+	// 指示如何填充终止消息.File将使用terminationMessagePath的内容来填充容器状态消息（无论成功或失败）.
+	// FallbackToLogsOnError将在终止消息文件为空且容器以错误退出时使用容器日志输出的最后一块.
+	// 日志输出限制为2048字节或80行,以较小者为准.
+	// 默认为File.
+	// 不能更新.
 	// +optional
 	TerminationMessagePolicy TerminationMessagePolicy `json:"terminationMessagePolicy,omitempty" protobuf:"bytes,20,opt,name=terminationMessagePolicy,casttype=TerminationMessagePolicy"`
 	// Image pull policy.
@@ -3829,26 +3763,18 @@ type EphemeralContainerCommon struct {
 	// If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
 	// +optional
 	SecurityContext *SecurityContext `json:"securityContext,omitempty" protobuf:"bytes,15,opt,name=securityContext"`
-
-	// Variables for interactive containers, these have very specialized use-cases (e.g. debugging)
-	// and shouldn't be used for general purpose containers.
-
-	// Whether this container should allocate a buffer for stdin in the container runtime. If this
-	// is not set, reads from stdin in the container will always result in EOF.
-	// Default is false.
+	// 交互式容器的变量,这些变量具有非常特殊的用途（例如调试）,不应用于通用容器.
+	// 此容器是否应在容器运行时为stdin分配缓冲区.如果未设置此项,则从容器中的stdin读取将始终导致EOF.
+	// 默认值为false.
 	// +optional
 	Stdin bool `json:"stdin,omitempty" protobuf:"varint,16,opt,name=stdin"`
-	// Whether the container runtime should close the stdin channel after it has been opened by
-	// a single attach. When stdin is true the stdin stream will remain open across multiple attach
-	// sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
-	// first client attaches to stdin, and then remains open and accepts data until the client disconnects,
-	// at which time stdin is closed and remains closed until the container is restarted. If this
-	// flag is false, a container processes that reads from stdin will never receive an EOF.
-	// Default is false
+	// 容器运行时是否应在单个附加后关闭stdin通道.当stdin为true时,stdin流将在多个附加会话中保持打开状态.
+	// 如果stdinOnce设置为true,则在容器启动时打开stdin,直到第一个客户端连接到stdin之前为空,然后保持打开状态并接受数据,直到客户端断开连接,
+	// 此时stdin被关闭并保持关闭状态,直到容器重新启动.如果此标志为false,则从stdin读取的容器进程永远不会收到EOF.
+	// 默认值为false.
 	// +optional
 	StdinOnce bool `json:"stdinOnce,omitempty" protobuf:"varint,17,opt,name=stdinOnce"`
-	// Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
-	// Default is false.
+	// 这个容器是否应该为自己分配一个 TTY,需要 'stdin' 也为 true.默认值为 false.
 	// +optional
 	TTY bool `json:"tty,omitempty" protobuf:"varint,18,opt,name=tty"`
 }
@@ -3857,27 +3783,12 @@ type EphemeralContainerCommon struct {
 // these two types.
 var _ = Container(EphemeralContainerCommon{})
 
-// An EphemeralContainer is a temporary container that you may add to an existing Pod for
-// user-initiated activities such as debugging. Ephemeral containers have no resource or
-// scheduling guarantees, and they will not be restarted when they exit or when a Pod is
-// removed or restarted. The kubelet may evict a Pod if an ephemeral container causes the
-// Pod to exceed its resource allocation.
-//
-// To add an ephemeral container, use the ephemeralcontainers subresource of an existing
-// Pod. Ephemeral containers may not be removed or restarted.
+// EphemeralContainer 临时容器,它可以被添加到现有的 Pod 中,用于用户发起的活动（例如调试）.
+// Ephemeral 容器没有资源或调度保证,并且它们不会在退出或 Pod 被删除或重启时重新启动.
 type EphemeralContainer struct {
-	// Ephemeral containers have all of the fields of Container, plus additional fields
-	// specific to ephemeral containers. Fields in common with Container are in the
-	// following inlined struct so than an EphemeralContainer may easily be converted
-	// to a Container.
 	EphemeralContainerCommon `json:",inline" protobuf:"bytes,1,req"`
 
-	// If set, the name of the container from PodSpec that this ephemeral container targets.
-	// The ephemeral container will be run in the namespaces (IPC, PID, etc) of this container.
-	// If not set then the ephemeral container uses the namespaces configured in the Pod spec.
-	//
-	// The container runtime must implement support for this feature. If the runtime does not
-	// support namespace targeting then the result of setting this field is undefined.
+	// 容器将在这个容器的命名空间（IPC、PID 等）中运行.如果未设置此字段,则 Ephemeral 容器将使用 Pod spec 中配置的命名空间.
 	// +optional
 	TargetContainerName string `json:"targetContainerName,omitempty" protobuf:"bytes,2,opt,name=targetContainerName"`
 }
@@ -3890,7 +3801,7 @@ type PodStatus struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-phase
 	// +optional
 	Phase PodPhase `json:"phase,omitempty" protobuf:"bytes,1,opt,name=phase,casttype=PodPhase"`
-	// pod的历史服务状态。
+	// pod的历史服务状态.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-conditions
 	// +optional
 	// +patchMergeKey=type
@@ -4057,43 +3968,6 @@ type PodTemplateList struct {
 	Items []PodTemplate `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
 
-// ReplicationControllerSpec is the specification of a replication controller.
-type ReplicationControllerSpec struct {
-	// Replicas is the number of desired replicas.
-	// This is a pointer to distinguish between explicit zero and unspecified.
-	// Defaults to 1.
-	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller
-	// +optional
-	Replicas *int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
-
-	// Minimum number of seconds for which a newly created pod should be ready
-	// without any of its container crashing, for it to be considered available.
-	// Defaults to 0 (pod will be considered available as soon as it is ready)
-	// +optional
-	MinReadySeconds int32 `json:"minReadySeconds,omitempty" protobuf:"varint,4,opt,name=minReadySeconds"`
-
-	// Selector is a label query over pods that should match the Replicas count.
-	// If Selector is empty, it is defaulted to the labels present on the Pod template.
-	// Label keys and values that must match in order to be controlled by this replication
-	// controller, if empty defaulted to labels on Pod template.
-	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
-	// +optional
-	// +mapType=atomic
-	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
-
-	// TemplateRef is a reference to an object that describes the pod that will be created if
-	// insufficient replicas are detected.
-	// Reference to an object that describes the pod that will be created if insufficient replicas are detected.
-	// +optional
-	// TemplateRef *ObjectReference `json:"templateRef,omitempty"`
-
-	// Template is the object that describes the pod that will be created if
-	// insufficient replicas are detected. This takes precedence over a TemplateRef.
-	// More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
-	// +optional
-	Template *PodTemplateSpec `json:"template,omitempty" protobuf:"bytes,3,opt,name=template"`
-}
-
 // ReplicationControllerStatus represents the current status of a replication
 // controller.
 type ReplicationControllerStatus struct {
@@ -4122,6 +3996,40 @@ type ReplicationControllerStatus struct {
 	// +patchMergeKey=type
 	// +patchStrategy=merge
 	Conditions []ReplicationControllerCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,6,rep,name=conditions"`
+}
+
+// ReplicationControllerSpec 是一个复制控制器的规范.
+type ReplicationControllerSpec struct {
+	// Replicas 是期望的副本数.
+	// 这是一个指针,用于区分显式的零和未指定的情况.
+	// 默认为 1.
+	// 更多信息：https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
+
+	// 新创建的 Pod 在没有任何容器崩溃的情况下应准备好的最短时间（秒数）,
+	// 以便将其视为可用.默认为 0（一旦准备好就将 Pod 视为可用）.
+	// +optional
+	MinReadySeconds int32 `json:"minReadySeconds,omitempty" protobuf:"varint,4,opt,name=minReadySeconds"`
+
+	// Selector 是一个标签查询,用于匹配副本数.
+	// 如果 Selector 为空,则默认为 Pod 模板上的标签.
+	// 必须匹配的标签键和值才能由此复制控制器控制,如果为空,则默认为 Pod 模板上的标签.
+	// 更多信息：https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	// +optional
+	// +mapType=atomic
+	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
+
+	// TemplateRef 是一个对象引用,描述了在检测到不足的副本时将创建的 Pod.
+	// 引用一个描述在检测到不足的副本时将创建的 Pod 的对象.
+	// +optional
+	// TemplateRef *ObjectReference `json:"templateRef,omitempty"`
+
+	// Template 是描述在检测到不足的副本时将创建的 Pod 的对象.
+	// 如果指定了 Template,则优先于 TemplateRef.
+	// 更多信息：https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#pod-template
+	// +optional
+	Template *PodTemplateSpec `json:"template,omitempty" protobuf:"bytes,3,opt,name=template"`
 }
 
 type ReplicationControllerConditionType string
@@ -5065,7 +4973,7 @@ type NodeStatus struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
 	// +optional
 	Capacity ResourceMap `json:"capacity,omitempty" protobuf:"bytes,1,rep,name=capacity,casttype=ResourceMap,castkey=ResourceName"`
-	// 表示节点可用于调度的资源。
+	// 表示节点可用于调度的资源.
 	// +optional
 	Allocatable ResourceMap `json:"allocatable,omitempty" protobuf:"bytes,2,rep,name=allocatable,casttype=ResourceMap,castkey=ResourceName"`
 	// NodePhase is the recently observed lifecycle phase of the node.
@@ -5102,7 +5010,7 @@ type NodeStatus struct {
 	// List of attachable volumes in use (mounted) by the node.
 	// +optional
 	VolumesInUse []UniqueVolumeName `json:"volumesInUse,omitempty" protobuf:"bytes,9,rep,name=volumesInUse"`
-	// List of volumes that are attached to the node.
+	// VolumesAttached 已附加到节点的卷列表.
 	// +optional
 	VolumesAttached []AttachedVolume `json:"volumesAttached,omitempty" protobuf:"bytes,10,rep,name=volumesAttached"`
 	// Status of the config assigned to the node via the dynamic Kubelet config feature.
@@ -5271,9 +5179,9 @@ type ResourceName string
 // The default convention, matching that for annotations, is to use lower-case names, with dashes, rather than
 // camel case, separating compound words.
 // Fully-qualified resource typenames are constructed from a DNS-style subdomain, followed by a slash `/` and a name.
-// storage：指的是持久化存储资源，例如使用 PV（Persistent Volume）和 PVC（Persistent Volume Claim）来提供的存储资源。存储在 PV 中的数据可以在 Pod 重启或迁移后仍然保留，因此适合用于需要长期保存数据的应用程序。
+// storage：指的是持久化存储资源,例如使用 PV（Persistent Volume）和 PVC（Persistent Volume Claim）来提供的存储资源.存储在 PV 中的数据可以在 Pod 重启或迁移后仍然保留,因此适合用于需要长期保存数据的应用程序.
 //
-// ephemeral-storage：指的是临时存储资源，例如 Pod 中的空间。存储在 ephemeral-storage 中的数据不会在 Pod 重启或迁移后保留，因此适合用于临时存储数据的应用程序。
+// ephemeral-storage：指的是临时存储资源,例如 Pod 中的空间.存储在 ephemeral-storage 中的数据不会在 Pod 重启或迁移后保留,因此适合用于临时存储数据的应用程序.
 const (
 	ResourceCPU              ResourceName = "cpu"               // CPU 核心数  (500m = .5 cores)
 	ResourceMemory           ResourceName = "memory"            // 内存大小 bytes (500Gi = 500GiB = 500 * 1024 * 1024 * 1024)
@@ -5758,7 +5666,7 @@ type EventSource struct {
 
 // Valid values for event types (new types could be added in future)
 const (
-	EventTypeNormal  string = "Normal"  // 仅供参考，不会造成任何问题
+	EventTypeNormal  string = "Normal"  // 仅供参考,不会造成任何问题
 	EventTypeWarning string = "Warning" // 这些事件是为了警告可能会出问题
 )
 
@@ -5795,15 +5703,15 @@ type Event struct {
 	// +optional
 	Source EventSource `json:"source,omitempty" protobuf:"bytes,5,opt,name=source"`
 
-	// 事件被记录的时间。 （服务器接收时间在 TypeMeta 中。）
+	// 事件被记录的时间. （服务器接收时间在 TypeMeta 中.）
 	// +optional
 	FirstTimestamp metav1.Time `json:"firstTimestamp,omitempty" protobuf:"bytes,6,opt,name=firstTimestamp"`
 
-	// 最近一次发生此事件被记录的时间。
+	// 最近一次发生此事件被记录的时间.
 	// +optional
 	LastTimestamp metav1.Time `json:"lastTimestamp,omitempty" protobuf:"bytes,7,opt,name=lastTimestamp"`
 
-	// 这个事件发生的次数。
+	// 这个事件发生的次数.
 	// +optional
 	Count int32 `json:"count,omitempty" protobuf:"varint,8,opt,name=count"`
 
@@ -6115,11 +6023,8 @@ type Secret struct {
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-
-	// Immutable, if set to true, ensures that data stored in the Secret cannot
-	// be updated (only object metadata can be modified).
-	// If not set to true, the field can be modified at any time.
-	// Defaulted to nil.
+	// 如果设置为true,确保存储在Secret中的数据不能被更新(只有对象元数据可以被修改).
+	// 如果不设置为true,该字段可以随时修改.默认为nil.
 	// +optional
 	Immutable *bool `json:"immutable,omitempty" protobuf:"varint,5,opt,name=immutable"`
 
@@ -6496,7 +6401,7 @@ const (
 
 // SELinuxOptions are the labels to be applied to the container
 type SELinuxOptions struct {
-	// User is a SELinux user label that applies to the container.
+	// User UID
 	// +optional
 	User string `json:"user,omitempty" protobuf:"bytes,1,opt,name=user"`
 	// Role is a SELinux role label that applies to the container.

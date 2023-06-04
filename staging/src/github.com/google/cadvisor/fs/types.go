@@ -108,10 +108,7 @@ type FsInfo interface {
 	// specified filesystem uuid. If no such device exists, this function will
 	// return the ErrNoSuchDevice error.
 	GetDeviceInfoByFsUUID(uuid string) (*DeviceInfo, error)
-
-	// Returns the block device info of the filesystem on which 'dir' resides.
-	GetDirFsDevice(dir string) (*DeviceInfo, error)
-
+	GetDirFsDevice(dir string) (*DeviceInfo, error) // 返回'dir'所在文件系统的块设备信息.
 	// Returns the device name associated with a particular label.
 	GetDeviceForLabel(label string) (string, error)
 

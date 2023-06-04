@@ -38,7 +38,7 @@ const (
 	maxListTries                         = 10 // 指定在读取 /proc/mounts 文件时重试的次数,以确保读取到一致的结果.(文件系统的挂载和卸载是动态的)
 )
 
-// IsCorruptedMnt return true if err is about corrupted mount point
+// IsCorruptedMnt 损坏的挂载点,则返回true
 func IsCorruptedMnt(err error) bool {
 	if err == nil {
 		return false
@@ -176,8 +176,6 @@ func isMountPointMatch(mp MountPoint, dir string) bool {
 	return ((mp.Path == dir) || (mp.Path == deletedDir))
 }
 
-// PathExists returns true if the specified path exists.
-// TODO: clean this up to use pkg/util/file/FileExists
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {

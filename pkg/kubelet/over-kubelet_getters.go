@@ -173,7 +173,7 @@ func (kl *Kubelet) getPodResourcesDir() string {
 // pods.
 func (kl *Kubelet) GetPods() []*v1.Pod {
 	pods := kl.mirrorPodManager.GetPods()
-	// 没有 apisserver 的kubelet需要对静态pod状态进行额外的更新。看到 #57106
+	// 没有 apisserver 的kubelet需要对静态pod状态进行额外的更新.看到 #57106
 	for _, p := range pods {
 		if kubelettypes.IsStaticPod(p) {
 			if status, ok := kl.statusManager.GetPodStatus(p.UID); ok {
@@ -337,10 +337,10 @@ func (kl *Kubelet) getMountedVolumePathListFromDisk(podUID types.UID) ([]string,
 	if err != nil {
 		return mountedVolumes, err
 	}
-	// 仅使用 IsLikelyNotMountPoint 来检查可能无法覆盖所有情况。
-	// 对于 CSI 卷，如果不挂载 或 在 rootfs 中绑定挂载，则挂载检查将无法按预期工作。
-	// 我们计划在删除 Pod 之前删除此挂载点检查作为条件，因为它不可靠，而且不同类型的卷可能具有不同的条件。
-	// 但是，这需要一种可靠的方式来清理未使用的卷目录，以避免在删除 Pod 期间出现问题。#74650
+	// 仅使用 IsLikelyNotMountPoint 来检查可能无法覆盖所有情况.
+	// 对于 CSI 卷,如果不挂载 或 在 rootfs 中绑定挂载,则挂载检查将无法按预期工作.
+	// 我们计划在删除 Pod 之前删除此挂载点检查作为条件,因为它不可靠,而且不同类型的卷可能具有不同的条件.
+	// 但是,这需要一种可靠的方式来清理未使用的卷目录,以避免在删除 Pod 期间出现问题.#74650
 
 	for _, volumePath := range volumePaths {
 		isNotMount, err := kl.mounter.IsLikelyNotMountPoint(volumePath)

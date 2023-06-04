@@ -83,11 +83,7 @@ func (c *totalVolumesCollector) DescribeWithStability(ch chan<- *metrics.Desc) {
 func (c *totalVolumesCollector) CollectWithStability(ch chan<- metrics.Metric) {
 	for stateName, pluginCount := range c.getVolumeCount() {
 		for pluginName, count := range pluginCount {
-			ch <- metrics.NewLazyConstMetric(totalVolumesDesc,
-				metrics.GaugeValue,
-				float64(count),
-				pluginName,
-				stateName)
+			ch <- metrics.NewLazyConstMetric(totalVolumesDesc, metrics.GaugeValue, float64(count), pluginName, stateName)
 		}
 	}
 }

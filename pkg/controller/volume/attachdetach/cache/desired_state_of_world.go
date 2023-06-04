@@ -178,10 +178,9 @@ type volumeToAttach struct {
 	// methods.
 	spec *volume.Spec
 
-	// scheduledPods is a map containing the set of pods that reference this
-	// volume and are scheduled to the underlying node. The key in the map is
-	// the name of the pod and the value is a pod object containing more
-	// information about the pod.
+	//这个映射记录了哪些 Pod 使用了该卷,并在哪些节点上运行,以便在对该卷执行操作时可以考虑这些因素
+	//例如,如果要卸载该卷,则需要先检查是否有 Pod 在使用该卷,如果有,则需要先将这些 Pod 调度到其他节点上,然后才能卸载该卷.
+	//scheduledPods 映射提供了一种方便的方式来跟踪使用该卷的 Pod,并在必要时对它们进行操作.
 	scheduledPods map[types.UniquePodName]pod
 }
 
@@ -255,11 +254,10 @@ func (dsw *desiredStateOfWorld) AddPod(
 		dsw.nodesManaged[nodeName].volumesToAttach[volumeName] = volumeObj
 	}
 	if _, podExists := volumeObj.scheduledPods[podName]; !podExists {
-		dsw.nodesManaged[nodeName].volumesToAttach[volumeName].scheduledPods[podName] =
-			pod{
-				podName: podName,
-				podObj:  podToAdd,
-			}
+		dsw.nodesManaged[nodeName].volumesToAttach[volumeName].scheduledPods[podName] = pod{
+			podName: podName,
+			podObj:  podToAdd,
+		}
 	}
 
 	return volumeName, nil
@@ -307,14 +305,10 @@ func (dsw *desiredStateOfWorld) DeletePod(
 		return
 	}
 
-	delete(
-		dsw.nodesManaged[nodeName].volumesToAttach[volumeName].scheduledPods,
-		podName)
+	delete(dsw.nodesManaged[nodeName].volumesToAttach[volumeName].scheduledPods, podName)
 
 	if len(volumeObj.scheduledPods) == 0 {
-		delete(
-			dsw.nodesManaged[nodeName].volumesToAttach,
-			volumeName)
+		delete(dsw.nodesManaged[nodeName].volumesToAttach, volumeName)
 	}
 }
 

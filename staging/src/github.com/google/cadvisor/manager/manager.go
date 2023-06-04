@@ -113,8 +113,7 @@ type Manager interface {
 	// function will return the fs.ErrNoSuchDevice error.
 	GetFsInfoByFsUUID(uuid string) (v2.FsInfo, error)
 
-	// GetDirFsInfo 获取包含给定目录的文件系统的文件系统信息.
-	GetDirFsInfo(dir string) (v2.FsInfo, error)
+	GetDirFsInfo(dir string) (v2.FsInfo, error) // 获取包含给定目录的文件系统的文件系统信息.
 
 	// Get filesystem information for a given label.
 	// Returns information for all global filesystems if label is empty.
@@ -771,7 +770,7 @@ func (m *manager) getRequestedContainers(containerName string, options v2.Reques
 }
 
 func (m *manager) GetDirFsInfo(dir string) (v2.FsInfo, error) {
-	device, err := m.fsInfo.GetDirFsDevice(dir)
+	device, err := m.fsInfo.GetDirFsDevice(dir) // ✅
 	if err != nil {
 		return v2.FsInfo{}, fmt.Errorf("failed to get device for dir %q: %v", dir, err)
 	}
@@ -787,7 +786,7 @@ func (m *manager) GetFsInfoByFsUUID(uuid string) (v2.FsInfo, error) {
 }
 
 // GetFsInfo 获取文件系统挂载点的使用量
-func (m *manager) GetFsInfo(label string) ([]v2.FsInfo, error) {
+func (m *manager) GetFsInfo(label string) ([]v2.FsInfo, error) { // ✅
 	var empty time.Time
 	// Get latest data from filesystems hanging off root container.
 	stats, err := m.memoryCache.RecentStats("/", empty, empty, 1)
@@ -1148,7 +1147,7 @@ func (m *manager) DebugInfo() map[string][]string {
 	return debugInfo
 }
 
-func (m *manager) getFsInfoByDeviceName(deviceName string) (v2.FsInfo, error) {
+func (m *manager) getFsInfoByDeviceName(deviceName string) (v2.FsInfo, error) { // ✅
 	mountPoint, err := m.fsInfo.GetMountpointForDevice(deviceName)
 	if err != nil {
 		return v2.FsInfo{}, fmt.Errorf("failed to get mount point for device %q: %v", deviceName, err)

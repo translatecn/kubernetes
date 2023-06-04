@@ -48,7 +48,7 @@ type basicPodStartupLatencyTracker struct {
 type perPodState struct {
 	firstStartedPulling time.Time
 	lastFinishedPulling time.Time
-	observedRunningTime time.Time // 第一次，当pod状态变为Running
+	observedRunningTime time.Time // 第一次,当pod状态变为Running
 	metricRecorded      bool      // 如果pod延迟已经被观察到
 }
 

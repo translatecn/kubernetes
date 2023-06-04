@@ -36,7 +36,7 @@ const (
 
 // BlockVolumePathHandler defines a set of operations for handling block volume-related operations
 type BlockVolumePathHandler interface {
-	// MapDevice creates a symbolic link to block device under specified map path
+	// MapDevice 在指定的映射路径下创建一个块设备的符号链接.这意味着创建一个指向块设备的符号链接,以便在该路径下访问该设备.
 	MapDevice(devicePath string, mapPath string, linkName string, bindMount bool) error
 	// UnmapDevice removes a symbolic link to block device under specified map path
 	UnmapDevice(mapPath string, linkName string, bindMount bool) error
@@ -51,13 +51,12 @@ type BlockVolumePathHandler interface {
 	// FindGlobalMapPathUUIDFromPod finds {pod uuid} symbolic link under globalMapPath
 	// corresponding to map path symlink, and then return global map path with pod uuid.
 	FindGlobalMapPathUUIDFromPod(pluginDir, mapPath string, podUID types.UID) (string, error)
-	// AttachFileDevice takes a path to a regular file and makes it available as an
-	// attached block device.
+	//AttachFileDevice 函数接收一个普通文件的路径,并将其作为已附加的块设备提供.
 	AttachFileDevice(path string) (string, error)
 	// DetachFileDevice takes a path to the attached block device and
 	// detach it from block device.
 	DetachFileDevice(path string) error
-	// GetLoopDevice returns the full path to the loop device associated with the given path.
+	// GetLoopDevice 返回与给定路径关联的循环设备的完整路径.
 	GetLoopDevice(path string) (string, error)
 }
 
@@ -71,93 +70,8 @@ func NewBlockVolumePathHandler() BlockVolumePathHandler {
 type VolumePathHandler struct {
 }
 
-// MapDevice creates a symbolic link to block device under specified map path
-func (v VolumePathHandler) MapDevice(devicePath string, mapPath string, linkName string, bindMount bool) error {
-	// Example of global map path:
-	//   globalMapPath/linkName: plugins/kubernetes.io/{PluginName}/{DefaultKubeletVolumeDevicesDirName}/{volumePluginDependentPath}/{podUid}
-	//   linkName: {podUid}
-	//
-	// Example of pod device map path:
-	//   podDeviceMapPath/linkName: pods/{podUid}/{DefaultKubeletVolumeDevicesDirName}/{escapeQualifiedPluginName}/{volumeName}
-	//   linkName: {volumeName}
-	if len(devicePath) == 0 {
-		return fmt.Errorf("failed to map device to map path. devicePath is empty")
-	}
-	if len(mapPath) == 0 {
-		return fmt.Errorf("failed to map device to map path. mapPath is empty")
-	}
-	if !filepath.IsAbs(mapPath) {
-		return fmt.Errorf("the map path should be absolute: map path: %s", mapPath)
-	}
-	klog.V(5).Infof("MapDevice: devicePath %s", devicePath)
-	klog.V(5).Infof("MapDevice: mapPath %s", mapPath)
-	klog.V(5).Infof("MapDevice: linkName %s", linkName)
-
-	// Check and create mapPath
-	_, err := os.Stat(mapPath)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("cannot validate map path: %s: %v", mapPath, err)
-	}
-	if err = os.MkdirAll(mapPath, 0750); err != nil {
-		return fmt.Errorf("failed to mkdir %s: %v", mapPath, err)
-	}
-
-	if bindMount {
-		return mapBindMountDevice(v, devicePath, mapPath, linkName)
-	}
-	return mapSymlinkDevice(v, devicePath, mapPath, linkName)
-}
-
-func mapBindMountDevice(v VolumePathHandler, devicePath string, mapPath string, linkName string) error {
-	// Check bind mount exists
-	linkPath := filepath.Join(mapPath, string(linkName))
-
-	file, err := os.Stat(linkPath)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("failed to stat file %s: %v", linkPath, err)
-		}
-
-		// Create file
-		newFile, err := os.OpenFile(linkPath, os.O_CREATE|os.O_RDWR, 0750)
-		if err != nil {
-			return fmt.Errorf("failed to open file %s: %v", linkPath, err)
-		}
-		if err := newFile.Close(); err != nil {
-			return fmt.Errorf("failed to close file %s: %v", linkPath, err)
-		}
-	} else {
-		// Check if device file
-		// TODO: Need to check if this device file is actually the expected bind mount
-		if file.Mode()&os.ModeDevice == os.ModeDevice {
-			klog.Warningf("Warning: Map skipped because bind mount already exist on the path: %v", linkPath)
-			return nil
-		}
-
-		klog.Warningf("Warning: file %s is already exist but not mounted, skip creating file", linkPath)
-	}
-
-	// Bind mount file
-	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Exec: utilexec.New()}
-	if err := mounter.MountSensitiveWithoutSystemd(devicePath, linkPath, "" /* fsType */, []string{"bind"}, nil); err != nil {
-		return fmt.Errorf("failed to bind mount devicePath: %s to linkPath %s: %v", devicePath, linkPath, err)
-	}
-
-	return nil
-}
-
-func mapSymlinkDevice(v VolumePathHandler, devicePath string, mapPath string, linkName string) error {
-	// Remove old symbolic link(or file) then create new one.
-	// This should be done because current symbolic link is
-	// stale across node reboot.
-	linkPath := filepath.Join(mapPath, string(linkName))
-	if err := os.Remove(linkPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to remove file %s: %v", linkPath, err)
-	}
-	return os.Symlink(devicePath, linkPath)
-}
-
 // UnmapDevice removes a symbolic link associated to block device under specified map path
+// 解绑pod和device的链接
 func (v VolumePathHandler) UnmapDevice(mapPath string, linkName string, bindMount bool) error {
 	if len(mapPath) == 0 {
 		return fmt.Errorf("failed to unmap device from map path. mapPath is empty")
@@ -293,4 +207,87 @@ func (v VolumePathHandler) GetDeviceBindMountRefs(devPath string, mapPath string
 	}
 	klog.V(5).Infof("GetDeviceBindMountRefs: refs %v", refs)
 	return refs, nil
+}
+
+// MapDevice 在指定的映射路径下创建一个块设备的符号链接.这意味着创建一个指向块设备的符号链接,以便在该路径下访问该设备.
+func (v VolumePathHandler) MapDevice(devicePath string, mapPath string, linkName string, bindMount bool) error { // ✅
+	// Example of global map path:
+	//   globalMapPath/linkName: plugins/kubernetes.io/{PluginName}/{DefaultKubeletVolumeDevicesDirName}/{volumePluginDependentPath}/{podUid}
+	//   linkName: {podUid}
+	//
+	// Example of pod device map path:
+	//   podDeviceMapPath/linkName: pods/{podUid}/{DefaultKubeletVolumeDevicesDirName}/{escapeQualifiedPluginName}/{volumeName}
+	//   linkName: {volumeName}
+	//volumeDevices
+	if len(devicePath) == 0 {
+		return fmt.Errorf("failed to map device to map path. devicePath is empty")
+	}
+	if len(mapPath) == 0 {
+		return fmt.Errorf("failed to map device to map path. mapPath is empty")
+	}
+	if !filepath.IsAbs(mapPath) {
+		return fmt.Errorf("the map path should be absolute: map path: %s", mapPath)
+	}
+	klog.V(5).Infof("MapDevice: devicePath %s", devicePath)
+	klog.V(5).Infof("MapDevice: mapPath %s", mapPath)
+	klog.V(5).Infof("MapDevice: linkName %s", linkName)
+
+	// Check and create mapPath
+	_, err := os.Stat(mapPath) // // path: plugins/kubernetes.io/kubernetes.io/local-volume/volumeDevices/{volumeName}
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("cannot validate map path: %s: %v", mapPath, err)
+	}
+	if err = os.MkdirAll(mapPath, 0750); err != nil {
+		return fmt.Errorf("failed to mkdir %s: %v", mapPath, err)
+	}
+
+	if bindMount {
+		return mapBindMountDevice(v, devicePath, mapPath, linkName) // ✅  使用 system-run 进行挂载,有一个程序一直运行
+	}
+	return mapSymlinkDevice(v, devicePath, mapPath, linkName) // ✅
+}
+func mapBindMountDevice(v VolumePathHandler, devicePath string, mapPath string, linkName string) error {
+	// Check bind mount exists
+	linkPath := filepath.Join(mapPath, string(linkName))
+
+	file, err := os.Stat(linkPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to stat file %s: %v", linkPath, err)
+		}
+
+		// Create file
+		newFile, err := os.OpenFile(linkPath, os.O_CREATE|os.O_RDWR, 0750)
+		if err != nil {
+			return fmt.Errorf("failed to open file %s: %v", linkPath, err)
+		}
+		if err := newFile.Close(); err != nil {
+			return fmt.Errorf("failed to close file %s: %v", linkPath, err)
+		}
+	} else {
+		// Check if device file
+		// TODO: Need to check if this device file is actually the expected bind mount
+		if file.Mode()&os.ModeDevice == os.ModeDevice {
+			klog.Warningf("Warning: Map skipped because bind mount already exist on the path: %v", linkPath)
+			return nil
+		}
+
+		klog.Warningf("Warning: file %s is already exist but not mounted, skip creating file", linkPath)
+	}
+
+	// Bind mount file
+	mounter := &mount.SafeFormatAndMount{Interface: mount.New(""), Exec: utilexec.New()}
+	if err := mounter.MountSensitiveWithoutSystemd(devicePath, linkPath, "" /* fsType */, []string{"bind"}, nil); err != nil { // ✅
+		return fmt.Errorf("failed to bind mount devicePath: %s to linkPath %s: %v", devicePath, linkPath, err)
+	}
+
+	return nil
+}
+func mapSymlinkDevice(v VolumePathHandler, devicePath string, mapPath string, linkName string) error {
+	// 删除旧的符号链接（或文件）,然后创建一个新的符号链接.这是必须的,因为当前的符号链接在节点重新启动后会变得过时.
+	linkPath := filepath.Join(mapPath, string(linkName))
+	if err := os.Remove(linkPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove file %s: %v", linkPath, err)
+	}
+	return os.Symlink(devicePath, linkPath)
 }

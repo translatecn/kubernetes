@@ -73,9 +73,9 @@ func (kl *Kubelet) initNetworkUtil() {
 	}
 }
 
-// 确保KUBE-IPTABLES-HINT链存在，它还将同步其他已弃用的iptables规则。
+// 确保KUBE-IPTABLES-HINT链存在,它还将同步其他已弃用的iptables规则.
 func (kl *Kubelet) syncIPTablesRules(iptClient utiliptables.Interface) bool {
-	// 创建提示链，以便其他组件可以看到我们使用的是iptables-legacy还是iptables-nft。
+	// 创建提示链,以便其他组件可以看到我们使用的是iptables-legacy还是iptables-nft.
 	if _, err := iptClient.EnsureChain(utiliptables.TableMangle, KubeIPTablesHintChain); err != nil {
 		klog.ErrorS(err, "Failed to ensure that iptables hint chain exists")
 		return false

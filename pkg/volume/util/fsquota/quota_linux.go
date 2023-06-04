@@ -76,115 +76,16 @@ var providers = []common.LinuxVolumeQuotaProvider{
 	&common.VolumeProvider{},
 }
 
-// Separate the innards for ease of testing
-func detectBackingDevInternal(mountpoint string, mounts string) (string, error) {
-	file, err := os.Open(mounts)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		match := common.MountParseRegexp.FindStringSubmatch(scanner.Text())
-		if match != nil {
-			device := match[1]
-			mount := match[2]
-			if mount == mountpoint {
-				return device, nil
-			}
-		}
-	}
-	return "", fmt.Errorf("couldn't find backing device for %s", mountpoint)
-}
-
-// detectBackingDev assumes that the mount point provided is valid
-func detectBackingDev(_ mount.Interface, mountpoint string) (string, error) {
-	return detectBackingDevInternal(mountpoint, common.MountsFile)
-}
-
 func clearBackingDev(path string) {
 	backingDevLock.Lock()
 	defer backingDevLock.Unlock()
 	delete(backingDevMap, path)
 }
 
-// Assumes that the path has been fully canonicalized
-// Breaking this up helps with testing
-func detectMountpointInternal(m mount.Interface, path string) (string, error) {
-	for path != "" && path != "/" {
-		// per k8s.io/mount-utils/mount_linux this detects all but
-		// a bind mount from one part of a mount to another.
-		// For our purposes that's fine; we simply want the "true"
-		// mount point
-		//
-		// IsNotMountPoint proved much more troublesome; it actually
-		// scans the mounts, and when a lot of mount/unmount
-		// activity takes place, it is not able to get a consistent
-		// view of /proc/self/mounts, causing it to time out and
-		// report incorrectly.
-		isNotMount, err := m.IsLikelyNotMountPoint(path)
-		if err != nil {
-			return "/", err
-		}
-		if !isNotMount {
-			return path, nil
-		}
-		path = filepath.Dir(path)
-	}
-	return "/", nil
-}
-
-func detectMountpoint(m mount.Interface, path string) (string, error) {
-	xpath, err := filepath.Abs(path)
-	if err != nil {
-		return "/", err
-	}
-	xpath, err = filepath.EvalSymlinks(xpath)
-	if err != nil {
-		return "/", err
-	}
-	if xpath, err = detectMountpointInternal(m, xpath); err == nil {
-		return xpath, nil
-	}
-	return "/", err
-}
-
 func clearMountpoint(path string) {
 	mountpointLock.Lock()
 	defer mountpointLock.Unlock()
 	delete(mountpointMap, path)
-}
-
-// getFSInfo Returns mountpoint and backing device
-// getFSInfo should cache the mountpoint and backing device for the
-// path.
-func getFSInfo(m mount.Interface, path string) (string, string, error) {
-	mountpointLock.Lock()
-	defer mountpointLock.Unlock()
-
-	backingDevLock.Lock()
-	defer backingDevLock.Unlock()
-
-	var err error
-
-	mountpoint, okMountpoint := mountpointMap[path]
-	if !okMountpoint {
-		mountpoint, err = detectMountpoint(m, path)
-		if err != nil {
-			return "", "", fmt.Errorf("cannot determine mountpoint for %s: %v", path, err)
-		}
-	}
-
-	backingDev, okBackingDev := backingDevMap[path]
-	if !okBackingDev {
-		backingDev, err = detectBackingDev(m, mountpoint)
-		if err != nil {
-			return "", "", fmt.Errorf("cannot determine backing device for %s: %v", path, err)
-		}
-	}
-	mountpointMap[path] = mountpoint
-	backingDevMap[path] = backingDev
-	return mountpoint, backingDev, nil
 }
 
 func clearFSInfo(path string) {
@@ -204,12 +105,6 @@ func setApplier(path string, applier common.LinuxVolumeQuotaApplier) {
 	dirApplierMap[path] = applier
 }
 
-func clearApplier(path string) {
-	dirApplierLock.Lock()
-	defer dirApplierLock.Unlock()
-	delete(dirApplierMap, path)
-}
-
 func setQuotaOnDir(path string, id common.QuotaID, bytes int64) error {
 	return getApplier(path).SetQuotaOnDir(path, id, bytes)
 }
@@ -220,84 +115,6 @@ func getQuotaOnDir(m mount.Interface, path string) (common.QuotaID, error) {
 		return common.BadQuotaID, err
 	}
 	return getApplier(path).GetQuotaOnDir(path)
-}
-
-func clearQuotaOnDir(m mount.Interface, path string) error {
-	// Since we may be called without path being in the map,
-	// we explicitly have to check in this case.
-	klog.V(4).Infof("clearQuotaOnDir %s", path)
-	supportsQuotas, err := SupportsQuotas(m, path)
-	if err != nil {
-		// Log-and-continue instead of returning an error for now
-		// due to unspecified backwards compatibility concerns (a subject to revise)
-		klog.V(3).Infof("Attempt to check for quota support failed: %v", err)
-	}
-	if !supportsQuotas {
-		return nil
-	}
-	projid, err := getQuotaOnDir(m, path)
-	if err == nil && projid != common.BadQuotaID {
-		// This means that we have a quota on the directory but
-		// we can't clear it.  That's not good.
-		err = setQuotaOnDir(path, projid, 0)
-		if err != nil {
-			klog.V(3).Infof("Attempt to clear quota failed: %v", err)
-		}
-		// Even if clearing the quota failed, we still need to
-		// try to remove the project ID, or that may be left dangling.
-		err1 := removeProjectID(path, projid)
-		if err1 != nil {
-			klog.V(3).Infof("Attempt to remove quota ID from system files failed: %v", err1)
-		}
-		clearFSInfo(path)
-		if err != nil {
-			return err
-		}
-		return err1
-	}
-	// If we couldn't get a quota, that's fine -- there may
-	// never have been one, and we have no way to know otherwise
-	klog.V(3).Infof("clearQuotaOnDir fails %v", err)
-	return nil
-}
-
-// SupportsQuotas -- Does the path support quotas
-// Cache the applier for paths that support quotas.  For paths that don't,
-// don't cache the result because nothing will clean it up.
-// However, do cache the device->applier map; the number of devices
-// is bounded.
-func SupportsQuotas(m mount.Interface, path string) (bool, error) {
-	if !enabledQuotasForMonitoring() {
-		klog.V(3).Info("SupportsQuotas called, but quotas disabled")
-		return false, nil
-	}
-	supportsQuotasLock.Lock()
-	defer supportsQuotasLock.Unlock()
-	if supportsQuotas, ok := supportsQuotasMap[path]; ok {
-		return supportsQuotas, nil
-	}
-	mount, dev, err := getFSInfo(m, path)
-	if err != nil {
-		return false, err
-	}
-	// Do we know about this device?
-	applier, ok := devApplierMap[mount]
-	if !ok {
-		for _, provider := range providers {
-			if applier = provider.GetQuotaApplier(mount, dev); applier != nil {
-				devApplierMap[mount] = applier
-				break
-			}
-		}
-	}
-	if applier != nil {
-		supportsQuotasMap[path] = true
-		setApplier(path, applier)
-		return true, nil
-	}
-	delete(backingDevMap, path)
-	delete(mountpointMap, path)
-	return false, nil
 }
 
 // AssignQuota -- assign a quota to the specified directory.
@@ -392,7 +209,91 @@ func GetInodes(path string) (*resource.Quantity, error) {
 	return resource.NewQuantity(inodes, resource.DecimalSI), nil
 }
 
-// ClearQuota -- remove the quota assigned to a directory
+// ------------------------------------------------------------------------------------------------------------------
+
+// SupportsQuotas 判断一个路径是否支持配额.如果支持配额,则缓存应用程序以供使用,如果不支持,则不缓存结果,因为没有东西可以清除它.
+// 但是,该设备->应用程序映射会被缓存,因为设备数量是有限的.
+// 此外,注释还提到了一个名为NewWrapperUnmounter的函数,该函数用于查找适当的插件来处理提供的规范.有关更多上下文,请参见NewWrapperMounter的注释.
+func SupportsQuotas(m mount.Interface, path string) (bool, error) {
+	if !enabledQuotasForMonitoring() {
+		klog.V(3).Info("SupportsQuotas called, but quotas disabled")
+		return false, nil
+	}
+	supportsQuotasLock.Lock()
+	defer supportsQuotasLock.Unlock()
+	if supportsQuotas, ok := supportsQuotasMap[path]; ok {
+		return supportsQuotas, nil
+	}
+	mount, dev, err := getFSInfo(m, path)
+	if err != nil {
+		return false, err
+	}
+	// Do we know about this device?
+	applier, ok := devApplierMap[mount]
+	if !ok {
+		for _, provider := range providers {
+			if applier = provider.GetQuotaApplier(mount, dev); applier != nil {
+				devApplierMap[mount] = applier
+				break
+			}
+		}
+	}
+	if applier != nil {
+		supportsQuotasMap[path] = true
+		setApplier(path, applier)
+		return true, nil
+	}
+	delete(backingDevMap, path)
+	delete(mountpointMap, path)
+	return false, nil
+}
+
+func clearQuotaOnDir(m mount.Interface, path string) error {
+	// Since we may be called without path being in the map,
+	// we explicitly have to check in this case.
+	klog.V(4).Infof("clearQuotaOnDir %s", path)
+	supportsQuotas, err := SupportsQuotas(m, path)
+	if err != nil {
+		// Log-and-continue instead of returning an error for now
+		// due to unspecified backwards compatibility concerns (a subject to revise)
+		klog.V(3).Infof("Attempt to check for quota support failed: %v", err)
+	}
+	if !supportsQuotas {
+		return nil
+	}
+	projid, err := getQuotaOnDir(m, path)
+	if err == nil && projid != common.BadQuotaID {
+		// This means that we have a quota on the directory but
+		// we can't clear it.  That's not good.
+		err = setQuotaOnDir(path, projid, 0)
+		if err != nil {
+			klog.V(3).Infof("Attempt to clear quota failed: %v", err)
+		}
+		// Even if clearing the quota failed, we still need to
+		// try to remove the project ID, or that may be left dangling.
+		err1 := removeProjectID(path, projid)
+		if err1 != nil {
+			klog.V(3).Infof("Attempt to remove quota ID from system files failed: %v", err1)
+		}
+		clearFSInfo(path)
+		if err != nil {
+			return err
+		}
+		return err1
+	}
+	// If we couldn't get a quota, that's fine -- there may
+	// never have been one, and we have no way to know otherwise
+	klog.V(3).Infof("clearQuotaOnDir fails %v", err)
+	return nil
+}
+
+func clearApplier(path string) {
+	dirApplierLock.Lock()
+	defer dirApplierLock.Unlock()
+	delete(dirApplierMap, path)
+}
+
+// ClearQuota -- 删除分配给一个目录的配额
 func ClearQuota(m mount.Interface, path string) error {
 	klog.V(3).Infof("ClearQuota %s", path)
 	if !enabledQuotasForMonitoring() {
@@ -402,11 +303,9 @@ func ClearQuota(m mount.Interface, path string) error {
 	defer quotaLock.Unlock()
 	poduid, ok := dirPodMap[path]
 	if !ok {
-		// Nothing in the map either means that there was no
-		// quota to begin with or that we're clearing a
-		// stale directory, so if we find a quota, just remove it.
-		// The process of clearing the quota requires that an applier
-		// be found, which needs to be cleaned up.
+
+		// 因此如果我们找到了配额,就将其删除.
+		// 清除配额的过程需要找到一个applier,需要进行清理.
 		defer delete(supportsQuotasMap, path)
 		defer clearApplier(path)
 		return clearQuotaOnDir(m, path)
@@ -449,4 +348,105 @@ func ClearQuota(m mount.Interface, path string) error {
 		return fmt.Errorf("unable to clear quota for %s: %v", path, err)
 	}
 	return nil
+}
+
+// Assumes that the path has been fully canonicalized
+// Breaking this up helps with testing
+func detectMountpointInternal(m mount.Interface, path string) (string, error) {
+	for path != "" && path != "/" {
+		// per k8s.io/mount-utils/mount_linux this detects all but
+		// a bind mount from one part of a mount to another.
+		// For our purposes that's fine; we simply want the "true"
+		// mount point
+		//
+		// IsNotMountPoint proved much more troublesome; it actually
+		// scans the mounts, and when a lot of mount/unmount
+		// activity takes place, it is not able to get a consistent
+		// view of /proc/self/mounts, causing it to time out and
+		// report incorrectly.
+		isNotMount, err := m.IsLikelyNotMountPoint(path)
+		if err != nil {
+			return "/", err
+		}
+		if !isNotMount {
+			return path, nil
+		}
+		path = filepath.Dir(path)
+	}
+	return "/", nil
+}
+
+// 检测文件系统挂载点
+func detectMountpoint(m mount.Interface, path string) (string, error) {
+	xpath, err := filepath.Abs(path)
+	if err != nil {
+		return "/", err
+	}
+	// 解析任何符号链接后返回路径名.如果路径是相对路径,则结果将相对于当前目录,除非其中一个组件是绝对符号链接.EvalSymlinks在结果上调用Clean函数.
+	xpath, err = filepath.EvalSymlinks(xpath)
+	if err != nil {
+		return "/", err
+	}
+	if xpath, err = detectMountpointInternal(m, xpath); err == nil {
+		return xpath, nil
+	}
+	return "/", err
+}
+
+// getFSInfo Returns mountpoint and backing device
+// getFSInfo should cache the mountpoint and backing device for the
+// path.
+func getFSInfo(m mount.Interface, path string) (string, string, error) {
+	mountpointLock.Lock()
+	defer mountpointLock.Unlock()
+
+	backingDevLock.Lock()
+	defer backingDevLock.Unlock()
+
+	var err error
+
+	mountpoint, okMountpoint := mountpointMap[path]
+	if !okMountpoint {
+		mountpoint, err = detectMountpoint(m, path)
+		if err != nil {
+			return "", "", fmt.Errorf("cannot determine mountpoint for %s: %v", path, err)
+		}
+	}
+
+	backingDev, okBackingDev := backingDevMap[path]
+	if !okBackingDev {
+		backingDev, err = detectBackingDev(m, mountpoint)
+		if err != nil {
+			return "", "", fmt.Errorf("cannot determine backing device for %s: %v", path, err)
+		}
+	}
+	mountpointMap[path] = mountpoint
+	backingDevMap[path] = backingDev
+	return mountpoint, backingDev, nil
+}
+
+// Separate the innards for ease of testing
+func detectBackingDevInternal(mountpoint string, mounts string) (string, error) {
+	file, err := os.Open(mounts)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		match := common.MountParseRegexp.FindStringSubmatch(scanner.Text())
+		if match != nil {
+			device := match[1]
+			mount := match[2]
+			if mount == mountpoint {
+				return device, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("couldn't find backing device for %s", mountpoint)
+}
+
+// detectBackingDev assumes that the mount point provided is valid
+func detectBackingDev(_ mount.Interface, mountpoint string) (string, error) {
+	return detectBackingDevInternal(mountpoint, common.MountsFile)
 }

@@ -39,7 +39,6 @@ import (
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	clientset "k8s.io/client-go/kubernetes"
 	storagelisters "k8s.io/client-go/listers/storage/v1"
-	csitranslationplugins "k8s.io/csi-translation-lib/plugins"
 	"k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/volume"
 	"k8s.io/kubernetes/pkg/volume/csi/nodeinfomanager"
@@ -62,21 +61,10 @@ const (
 
 type csiPlugin struct {
 	host                      volume.VolumeHost
-	csiDriverLister           storagelisters.CSIDriverLister
+	csiDriverLister           storagelisters.CSIDriverLister // 用来列出对应节点的CSIDriver
 	serviceAccountTokenGetter func(namespace, name string, tr *authenticationv1.TokenRequest) (*authenticationv1.TokenRequest, error)
-	volumeAttachmentLister    storagelisters.VolumeAttachmentLister
+	volumeAttachmentLister    storagelisters.VolumeAttachmentLister // 用来调用infomer和CSIDriverLister
 }
-
-// ProbeVolumePlugins returns implemented plugins
-func ProbeVolumePlugins() []volume.VolumePlugin {
-	p := &csiPlugin{
-		host: nil,
-	}
-	return []volume.VolumePlugin{p}
-}
-
-// volume.VolumePlugin methods
-var _ volume.VolumePlugin = &csiPlugin{}
 
 // RegistrationHandler is the handler which is fed to the pluginwatcher API.
 type RegistrationHandler struct {
@@ -179,137 +167,6 @@ func (h *RegistrationHandler) DeRegisterPlugin(pluginName string) {
 	if err := unregisterDriver(pluginName); err != nil {
 		klog.Error(log("registrationHandler.DeRegisterPlugin failed: %v", err))
 	}
-}
-
-func (p *csiPlugin) Init(host volume.VolumeHost) error {
-	p.host = host
-
-	csiClient := host.GetKubeClient()
-	if csiClient == nil {
-		klog.Warning(log("kubeclient not set, assuming standalone kubelet"))
-	} else {
-		// set CSIDriverLister and volumeAttachmentLister
-		adcHost, ok := host.(volume.AttachDetachVolumeHost)
-		if ok {
-			p.csiDriverLister = adcHost.CSIDriverLister()
-			if p.csiDriverLister == nil {
-				klog.Error(log("CSIDriverLister not found on AttachDetachVolumeHost"))
-			}
-			p.volumeAttachmentLister = adcHost.VolumeAttachmentLister()
-			if p.volumeAttachmentLister == nil {
-				klog.Error(log("VolumeAttachmentLister not found on AttachDetachVolumeHost"))
-			}
-		}
-		kletHost, ok := host.(volume.KubeletVolumeHost)
-		if ok {
-			p.csiDriverLister = kletHost.CSIDriverLister()
-			if p.csiDriverLister == nil {
-				klog.Error(log("CSIDriverLister not found on KubeletVolumeHost"))
-			}
-			p.serviceAccountTokenGetter = host.GetServiceAccountTokenFunc()
-			if p.serviceAccountTokenGetter == nil {
-				klog.Error(log("ServiceAccountTokenGetter not found on KubeletVolumeHost"))
-			}
-			// We don't run the volumeAttachmentLister in the kubelet context
-			p.volumeAttachmentLister = nil
-		}
-	}
-
-	var migratedPlugins = map[string](func() bool){
-		csitranslationplugins.GCEPDInTreePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationGCE)
-		},
-		csitranslationplugins.AWSEBSInTreePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAWS)
-		},
-		csitranslationplugins.CinderInTreePluginName: func() bool {
-			return true
-		},
-		csitranslationplugins.AzureDiskInTreePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAzureDisk)
-		},
-		csitranslationplugins.AzureFileInTreePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAzureFile)
-		},
-		csitranslationplugins.VSphereInTreePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationvSphere)
-		},
-		csitranslationplugins.PortworxVolumePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationPortworx)
-		},
-		csitranslationplugins.RBDVolumePluginName: func() bool {
-			return utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationRBD)
-		},
-	}
-
-	// Initializing the label management channels
-	nim = nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
-
-	// This function prevents Kubelet from posting Ready status until CSINode
-	// is both installed and initialized
-	if err := initializeCSINode(host); err != nil {
-		return errors.New(log("failed to initialize CSINode: %v", err))
-	}
-
-	return nil
-}
-
-func initializeCSINode(host volume.VolumeHost) error {
-	kvh, ok := host.(volume.KubeletVolumeHost)
-	if !ok {
-		klog.V(4).Info("Cast from VolumeHost to KubeletVolumeHost failed. Skipping CSINode initialization, not running on kubelet")
-		return nil
-	}
-	kubeClient := host.GetKubeClient()
-	if kubeClient == nil {
-		// Kubelet running in standalone mode. Skip CSINode initialization
-		klog.Warning("Skipping CSINode initialization, kubelet running in standalone mode")
-		return nil
-	}
-
-	kvh.SetKubeletError(errors.New("CSINode is not yet initialized"))
-
-	go func() {
-		defer utilruntime.HandleCrash()
-
-		// First wait indefinitely to talk to Kube APIServer
-		nodeName := host.GetNodeName()
-		err := waitForAPIServerForever(kubeClient, nodeName)
-		if err != nil {
-			klog.Fatalf("Failed to initialize CSINode while waiting for API server to report ok: %v", err)
-		}
-
-		// Backoff parameters tuned to retry over 140 seconds. Will fail and restart the Kubelet
-		// after max retry steps.
-		initBackoff := wait.Backoff{
-			Steps:    6,
-			Duration: 15 * time.Millisecond,
-			Factor:   6.0,
-			Jitter:   0.1,
-		}
-		err = wait.ExponentialBackoff(initBackoff, func() (bool, error) {
-			klog.V(4).Infof("Initializing migrated drivers on CSINode")
-			err := nim.InitializeCSINodeWithAnnotation()
-			if err != nil {
-				kvh.SetKubeletError(fmt.Errorf("failed to initialize CSINode: %v", err))
-				klog.Errorf("Failed to initialize CSINode: %v", err)
-				return false, nil
-			}
-
-			// Successfully initialized drivers, allow Kubelet to post Ready
-			kvh.SetKubeletError(nil)
-			return true, nil
-		})
-		if err != nil {
-			// 2 releases after CSIMigration and all CSIMigrationX (where X is a volume plugin)
-			// are permanently enabled the apiserver/controllers can assume that the kubelet is
-			// using CSI for all Migrated volume plugins. Then all the CSINode initialization
-			// code can be dropped from Kubelet.
-			// Kill the Kubelet process and allow it to restart to retry initialization
-			klog.Fatalf("Failed to initialize CSINode after retrying: %v", err)
-		}
-	}()
-	return nil
 }
 
 func (p *csiPlugin) GetPluginName() string {
@@ -543,11 +400,6 @@ func (p *csiPlugin) SupportsSELinuxContextMount(spec *volume.Spec) (bool, error)
 	}
 	return false, nil
 }
-
-// volume.AttachableVolumePlugin methods
-var _ volume.AttachableVolumePlugin = &csiPlugin{}
-
-var _ volume.DeviceMountableVolumePlugin = &csiPlugin{}
 
 func (p *csiPlugin) NewAttacher() (volume.Attacher, error) {
 	return p.newAttacherDetacher()
@@ -816,19 +668,6 @@ func (p *csiPlugin) getPublishContext(client clientset.Interface, handle, driver
 	return attachment.Status.AttachmentMetadata, nil
 }
 
-func (p *csiPlugin) newAttacherDetacher() (*csiAttacher, error) {
-	k8s := p.host.GetKubeClient()
-	if k8s == nil {
-		return nil, errors.New(log("unable to get kubernetes client from host"))
-	}
-
-	return &csiAttacher{
-		plugin:       p,
-		k8s:          k8s,
-		watchTimeout: csiTimeout,
-	}, nil
-}
-
 // podInfoEnabled  check CSIDriver enabled pod info flag
 func (p *csiPlugin) podInfoEnabled(driverName string) (bool, error) {
 	csiDriver, err := p.getCSIDriver(driverName)
@@ -896,8 +735,136 @@ func highestSupportedVersion(versions []string) (*utilversion.Version, error) {
 	return highestSupportedVersion, nil
 }
 
-// waitForAPIServerForever waits forever to get a CSINode instance as a proxy
-// for a healthy APIServer
+func (p *csiPlugin) newAttacherDetacher() (*csiAttacher, error) {
+	k8s := p.host.GetKubeClient()
+	if k8s == nil {
+		return nil, errors.New(log("unable to get kubernetes client from host"))
+	}
+
+	return &csiAttacher{
+		plugin:       p,
+		k8s:          k8s,
+		watchTimeout: csiTimeout,
+	}, nil
+}
+
+// ProbeVolumePlugins returns implemented plugins
+func ProbeVolumePlugins() []volume.VolumePlugin {
+	p := &csiPlugin{
+		host: nil,
+	}
+	return []volume.VolumePlugin{p}
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+
+func (p *csiPlugin) Init(host volume.VolumeHost) error {
+	p.host = host
+
+	csiClient := host.GetKubeClient()
+	if csiClient == nil {
+		klog.Warning(log("kubeclient not set, assuming standalone kubelet"))
+	} else {
+		// set CSIDriverLister and volumeAttachmentLister
+		adcHost, ok := host.(volume.AttachDetachVolumeHost)
+		if ok {
+			p.csiDriverLister = adcHost.CSIDriverLister()
+			if p.csiDriverLister == nil {
+				klog.Error(log("CSIDriverLister not found on AttachDetachVolumeHost"))
+			}
+			p.volumeAttachmentLister = adcHost.VolumeAttachmentLister()
+			if p.volumeAttachmentLister == nil {
+				klog.Error(log("VolumeAttachmentLister not found on AttachDetachVolumeHost"))
+			}
+		}
+		kletHost, ok := host.(volume.KubeletVolumeHost)
+		if ok {
+			p.csiDriverLister = kletHost.CSIDriverLister()
+			if p.csiDriverLister == nil {
+				klog.Error(log("CSIDriverLister not found on KubeletVolumeHost"))
+			}
+			p.serviceAccountTokenGetter = host.GetServiceAccountTokenFunc()
+			if p.serviceAccountTokenGetter == nil {
+				klog.Error(log("ServiceAccountTokenGetter not found on KubeletVolumeHost"))
+			}
+			// We don't run the volumeAttachmentLister in the kubelet context
+			p.volumeAttachmentLister = nil
+		}
+	}
+
+	var migratedPlugins = map[string](func() bool){}
+
+	// Initializing the label management channels
+	nim = nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
+
+	// This function prevents Kubelet from posting Ready status until CSINode
+	// is both installed and initialized
+	if err := initializeCSINode(host); err != nil {
+		return errors.New(log("failed to initialize CSINode: %v", err))
+	}
+
+	return nil
+}
+
+func initializeCSINode(host volume.VolumeHost) error {
+	kvh, ok := host.(volume.KubeletVolumeHost)
+	if !ok {
+		klog.V(4).Info("Cast from VolumeHost to KubeletVolumeHost failed. Skipping CSINode initialization, not running on kubelet")
+		return nil
+	}
+	kubeClient := host.GetKubeClient()
+	if kubeClient == nil {
+		// Kubelet running in standalone mode. Skip CSINode initialization
+		klog.Warning("Skipping CSINode initialization, kubelet running in standalone mode")
+		return nil
+	}
+
+	kvh.SetKubeletError(errors.New("CSINode is not yet initialized"))
+
+	go func() {
+		defer utilruntime.HandleCrash()
+
+		// First wait indefinitely to talk to Kube APIServer
+		nodeName := host.GetNodeName()
+		err := waitForAPIServerForever(kubeClient, nodeName)
+		if err != nil {
+			klog.Fatalf("Failed to initialize CSINode while waiting for API server to report ok: %v", err)
+		}
+
+		// Backoff parameters tuned to retry over 140 seconds. Will fail and restart the Kubelet
+		// after max retry steps.
+		initBackoff := wait.Backoff{
+			Steps:    6,
+			Duration: 15 * time.Millisecond,
+			Factor:   6.0,
+			Jitter:   0.1,
+		}
+		err = wait.ExponentialBackoff(initBackoff, func() (bool, error) {
+			klog.V(4).Infof("Initializing migrated drivers on CSINode")
+			err := nim.InitializeCSINodeWithAnnotation()
+			if err != nil {
+				kvh.SetKubeletError(fmt.Errorf("failed to initialize CSINode: %v", err))
+				klog.Errorf("Failed to initialize CSINode: %v", err)
+				return false, nil
+			}
+
+			// Successfully initialized drivers, allow Kubelet to post Ready
+			kvh.SetKubeletError(nil)
+			return true, nil
+		})
+		if err != nil {
+			// 2 releases after CSIMigration and all CSIMigrationX (where X is a volume plugin)
+			// are permanently enabled the apiserver/controllers can assume that the kubelet is
+			// using CSI for all Migrated volume plugins. Then all the CSINode initialization
+			// code can be dropped from Kubelet.
+			// Kill the Kubelet process and allow it to restart to retry initialization
+			klog.Fatalf("Failed to initialize CSINode after retrying: %v", err)
+		}
+	}()
+	return nil
+}
+
+// waitForAPIServerForever 等待获取CSINode实例作为健康apisserver的代理
 func waitForAPIServerForever(client clientset.Interface, nodeName types.NodeName) error {
 	var lastErr error
 	err := wait.PollImmediateInfinite(time.Second, func() (bool, error) {

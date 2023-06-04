@@ -52,15 +52,15 @@ type EventSink interface {
 
 // CorrelatorOptions 用于聚合和过滤事件
 type CorrelatorOptions struct {
-	LRUCacheSize         int                        // 用于 EventSourceObjectSpamFilter 和 EventAggregator 的 LRU 缓存大小。
-	BurstSize            int                        // 事件令牌桶速率过滤器中使用的突发大小。
-	QPS                  float32                    // 事件令牌桶中的查询速率（每秒）。
-	KeyFunc              EventAggregatorKeyFunc     // 用于聚合事件键的函数。
-	MessageFunc          EventAggregatorMessageFunc // 用于生成聚合消息的函数。
-	MaxEvents            int                        // 在聚合之前的一个时间间隔内的事件数。
-	MaxIntervalInSeconds int                        // 自上一个类似事件发生以来必须经过的时间（以秒为单位），才能被 EventAggregator 视为新事件。
+	LRUCacheSize         int                        // 用于 EventSourceObjectSpamFilter 和 EventAggregator 的 LRU 缓存大小.
+	BurstSize            int                        // 事件令牌桶速率过滤器中使用的突发大小.
+	QPS                  float32                    // 事件令牌桶中的查询速率（每秒）.
+	KeyFunc              EventAggregatorKeyFunc     // 用于聚合事件键的函数.
+	MessageFunc          EventAggregatorMessageFunc // 用于生成聚合消息的函数.
+	MaxEvents            int                        // 在聚合之前的一个时间间隔内的事件数.
+	MaxIntervalInSeconds int                        // 自上一个类似事件发生以来必须经过的时间（以秒为单位）,才能被 EventAggregator 视为新事件.
 	Clock                clock.PassiveClock         //
-	SpamKeyFunc          EventSpamKeyFunc           // 使用的函数，根据给定事件返回一个键，基于该键进行过滤。
+	SpamKeyFunc          EventSpamKeyFunc           // 使用的函数,根据给定事件返回一个键,基于该键进行过滤.
 }
 
 type EventRecorder interface {
@@ -173,7 +173,7 @@ func recordEvent(sink EventSink, event *v1.Event, patch []byte, updateExistingEv
 	if updateExistingEvent {
 		newEvent, err = sink.Patch(event, patch)
 	}
-	// 更新可能会失败，因为该事件可能已被删除，因此不再存在。
+	// 更新可能会失败,因为该事件可能已被删除,因此不再存在.
 	if !updateExistingEvent || (updateExistingEvent && util.IsKeyNotFoundError(err)) {
 		// Making sure that ResourceVersion is empty on creation
 		event.ResourceVersion = ""
@@ -272,8 +272,8 @@ func (recorder *recorderImpl) generateEvent(object runtime.Object, annotations m
 	event := recorder.makeEvent(ref, annotations, eventtype, reason, message)
 	event.Source = recorder.source
 
-	// 注意:事件应该是一个非阻塞操作，但我们也不需要把它放在一个例程中，否则当我们关闭这个广播器时，我们会竞相写一个关闭的通道。
-	// 如果我们超载了，就丢弃事件，如果发生了，就记录一个错误(我们已经配置了广播器来丢弃传出的事件)。
+	// 注意:事件应该是一个非阻塞操作,但我们也不需要把它放在一个例程中,否则当我们关闭这个广播器时,我们会竞相写一个关闭的通道.
+	// 如果我们超载了,就丢弃事件,如果发生了,就记录一个错误(我们已经配置了广播器来丢弃传出的事件).
 	sent, err := recorder.ActionOrDrop(watch.Added, event)
 	if err != nil {
 		klog.Errorf("unable to record event: %v (will not retry!)", err)

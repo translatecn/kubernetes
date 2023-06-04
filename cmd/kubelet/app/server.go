@@ -385,12 +385,12 @@ func UnsecuredDependencies(s *options.KubeletServer, featureGate featuregate.Fea
 		EventClient:         nil,
 		TracerProvider:      tp,
 		HostUtil:            hu,
-		Mounter:             mounter,
+		Mounter:             mounter, // ✅
 		Subpather:           subpather,
 		OOMAdjuster:         oom.NewOOMAdjuster(),
 		OSInterface:         kubecontainer.RealOS{},
-		VolumePlugins:       plugins,
-		DynamicPluginProber: GetDynamicPluginProber(s.VolumePluginDir, pluginRunner),
+		VolumePlugins:       plugins,                                                 // ✅
+		DynamicPluginProber: GetDynamicPluginProber(s.VolumePluginDir, pluginRunner), // ✅
 		TLSOptions:          tlsOptions}, nil
 }
 
@@ -1147,7 +1147,6 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 	if kubeDeps.OSInterface == nil {
 		kubeDeps.OSInterface = kubecontainer.RealOS{}
 	}
-
 	if kubeServer.KubeletConfiguration.SeccompDefault && !utilfeature.DefaultFeatureGate.Enabled(features.SeccompDefault) {
 		return fmt.Errorf("the SeccompDefault feature gate must be enabled in order to use the SeccompDefault configuration")
 	}
@@ -1226,11 +1225,11 @@ func createAndInitKubelet(kubeServer *options.KubeletServer,
 		kubeServer.ImageCredentialProviderBinDir,
 		kubeServer.RegisterNode,
 		kubeServer.RegisterWithTaints,
-		kubeServer.AllowedUnsafeSysctls, // 被允许的 sysctl 不安全指令
-		kubeServer.ExperimentalMounterPath,
-		kubeServer.KernelMemcgNotification,
+		kubeServer.AllowedUnsafeSysctls,    // 被允许的 sysctl 不安全指令
+		kubeServer.ExperimentalMounterPath, // mount程序的路径
+		kubeServer.KernelMemcgNotification, // kernel msg
 		kubeServer.ExperimentalNodeAllocatableIgnoreEvictionThreshold,
-		kubeServer.MinimumGCAge,
+		kubeServer.MinimumGCAge, // 完成的容器在被垃圾回收之前的最小年龄,默认是 0 分钟. 这意味着每个完成的容器都会被执行垃圾回收
 		kubeServer.MaxPerPodContainerCount,
 		kubeServer.MaxContainerCount,
 		kubeServer.MasterServiceNamespace,

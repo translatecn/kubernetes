@@ -45,6 +45,8 @@ import (
 
 type ActivePodsFunc func() []*v1.Pod
 
+// ContainerManager -  管理容器的各种资源,比如 CGroups、QoS、cpuset、device 等
+// - 内置了很多资源管理器,总结起来就是其他manager的管家
 type ContainerManager interface {
 	// Start 运行容器管理器的 housekeeping.
 	// - 确保 Docker 守护进程在容器中运行.
@@ -55,49 +57,26 @@ type ContainerManager interface {
 	// These cgroups include the system and Kubernetes services.
 	SystemCgroupsLimit() v1.ResourceMap
 
-	// GetNodeConfig returns a NodeConfig that is being used by the container manager.
-	GetNodeConfig() NodeConfig
-
-	// Status returns internal Status.
-	Status() Status
-	NewPodContainerManager() PodContainerManager //
-	// GetMountedSubsystems returns the mounted cgroup subsystems on the node
-	GetMountedSubsystems() *CgroupSubsystems
-
-	// GetQOSContainersInfo returns the names of top level QoS containers
-	GetQOSContainersInfo() QOSContainersInfo
-
-	// GetNodeAllocatableReservation returns the amount of compute resources that have to be reserved from scheduling.
-	GetNodeAllocatableReservation() v1.ResourceMap
-
-	// GetCapacity returns the amount of compute resources tracked by container manager available on the node.
-	GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap
-
-	// GetDevicePluginResourceCapacity returns the node capacity (amount of total device plugin resources),
-	// node allocatable (amount of total healthy resources reported by device plugin),
-	// and inactive device plugin resources previously registered on the node.
-	GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string)
-
-	// UpdateQOSCgroups performs housekeeping updates to ensure that the top
-	// level QoS containers have their desired state in a thread-safe way
-	UpdateQOSCgroups() error
+	GetNodeConfig() NodeConfig                                                   // 返回节点配置
+	Status() Status                                                              // 返回内部错误信息
+	NewPodContainerManager() PodContainerManager                                 // 工厂函数返回podContainerManager对象
+	GetMountedSubsystems() *CgroupSubsystems                                     // 返回节点上挂载的 cgroup subsystems
+	GetQOSContainersInfo() QOSContainersInfo                                     //  返回顶级qos 容器名
+	GetNodeAllocatableReservation() v1.ResourceMap                               // 返回节点预留的资源
+	GetCapacity(localStorageCapacityIsolation bool) v1.ResourceMap               //  返回节点上可用的资源
+	GetDevicePluginResourceCapacity() (v1.ResourceMap, v1.ResourceMap, []string) // 返回节点上插件资源总量,可用总量和不活跃的插件资源
+	UpdateQOSCgroups() error                                                     // 确保顶级qos容器在期望的状态中
 
 	// GetResources returns RunContainerOptions with devices, mounts, and env fields populated for
 	// extended resources required by container.
-	GetResources(pod *v1.Pod, container *v1.Container) (*kubecontainer.RunContainerOptions, error) //
+	GetResources(pod *v1.Pod, container *v1.Container) (*kubecontainer.RunContainerOptions, error) // 返回
 	UpdatePluginResources(*schedulerframework.NodeInfo, *lifecycle.PodAdmitAttributes) error       // 预分配需要的资源
 	InternalContainerLifecycle() InternalContainerLifecycle                                        //
+	GetPodCgroupRoot() string                                                                      // 返回 cgroup的root
+	GetPluginRegistrationHandler() cache.PluginHandler                                             // 插件注册
 
-	// GetPodCgroupRoot returns the cgroup which contains all pods.
-	GetPodCgroupRoot() string
-
-	// GetPluginRegistrationHandler returns a plugin registration handler
-	// The pluginwatcher's Handlers allow to have a single module for handling
-	// registration.
-	GetPluginRegistrationHandler() cache.PluginHandler
-
-	ShouldResetExtendedResourceCapacity() bool                      // 检查设备管理器,看看是否重新创建了节点,在这种情况下,应该将扩展资源归零,直到它们可用为止
-	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // 在Pod创建时，资源预分配检查
+	ShouldResetExtendedResourceCapacity() bool                      // 决定扩展资源是否清理
+	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // pod准入控制器
 	// GetNodeAllocatableAbsolute returns the absolute value of Node Allocatable which is primarily useful for enforcement.
 	GetNodeAllocatableAbsolute() v1.ResourceMap
 
@@ -106,7 +85,7 @@ type ContainerManager interface {
 
 	// UnrepareResources unprepares pod resources
 	UnprepareResources(*v1.Pod) error
-	PodMightNeedToUnprepareResources(UID types.UID) bool // 如果具有给定UID的pod可能需要准备资源，则返回true。
+	PodMightNeedToUnprepareResources(UID types.UID) bool // 如果具有给定UID的pod可能需要准备资源,则返回true.
 
 	// Implements the podresources Provider API for CPUs, Memory and Devices
 	podresources.CPUsProvider

@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	containerTopologyScope = "container" // 每个容器都有自己的拓扑结构信息，并且可以根据需要进行调度和运行。
-	podTopologyScope       = "pod"       // 每个 Pod 都有自己的拓扑结构信息，并且可以根据需要进行调度和运行。
+	containerTopologyScope = "container" // 每个容器都有自己的拓扑结构信息,并且可以根据需要进行调度和运行.
+	podTopologyScope       = "pod"       // 每个 Pod 都有自己的拓扑结构信息,并且可以根据需要进行调度和运行.
 )
 
 type podTopologyHints map[string]map[string]TopologyHint

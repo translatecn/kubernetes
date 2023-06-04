@@ -87,35 +87,6 @@ func skipEmptyNames(visitor Visitor) Visitor {
 	}
 }
 
-// VisitContainers invokes the visitor function with a pointer to every container
-// spec in the given pod spec with type set in mask. If visitor returns false,
-// visiting is short-circuited. VisitContainers returns true if visiting completes,
-// false if visiting was short-circuited.
-func VisitContainers(podSpec *v1.PodSpec, mask ContainerType, visitor ContainerVisitor) bool {
-	if mask&InitContainers != 0 {
-		for i := range podSpec.InitContainers {
-			if !visitor(&podSpec.InitContainers[i], InitContainers) {
-				return false
-			}
-		}
-	}
-	if mask&Containers != 0 {
-		for i := range podSpec.Containers {
-			if !visitor(&podSpec.Containers[i], Containers) {
-				return false
-			}
-		}
-	}
-	if mask&EphemeralContainers != 0 {
-		for i := range podSpec.EphemeralContainers {
-			if !visitor((*v1.Container)(&podSpec.EphemeralContainers[i].EphemeralContainerCommon), EphemeralContainers) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 // VisitPodSecretNames invokes the visitor function with the name of every secret
 // referenced by the pod spec. If visitor returns false, visiting is short-circuited.
 // Transitive references (e.g. pod -> pvc -> pv -> secret) are not visited.
@@ -383,4 +354,33 @@ func UpdatePodCondition(status *v1.PodStatus, condition *v1.PodCondition) bool {
 	status.Conditions[conditionIndex] = *condition
 	// Return true if one of the fields have changed.
 	return !isEqual
+}
+
+// VisitContainers invokes the visitor function with a pointer to every container
+// spec in the given pod spec with type set in mask. If visitor returns false,
+// visiting is short-circuited. VisitContainers returns true if visiting completes,
+// false if visiting was short-circuited.
+func VisitContainers(podSpec *v1.PodSpec, mask ContainerType, visitor ContainerVisitor) bool {
+	if mask&InitContainers != 0 {
+		for i := range podSpec.InitContainers {
+			if !visitor(&podSpec.InitContainers[i], InitContainers) {
+				return false
+			}
+		}
+	}
+	if mask&Containers != 0 {
+		for i := range podSpec.Containers {
+			if !visitor(&podSpec.Containers[i], Containers) {
+				return false
+			}
+		}
+	}
+	if mask&EphemeralContainers != 0 {
+		for i := range podSpec.EphemeralContainers {
+			if !visitor((*v1.Container)(&podSpec.EphemeralContainers[i].EphemeralContainerCommon), EphemeralContainers) {
+				return false
+			}
+		}
+	}
+	return true
 }

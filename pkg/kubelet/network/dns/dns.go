@@ -66,7 +66,7 @@ type Configurer struct {
 	// If non-nil, use this for container DNS server.
 	clusterDNS     []net.IP
 	ClusterDomain  string // 自定义 域
-	ResolverConfig string // 用于配置 Kubernetes 中容器 DNS 的选项，用于指定 DNS 解析器配置文件的路径 , 可以与 clusterDomain 和 clusterDNS 选项一起使用
+	ResolverConfig string // 用于配置 Kubernetes 中容器 DNS 的选项,用于指定 DNS 解析器配置文件的路径 , 可以与 clusterDomain 和 clusterDNS 选项一起使用
 }
 
 // NewConfigurer returns a DNS configurer for launching pods.

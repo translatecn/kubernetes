@@ -24,7 +24,7 @@ import (
 )
 
 type RuntimeVersioner interface {
-	Version(ctx context.Context, apiVersion string) (*runtimeapi.VersionResponse, error) // 返回运行时的 名称，版本，api版本
+	Version(ctx context.Context, apiVersion string) (*runtimeapi.VersionResponse, error) // 返回运行时的 名称,版本,api版本
 }
 
 // ContainerManager contains methods to manipulate containers managed by a
@@ -38,20 +38,15 @@ type ContainerManager interface {
 	StopContainer(ctx context.Context, containerID string, timeout int64) error
 	// RemoveContainer removes the container.
 	RemoveContainer(ctx context.Context, containerID string) error
-	// ListContainers lists all containers by filters.
 	ListContainers(ctx context.Context, filter *runtimeapi.ContainerFilter) ([]*runtimeapi.Container, error)
 	// ContainerStatus returns the status of the container.
 	ContainerStatus(ctx context.Context, containerID string, verbose bool) (*runtimeapi.ContainerStatusResponse, error)
 	// UpdateContainerResources updates ContainerConfig of the container synchronously.
 	// If runtime fails to transactionally update the requested resources, an error is returned.
 	UpdateContainerResources(ctx context.Context, containerID string, resources *runtimeapi.ContainerResources) error
-	// ExecSync executes a command in the container, and returns the stdout output.
-	// If command exits with a non-zero exit code, an error is returned.
-	ExecSync(ctx context.Context, containerID string, cmd []string, timeout time.Duration) (stdout []byte, stderr []byte, err error)
-	// Exec prepares a streaming endpoint to execute a command in the container, and returns the address.
-	Exec(context.Context, *runtimeapi.ExecRequest) (*runtimeapi.ExecResponse, error)
-	// Attach prepares a streaming endpoint to attach to a running container, and returns the address.
-	Attach(ctx context.Context, req *runtimeapi.AttachRequest) (*runtimeapi.AttachResponse, error)
+	ExecSync(ctx context.Context, containerID string, cmd []string, timeout time.Duration) (stdout []byte, stderr []byte, err error) // 执行命令,返回结果
+	Exec(context.Context, *runtimeapi.ExecRequest) (*runtimeapi.ExecResponse, error)                                                 // 执行命令,返回一个stream socket,用于实时返回结果
+	Attach(ctx context.Context, req *runtimeapi.AttachRequest) (*runtimeapi.AttachResponse, error)                                   // 和exec 很像
 	// ReopenContainerLog asks runtime to reopen the stdout/stderr log file
 	// for the container. If it returns error, new container log file MUST NOT
 	// be created.
@@ -69,7 +64,7 @@ type PodSandboxManager interface {
 	RunPodSandbox(ctx context.Context, config *runtimeapi.PodSandboxConfig, runtimeHandler string) (string, error)
 	// StopPodSandbox stops the sandbox. If there are any running containers in the
 	// sandbox, they should be force terminated.
-	StopPodSandbox(pctx context.Context, odSandboxID string) error
+	StopPodSandbox(pctx context.Context, odSandboxID string) error // 如果沙盒里有正在运行的容器,也会删除
 	// RemovePodSandbox removes the sandbox. If there are running containers in the
 	// sandbox, they should be forcibly removed.
 	RemovePodSandbox(ctx context.Context, podSandboxID string) error

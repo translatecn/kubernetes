@@ -42,14 +42,14 @@ const incomingQueueLength = 25
 // is delivered to every watcher.
 // 用于将事件通知分发给任意数量的观察者
 type Broadcaster struct {
-	watchers            map[int64]*broadcasterWatcher // 一个 map，用于存储所有观察者的信息。
-	nextWatcher         int64                         // 下一个观察者的 ID。
-	distributing        sync.WaitGroup                // 用于等待所有观察者处理完所有事件。
-	incomingBlock       sync.Mutex                    // 用于确保在 Broadcaster 关闭后不会向已关闭的通道发送事件。
-	incoming            chan Event                    // 用于收集事件，统一的入口。
-	stopped             chan struct{}                 // 通知所有观察者停止处理事件。
-	watchQueueLength    int                           // 每个观察者通道的缓冲区大小。
-	fullChannelBehavior FullChannelBehavior           // 如果某个观察者通道已满，应该如何处理事件。
+	watchers            map[int64]*broadcasterWatcher // 一个 map,用于存储所有观察者的信息.
+	nextWatcher         int64                         // 下一个观察者的 ID.
+	distributing        sync.WaitGroup                // 用于等待所有观察者处理完所有事件.
+	incomingBlock       sync.Mutex                    // 用于确保在 Broadcaster 关闭后不会向已关闭的通道发送事件.
+	incoming            chan Event                    // 用于收集事件,统一的入口.
+	stopped             chan struct{}                 // 通知所有观察者停止处理事件.
+	watchQueueLength    int                           // 每个观察者通道的缓冲区大小.
+	fullChannelBehavior FullChannelBehavior           // 如果某个观察者通道已满,应该如何处理事件.
 }
 
 func NewBroadcaster(queueLength int, fullChannelBehavior FullChannelBehavior) *Broadcaster {
@@ -98,7 +98,7 @@ func (obj functionFakeRuntimeObject) DeepCopyObject() runtime.Object {
 // The purpose of this terrible hack is so that watchers added after an event
 // won't ever see that event, and will always see any event after they are
 // added.
-// 执行f，阻塞进入的队列(并等待它先耗尽)。这样做的目的是为了让事件后添加的观察者永远不会看到该事件，而总是在添加事件后看到任何事件。
+// 执行f,阻塞进入的队列(并等待它先耗尽).这样做的目的是为了让事件后添加的观察者永远不会看到该事件,而总是在添加事件后看到任何事件.
 func (m *Broadcaster) blockQueue(f func()) {
 	m.incomingBlock.Lock()
 	defer m.incomingBlock.Unlock()
@@ -194,7 +194,7 @@ func (m *Broadcaster) closeAll() {
 
 func (m *Broadcaster) Action(action EventType, obj runtime.Object) error { // ✅
 	//recorder.Action(
-	// 将给定的事件分配给所有的观察者，如果有太多的动作排队，则将其丢弃。如果动作被发送则返回true，如果被丢弃则返回false。
+	// 将给定的事件分配给所有的观察者,如果有太多的动作排队,则将其丢弃.如果动作被发送则返回true,如果被丢弃则返回false.
 	m.incomingBlock.Lock()
 	defer m.incomingBlock.Unlock()
 	select {

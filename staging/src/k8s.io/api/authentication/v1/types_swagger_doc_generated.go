@@ -64,7 +64,7 @@ func (TokenRequestSpec) SwaggerDoc() map[string]string {
 var map_TokenRequestStatus = map[string]string{
 	"":                    "TokenRequestStatus is the result of a token request.",
 	"token":               "Token is the opaque bearer token.",
-	"expirationTimestamp": "ExpirationTimestamp is the time of expiration of the returned token.",
+	"expirationTimestamp": "ExpirationTimestamp 返回令牌的过期时间.",
 }
 
 func (TokenRequestStatus) SwaggerDoc() map[string]string {

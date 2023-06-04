@@ -1326,7 +1326,7 @@ func schema_pkg_apis_meta_v1_ObjectMeta(ref common.ReferenceCallback) common.Ope
 					},
 					"generateName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "一个可选的前缀，由服务器用于生成唯一名称，仅在未提供 Name 字段时使用。 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
+							Description: "一个可选的前缀,由服务器用于生成唯一名称,仅在未提供 Name 字段时使用. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
 							Type:        []string{"string"},
 							Format:      "",
 						},

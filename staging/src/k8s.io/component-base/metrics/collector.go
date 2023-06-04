@@ -25,7 +25,7 @@ import (
 
 // StableCollector extends the prometheus.Collector interface to allow customization of the
 // metric registration process, it's especially intend to be used in scenario of custom collector.
-// 定义了一组方法，用于实现自定义的指标收集器。通过实现这些方法，可以采集和导出 Kubernetes 中的各种指标数据。
+// 定义了一组方法,用于实现自定义的指标收集器.通过实现这些方法,可以采集和导出 Kubernetes 中的各种指标数据.
 type StableCollector interface {
 	prometheus.Collector
 

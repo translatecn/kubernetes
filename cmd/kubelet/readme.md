@@ -151,10 +151,10 @@ task=python,pid=988370,uid=0
 
 
 ```
-/proc/self/uid_map 文件的内容表示当前进程在用户命名空间中的 UID 映射关系。文件中每一行表示一个映射关系，格式为：
+/proc/self/uid_map 文件的内容表示当前进程在用户命名空间中的 UID 映射关系.文件中每一行表示一个映射关系,格式为：
 ID-inside-ns ID-outside-ns count
 
-ID-inside-ns 表示用户命名空间内的 UID。
-ID-outside-ns 表示用户命名空间外的 UID。
-count 表示映射的长度。 2**32-1
+ID-inside-ns 表示用户命名空间内的 UID.
+ID-outside-ns 表示用户命名空间外的 UID.
+count 表示映射的长度. 2**32-1
 ```

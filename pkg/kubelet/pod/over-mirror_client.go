@@ -32,11 +32,11 @@ import (
 
 // MirrorClient knows how to create/delete a mirror pod in the API server.
 type MirrorClient interface {
-	// CreateMirrorPod 在 API 服务器中为给定的 Pod 创建镜像 Pod，或返回一个错误。
-	// 镜像 Pod 将具有与给定 Pod 相同的注释，以及一个额外的注释，其中包含静态 Pod 的哈希值。
+	// CreateMirrorPod 在 API 服务器中为给定的 Pod 创建镜像 Pod,或返回一个错误.
+	// 镜像 Pod 将具有与给定 Pod 相同的注释,以及一个额外的注释,其中包含静态 Pod 的哈希值.
 	CreateMirrorPod(pod *v1.Pod) error
-	// DeleteMirrorPod 从 API 服务器中删除具有给定完整名称的镜像 Pod，或返回一个错误。
-	//如果 UID 不为 nil，则只有在其 UID 与提供的 UID 匹配时才会删除该 Pod。它返回该 Pod 是否实际上被删除，以及在删除 Pod 时返回的任何错误。
+	// DeleteMirrorPod 从 API 服务器中删除具有给定完整名称的镜像 Pod,或返回一个错误.
+	//如果 UID 不为 nil,则只有在其 UID 与提供的 UID 匹配时才会删除该 Pod.它返回该 Pod 是否实际上被删除,以及在删除 Pod 时返回的任何错误.
 	DeleteMirrorPod(podFullName string, uid *types.UID) (bool, error)
 }
 

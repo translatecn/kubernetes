@@ -34,27 +34,9 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// AttachFileDevice takes a path to a regular file and makes it available as an
-// attached block device.
-func (v VolumePathHandler) AttachFileDevice(path string) (string, error) {
-	blockDevicePath, err := v.GetLoopDevice(path)
-	if err != nil && err.Error() != ErrDeviceNotFound {
-		return "", fmt.Errorf("GetLoopDevice failed for path %s: %v", path, err)
-	}
-
-	// If no existing loop device for the path, create one
-	if blockDevicePath == "" {
-		klog.V(4).Infof("Creating device for path: %s", path)
-		blockDevicePath, err = makeLoopDevice(path)
-		if err != nil {
-			return "", fmt.Errorf("makeLoopDevice failed for path %s: %v", path, err)
-		}
-	}
-	return blockDevicePath, nil
-}
-
 // DetachFileDevice takes a path to the attached block device and
 // detach it from block device.
+// 释放文件描述符锁
 func (v VolumePathHandler) DetachFileDevice(path string) error {
 	loopPath, err := v.GetLoopDevice(path)
 	if err != nil {
@@ -74,32 +56,6 @@ func (v VolumePathHandler) DetachFileDevice(path string) error {
 	return nil
 }
 
-// GetLoopDevice returns the full path to the loop device associated with the given path.
-func (v VolumePathHandler) GetLoopDevice(path string) (string, error) {
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return "", errors.New(ErrDeviceNotFound)
-	}
-	if err != nil {
-		return "", fmt.Errorf("not attachable: %v", err)
-	}
-
-	return getLoopDeviceFromSysfs(path)
-}
-
-func makeLoopDevice(path string) (string, error) {
-	args := []string{"-f", path}
-	cmd := exec.Command(losetupPath, args...)
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		klog.V(2).Infof("Failed device create command for path: %s %v %s", path, err, out)
-		return "", fmt.Errorf("losetup %s failed: %v", strings.Join(args, " "), err)
-	}
-
-	return getLoopDeviceFromSysfs(path)
-}
-
 // removeLoopDevice removes specified loopback device
 func removeLoopDevice(device string) error {
 	args := []string{"-d", device}
@@ -113,39 +69,6 @@ func removeLoopDevice(device string) error {
 		return fmt.Errorf("losetup -d %s failed: %v", device, err)
 	}
 	return nil
-}
-
-// getLoopDeviceFromSysfs finds the backing file for a loop
-// device from sysfs via "/sys/block/loop*/loop/backing_file".
-func getLoopDeviceFromSysfs(path string) (string, error) {
-	// If the file is a symlink.
-	realPath, err := filepath.EvalSymlinks(path)
-	if err != nil {
-		return "", fmt.Errorf("failed to evaluate path %s: %s", path, err)
-	}
-
-	devices, err := filepath.Glob("/sys/block/loop*")
-	if err != nil {
-		return "", fmt.Errorf("failed to list loop devices in sysfs: %s", err)
-	}
-
-	for _, device := range devices {
-		backingFile := fmt.Sprintf("%s/loop/backing_file", device)
-
-		// The contents of this file is the absolute path of "path".
-		data, err := ioutil.ReadFile(backingFile)
-		if err != nil {
-			continue
-		}
-
-		// Return the first match.
-		backingFilePath := strings.TrimSpace(string(data))
-		if backingFilePath == path || backingFilePath == realPath {
-			return fmt.Sprintf("/dev/%s", filepath.Base(device)), nil
-		}
-	}
-
-	return "", errors.New(ErrDeviceNotFound)
 }
 
 // FindGlobalMapPathUUIDFromPod finds {pod uuid} bind mount under globalMapPath
@@ -226,4 +149,80 @@ func getDeviceMajorMinor(path string) (string, error) {
 	minor := unix.Minor(devNumber)
 
 	return fmt.Sprintf("%x:%x", major, minor), nil
+}
+
+// GetLoopDevice returns the full path to the loop device associated with the given path.
+func (v VolumePathHandler) GetLoopDevice(path string) (string, error) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return "", errors.New(ErrDeviceNotFound)
+	}
+	if err != nil {
+		return "", fmt.Errorf("not attachable: %v", err)
+	}
+
+	return getLoopDeviceFromSysfs(path)
+}
+
+// getLoopDeviceFromSysfs finds the backing file for a loop
+// device from sysfs via "/sys/block/loop*/loop/backing_file".
+func getLoopDeviceFromSysfs(path string) (string, error) {
+	// If the file is a symlink.
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to evaluate path %s: %s", path, err)
+	}
+
+	devices, err := filepath.Glob("/sys/block/loop*")
+	if err != nil {
+		return "", fmt.Errorf("failed to list loop devices in sysfs: %s", err)
+	}
+
+	for _, device := range devices {
+		backingFile := fmt.Sprintf("%s/loop/backing_file", device)
+
+		// The contents of this file is the absolute path of "path".
+		data, err := ioutil.ReadFile(backingFile)
+		if err != nil {
+			continue
+		}
+
+		// Return the first match.
+		backingFilePath := strings.TrimSpace(string(data))
+		if backingFilePath == path || backingFilePath == realPath {
+			return fmt.Sprintf("/dev/%s", filepath.Base(device)), nil
+		}
+	}
+
+	return "", errors.New(ErrDeviceNotFound)
+}
+func makeLoopDevice(path string) (string, error) {
+	args := []string{"-f", path}
+	cmd := exec.Command(losetupPath, args...)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		klog.V(2).Infof("Failed device create command for path: %s %v %s", path, err, out)
+		return "", fmt.Errorf("losetup %s failed: %v", strings.Join(args, " "), err)
+	}
+
+	return getLoopDeviceFromSysfs(path)
+}
+
+// AttachFileDevice 获取常规文件的路径,并使其作为附加块设备可用.
+func (v VolumePathHandler) AttachFileDevice(path string) (string, error) {
+	blockDevicePath, err := v.GetLoopDevice(path) // ✅ 返回与给定路径关联的loop设备的完整路径
+	if err != nil && err.Error() != ErrDeviceNotFound {
+		return "", fmt.Errorf("GetLoopDevice failed for path %s: %v", path, err)
+	}
+
+	// If no existing loop device for the path, create one
+	if blockDevicePath == "" {
+		klog.V(4).Infof("Creating device for path: %s", path)
+		blockDevicePath, err = makeLoopDevice(path) // ✅
+		if err != nil {
+			return "", fmt.Errorf("makeLoopDevice failed for path %s: %v", path, err)
+		}
+	}
+	return blockDevicePath, nil
 }

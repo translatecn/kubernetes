@@ -86,47 +86,9 @@ func registerMetrics() {
 	legacyregistry.MustRegister(csiOperationsLatencyMetric)
 }
 
-// OperationCompleteHook returns a hook to call when an operation is completed
-func OperationCompleteHook(plugin, operationName string) func(types.CompleteFuncParam) {
-	requestTime := time.Now()
-	opComplete := func(c types.CompleteFuncParam) {
-		timeTaken := time.Since(requestTime).Seconds()
-		// Create metric with operation name and plugin name
-		status := statusSuccess
-		if *c.Err != nil {
-			// TODO: Establish well-known error codes to be able to distinguish
-			// user configuration errors from system errors.
-			status = statusFailUnknown
-		}
-		migrated := false
-		if c.Migrated != nil {
-			migrated = *c.Migrated
-		}
-		StorageOperationMetric.WithLabelValues(plugin, operationName, status, strconv.FormatBool(migrated)).Observe(timeTaken)
-	}
-	return opComplete
-}
-
 // FSGroupCompleteHook returns a hook to call when volume recursive permission is changed
 func FSGroupCompleteHook(plugin volume.VolumePlugin, spec *volume.Spec) func(types.CompleteFuncParam) {
 	return OperationCompleteHook(GetFullQualifiedPluginNameForVolume(plugin.GetPluginName(), spec), "volume_apply_access_control")
-}
-
-// GetFullQualifiedPluginNameForVolume returns full qualified plugin name for
-// given volume. For CSI plugin, it appends plugin driver name at the end of
-// plugin name, e.g. kubernetes.io/csi:csi-hostpath. It helps to distinguish
-// between metrics emitted for CSI volumes which may be handled by different
-// CSI plugin drivers.
-func GetFullQualifiedPluginNameForVolume(pluginName string, spec *volume.Spec) string {
-	if spec != nil {
-		if spec.Volume != nil && spec.Volume.CSI != nil {
-			return fmt.Sprintf("%s:%s", pluginName, spec.Volume.CSI.Driver)
-		}
-		if spec.PersistentVolume != nil && spec.PersistentVolume.Spec.CSI != nil {
-			return fmt.Sprintf("%s:%s", pluginName, spec.PersistentVolume.Spec.CSI.Driver)
-		}
-	}
-	return pluginName
 }
 
 // RecordOperationLatencyMetric records the end to end latency for certain operation
@@ -158,4 +120,39 @@ func getErrorCode(err error) string {
 	}
 
 	return st.Code().String()
+}
+
+// GetFullQualifiedPluginNameForVolume 返回给定卷的完全限定插件名称.
+// 对于CSI插件,它会在插件名称的末尾附加插件驱动程序的名称,例如kubernetes.io/csi:csi-hostpath.这有助于区分由不同CSI插件驱动程序处理的CSI卷所发出的指标.
+func GetFullQualifiedPluginNameForVolume(pluginName string, spec *volume.Spec) string {
+	if spec != nil {
+		if spec.Volume != nil && spec.Volume.CSI != nil {
+			return fmt.Sprintf("%s:%s", pluginName, spec.Volume.CSI.Driver)
+		}
+		if spec.PersistentVolume != nil && spec.PersistentVolume.Spec.CSI != nil {
+			return fmt.Sprintf("%s:%s", pluginName, spec.PersistentVolume.Spec.CSI.Driver)
+		}
+	}
+	return pluginName
+}
+
+// OperationCompleteHook returns a hook to call when an operation is completed
+func OperationCompleteHook(plugin, operationName string) func(types.CompleteFuncParam) {
+	requestTime := time.Now()
+	opComplete := func(c types.CompleteFuncParam) {
+		timeTaken := time.Since(requestTime).Seconds()
+		// Create metric with operation name and plugin name
+		status := statusSuccess
+		if *c.Err != nil {
+			// TODO: Establish well-known error codes to be able to distinguish
+			// user configuration errors from system errors.
+			status = statusFailUnknown
+		}
+		migrated := false
+		if c.Migrated != nil {
+			migrated = *c.Migrated
+		}
+		StorageOperationMetric.WithLabelValues(plugin, operationName, status, strconv.FormatBool(migrated)).Observe(timeTaken)
+	}
+	return opComplete
 }

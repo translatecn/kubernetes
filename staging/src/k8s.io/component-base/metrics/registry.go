@@ -149,7 +149,7 @@ type KubeRegistry interface {
 	Gatherer() prometheus.Gatherer
 }
 
-// kubereregistry 是prometheus注册表类型对象的包装器。在初始化时，kubernetes二进制版本信息被加载到注册表对象中，这样就可以为指标版本配置自动行为。
+// kubereregistry 是prometheus注册表类型对象的包装器.在初始化时,kubernetes二进制版本信息被加载到注册表对象中,这样就可以为指标版本配置自动行为.
 type kubeRegistry struct {
 	PromRegistry
 	version              semver.Version
@@ -186,7 +186,7 @@ func (kr *kubeRegistry) Gatherer() prometheus.Gatherer {
 	return kr.PromRegistry
 }
 
-// MustRegister 的工作方式与Register类似，但它注册了任意数量的collector，并且在第一次注册时出现panic，从而导致错误。
+// MustRegister 的工作方式与Register类似,但它注册了任意数量的collector,并且在第一次注册时出现panic,从而导致错误.
 func (kr *kubeRegistry) MustRegister(cs ...Registerable) {
 	metrics := make([]prometheus.Collector, 0, len(cs))
 	for _, c := range cs {
@@ -237,7 +237,7 @@ func (kr *kubeRegistry) RawMustRegister(cs ...prometheus.Collector) {
 	}
 }
 
-// addressettable 将自动添加我们的度量到我们的重置列表，如果它满足接口
+// addressettable 将自动添加我们的度量到我们的重置列表,如果它满足接口
 func (kr *kubeRegistry) addResettable(i interface{}) {
 	kr.resetLock.Lock()
 	defer kr.resetLock.Unlock()

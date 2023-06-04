@@ -85,7 +85,7 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 		}
 	}
 
-	// 删除节点信息中缺少的扩展资源请求。这是支持集群级资源所必需的，这些资源是节点未知的扩展资源。
+	// 删除节点信息中缺少的扩展资源请求.这是支持集群级资源所必需的,这些资源是节点未知的扩展资源.
 	podWithoutMissingExtendedResources := removeMissingExtendedResources(admitPod, nodeInfo)
 
 	reasons := generalFilter(podWithoutMissingExtendedResources, nodeInfo) // 资源、污点 的检查
@@ -96,7 +96,7 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 		fit = len(reasons) == 0 && err == nil
 		if err != nil {
 			message := fmt.Sprintf("Unexpected error while attempting to recover from admission failure: %v", err)
-			klog.InfoS("尝试从拒绝 Pod 的错误中恢复时出现了意外错误。", "pod", klog.KObj(admitPod), "err", err)
+			klog.InfoS("尝试从拒绝 Pod 的错误中恢复时出现了意外错误.", "pod", klog.KObj(admitPod), "err", err)
 			return PodAdmitResult{
 				Admit:   fit,
 				Reason:  "UnexpectedAdmissionError",
@@ -109,8 +109,8 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 		var reason string
 		var message string
 		if len(reasons) == 0 {
-			message = fmt.Sprint("由于未知原因导致GeneralPredicates失败，这是意外的。")
-			klog.InfoS("未能承认pod:由于未知原因导致GeneralPredicates失败，这是意外的", "pod", klog.KObj(admitPod))
+			message = fmt.Sprint("由于未知原因导致GeneralPredicates失败,这是意外的.")
+			klog.InfoS("未能承认pod:由于未知原因导致GeneralPredicates失败,这是意外的", "pod", klog.KObj(admitPod))
 			return PodAdmitResult{
 				Admit:   fit,
 				Reason:  "UnknownReason",
@@ -153,7 +153,7 @@ func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult 
 		return PodAdmitResult{
 			Admit:   false,
 			Reason:  "PodOSNotSupported",
-			Message: "评估pod失败，因为OS字段与节点OS不匹配",
+			Message: "评估pod失败,因为OS字段与节点OS不匹配",
 		}
 	}
 	return PodAdmitResult{
@@ -237,7 +237,7 @@ func (e *InsufficientResourceError) GetReason() string {
 	return fmt.Sprintf("Insufficient %v", e.ResourceName)
 }
 
-// GetInsufficientAmount 返回错误中资源不足的数量。
+// GetInsufficientAmount 返回错误中资源不足的数量.
 func (e *InsufficientResourceError) GetInsufficientAmount() int64 {
 	return e.Requested - (e.Capacity - e.Used)
 }
@@ -257,7 +257,7 @@ func (e *PredicateFailureError) GetReason() string {
 	return e.PredicateDesc
 }
 
-// 检查kubelet关心的一组过滤器。
+// 检查kubelet关心的一组过滤器.
 func generalFilter(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) []PredicateFailureReason {
 	admissionResults := scheduler.AdmissionCheck(pod, nodeInfo, true) // 对 noderesources/nodeport/nodeAffinity/nodename 做一些检查  ✅
 	var reasons []PredicateFailureReason

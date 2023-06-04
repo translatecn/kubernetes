@@ -298,8 +298,8 @@ func startAttachDetachController(ctx context.Context, controllerContext Controll
 			controllerContext.InformerFactory.Core().V1().PersistentVolumeClaims(),
 			controllerContext.InformerFactory.Core().V1().PersistentVolumes(),
 			csiNodeInformer,
-			csiDriverInformer,
-			controllerContext.InformerFactory.Storage().V1().VolumeAttachments(),
+			csiDriverInformer, // ✅
+			controllerContext.InformerFactory.Storage().V1().VolumeAttachments(), // ✅
 			controllerContext.Cloud,
 			plugins,
 			GetDynamicPluginProber(controllerContext.ComponentConfig.PersistentVolumeBinderController.VolumeConfiguration),

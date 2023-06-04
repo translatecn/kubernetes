@@ -62,9 +62,9 @@ type RuntimeHelper interface {
 	GetOrCreateUserNamespaceMappings(pod *v1.Pod) (*runtimeapi.UserNamespace, error)
 }
 
-// ShouldContainerBeRestarted checks whether a container needs to be restarted.
+// ShouldContainerBeRestarted 检查是否应该restart
 // TODO(yifan): Think about how to refactor this.
-func ShouldContainerBeRestarted(container *v1.Container, pod *v1.Pod, podStatus *PodStatus) bool {
+func ShouldContainerBeRestarted(container *v1.Container, pod *v1.Pod, podStatus *PodStatus) bool { // ✅
 	// Once a pod has been marked deleted, it should not be restarted
 	if pod.DeletionTimestamp != nil {
 		return false

@@ -197,13 +197,13 @@ func (r *remoteImageService) RemoveImage(ctx context.Context, image *runtimeapi.
 }
 
 // ImageFsInfo returns information of the filesystem that is used to store images.
-func (r *remoteImageService) ImageFsInfo(ctx context.Context) ([]*runtimeapi.FilesystemUsage, error) {
+func (r *remoteImageService) ImageFsInfo(ctx context.Context) ([]*runtimeapi.FilesystemUsage, error) { // ✅
 	// Do not set timeout, because `ImageFsInfo` takes time.
 	// TODO(random-liu): Should we assume runtime should cache the result, and set timeout here?
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	return r.imageFsInfoV1(ctx)
+	return r.imageFsInfoV1(ctx) // ✅
 }
 
 func (r *remoteImageService) imageFsInfoV1(ctx context.Context) ([]*runtimeapi.FilesystemUsage, error) {
@@ -212,5 +212,5 @@ func (r *remoteImageService) imageFsInfoV1(ctx context.Context) ([]*runtimeapi.F
 		klog.ErrorS(err, "ImageFsInfo from image service failed")
 		return nil, err
 	}
-	return resp.GetImageFilesystems(), nil
+	return resp.GetImageFilesystems(), nil // ✅
 }

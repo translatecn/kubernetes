@@ -19,9 +19,9 @@ package types
 
 import (
 	"errors"
+	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/mount-utils"
 )
 
@@ -58,26 +58,6 @@ func NewOperationContext(eventErr, detailedErr error, migrated bool) OperationCo
 type CompleteFuncParam struct {
 	Err      *error
 	Migrated *bool
-}
-
-// Run executes the operations and its supporting functions
-func (o *GeneratedOperations) Run() (eventErr, detailedErr error) {
-	var context OperationContext
-	if o.CompleteFunc != nil {
-		c := CompleteFuncParam{
-			Err:      &context.DetailedErr,
-			Migrated: &context.Migrated,
-		}
-		defer o.CompleteFunc(c)
-	}
-	if o.EventRecorderFunc != nil {
-		defer o.EventRecorderFunc(&eventErr)
-	}
-	// Handle panic, if any, from operationFunc()
-	defer runtime.RecoverFromPanic(&detailedErr)
-
-	context = o.OperationFunc()
-	return context.EventErr, context.DetailedErr
 }
 
 // FailedPrecondition error indicates CSI operation returned failed precondition
@@ -166,3 +146,25 @@ const (
 	// as a annotation to the PVC.
 	VolumeResizerKey = "volume.kubernetes.io/storage-resizer"
 )
+
+// --------------------------------------------------------------------------------------------------------------------
+
+// Run executes the operations and its supporting functions
+func (o *GeneratedOperations) Run() (eventErr, detailedErr error) {
+	var context OperationContext
+	if o.CompleteFunc != nil {
+		c := CompleteFuncParam{
+			Err:      &context.DetailedErr,
+			Migrated: &context.Migrated,
+		}
+		defer o.CompleteFunc(c)
+	}
+	if o.EventRecorderFunc != nil {
+		defer o.EventRecorderFunc(&eventErr)
+	}
+	// Handle panic, if any, from operationFunc()
+	defer runtime.RecoverFromPanic(&detailedErr)
+
+	context = o.OperationFunc() // 卸载、等操作
+	return context.EventErr, context.DetailedErr
+}

@@ -3358,7 +3358,7 @@ const (
 	MaxDNSNameservers             = 3    // 最大 DNS 名称服务器数
 	MaxDNSSearchPathsExpanded     = 32   // 扩展的 最大域数
 	MaxDNSSearchListCharsExpanded = 2048 // 扩展的 最大字符数
-	MaxDNSSearchPathsLegacy       = 6    // 最大domain数。
+	MaxDNSSearchPathsLegacy       = 6    // 最大domain数.
 	MaxDNSSearchListCharsLegacy   = 256  // 最大字符数和
 )
 

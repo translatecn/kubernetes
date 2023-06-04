@@ -199,11 +199,12 @@ func (p *Provider) GetRawContainerInfo(containerName string, req *cadvisorapiv1.
 
 // HasDedicatedImageFs   如果imagefs与rootfs在不同的设备上,则返回true.
 func (p *Provider) HasDedicatedImageFs(ctx context.Context) (bool, error) {
-	device, err := p.containerStatsProvider.ImageFsDevice(ctx)
+	// /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+	device, err := p.containerStatsProvider.ImageFsDevice(ctx) // 获取 imagefs  对应目录,在哪个挂载点以及设备上 ✅  (该目录由 cri 返回)
 	if err != nil {
 		return false, err
 	}
-	rootFsInfo, err := p.cadvisor.RootFsInfo()
+	rootFsInfo, err := p.cadvisor.RootFsInfo() // 获取 /var/lib/kubelet 在哪个挂载点以及设备上 ✅  (该目录写死)
 	if err != nil {
 		return false, err
 	}

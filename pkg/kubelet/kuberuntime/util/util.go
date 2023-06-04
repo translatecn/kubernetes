@@ -25,6 +25,7 @@ import (
 
 // PodSandboxChanged checks whether the spec of the pod is changed and returns
 // (changed, new attempt, original sandboxID if exist).
+// 是否改变了,
 func PodSandboxChanged(pod *v1.Pod, podStatus *kubecontainer.PodStatus) (bool, uint32, string) {
 	if len(podStatus.SandboxStatuses) == 0 {
 		klog.V(2).InfoS("No sandbox for pod can be found. Need to start a new one", "pod", klog.KObj(pod))
@@ -39,7 +40,7 @@ func PodSandboxChanged(pod *v1.Pod, podStatus *kubecontainer.PodStatus) (bool, u
 	}
 
 	// Needs to create a new sandbox when readySandboxCount > 1 or the ready sandbox is not the latest one.
-	sandboxStatus := podStatus.SandboxStatuses[0]
+	sandboxStatus := podStatus.SandboxStatuses[0] // 最新
 	if readySandboxCount > 1 {
 		klog.V(2).InfoS("Multiple sandboxes are ready for Pod. Need to reconcile them", "pod", klog.KObj(pod))
 		return true, sandboxStatus.Metadata.Attempt + 1, sandboxStatus.Id

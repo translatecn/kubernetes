@@ -37,33 +37,24 @@ const (
 
 // Interface defines the set of methods to allow for mount operations on a system.
 type Interface interface {
-	// Mount mounts source to target as fstype with given options.
-	// options MUST not contain sensitive material (like passwords).
+	//Mount 方法将源挂载到目标作为给定选项的 fstype.options 参数不能包含敏感材料（如密码）.
 	Mount(source string, target string, fstype string, options []string) error
-	// MountSensitive is the same as Mount() but this method allows
-	// sensitiveOptions to be passed in a separate parameter from the normal
-	// mount options and ensures the sensitiveOptions are never logged. This
-	// method should be used by callers that pass sensitive material (like
-	// passwords) as mount options.
+	// MountSensitive 方法与 Mount() 方法相同,但该方法允许将 sensitiveOptions 作为单独的参数传递,而不是与普通的挂载选项混合在一起,
+	// 并确保不会记录 sensitiveOptions.该方法应该由传递敏感材料（如密码）作为挂载选项的调用者使用.
 	MountSensitive(source string, target string, fstype string, options []string, sensitiveOptions []string) error
-	// MountSensitiveWithoutSystemd is the same as MountSensitive() but this method disable using systemd mount.
+	// 该方法禁用了使用 systemd 挂载. 这意味着该方法与 MountSensitive() 方法类似,但是不使用 systemd 来挂载卷,而是使用其他的挂载方式.
+	// 这通常是因为在某些系统或环境中,使用 systemd 挂载可能会导致问题,因此需要使用其他的挂载方式来避免这些问题.
 	MountSensitiveWithoutSystemd(source string, target string, fstype string, options []string, sensitiveOptions []string) error
-	// MountSensitiveWithoutSystemdWithMountFlags is the same as MountSensitiveWithoutSystemd() with additional mount flags
+
 	MountSensitiveWithoutSystemdWithMountFlags(source string, target string, fstype string, options []string, sensitiveOptions []string, mountFlags []string) error
-	// Unmount unmounts given target.
 	Unmount(target string) error
-	// List returns a list of all mounted filesystems.  This can be large.
-	// On some platforms, reading mounts directly from the OS is not guaranteed
-	// consistent (i.e. it could change between chunked reads). This is guaranteed
-	// to be consistent.
-	List() ([]MountPoint, error)
-	// IsLikelyNotMountPoint 使用启发式方法来确定一个目录是否不是挂载点。当目录不存在时，返回ErrNotExist。
-	// 不能正确检测所有挂载点类型，特别是linux绑定挂载和符号链接。对于不关心这种情况的调用者来说，这是调用List()并扫描输出的更快的替代方法。
+	List() ([]MountPoint, error) // 返回所有已挂载文件系统的列表
+	// IsLikelyNotMountPoint 确定一个目录是否不是挂载点.当目录不存在时,返回ErrNotExist.
+	// 不能正确检测所有挂载点类型,特别是linux绑定挂载和符号链接.对于不关心这种情况的调用者来说,这是调用List()并扫描输出的更快的替代方法.
 	IsLikelyNotMountPoint(file string) (bool, error)
-	// canSafelySkipMountPointCheck indicates whether this mounter returns errors on
-	// operations for targets that are not mount points. If this returns true, no such
-	// errors will be returned.
+	// 指示此挂载器是否在针对非挂载点的目标进行操作时返回错误.
 	canSafelySkipMountPointCheck() bool
+
 	// IsMountPoint determines if a directory is a mountpoint.
 	// It should return ErrNotExist when the directory does not exist.
 	// IsMountPoint is more expensive than IsLikelyNotMountPoint.
@@ -252,76 +243,6 @@ func GetDeviceNameFromMount(mounter Interface, mountPath string) (string, int, e
 	return device, refCount, nil
 }
 
-// MakeBindOpts detects whether a bind mount is being requested and makes the remount options to
-// use in case of bind mount, due to the fact that bind mount doesn't respect mount options.
-// The list equals:
-//
-//	options - 'bind' + 'remount' (no duplicate)
-func MakeBindOpts(options []string) (bool, []string, []string) {
-	bind, bindOpts, bindRemountOpts, _ := MakeBindOptsSensitive(options, nil /* sensitiveOptions */)
-	return bind, bindOpts, bindRemountOpts
-}
-
-// MakeBindOptsSensitive is the same as MakeBindOpts but this method allows
-// sensitiveOptions to be passed in a separate parameter from the normal mount
-// options and ensures the sensitiveOptions are never logged. This method should
-// be used by callers that pass sensitive material (like passwords) as mount
-// options.
-func MakeBindOptsSensitive(options []string, sensitiveOptions []string) (bool, []string, []string, []string) {
-	// Because we have an FD opened on the subpath bind mount, the "bind" option
-	// needs to be included, otherwise the mount target will error as busy if you
-	// remount as readonly.
-	//
-	// As a consequence, all read only bind mounts will no longer change the underlying
-	// volume mount to be read only.
-	bindRemountOpts := []string{"bind", "remount"}
-	bindRemountSensitiveOpts := []string{}
-	bind := false
-	bindOpts := []string{"bind"}
-
-	// _netdev is a userspace mount option and does not automatically get added when
-	// bind mount is created and hence we must carry it over.
-	if checkForNetDev(options, sensitiveOptions) {
-		bindOpts = append(bindOpts, "_netdev")
-	}
-
-	for _, option := range options {
-		switch option {
-		case "bind":
-			bind = true
-		case "remount":
-		default:
-			bindRemountOpts = append(bindRemountOpts, option)
-		}
-	}
-
-	for _, sensitiveOption := range sensitiveOptions {
-		switch sensitiveOption {
-		case "bind":
-			bind = true
-		case "remount":
-		default:
-			bindRemountSensitiveOpts = append(bindRemountSensitiveOpts, sensitiveOption)
-		}
-	}
-
-	return bind, bindOpts, bindRemountOpts, bindRemountSensitiveOpts
-}
-
-func checkForNetDev(options []string, sensitiveOptions []string) bool {
-	for _, option := range options {
-		if option == "_netdev" {
-			return true
-		}
-	}
-	for _, sensitiveOption := range sensitiveOptions {
-		if sensitiveOption == "_netdev" {
-			return true
-		}
-	}
-	return false
-}
-
 // PathWithinBase checks if give path is within given base directory.
 func PathWithinBase(fullPath, basePath string) bool {
 	rel, err := filepath.Rel(basePath, fullPath)
@@ -362,4 +283,72 @@ func sanitizedOptionsForLogging(options []string, sensitiveOptions []string) str
 		separator +
 		sensitiveOptionsStart +
 		sensitiveOptionsEnd
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+// MakeBindOptsSensitive  方法与 MakeBindOpts() 方法相同,但该方法允许将 sensitiveOptions 作为单独的参数传递,
+// 而不是与普通的挂载选项混合在一起,并确保不会记录 sensitiveOptions.该方法应该由传递敏感材料（如密码）作为挂载选项的调用者使用.
+func MakeBindOptsSensitive(options []string, sensitiveOptions []string) (bool, []string, []string, []string) {
+	// Because we have an FD opened on the subpath bind mount, the "bind" option
+	// needs to be included, otherwise the mount target will error as busy if you
+	// remount as readonly.
+	//
+	// As a consequence, all read only bind mounts will no longer change the underlying
+	// volume mount to be read only.
+	bindRemountOpts := []string{"bind", "remount"}
+	bindRemountSensitiveOpts := []string{}
+	bind := false
+	bindOpts := []string{"bind"}
+
+	// _netdev是一个用户空间挂载选项,在创建bind mount时不会自动添加,因此我们必须保留它.
+	if checkForNetDev(options, sensitiveOptions) {
+		bindOpts = append(bindOpts, "_netdev")
+	}
+
+	for _, option := range options {
+		switch option {
+		case "bind":
+			bind = true
+		case "remount":
+		default:
+			bindRemountOpts = append(bindRemountOpts, option)
+		}
+	}
+
+	for _, sensitiveOption := range sensitiveOptions {
+		switch sensitiveOption {
+		case "bind":
+			bind = true
+		case "remount":
+		default:
+			bindRemountSensitiveOpts = append(bindRemountSensitiveOpts, sensitiveOption)
+		}
+	}
+
+	return bind, bindOpts, bindRemountOpts, bindRemountSensitiveOpts
+}
+
+// MakeBindOpts detects whether a bind mount is being requested and makes the remount options to
+// use in case of bind mount, due to the fact that bind mount doesn't respect mount options.
+// The list equals:
+//
+//	options - 'bind' + 'remount' (no duplicate)
+func MakeBindOpts(options []string) (bool, []string, []string) {
+	bind, bindOpts, bindRemountOpts, _ := MakeBindOptsSensitive(options, nil /* sensitiveOptions */)
+	return bind, bindOpts, bindRemountOpts
+}
+
+func checkForNetDev(options []string, sensitiveOptions []string) bool {
+	for _, option := range options {
+		if option == "_netdev" {
+			return true
+		}
+	}
+	for _, sensitiveOption := range sensitiveOptions {
+		if sensitiveOption == "_netdev" {
+			return true
+		}
+	}
+	return false
 }

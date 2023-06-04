@@ -497,8 +497,8 @@ func preCheckForNode(nodeInfo *framework.NodeInfo) queue.PreEnqueueCheck {
 	}
 }
 
-// AdmissionCheck 调用 noderesources/nodeport/nodeAffinity/nodename 的过滤逻辑，返回失败原因。
-// 它用于kubelet(pkg/kubelet/lifecycle/predicate.go)和 scheduler。如果' includeAllFailures '设置为false，则返回第一个失败;否则返回所有失败。
+// AdmissionCheck 调用 noderesources/nodeport/nodeAffinity/nodename 的过滤逻辑,返回失败原因.
+// 它用于kubelet(pkg/kubelet/lifecycle/predicate.go)和 scheduler.如果' includeAllFailures '设置为false,则返回第一个失败;否则返回所有失败.
 func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailures bool) []AdmissionResult {
 	var admissionResults []AdmissionResult
 	insufficientResources := noderesources.Fits(pod, nodeInfo)

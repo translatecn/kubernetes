@@ -19,8 +19,8 @@ package lifecycle
 import "k8s.io/api/core/v1"
 
 type PodAdmitAttributes struct {
-	Pod       *v1.Pod   // 要评估准入的 Pod。
-	OtherPods []*v1.Pod // 所有绑定到 kubelet 的 Pod，不包括正在评估的 Pod。
+	Pod       *v1.Pod   // 要评估准入的 Pod.
+	OtherPods []*v1.Pod // 所有绑定到 kubelet 的 Pod,不包括正在评估的 Pod.
 }
 
 type PodAdmitResult struct { // 评估结果

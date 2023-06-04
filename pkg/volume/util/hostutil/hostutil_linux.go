@@ -153,13 +153,6 @@ func (hu *HostUtil) PathExists(pathname string) (bool, error) {
 	return utilpath.Exists(utilpath.CheckFollowSymlink, pathname)
 }
 
-// EvalHostSymlinks returns the path name after evaluating symlinks.
-// TODO once the nsenter implementation is removed, this method can be removed
-// from the interface and filepath.EvalSymlinks used directly
-func (hu *HostUtil) EvalHostSymlinks(pathname string) (string, error) {
-	return filepath.EvalSymlinks(pathname)
-}
-
 // FindMountInfo returns the mount info on the given path.
 func (hu *HostUtil) FindMountInfo(path string) (mount.MountInfo, error) {
 	return findMountInfo(path, procMountInfoPath)
@@ -330,4 +323,11 @@ func getSELinuxMountContext(path string, mountInfoFilename string, selinuxEnable
 		return context, nil
 	}
 	return "", nil
+}
+
+// EvalHostSymlinks returns the path name after evaluating symlinks.
+// TODO once the nsenter implementation is removed, this method can be removed
+// from the interface and filepath.EvalSymlinks used directly
+func (hu *HostUtil) EvalHostSymlinks(pathname string) (string, error) {
+	return filepath.EvalSymlinks(pathname)
 }

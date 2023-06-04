@@ -758,7 +758,7 @@ func VolumeLimits(volumePluginListFunc func() []volume.VolumePluginWithAttachLim
 		}
 
 		pluginWithLimits := volumePluginListFunc()
-		// 几个Condition函数，给出节点是否有资源的压力
+		// 几个Condition函数,给出节点是否有资源的压力
 		for _, volumePlugin := range pluginWithLimits {
 			attachLimits, err := volumePlugin.GetVolumeLimits()
 			if err != nil {

@@ -27,16 +27,16 @@ import (
 )
 
 func (rc *reconciler) runOld(stopCh <-chan struct{}) {
-	wait.Until(rc.reconciliationLoopFunc(), rc.loopSleepDuration, stopCh)
+	wait.Until(rc.reconciliationLoopFunc(), rc.loopSleepDuration, stopCh) // 100ms
 }
 
 func (rc *reconciler) reconciliationLoopFunc() func() {
 	return func() {
 		rc.reconcile()
+		//在所有现有的pod从所有来源添加到期望状态之后,将状态与实际情况同步一次.
+		//否则,重建过程可能会清理仍在使用的pod卷,因为desired state of world不包含完整的pod列表.
+		//这个过程只会在所有现有的pod都添加到了desired state of world之后才会执行,以确保状态同步是完整和准确的.
 
-		// Sync the state with the reality once after all existing pods are added to the desired state from all sources.
-		// Otherwise, the reconstruct process may clean up pods' volumes that are still in use because
-		// desired state of world does not contain a complete list of pods.
 		if rc.populatorHasAddedPods() && !rc.StatesHasBeenSynced() {
 			klog.InfoS("Reconciler: start to sync state")
 			rc.sync()
@@ -45,17 +45,13 @@ func (rc *reconciler) reconciliationLoopFunc() func() {
 }
 
 func (rc *reconciler) reconcile() {
-	// Unmounts are triggered before mounts so that a volume that was
-	// referenced by a pod that was deleted and is now referenced by another
-	// pod is unmounted from the first pod before being mounted to the new
-	// pod.
-	rc.unmountVolumes()
+	//卸载卷、挂载附着的卷、卸载分离的设备
 
-	// Next we mount required volumes. This function could also trigger
-	// attach if kubelet is responsible for attaching volumes.
-	// If underlying PVC was resized while in-use then this function also handles volume
-	// resizing.
-	rc.mountOrAttachVolumes()
+	//在挂载之前触发卸载操作,这样一个卷如果被一个被删除的pod所引用,现在又被另一个pod所引用,
+	//那么它会先从第一个pod中卸载,然后再挂载到新的pod中.这是为了避免数据损坏或数据丢失的情况.
+	rc.unmountVolumes() // ✅
+	// 挂载必需的卷 . 如果正在使用的PVC被调整大小,那么这个函数还会处理卷的大小调整.
+	rc.mountOrAttachVolumes() // ✅
 
 	// Ensure devices that should be detached/unmounted are detached/unmounted.
 	rc.unmountDetachDevices()

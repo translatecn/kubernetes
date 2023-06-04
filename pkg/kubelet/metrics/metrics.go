@@ -112,7 +112,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           "containers_per_pod_count",
-			Help:           "直方图，跟踪每个pod的容器数量。",
+			Help:           "直方图,跟踪每个pod的容器数量.",
 			Buckets:        metrics.ExponentialBuckets(1, 2, 5),
 			StabilityLevel: metrics.ALPHA,
 		},
@@ -198,7 +198,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PLEGRelistDurationKey,
-			Help:           "在PLEG中relist执行的时间,以秒为单位。",
+			Help:           "在PLEG中relist执行的时间,以秒为单位.",
 			Buckets:        metrics.DefBuckets,
 			StabilityLevel: metrics.ALPHA,
 		},
@@ -219,7 +219,7 @@ var (
 		&metrics.HistogramOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PLEGRelistIntervalKey,
-			Help:           "在PLEG中relist之间的间隔,以秒为单位。",
+			Help:           "在PLEG中relist之间的间隔,以秒为单位.",
 			Buckets:        metrics.DefBuckets,
 			StabilityLevel: metrics.ALPHA,
 		},
@@ -434,7 +434,7 @@ var (
 		&metrics.CounterOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           StartedPodsTotalKey,
-			Help:           "Cumulative number of pods started",
+			Help:           "累计启动的pod数",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)

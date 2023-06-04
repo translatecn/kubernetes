@@ -293,7 +293,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 			Unschedulable: !kl.registerSchedulable,
 		},
 	}
-	//如果有系统独特的标签就添加，linux上应该没有
+	//如果有系统独特的标签就添加,linux上应该没有
 	osLabels, err := getOSSpecificLabels()
 	if err != nil {
 		return nil, err
@@ -308,7 +308,7 @@ func (kl *Kubelet) initialNode(ctx context.Context) (*v1.Node, error) {
 		Key:    v1.TaintNodeUnschedulable,
 		Effect: v1.TaintEffectNoSchedule,
 	}
-	// 如果节点设置为不能被调度就添加污点信息 key为 node.kubernetes.io/unschedulable，value为NoSchedule
+	// 如果节点设置为不能被调度就添加污点信息 key为 node.kubernetes.io/unschedulable,value为NoSchedule
 	// Taint node with TaintNodeUnschedulable when initializing
 	// node to avoid race condition; refer to #63897 for more detail.
 	if node.Spec.Unschedulable &&
@@ -714,7 +714,7 @@ func (kl *Kubelet) defaultNodeStatusFuncs() []func(context.Context, *v1.Node) er
 	}
 	var setters []func(ctx context.Context, n *v1.Node) error
 	setters = append(setters,
-		// 设置IP，hostname
+		// 设置IP,hostname
 		nodestatus.NodeAddress(kl.nodeIPs, kl.nodeIPValidator, kl.hostname, kl.hostnameOverridden, kl.externalCloudProvider, kl.cloud, nodeAddressesFunc),
 		// 节点绑定Capacity(代表总量)和Allocatable(代表节点上可供普通 Pod 消耗的资源量)
 		nodestatus.MachineInfo(

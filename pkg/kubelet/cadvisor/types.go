@@ -32,20 +32,11 @@ type Interface interface {
 	GetRequestedContainersInfo(containerName string, options cadvisorapiv2.RequestOptions) (map[string]*cadvisorapi.ContainerInfo, error)
 	SubcontainerInfo(name string, req *cadvisorapi.ContainerInfoRequest) (map[string]*cadvisorapi.ContainerInfo, error)
 	MachineInfo() (*cadvisorapi.MachineInfo, error)
-
 	VersionInfo() (*cadvisorapi.VersionInfo, error)
-
-	// ImagesFsInfo 返回有关存储容器镜像的文件系统的使用情况信息.
-	ImagesFsInfo() (cadvisorapiv2.FsInfo, error)
-
-	// RootFsInfo 返回有关根文件系统的使用情况信息.
-	RootFsInfo() (cadvisorapiv2.FsInfo, error)
-
-	// WatchEvents 获取通过传递的通道传输的符合请求条件的事件流.
-	WatchEvents(request *events.Request) (*events.EventChannel, error)
-
-	// GetDirFsInfo 获取包含给定文件的文件系统的文件系统信息.
-	GetDirFsInfo(path string) (cadvisorapiv2.FsInfo, error)
+	ImagesFsInfo() (cadvisorapiv2.FsInfo, error)                       // 返回有关存储容器镜像的文件系统的使用情况信息.
+	RootFsInfo() (cadvisorapiv2.FsInfo, error)                         // 返回有关根文件系统的使用情况信息.
+	WatchEvents(request *events.Request) (*events.EventChannel, error) // 获取通过传递的通道传输的符合请求条件的事件流.
+	GetDirFsInfo(path string) (cadvisorapiv2.FsInfo, error)            // ✅获取包含给定文件的文件系统的文件系统信息.
 }
 
 // ImageFsInfoProvider informs cAdvisor how to find imagefs for container images.

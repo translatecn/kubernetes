@@ -58,8 +58,8 @@ type Resources struct {
 	Rdma                         map[string]LinuxRdma `json:"rdma"`                             // 资源限制配置.
 	CpuWeight                    uint64               `json:"cpu_weight"`                       // 设置比例带宽限制.
 	Unified                      map[string]string    `json:"unified"`                          // 仅适用于 cgroupv2 的键值对映射.
-	SkipDevices                  bool                 `json:"-"`                                // SkipDevices允许跳过配置设备权限。例如，kubelet在创建父cgroup (kubepods)时使用，这在许多容器中都很常见，并且在运行update时使用。
-	// SkipFreezeOnSet是cgroup管理器在设置资源时跳过cgroup冻结的标志。仅适用于systemd遗留(即cgroup v1)管理器(默认情况下使用freeze来避免由于systemd无法以非中断方式更新设备规则而导致的虚假权限错误)。
-	// 如果没有设置，可以使用一些方法(例如查看cgroup的设备)。在Set()期间使用list和查询systemd单元属性来确定是否需要冻结。这些//方法可能相对较慢，因此使用此标志。
+	SkipDevices                  bool                 `json:"-"`                                // SkipDevices允许跳过配置设备权限.例如,kubelet在创建父cgroup (kubepods)时使用,这在许多容器中都很常见,并且在运行update时使用.
+	// SkipFreezeOnSet是cgroup管理器在设置资源时跳过cgroup冻结的标志.仅适用于systemd遗留(即cgroup v1)管理器(默认情况下使用freeze来避免由于systemd无法以非中断方式更新设备规则而导致的虚假权限错误).
+	// 如果没有设置,可以使用一些方法(例如查看cgroup的设备).在Set()期间使用list和查询systemd单元属性来确定是否需要冻结.这些//方法可能相对较慢,因此使用此标志.
 	SkipFreezeOnSet bool `json:"-"`
 }

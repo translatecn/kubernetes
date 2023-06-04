@@ -539,7 +539,7 @@ func validatingWebhookHasInvalidLabelValueInSelector(webhooks []admissionregistr
 	return false
 }
 
-// mutatingWebhookAllowInvalidLabelValueInSelector 如果所有的webhook允许在选择器中使用无效的标签值，则返回true
+// mutatingWebhookAllowInvalidLabelValueInSelector 如果所有的webhook允许在选择器中使用无效的标签值,则返回true
 func mutatingWebhookHasInvalidLabelValueInSelector(webhooks []admissionregistration.MutatingWebhook) bool {
 	labelSelectorValidationOpts := metav1validation.LabelSelectorValidationOptions{
 		AllowInvalidLabelValueInSelector: false,

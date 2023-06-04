@@ -26,10 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// PodRequestsAndLimits returns a dictionary of all defined resources summed up for all
-// containers of the pod. Pod overhead is added to the
-// total container resource requests and to the total container limits which have a
-// non-zero quantity.
+// PodRequestsAndLimits 返回一个字典,其中包含 Pod 中所有容器定义的资源总和.Pod 开销被添加到总容器资源请求和具有非零数量的总容器限制中.
 func PodRequestsAndLimits(pod *v1.Pod) (reqs, limits v1.ResourceMap) {
 	return PodRequestsAndLimitsReuse(pod, nil, nil)
 }
@@ -42,69 +39,6 @@ func PodRequestsAndLimitsWithoutOverhead(pod *v1.Pod) (reqs, limits v1.ResourceM
 	podRequestsAndLimitsWithoutOverhead(pod, reqs, limits)
 
 	return reqs, limits
-}
-
-func podRequestsAndLimitsWithoutOverhead(pod *v1.Pod, reqs, limits v1.ResourceMap) {
-	for _, container := range pod.Spec.Containers {
-		addResourceList(reqs, container.Resources.Requests)
-		addResourceList(limits, container.Resources.Limits)
-	}
-	// init containers define the minimum of any resource
-	for _, container := range pod.Spec.InitContainers {
-		maxResourceList(reqs, container.Resources.Requests)
-		maxResourceList(limits, container.Resources.Limits)
-	}
-}
-
-// PodRequestsAndLimitsReuse returns a dictionary of all defined resources summed up for all
-// containers of the pod. Pod overhead is added to the
-// total container resource requests and to the total container limits which have a
-// non-zero quantity. The caller may avoid allocations of resource lists by passing
-// a requests and limits list to the function, which will be cleared before use.
-func PodRequestsAndLimitsReuse(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceMap) (reqs, limits v1.ResourceMap) {
-	// attempt to reuse the maps if passed, or allocate otherwise
-	reqs, limits = reuseOrClearResourceList(reuseReqs), reuseOrClearResourceList(reuseLimits)
-
-	podRequestsAndLimitsWithoutOverhead(pod, reqs, limits)
-
-	// Add overhead for running a pod
-	// to the sum of requests and to non-zero limits:
-	if pod.Spec.Overhead != nil {
-		addResourceList(reqs, pod.Spec.Overhead)
-
-		for name, quantity := range pod.Spec.Overhead {
-			if value, ok := limits[name]; ok && !value.IsZero() {
-				value.Add(quantity)
-				limits[name] = value
-			}
-		}
-	}
-
-	return
-}
-
-// reuseOrClearResourceList is a helper for avoiding excessive allocations of
-// resource lists within the inner loop of resource calculations.
-func reuseOrClearResourceList(reuse v1.ResourceMap) v1.ResourceMap {
-	if reuse == nil {
-		return make(v1.ResourceMap, 4)
-	}
-	for k := range reuse {
-		delete(reuse, k)
-	}
-	return reuse
-}
-
-// addResourceList adds the resources in newList to list.
-func addResourceList(list, newList v1.ResourceMap) {
-	for name, quantity := range newList {
-		if value, ok := list[name]; !ok {
-			list[name] = quantity.DeepCopy()
-		} else {
-			value.Add(quantity)
-			list[name] = value
-		}
-	}
 }
 
 // maxResourceList sets list to the greater of list/newList for every resource in newList
@@ -138,7 +72,7 @@ func GetResourceRequestQuantity(pod *v1.Pod, resourceName v1.ResourceName) resou
 	for _, container := range pod.Spec.InitContainers {
 		if rQuantity, ok := container.Resources.Requests[resourceName]; ok {
 			if requestQuantity.Cmp(rQuantity) < 0 {
-				//ToDo why? 意味着init 是一个接着一个启动的么？
+				//ToDo why? 意味着init 是一个接着一个启动的么?
 				requestQuantity = rQuantity.DeepCopy()
 			}
 		}
@@ -295,8 +229,73 @@ func MergeContainerResourceLimits(container *v1.Container,
 	}
 }
 
+// ----------------------------------------------------------------------------------------------------------------
+
 // IsHugePageResourceName returns true if the resource name has the huge page
 // resource prefix.
 func IsHugePageResourceName(name v1.ResourceName) bool {
 	return strings.HasPrefix(string(name), v1.ResourceHugePagesPrefix)
+}
+
+func podRequestsAndLimitsWithoutOverhead(pod *v1.Pod, reqs, limits v1.ResourceMap) {
+	for _, container := range pod.Spec.Containers {
+		addResourceList(reqs, container.Resources.Requests)
+		addResourceList(limits, container.Resources.Limits)
+	}
+	// init containers define the minimum of any resource
+	for _, container := range pod.Spec.InitContainers {
+		maxResourceList(reqs, container.Resources.Requests)
+		maxResourceList(limits, container.Resources.Limits)
+	}
+}
+
+// PodRequestsAndLimitsReuse returns a dictionary of all defined resources summed up for all
+// containers of the pod. Pod overhead is added to the
+// total container resource requests and to the total container limits which have a
+// non-zero quantity. The caller may avoid allocations of resource lists by passing
+// a requests and limits list to the function, which will be cleared before use.
+func PodRequestsAndLimitsReuse(pod *v1.Pod, reuseReqs, reuseLimits v1.ResourceMap) (reqs, limits v1.ResourceMap) {
+	// attempt to reuse the maps if passed, or allocate otherwise
+	reqs, limits = reuseOrClearResourceList(reuseReqs), reuseOrClearResourceList(reuseLimits)
+
+	podRequestsAndLimitsWithoutOverhead(pod, reqs, limits)
+
+	// Add overhead for running a pod
+	// to the sum of requests and to non-zero limits:
+	if pod.Spec.Overhead != nil {
+		addResourceList(reqs, pod.Spec.Overhead)
+
+		for name, quantity := range pod.Spec.Overhead {
+			if value, ok := limits[name]; ok && !value.IsZero() {
+				value.Add(quantity)
+				limits[name] = value
+			}
+		}
+	}
+
+	return
+}
+
+// 在资源计算的内部循环中避免过多的资源列表分配.该函数的具体实现可能会根据上下文略有不同
+// 但一般情况下,它会检查给定的资源列表是否为空或者长度是否足够,如果足够则直接返回该列表,否则会清空该列表并返回.这样可以避免在内部循环中频繁地进行内存分配和释放,从而提高程序的性能.
+func reuseOrClearResourceList(reuse v1.ResourceMap) v1.ResourceMap {
+	if reuse == nil {
+		return make(v1.ResourceMap, 4)
+	}
+	for k := range reuse {
+		delete(reuse, k)
+	}
+	return reuse
+}
+
+// addResourceList adds the resources in newList to list.
+func addResourceList(list, newList v1.ResourceMap) {
+	for name, quantity := range newList {
+		if value, ok := list[name]; !ok {
+			list[name] = quantity.DeepCopy()
+		} else {
+			value.Add(quantity)
+			list[name] = value
+		}
+	}
 }

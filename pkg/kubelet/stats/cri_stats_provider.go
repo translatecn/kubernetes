@@ -386,15 +386,13 @@ func (p *criStatsProvider) getPodAndContainerMaps(ctx context.Context) (map[stri
 }
 
 // ImageFsStats returns the stats of the image filesystem.
-func (p *criStatsProvider) ImageFsStats(ctx context.Context) (*statsapi.FsStats, error) {
-	resp, err := p.imageService.ImageFsInfo(ctx)
+func (p *criStatsProvider) ImageFsStats(ctx context.Context) (*statsapi.FsStats, error) { // ✅
+	resp, err := p.imageService.ImageFsInfo(ctx) // ✅
 	if err != nil {
 		return nil, err
 	}
 
-	// CRI may return the stats of multiple image filesystems but we only
-	// return the first one.
-	//
+	// CRI可以返回多个imagefs系统的统计信息,但我们只返回第一个.
 	// TODO(yguo0905): Support returning stats of multiple image filesystems.
 	if len(resp) == 0 {
 		return nil, fmt.Errorf("imageFs information is unavailable")
@@ -421,15 +419,14 @@ func (p *criStatsProvider) ImageFsStats(ctx context.Context) (*statsapi.FsStats,
 	return s, nil
 }
 
-// ImageFsDevice returns name of the device where the image filesystem locates,
-// e.g. /dev/sda1.
-func (p *criStatsProvider) ImageFsDevice(ctx context.Context) (string, error) {
-	resp, err := p.imageService.ImageFsInfo(ctx)
+// ImageFsDevice docker 镜像存放位置,所在的设备   e.g. /dev/sda1.
+func (p *criStatsProvider) ImageFsDevice(ctx context.Context) (string, error) { // ✅
+	resp, err := p.imageService.ImageFsInfo(ctx) // ✅
 	if err != nil {
 		return "", err
 	}
 	for _, fs := range resp {
-		fsInfo := p.getFsInfo(fs.GetFsId())
+		fsInfo := p.getFsInfo(fs.GetFsId()) // ✅ 获取指定 fsID 的文件系统信息.
 		if fsInfo != nil {
 			return fsInfo.Device, nil
 		}
@@ -437,16 +434,14 @@ func (p *criStatsProvider) ImageFsDevice(ctx context.Context) (string, error) {
 	return "", errors.New("imagefs device is not found")
 }
 
-// getFsInfo returns the information of the filesystem with the specified
-// fsID. If any error occurs, this function logs the error and returns
-// nil.
-func (p *criStatsProvider) getFsInfo(fsID *runtimeapi.FilesystemIdentifier) *cadvisorapiv2.FsInfo {
+// 获取指定 fsID 的文件系统信息.
+func (p *criStatsProvider) getFsInfo(fsID *runtimeapi.FilesystemIdentifier) *cadvisorapiv2.FsInfo { // ✅
 	if fsID == nil {
 		klog.V(2).InfoS("Failed to get filesystem info: fsID is nil")
 		return nil
 	}
 	mountpoint := fsID.GetMountpoint()
-	fsInfo, err := p.cadvisor.GetDirFsInfo(mountpoint)
+	fsInfo, err := p.cadvisor.GetDirFsInfo(mountpoint) // 获取 对应目录,在哪个挂载点以及设备上 ✅
 	if err != nil {
 		msg := "Failed to get the info of the filesystem with mountpoint"
 		if err == cadvisorfs.ErrNoSuchDevice {

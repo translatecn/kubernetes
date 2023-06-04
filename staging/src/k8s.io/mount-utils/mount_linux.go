@@ -54,26 +54,20 @@ const (
 	errNotMounted = "not mounted"
 )
 
-// Mounter provides the default implementation of mount.Interface
-// for the linux platform.  This implementation assumes that the
-// kubelet is running in the host's root mount namespace.
 type Mounter struct {
-	mounterPath                string
-	withSystemd                *bool
-	trySystemd                 bool
-	withSafeNotMountedBehavior bool
+	mounterPath                string // 挂载器二进制文件的路径.
+	withSystemd                *bool  // 如果为true,则使用systemd挂载器,否则使用普通的挂载器.如果为nil,则使用默认值.
+	trySystemd                 bool   // 如果为true,则尝试使用systemd挂载器.如果使用systemd挂载器失败,则使用普通的挂载器.如果为false,则只使用普通的挂载器.
+	withSafeNotMountedBehavior bool   // 如果为true,则在检测到umount的“not mounted”消息时,认为路径未挂载.如果为false,则不进行此类检查.
 }
 
 var _ MounterForceUnmounter = &Mounter{}
 
-// New returns a mount.Interface for the current system.
-// It provides options to override the default mounter behavior.
-// mounterPath allows using an alternative to `/bin/mount` for mounting.
 func New(mounterPath string) Interface {
 	return &Mounter{
-		mounterPath:                mounterPath,
+		mounterPath:                mounterPath, // /bin/mount
 		trySystemd:                 true,
-		withSafeNotMountedBehavior: detectSafeNotMountedBehavior(),
+		withSafeNotMountedBehavior: detectSafeNotMountedBehavior(), //
 	}
 }
 
@@ -89,21 +83,6 @@ func NewWithoutSystemd(mounterPath string) Interface {
 	}
 }
 
-// hasSystemd validates that the withSystemd bool is set, if it is not,
-// detectSystemd will be called once for this Mounter instance.
-func (mounter *Mounter) hasSystemd() bool {
-	if !mounter.trySystemd {
-		mounter.withSystemd = &mounter.trySystemd
-	}
-
-	if mounter.withSystemd == nil {
-		withSystemd := detectSystemd()
-		mounter.withSystemd = &withSystemd
-	}
-
-	return *mounter.withSystemd
-}
-
 // Mount mounts source to target as fstype with given options. 'source' and 'fstype' must
 // be an empty string in case it's not required, e.g. for remount, or for auto filesystem
 // type, where kernel handles fstype for you. The mount 'options' is a list of options,
@@ -111,180 +90,6 @@ func (mounter *Mounter) hasSystemd() bool {
 // required, call Mount with an empty string list or nil.
 func (mounter *Mounter) Mount(source string, target string, fstype string, options []string) error {
 	return mounter.MountSensitive(source, target, fstype, options, nil)
-}
-
-// MountSensitive is the same as Mount() but this method allows
-// sensitiveOptions to be passed in a separate parameter from the normal
-// mount options and ensures the sensitiveOptions are never logged. This
-// method should be used by callers that pass sensitive material (like
-// passwords) as mount options.
-func (mounter *Mounter) MountSensitive(source string, target string, fstype string, options []string, sensitiveOptions []string) error {
-	// Path to mounter binary if containerized mounter is needed. Otherwise, it is set to empty.
-	// All Linux distros are expected to be shipped with a mount utility that a support bind mounts.
-	mounterPath := ""
-	bind, bindOpts, bindRemountOpts, bindRemountOptsSensitive := MakeBindOptsSensitive(options, sensitiveOptions)
-	if bind {
-		err := mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindOpts, bindRemountOptsSensitive, nil /* mountFlags */, mounter.trySystemd)
-		if err != nil {
-			return err
-		}
-		return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindRemountOpts, bindRemountOptsSensitive, nil /* mountFlags */, mounter.trySystemd)
-	}
-	// The list of filesystems that require containerized mounter on GCI image cluster
-	fsTypesNeedMounter := map[string]struct{}{
-		"nfs":       {},
-		"glusterfs": {},
-		"ceph":      {},
-		"cifs":      {},
-	}
-	if _, ok := fsTypesNeedMounter[fstype]; ok {
-		mounterPath = mounter.mounterPath
-	}
-	return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, options, sensitiveOptions, nil /* mountFlags */, mounter.trySystemd)
-}
-
-// MountSensitiveWithoutSystemd is the same as MountSensitive() but disable using systemd mount.
-func (mounter *Mounter) MountSensitiveWithoutSystemd(source string, target string, fstype string, options []string, sensitiveOptions []string) error {
-	return mounter.MountSensitiveWithoutSystemdWithMountFlags(source, target, fstype, options, sensitiveOptions, nil /* mountFlags */)
-}
-
-// MountSensitiveWithoutSystemdWithMountFlags is the same as MountSensitiveWithoutSystemd with additional mount flags.
-func (mounter *Mounter) MountSensitiveWithoutSystemdWithMountFlags(source string, target string, fstype string, options []string, sensitiveOptions []string, mountFlags []string) error {
-	mounterPath := ""
-	bind, bindOpts, bindRemountOpts, bindRemountOptsSensitive := MakeBindOptsSensitive(options, sensitiveOptions)
-	if bind {
-		err := mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindOpts, bindRemountOptsSensitive, mountFlags, false)
-		if err != nil {
-			return err
-		}
-		return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindRemountOpts, bindRemountOptsSensitive, mountFlags, false)
-	}
-	// The list of filesystems that require containerized mounter on GCI image cluster
-	fsTypesNeedMounter := map[string]struct{}{
-		"nfs":       {},
-		"glusterfs": {},
-		"ceph":      {},
-		"cifs":      {},
-	}
-	if _, ok := fsTypesNeedMounter[fstype]; ok {
-		mounterPath = mounter.mounterPath
-	}
-	return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, options, sensitiveOptions, mountFlags, false)
-}
-
-// doMount runs the mount command. mounterPath is the path to mounter binary if containerized mounter is used.
-// sensitiveOptions is an extension of options except they will not be logged (because they may contain sensitive material)
-// systemdMountRequired is an extension of option to decide whether uses systemd mount.
-func (mounter *Mounter) doMount(mounterPath string, mountCmd string, source string, target string, fstype string, options []string, sensitiveOptions []string, mountFlags []string, systemdMountRequired bool) error {
-	mountArgs, mountArgsLogStr := MakeMountArgsSensitiveWithMountFlags(source, target, fstype, options, sensitiveOptions, mountFlags)
-	if len(mounterPath) > 0 {
-		mountArgs = append([]string{mountCmd}, mountArgs...)
-		mountArgsLogStr = mountCmd + " " + mountArgsLogStr
-		mountCmd = mounterPath
-	}
-
-	if systemdMountRequired && mounter.hasSystemd() {
-		// Try to run mount via systemd-run --scope. This will escape the
-		// service where kubelet runs and any fuse daemons will be started in a
-		// specific scope. kubelet service than can be restarted without killing
-		// these fuse daemons.
-		//
-		// Complete command line (when mounterPath is not used):
-		// systemd-run --description=... --scope -- mount -t <type> <what> <where>
-		//
-		// Expected flow:
-		// * systemd-run creates a transient scope (=~ cgroup) and executes its
-		//   argument (/bin/mount) there.
-		// * mount does its job, forks a fuse daemon if necessary and finishes.
-		//   (systemd-run --scope finishes at this point, returning mount's exit
-		//   code and stdout/stderr - thats one of --scope benefits).
-		// * systemd keeps the fuse daemon running in the scope (i.e. in its own
-		//   cgroup) until the fuse daemon dies (another --scope benefit).
-		//   Kubelet service can be restarted and the fuse daemon survives.
-		// * When the fuse daemon dies (e.g. during unmount) systemd removes the
-		//   scope automatically.
-		//
-		// systemd-mount is not used because it's too new for older distros
-		// (CentOS 7, Debian Jessie).
-		mountCmd, mountArgs, mountArgsLogStr = AddSystemdScopeSensitive("systemd-run", target, mountCmd, mountArgs, mountArgsLogStr)
-		// } else {
-		// No systemd-run on the host (or we failed to check it), assume kubelet
-		// does not run as a systemd service.
-		// No code here, mountCmd and mountArgs are already populated.
-	}
-
-	// Logging with sensitive mount options removed.
-	klog.V(4).Infof("Mounting cmd (%s) with arguments (%s)", mountCmd, mountArgsLogStr)
-	command := exec.Command(mountCmd, mountArgs...)
-	output, err := command.CombinedOutput()
-	if err != nil {
-		if err.Error() == errNoChildProcesses {
-			if command.ProcessState.Success() {
-				// We don't consider errNoChildProcesses an error if the process itself succeeded (see - k/k issue #103753).
-				return nil
-			}
-			// Rewrite err with the actual exit error of the process.
-			err = &exec.ExitError{ProcessState: command.ProcessState}
-		}
-		klog.Errorf("Mount failed: %v\nMounting command: %s\nMounting arguments: %s\nOutput: %s\n", err, mountCmd, mountArgsLogStr, string(output))
-		return fmt.Errorf("mount failed: %v\nMounting command: %s\nMounting arguments: %s\nOutput: %s",
-			err, mountCmd, mountArgsLogStr, string(output))
-	}
-	return err
-}
-
-// detectSystemd returns true if OS runs with systemd as init. When not sure
-// (permission errors, ...), it returns false.
-// There may be different ways how to detect systemd, this one makes sure that
-// systemd-runs (needed by Mount()) works.
-func detectSystemd() bool {
-	if _, err := exec.LookPath("systemd-run"); err != nil {
-		klog.V(2).Infof("Detected OS without systemd")
-		return false
-	}
-	// Try to run systemd-run --scope /bin/true, that should be enough
-	// to make sure that systemd is really running and not just installed,
-	// which happens when running in a container with a systemd-based image
-	// but with different pid 1.
-	cmd := exec.Command("systemd-run", "--description=Kubernetes systemd probe", "--scope", "true")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		klog.V(2).Infof("Cannot run systemd-run, assuming non-systemd OS")
-		klog.V(4).Infof("systemd-run output: %s, failed with: %v", string(output), err)
-		return false
-	}
-	klog.V(2).Infof("Detected OS with systemd")
-	return true
-}
-
-// detectSafeNotMountedBehavior returns true if the umount implementation replies "not mounted"
-// when the specified path is not mounted. When not sure (permission errors, ...), it returns false.
-// When possible, we will trust umount's message and avoid doing our own mount point checks.
-// More info: https://github.com/util-linux/util-linux/blob/v2.2/mount/umount.c#L179
-func detectSafeNotMountedBehavior() bool {
-	return detectSafeNotMountedBehaviorWithExec(utilexec.New())
-}
-
-// detectSafeNotMountedBehaviorWithExec is for testing with FakeExec.
-func detectSafeNotMountedBehaviorWithExec(exec utilexec.Interface) bool {
-	// create a temp dir and try to umount it
-	path, err := ioutil.TempDir("", "kubelet-detect-safe-umount")
-	if err != nil {
-		klog.V(4).Infof("Cannot create temp dir to detect safe 'not mounted' behavior: %v", err)
-		return false
-	}
-	defer os.RemoveAll(path)
-	cmd := exec.Command("umount", path)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		if strings.Contains(string(output), errNotMounted) {
-			klog.V(4).Infof("Detected umount with safe 'not mounted' behavior")
-			return true
-		}
-		klog.V(4).Infof("'umount %s' failed with: %v, output: %s", path, err, string(output))
-	}
-	klog.V(4).Infof("Detected umount with unsafe 'not mounted' behavior")
-	return false
 }
 
 // MakeMountArgs makes the arguments to the mount(8) command.
@@ -298,83 +103,6 @@ func MakeMountArgs(source, target, fstype string, options []string) (mountArgs [
 // sensitiveOptions is an extension of options except they will not be logged (because they may contain sensitive material)
 func MakeMountArgsSensitive(source, target, fstype string, options []string, sensitiveOptions []string) (mountArgs []string, mountArgsLogStr string) {
 	return MakeMountArgsSensitiveWithMountFlags(source, target, fstype, options, sensitiveOptions, nil /* mountFlags */)
-}
-
-// MakeMountArgsSensitiveWithMountFlags makes the arguments to the mount(8) command.
-// sensitiveOptions is an extension of options except they will not be logged (because they may contain sensitive material)
-// mountFlags are additional mount flags that are not related with the fstype
-// and mount options
-func MakeMountArgsSensitiveWithMountFlags(source, target, fstype string, options []string, sensitiveOptions []string, mountFlags []string) (mountArgs []string, mountArgsLogStr string) {
-	// Build mount command as follows:
-	//   mount [$mountFlags] [-t $fstype] [-o $options] [$source] $target
-	mountArgs = []string{}
-	mountArgsLogStr = ""
-
-	mountArgs = append(mountArgs, mountFlags...)
-	mountArgsLogStr += strings.Join(mountFlags, " ")
-
-	if len(fstype) > 0 {
-		mountArgs = append(mountArgs, "-t", fstype)
-		mountArgsLogStr += strings.Join(mountArgs, " ")
-	}
-	if len(options) > 0 || len(sensitiveOptions) > 0 {
-		combinedOptions := []string{}
-		combinedOptions = append(combinedOptions, options...)
-		combinedOptions = append(combinedOptions, sensitiveOptions...)
-		mountArgs = append(mountArgs, "-o", strings.Join(combinedOptions, ","))
-		// exclude sensitiveOptions from log string
-		mountArgsLogStr += " -o " + sanitizedOptionsForLogging(options, sensitiveOptions)
-	}
-	if len(source) > 0 {
-		mountArgs = append(mountArgs, source)
-		mountArgsLogStr += " " + source
-	}
-	mountArgs = append(mountArgs, target)
-	mountArgsLogStr += " " + target
-
-	return mountArgs, mountArgsLogStr
-}
-
-// AddSystemdScope adds "system-run --scope" to given command line
-// If args contains sensitive material, use AddSystemdScopeSensitive to construct
-// a safe to log string.
-func AddSystemdScope(systemdRunPath, mountName, command string, args []string) (string, []string) {
-	descriptionArg := fmt.Sprintf("--description=Kubernetes transient mount for %s", mountName)
-	systemdRunArgs := []string{descriptionArg, "--scope", "--", command}
-	return systemdRunPath, append(systemdRunArgs, args...)
-}
-
-// AddSystemdScopeSensitive adds "system-run --scope" to given command line
-// It also accepts takes a sanitized string containing mount arguments, mountArgsLogStr,
-// and returns the string appended to the systemd command for logging.
-func AddSystemdScopeSensitive(systemdRunPath, mountName, command string, args []string, mountArgsLogStr string) (string, []string, string) {
-	descriptionArg := fmt.Sprintf("--description=Kubernetes transient mount for %s", mountName)
-	systemdRunArgs := []string{descriptionArg, "--scope", "--", command}
-	return systemdRunPath, append(systemdRunArgs, args...), strings.Join(systemdRunArgs, " ") + " " + mountArgsLogStr
-}
-
-// Unmount unmounts the target.
-// If the mounter has safe "not mounted" behavior, no error will be returned when the target is not a mount point.
-func (mounter *Mounter) Unmount(target string) error {
-	klog.V(4).Infof("Unmounting %s", target)
-	command := exec.Command("umount", target)
-	output, err := command.CombinedOutput()
-	if err != nil {
-		if err.Error() == errNoChildProcesses {
-			if command.ProcessState.Success() {
-				// We don't consider errNoChildProcesses an error if the process itself succeeded (see - k/k issue #103753).
-				return nil
-			}
-			// Rewrite err with the actual exit error of the process.
-			err = &exec.ExitError{ProcessState: command.ProcessState}
-		}
-		if mounter.withSafeNotMountedBehavior && strings.Contains(string(output), errNotMounted) {
-			klog.V(4).Infof("ignoring 'not mounted' error for %s", target)
-			return nil
-		}
-		return fmt.Errorf("unmount failed: %v\nUnmounting arguments: %s\nOutput: %s", err, target, string(output))
-	}
-	return nil
 }
 
 // UnmountWithForce unmounts given target but will retry unmounting with force option
@@ -396,13 +124,11 @@ func (*Mounter) List() ([]MountPoint, error) {
 	return ListProcMounts(procMountsPath)
 }
 
-// IsLikelyNotMountPoint determines if a directory is not a mountpoint.
-// It is fast but not necessarily ALWAYS correct. If the path is in fact
-// a bind mount from one part of a mount to another it will not be detected.
-// It also can not distinguish between mountpoints and symbolic links.
-// mkdir /tmp/a /tmp/b; mount --bind /tmp/a /tmp/b; IsLikelyNotMountPoint("/tmp/b")
-// will return true. When in fact /tmp/b is a mount point. If this situation
-// is of interest to you, don't use this function...
+// 这段代码的作用是判断一个目录是不是挂载点.
+// 它很快,但不一定总是正确的.
+// 如果路径实际上是从一个挂载的部分绑定到另一个部分,则不会检测到它.它也无法区分挂载点和符号链接.
+// 例如,mkdir /tmp/a /tmp/b; mount --bind /tmp/a /tmp/b; IsLikelyNotMountPoint("/tmp/b")将返回true.
+// 实际上,/tmp/b是一个挂载点.如果您对此情况感兴趣,请不要使用此函数...
 func (mounter *Mounter) IsLikelyNotMountPoint(file string) (bool, error) {
 	stat, err := os.Stat(file)
 	if err != nil {
@@ -412,7 +138,7 @@ func (mounter *Mounter) IsLikelyNotMountPoint(file string) (bool, error) {
 	if err != nil {
 		return true, err
 	}
-	// If the directory has a different device as parent, then it is a mountpoint.
+	//如果目录的上级目录与其设备不同,则该目录是一个挂载点.
 	if stat.Sys().(*syscall.Stat_t).Dev != rootStat.Sys().(*syscall.Stat_t).Dev {
 		return false, nil
 	}
@@ -771,6 +497,34 @@ func (mounter *Mounter) IsMountPoint(file string) (bool, error) {
 	return false, nil
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+
+func detectSafeNotMountedBehavior() bool {
+	// 检测安全未挂载行为
+	return detectSafeNotMountedBehaviorWithExec(utilexec.New())
+}
+
+func detectSafeNotMountedBehaviorWithExec(exec utilexec.Interface) bool {
+	// create a temp dir and try to umount it
+	path, err := ioutil.TempDir("", "kubelet-detect-safe-umount")
+	if err != nil {
+		klog.V(4).Infof("Cannot create temp dir to detect safe 'not mounted' behavior: %v", err)
+		return false
+	}
+	defer os.RemoveAll(path)
+	cmd := exec.Command("umount", path)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		if strings.Contains(string(output), errNotMounted) {
+			klog.V(4).Infof("检测到umount具有安全的“未挂载”行为")
+			return true
+		}
+		klog.V(4).Infof("'umount %s' failed with: %v, output: %s", path, err, string(output))
+	}
+	klog.V(4).Infof("Detected umount with unsafe 'not mounted' behavior")
+	return false
+}
+
 // tryUnmount calls plain "umount" and waits for unmountTimeout for it to finish.
 func tryUnmount(path string, unmountTimeout time.Duration) error {
 	klog.V(4).Infof("Unmounting %s", path)
@@ -800,4 +554,240 @@ func forceUmount(path string) error {
 		return fmt.Errorf("unmount failed: %v\nUnmounting arguments: %s\nOutput: %s", cmderr, path, string(out))
 	}
 	return nil
+}
+
+// Unmount unmounts the target.
+// If the mounter has safe "not mounted" behavior, no error will be returned when the target is not a mount point.
+func (mounter *Mounter) Unmount(target string) error {
+	klog.V(4).Infof("Unmounting %s", target)
+	command := exec.Command("umount", target)
+	output, err := command.CombinedOutput()
+	if err != nil {
+		if err.Error() == errNoChildProcesses {
+			if command.ProcessState.Success() {
+				// We don't consider errNoChildProcesses an error if the process itself succeeded (see - k/k issue #103753).
+				return nil
+			}
+			// Rewrite err with the actual exit error of the process.
+			err = &exec.ExitError{ProcessState: command.ProcessState}
+		}
+		if mounter.withSafeNotMountedBehavior && strings.Contains(string(output), errNotMounted) {
+			klog.V(4).Infof("ignoring 'not mounted' error for %s", target)
+			return nil
+		}
+		return fmt.Errorf("unmount failed: %v\nUnmounting arguments: %s\nOutput: %s", err, target, string(output))
+	}
+	return nil
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+
+// MountSensitiveWithoutSystemd is the same as MountSensitive() but disable using systemd mount.
+func (mounter *Mounter) MountSensitiveWithoutSystemd(source string, target string, fstype string, options []string, sensitiveOptions []string) error {
+	return mounter.MountSensitiveWithoutSystemdWithMountFlags(source, target, fstype, options, sensitiveOptions, nil /* mountFlags */)
+}
+
+// MountSensitiveWithoutSystemdWithMountFlags is the same as MountSensitiveWithoutSystemd with additional mount flags.
+func (mounter *Mounter) MountSensitiveWithoutSystemdWithMountFlags(source string, target string, fstype string, options []string, sensitiveOptions []string, mountFlags []string) error {
+	mounterPath := ""
+	bind, bindOpts, bindRemountOpts, bindRemountOptsSensitive := MakeBindOptsSensitive(options, sensitiveOptions) // ✅
+	if bind {
+		err := mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindOpts, bindRemountOptsSensitive, mountFlags, false)
+		if err != nil {
+			return err
+		}
+		return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindRemountOpts, bindRemountOptsSensitive, mountFlags, false)
+	}
+	// 在GCI映像集群上需要容器化挂载的文件系统列表
+	fsTypesNeedMounter := map[string]struct{}{
+		"nfs":       {},
+		"glusterfs": {},
+		"ceph":      {},
+		"cifs":      {},
+	}
+	if _, ok := fsTypesNeedMounter[fstype]; ok {
+		mounterPath = mounter.mounterPath
+	}
+	return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, options, sensitiveOptions, mountFlags, false)
+}
+
+// MountSensitive is the same as Mount() but this method allows
+// sensitiveOptions to be passed in a separate parameter from the normal
+// mount options and ensures the sensitiveOptions are never logged. This
+// method should be used by callers that pass sensitive material (like
+// passwords) as mount options.
+func (mounter *Mounter) MountSensitive(source string, target string, fstype string, options []string, sensitiveOptions []string) error {
+	// Path to mounter binary if containerized mounter is needed. Otherwise, it is set to empty.
+	// All Linux distros are expected to be shipped with a mount utility that a support bind mounts.
+	mounterPath := ""
+	bind, bindOpts, bindRemountOpts, bindRemountOptsSensitive := MakeBindOptsSensitive(options, sensitiveOptions) // ✅
+	if bind {
+		err := mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindOpts, bindRemountOptsSensitive, nil /* mountFlags */, mounter.trySystemd)
+		if err != nil {
+			return err
+		}
+		return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, bindRemountOpts, bindRemountOptsSensitive, nil /* mountFlags */, mounter.trySystemd)
+	}
+	// The list of filesystems that require containerized mounter on GCI image cluster
+	fsTypesNeedMounter := map[string]struct{}{
+		"nfs":       {},
+		"glusterfs": {},
+		"ceph":      {},
+		"cifs":      {},
+	}
+	if _, ok := fsTypesNeedMounter[fstype]; ok {
+		mounterPath = mounter.mounterPath
+	}
+	return mounter.doMount(mounterPath, defaultMountCommand, source, target, fstype, options, sensitiveOptions, nil /* mountFlags */, mounter.trySystemd)
+}
+
+// MakeMountArgsSensitiveWithMountFlags makes the arguments to the mount(8) command.
+// sensitiveOptions is an extension of options except they will not be logged (because they may contain sensitive material)
+// mountFlags are additional mount flags that are not related with the fstype
+// and mount options
+func MakeMountArgsSensitiveWithMountFlags(source, target, fstype string, options []string, sensitiveOptions []string, mountFlags []string) (mountArgs []string, mountArgsLogStr string) {
+	// Build mount command as follows:
+	//   mount [$mountFlags] [-t $fstype] [-o $options] [$source] $target
+	mountArgs = []string{}
+	mountArgsLogStr = ""
+
+	mountArgs = append(mountArgs, mountFlags...)
+	mountArgsLogStr += strings.Join(mountFlags, " ")
+
+	if len(fstype) > 0 {
+		mountArgs = append(mountArgs, "-t", fstype)
+		mountArgsLogStr += strings.Join(mountArgs, " ")
+	}
+	if len(options) > 0 || len(sensitiveOptions) > 0 {
+		combinedOptions := []string{}
+		combinedOptions = append(combinedOptions, options...)
+		combinedOptions = append(combinedOptions, sensitiveOptions...)
+		mountArgs = append(mountArgs, "-o", strings.Join(combinedOptions, ","))
+		// exclude sensitiveOptions from log string
+		mountArgsLogStr += " -o " + sanitizedOptionsForLogging(options, sensitiveOptions)
+	}
+	if len(source) > 0 {
+		mountArgs = append(mountArgs, source)
+		mountArgsLogStr += " " + source
+	}
+	mountArgs = append(mountArgs, target)
+	mountArgsLogStr += " " + target
+
+	return mountArgs, mountArgsLogStr
+}
+
+// detectSystemd 函数用于检测操作系统是否使用 systemd 作为 init.
+// 当不确定时（例如权限错误等）,它将返回 false.
+// 可能有不同的方法来检测 systemd,这个方法确保 systemd-runs（Mount() 函数所需的程序）能够正常工作.
+func detectSystemd() bool {
+	if _, err := exec.LookPath("systemd-run"); err != nil {
+		klog.V(2).Infof("Detected OS without systemd")
+		return false
+	}
+	// 尝试运行 systemd-run --scope /bin/true 命令,
+	// 以确保 systemd 确实在运行,而不仅仅是已安装,这在使用基于 systemd 的镜像运行容器,
+	// 但 pid 1 不同的情况下可能会发生.因此,如果该命令执行成功,则可以确定 systemd 正在运行.
+	cmd := exec.Command("systemd-run", "--description=Kubernetes systemd probe", "--scope", "true")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		klog.V(2).Infof("Cannot run systemd-run, assuming non-systemd OS")
+		klog.V(4).Infof("systemd-run output: %s, failed with: %v", string(output), err)
+		return false
+	}
+	klog.V(2).Infof("Detected OS with systemd")
+	return true
+}
+
+// hasSystemd validates that the withSystemd bool is set, if it is not,
+// detectSystemd will be called once for this Mounter instance.
+func (mounter *Mounter) hasSystemd() bool {
+	if !mounter.trySystemd {
+		mounter.withSystemd = &mounter.trySystemd
+	}
+
+	if mounter.withSystemd == nil {
+		withSystemd := detectSystemd()
+		mounter.withSystemd = &withSystemd
+	}
+
+	return *mounter.withSystemd
+}
+
+// AddSystemdScope adds "system-run --scope" to given command line
+// If args contains sensitive material, use AddSystemdScopeSensitive to construct
+// a safe to log string.
+func AddSystemdScope(systemdRunPath, mountName, command string, args []string) (string, []string) {
+	descriptionArg := fmt.Sprintf("--description=Kubernetes transient mount for %s", mountName)
+	systemdRunArgs := []string{descriptionArg, "--scope", "--", command}
+	return systemdRunPath, append(systemdRunArgs, args...)
+}
+
+// AddSystemdScopeSensitive adds "system-run --scope" to given command line
+// It also accepts takes a sanitized string containing mount arguments, mountArgsLogStr,
+// and returns the string appended to the systemd command for logging.
+func AddSystemdScopeSensitive(systemdRunPath, mountName, command string, args []string, mountArgsLogStr string) (string, []string, string) {
+	descriptionArg := fmt.Sprintf("--description=Kubernetes transient mount for %s", mountName)
+	systemdRunArgs := []string{descriptionArg, "--scope", "--", command}
+	return systemdRunPath, append(systemdRunArgs, args...), strings.Join(systemdRunArgs, " ") + " " + mountArgsLogStr
+}
+
+// doMount 函数运行 mount 命令.如果使用容器化的 mounter,则 mounterPath 是 mounter 二进制文件的路径.
+// sensitiveOptions 是 options 的扩展,除了它们不会被记录日志（因为它们可能包含敏感材料）.
+// systemdMountRequired 是一个选项的扩展,用于决定是否使用 systemd mount.
+func (mounter *Mounter) doMount(mounterPath string, mountCmd string, source string, target string, fstype string, options []string, sensitiveOptions []string, mountFlags []string, systemdMountRequired bool) error {
+	mountArgs, mountArgsLogStr := MakeMountArgsSensitiveWithMountFlags(source, target, fstype, options, sensitiveOptions, mountFlags) // ✅
+	if len(mounterPath) > 0 {
+		mountArgs = append([]string{mountCmd}, mountArgs...)
+		mountArgsLogStr = mountCmd + " " + mountArgsLogStr
+		mountCmd = mounterPath
+	}
+
+	if systemdMountRequired && mounter.hasSystemd() { // ✅
+		// Try to run mount via systemd-run --scope. This will escape the
+		// service where kubelet runs and any fuse daemons will be started in a
+		// specific scope. kubelet service than can be restarted without killing
+		// these fuse daemons.
+		//
+		// Complete command line (when mounterPath is not used):
+		// systemd-run --description=... --scope -- mount -t <type> <what> <where>
+		//
+		// Expected flow:
+		// * systemd-run creates a transient scope (=~ cgroup) and executes its
+		//   argument (/bin/mount) there.
+		// * mount does its job, forks a fuse daemon if necessary and finishes.
+		//   (systemd-run --scope finishes at this point, returning mount's exit
+		//   code and stdout/stderr - thats one of --scope benefits).
+		// * systemd keeps the fuse daemon running in the scope (i.e. in its own
+		//   cgroup) until the fuse daemon dies (another --scope benefit).
+		//   Kubelet service can be restarted and the fuse daemon survives.
+		// * When the fuse daemon dies (e.g. during unmount) systemd removes the
+		//   scope automatically.
+		//
+		// systemd-mount is not used because it's too new for older distros
+		// (CentOS 7, Debian Jessie).
+		mountCmd, mountArgs, mountArgsLogStr = AddSystemdScopeSensitive("systemd-run", target, mountCmd, mountArgs, mountArgsLogStr) // ✅
+		// } else {
+		// No systemd-run on the host (or we failed to check it), assume kubelet
+		// does not run as a systemd service.
+		// No code here, mountCmd and mountArgs are already populated.
+	}
+
+	// Logging with sensitive mount options removed.
+	klog.V(4).Infof("Mounting cmd (%s) with arguments (%s)", mountCmd, mountArgsLogStr)
+	command := exec.Command(mountCmd, mountArgs...)
+	output, err := command.CombinedOutput()
+	if err != nil {
+		if err.Error() == errNoChildProcesses {
+			if command.ProcessState.Success() {
+				// We don't consider errNoChildProcesses an error if the process itself succeeded (see - k/k issue #103753).
+				return nil
+			}
+			// Rewrite err with the actual exit error of the process.
+			err = &exec.ExitError{ProcessState: command.ProcessState}
+		}
+		klog.Errorf("Mount failed: %v\nMounting command: %s\nMounting arguments: %s\nOutput: %s\n", err, mountCmd, mountArgsLogStr, string(output))
+		return fmt.Errorf("mount failed: %v\nMounting command: %s\nMounting arguments: %s\nOutput: %s",
+			err, mountCmd, mountArgsLogStr, string(output))
+	}
+	return err
 }

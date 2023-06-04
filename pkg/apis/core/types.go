@@ -330,13 +330,12 @@ type PersistentVolumeSpec struct {
 	// or to remain in raw block state. Value of Filesystem is implied when not included in spec.
 	// +optional
 	VolumeMode *PersistentVolumeMode
-	// NodeAffinity defines constraints that limit what nodes this volume can be accessed from.
-	// This field influences the scheduling of pods that use this volume.
+	// 限制可以从哪些节点访问该卷.
 	// +optional
 	NodeAffinity *VolumeNodeAffinity
 }
 
-// VolumeNodeAffinity defines constraints that limit what nodes this volume can be accessed from.
+// VolumeNodeAffinity 限制可以从哪些节点访问该卷.
 type VolumeNodeAffinity struct {
 	// Required specifies hard node constraints that must be met.
 	Required *NodeSelector
@@ -2614,15 +2613,15 @@ type TopologySelectorLabelRequirement struct {
 	Values []string
 }
 
-// Affinity 是一组亲和性调度规则。
+// Affinity 是一组亲和性调度规则.
 type Affinity struct {
 	// 描述pod的节点亲和性调度规则
 	// +optional
 	NodeAffinity *NodeAffinity
-	// 描述pod关联调度规则(例如，将此pod与其他pod一起放置在相同的节点、区域等)。
+	// 描述pod关联调度规则(例如,将此pod与其他pod一起放置在相同的节点、区域等).
 	// +optional
 	PodAffinity *PodAffinity
-	// 描述pod反亲和调度规则(例如，避免将此pod与其他pod放在相同的节点、区域等)。
+	// 描述pod反亲和调度规则(例如,避免将此pod与其他pod放在相同的节点、区域等).
 	// +optional
 	PodAntiAffinity *PodAntiAffinity
 }
@@ -2717,13 +2716,13 @@ type PodAffinityTerm struct {
 	// 对一组资源(在本例中是pod)的标签查询
 	// +optional
 	LabelSelector *metav1.LabelSelector
-	// Namespaces指定该术语适用的名称空间名称的静态列表。
-	// 该术语适用于此字段中列出的名称空间和由namespaceSelector选择的名称空间的联合。
-	// null或空的namespaces list和null namespaceSelector表示“这个pod的命名空间”。
+	// Namespaces指定该术语适用的名称空间名称的静态列表.
+	// 该术语适用于此字段中列出的名称空间和由namespaceSelector选择的名称空间的联合.
+	// null或空的namespaces list和null namespaceSelector表示“这个pod的命名空间”.
 	// +optional
 	Namespaces []string
-	// 该pod应该与指定名称空间中匹配labelSelector的pod共存(亲和)或不共存(反亲和)，其中共存被定义为运行在一个节点上，
-	// 其带有键topologyKey的标签值与运行所选pod的任何节点的标签值匹配。topologyKey不允许为空。
+	// 该pod应该与指定名称空间中匹配labelSelector的pod共存(亲和)或不共存(反亲和),其中共存被定义为运行在一个节点上,
+	// 其带有键topologyKey的标签值与运行所选pod的任何节点的标签值匹配.topologyKey不允许为空.
 	TopologyKey string
 	// 名称空间选择器
 	// +optional
@@ -2857,11 +2856,11 @@ type PodSpec struct {
 	InitContainers []Container
 	// List of containers belonging to the pod.
 	Containers []Container
-	// Ephemeral Containers 是在 Pod 中运行的临时容器列表。可以在现有的 Pod 中运行临时容器，以执行用户启动的操作，例如调试。
-	// 创建 Pod 时不能指定此列表，也不能通过更新 Pod 规范来修改此列表。要向现有 Pod 添加临时容器，请使用 Pod 的 ephemeralcontainers 子资源。
+	// Ephemeral Containers 是在 Pod 中运行的临时容器列表.可以在现有的 Pod 中运行临时容器,以执行用户启动的操作,例如调试.
+	// 创建 Pod 时不能指定此列表,也不能通过更新 Pod 规范来修改此列表.要向现有 Pod 添加临时容器,请使用 Pod 的 ephemeralcontainers 子资源.
 	//
-	// Ephemeral Containers 是 Kubernetes 1.16 中引入的新功能。它允许用户在运行中的 Pod 中添加临时容器，以便进行调试或其他任务。
-	// 与常规容器不同，临时容器不会在 Pod 的生命周期中一直存在，而是在任务完成后自动删除。因此，它们只能用于临时任务，而不能用于长期运行的服务。
+	// Ephemeral Containers 是 Kubernetes 1.16 中引入的新功能.它允许用户在运行中的 Pod 中添加临时容器,以便进行调试或其他任务.
+	// 与常规容器不同,临时容器不会在 Pod 的生命周期中一直存在,而是在任务完成后自动删除.因此,它们只能用于临时任务,而不能用于长期运行的服务.
 	// +optional
 	EphemeralContainers []EphemeralContainer
 	// +optional

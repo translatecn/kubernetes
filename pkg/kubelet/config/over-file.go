@@ -125,7 +125,7 @@ func (s *sourceFile) listConfig() error {
 		if !os.IsNotExist(err) {
 			return err
 		}
-		// 发出一个更新，其中包含一个空的 PodList，以便将 FileSource 标记为已处理。
+		// 发出一个更新,其中包含一个空的 PodList,以便将 FileSource 标记为已处理.
 		s.updates <- kubetypes.PodUpdate{Pods: []*v1.Pod{}, Op: kubetypes.SET, Source: kubetypes.FileSource}
 		return fmt.Errorf("path does not exist, ignoring")
 	}

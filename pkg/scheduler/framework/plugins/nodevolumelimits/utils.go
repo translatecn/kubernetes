@@ -22,10 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	utilfeature "k8s.io/apiserver/pkg/util/feature"
-	csilibplugins "k8s.io/csi-translation-lib/plugins"
 	v1helper "k8s.io/kubernetes/pkg/apis/core/v1/helper"
-	"k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 )
 
@@ -39,28 +36,6 @@ func isCSIMigrationOn(csiNode *storagev1.CSINode, pluginName string) bool {
 	// In-tree storage to CSI driver migration feature should be enabled,
 	// along with the plugin-specific one
 	switch pluginName {
-	case csilibplugins.AWSEBSInTreePluginName:
-		if !utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAWS) {
-			return false
-		}
-	case csilibplugins.PortworxVolumePluginName:
-		if !utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationPortworx) {
-			return false
-		}
-	case csilibplugins.GCEPDInTreePluginName:
-		if !utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationGCE) {
-			return false
-		}
-	case csilibplugins.AzureDiskInTreePluginName:
-		if !utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationAzureDisk) {
-			return false
-		}
-	case csilibplugins.CinderInTreePluginName:
-		return true
-	case csilibplugins.RBDVolumePluginName:
-		if !utilfeature.DefaultFeatureGate.Enabled(features.CSIMigrationRBD) {
-			return false
-		}
 	default:
 		return false
 	}

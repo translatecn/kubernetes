@@ -18,15 +18,80 @@ package kuberuntime
 
 import (
 	"context"
-
 	v1 "k8s.io/api/core/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	credentialprovidersecrets "k8s.io/kubernetes/pkg/credentialprovider/secrets"
+	"k8s.io/kubernetes/pkg/util/parsers"
+
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 	"k8s.io/klog/v2"
-	credentialprovidersecrets "k8s.io/kubernetes/pkg/credentialprovider/secrets"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
-	"k8s.io/kubernetes/pkg/util/parsers"
 )
+
+// ListImages gets all images currently on the machine.
+func (m *kubeGenericRuntimeManager) ListImages(ctx context.Context) ([]kubecontainer.Image, error) {
+	var images []kubecontainer.Image
+
+	allImages, err := m.imageService.ListImages(ctx, nil)
+	if err != nil {
+		klog.ErrorS(err, "Failed to list images")
+		return nil, err
+	}
+
+	for _, img := range allImages {
+		images = append(images, kubecontainer.Image{
+			ID:          img.Id,
+			Size:        int64(img.Size_),
+			RepoTags:    img.RepoTags,
+			RepoDigests: img.RepoDigests,
+			Spec:        toKubeContainerImageSpec(img),
+		})
+	}
+
+	return images, nil
+}
+
+// RemoveImage removes the specified image.
+func (m *kubeGenericRuntimeManager) RemoveImage(ctx context.Context, image kubecontainer.ImageSpec) error {
+	err := m.imageService.RemoveImage(ctx, &runtimeapi.ImageSpec{Image: image.Image})
+	if err != nil {
+		klog.ErrorS(err, "Failed to remove image", "image", image.Image)
+		return err
+	}
+
+	return nil
+}
+
+// ImageStats returns the statistics of the image.
+// Notice that current logic doesn't really work for images which share layers (e.g. docker image),
+// this is a known issue, and we'll address this by getting imagefs stats directly from CRI.
+// TODO: Get imagefs stats directly from CRI.
+func (m *kubeGenericRuntimeManager) ImageStats(ctx context.Context) (*kubecontainer.ImageStats, error) {
+	allImages, err := m.imageService.ListImages(ctx, nil)
+	if err != nil {
+		klog.ErrorS(err, "Failed to list images")
+		return nil, err
+	}
+	stats := &kubecontainer.ImageStats{}
+	for _, img := range allImages {
+		stats.TotalStorageBytes += img.Size_
+	}
+	return stats, nil
+}
+
+// GetImageRef gets the ID of the image which has already been in
+// the local storage. It returns ("", nil) if the image isn't in the local storage.
+func (m *kubeGenericRuntimeManager) GetImageRef(ctx context.Context, image kubecontainer.ImageSpec) (string, error) {
+	resp, err := m.imageService.ImageStatus(ctx, toRuntimeAPIImageSpec(image), false)
+	if err != nil {
+		klog.ErrorS(err, "Failed to get image status", "image", image.Image)
+		return "", err
+	}
+	if resp.Image == nil {
+		return "", nil
+	}
+	return resp.Image.Id, nil
+}
 
 // PullImage pulls an image from the network to local storage using the supplied
 // secrets if necessary.
@@ -78,69 +143,4 @@ func (m *kubeGenericRuntimeManager) PullImage(ctx context.Context, image kubecon
 	}
 
 	return "", utilerrors.NewAggregate(pullErrs)
-}
-
-// GetImageRef gets the ID of the image which has already been in
-// the local storage. It returns ("", nil) if the image isn't in the local storage.
-func (m *kubeGenericRuntimeManager) GetImageRef(ctx context.Context, image kubecontainer.ImageSpec) (string, error) {
-	resp, err := m.imageService.ImageStatus(ctx, toRuntimeAPIImageSpec(image), false)
-	if err != nil {
-		klog.ErrorS(err, "Failed to get image status", "image", image.Image)
-		return "", err
-	}
-	if resp.Image == nil {
-		return "", nil
-	}
-	return resp.Image.Id, nil
-}
-
-// ListImages gets all images currently on the machine.
-func (m *kubeGenericRuntimeManager) ListImages(ctx context.Context) ([]kubecontainer.Image, error) {
-	var images []kubecontainer.Image
-
-	allImages, err := m.imageService.ListImages(ctx, nil)
-	if err != nil {
-		klog.ErrorS(err, "Failed to list images")
-		return nil, err
-	}
-
-	for _, img := range allImages {
-		images = append(images, kubecontainer.Image{
-			ID:          img.Id,
-			Size:        int64(img.Size_),
-			RepoTags:    img.RepoTags,
-			RepoDigests: img.RepoDigests,
-			Spec:        toKubeContainerImageSpec(img),
-		})
-	}
-
-	return images, nil
-}
-
-// RemoveImage removes the specified image.
-func (m *kubeGenericRuntimeManager) RemoveImage(ctx context.Context, image kubecontainer.ImageSpec) error {
-	err := m.imageService.RemoveImage(ctx, &runtimeapi.ImageSpec{Image: image.Image})
-	if err != nil {
-		klog.ErrorS(err, "Failed to remove image", "image", image.Image)
-		return err
-	}
-
-	return nil
-}
-
-// ImageStats returns the statistics of the image.
-// Notice that current logic doesn't really work for images which share layers (e.g. docker image),
-// this is a known issue, and we'll address this by getting imagefs stats directly from CRI.
-// TODO: Get imagefs stats directly from CRI.
-func (m *kubeGenericRuntimeManager) ImageStats(ctx context.Context) (*kubecontainer.ImageStats, error) {
-	allImages, err := m.imageService.ListImages(ctx, nil)
-	if err != nil {
-		klog.ErrorS(err, "Failed to list images")
-		return nil, err
-	}
-	stats := &kubecontainer.ImageStats{}
-	for _, img := range allImages {
-		stats.TotalStorageBytes += img.Size_
-	}
-	return stats, nil
 }

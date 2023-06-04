@@ -425,7 +425,7 @@ type KubeletConfiguration struct {
 	// Default: ""
 	// +optional
 	PodCIDR string `json:"podCIDR,omitempty"`
-	// pod中pid的最大数目。Default: -1
+	// pod中pid的最大数目.Default: -1
 	// +optional
 	PodPidsLimit *int64 `json:"podPidsLimit,omitempty"`
 	// resolvConf is the resolver configuration file used as the basis
@@ -660,8 +660,7 @@ type KubeletConfiguration struct {
 	// Default: []
 	// +optional
 	AllowedUnsafeSysctls []string `json:"allowedUnsafeSysctls,omitempty"`
-	// volumePluginDir is the full path of the directory in which to search
-	// for additional third party volume plugins.
+	// volumePluginDir 要搜索其他第三方卷插件的完整目录路径.
 	// Default: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
 	// +optional
 	VolumePluginDir string `json:"volumePluginDir,omitempty"`
