@@ -158,7 +158,7 @@ func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAd
 	klog.InfoS("无法将pod分配到节点上.", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
 	return lifecycle.PodAdmitResult{
 		Admit:   false,
-		Reason:  Reason,
+		Reason:  Reason, // ✅
 		Message: fmt.Sprintf(nodeConditionMessageFmt, m.nodeConditions),
 	}
 }

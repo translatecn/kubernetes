@@ -124,9 +124,7 @@ type PodSpec struct {
 	// Defaults to 30 seconds.
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty" protobuf:"varint,4,opt,name=terminationGracePeriodSeconds"`
-	// Optional duration in seconds the pod may be active on the node relative to
-	// StartTime before the system will actively try to mark it failed and kill associated containers.
-	// Value must be a positive integer.
+	// 用于指定 Pod 在 StartTime 后可以在节点上保持活动状态的时间.
 	// +optional
 	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty" protobuf:"varint,5,opt,name=activeDeadlineSeconds"`
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
@@ -134,20 +132,14 @@ type PodSpec struct {
 	// More info: http://kubernetes.io/docs/user-guide/node-selection/README
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty" protobuf:"bytes,7,rep,name=nodeSelector"`
-
-	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
 	// More info: https://git.k8s.io/community/contributors/design-proposals/auth/service_accounts.md
 	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty" protobuf:"bytes,8,opt,name=serviceAccountName"`
-	// DeprecatedServiceAccount is a depreciated alias for ServiceAccountName.
-	// Deprecated: Use serviceAccountName instead.
+	// 弃用
 	// +k8s:conversion-gen=false
 	// +optional
 	DeprecatedServiceAccount string `json:"serviceAccount,omitempty" protobuf:"bytes,9,opt,name=serviceAccount"`
-
-	// NodeName is a request to schedule this pod onto a specific node. If it is non-empty,
-	// the scheduler simply schedules this pod onto that node, assuming that it fits resource
-	// requirements.
+	// 调度到哪个节点
 	// +optional
 	NodeName string `json:"nodeName,omitempty" protobuf:"bytes,10,opt,name=nodeName"`
 	// Host networking requested for this pod. Use the host's network namespace.

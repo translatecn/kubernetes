@@ -577,17 +577,18 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	klet.reasonCache = NewReasonCache()
 	klet.workQueue = queue.NewBasicWorkQueue(klet.clock)
-	klet.podWorkers = newPodWorkers( // 针对pod进行操作的
-		klet.syncPod,
-		klet.syncTerminatingPod, // 设置终止一个pod的函数
-		klet.syncTerminatedPod,
-		kubeDeps.Recorder,
-		klet.workQueue,
-		klet.resyncInterval,
-		backOffPeriod,
-		klet.podCache,
-	)
-
+	{
+		klet.podWorkers = newPodWorkers( // 针对pod进行操作的
+			klet.syncPod,
+			klet.syncTerminatingPod, // 设置终止一个pod的函数
+			klet.syncTerminatedPod,
+			kubeDeps.Recorder,
+			klet.workQueue,
+			klet.resyncInterval,
+			backOffPeriod,
+			klet.podCache,
+		)
+	}
 	runtime, err := kuberuntime.NewKubeGenericRuntimeManager(
 		kubecontainer.FilterEventRecorder(kubeDeps.Recorder),
 		klet.livenessManager,
@@ -860,7 +861,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // pod 准入失败恢复器  ✅
 		klet.GetActivePods,
-		killPodNow(klet.podWorkers, kubeDeps.Recorder),
+		killPodNow(klet.podWorkers, kubeDeps.Recorder), // ✅
 		kubeDeps.Recorder,
 	)
 
@@ -902,7 +903,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		Recorder:                         kubeDeps.Recorder,
 		NodeRef:                          nodeRef,
 		GetPodsFunc:                      klet.GetActivePods,
-		KillPodFunc:                      killPodNow(klet.podWorkers, kubeDeps.Recorder),
+		KillPodFunc:                      killPodNow(klet.podWorkers, kubeDeps.Recorder), // ✅
 		SyncNodeStatusFunc:               klet.syncNodeStatus,
 		ShutdownGracePeriodRequested:     kubeCfg.ShutdownGracePeriod.Duration,
 		ShutdownGracePeriodCriticalPods:  kubeCfg.ShutdownGracePeriodCriticalPods.Duration,

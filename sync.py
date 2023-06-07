@@ -88,5 +88,4 @@ for _item in catch_dir(f'./staging/src/{item}', 2):
 
 for item in a.split('\n'):
     item = os.path.dirname(item.strip())
-    print(f'cd {item} && go mod tidy')
     system(f'cd {item} && go mod tidy')

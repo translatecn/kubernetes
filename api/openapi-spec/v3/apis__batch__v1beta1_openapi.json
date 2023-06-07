@@ -2373,7 +2373,7 @@
         "description": "PodSpec is a description of a pod.",
         "properties": {
           "activeDeadlineSeconds": {
-            "description": "Optional duration in seconds the pod may be active on the node relative to StartTime before the system will actively try to mark it failed and kill associated containers. Value must be a positive integer.",
+            "description": "用于指定 Pod 在 StartTime 后可以在节点上保持活动状态的时间.如果 Pod 在此时间内未完成,系统将会主动尝试标记它为失败状态并杀死关联的容器.",
             "format": "int64",
             "type": "integer"
           },

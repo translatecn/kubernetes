@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: python
+data:
+  data: |
+    a = 'a'
+    while True:
+        a = a * 100
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: centos
+  labels:
+    app: centos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: centos
+  template:
+    metadata:
+      name: centos
+      labels:
+        app: centos
+    spec:
+      containers:
+        - name: centos
+          image: centos:7
+          imagePullPolicy: IfNotPresent
+          command:
+            #        - "/bin/sh"
+            #        - "-c"
+            #        - "sleep 12345"
+            - "python"
+            - "/xx/data"
+          resources:
+            limits:
+              memory: "128M"
+            requests:
+              memory: "128M"
+          volumeMounts:
+            - mountPath: /xx
+              name: d
+      volumes:
+        - name: d
+          configMap:
+            name: python

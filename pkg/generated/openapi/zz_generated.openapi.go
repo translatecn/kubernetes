@@ -23216,7 +23216,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"activeDeadlineSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Optional duration in seconds the pod may be active on the node relative to StartTime before the system will actively try to mark it failed and kill associated containers. Value must be a positive integer.",
+							Description: "用于指定 Pod 在 StartTime 后可以在节点上保持活动状态的时间.如果 Pod 在此时间内未完成,系统将会主动尝试标记它为失败状态并杀死关联的容器.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
