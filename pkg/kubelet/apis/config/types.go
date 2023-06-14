@@ -407,7 +407,7 @@ type KubeletConfiguration struct { // --config
 	// 如果开启了LocalStorageCapacityIsolation特性就通过 cadvisor接口获取 rootfsinfo
 
 	// - 然后将类型为ephemeral-storage的存储的容量设置为rootfs获取到的
-	// +optional
+	// +optionalLocalStorageCapacityIsolation
 	LocalStorageCapacityIsolation bool
 }
 

@@ -19,7 +19,12 @@ package status
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/nsf/jsondiff"
+	"io/ioutil"
+	"os"
+	"path"
 	"sort"
 	"strings"
 	"sync"
@@ -246,7 +251,25 @@ func (m *manager) syncPod(uid types.UID, status versionedPodStatus) {
 		m.deletePodStatus(uid)
 		return
 	}
-
+	{
+		opts := jsondiff.DefaultConsoleOptions()
+		opts.Indent = "    "
+		opts.SkipMatches = true
+		opts.Added = jsondiff.Tag{}
+		opts.Removed = jsondiff.Tag{}
+		opts.Changed = jsondiff.Tag{}
+		opts.Skipped = jsondiff.Tag{}
+		opts.SkippedObjectProperty = nil
+		opts.SkippedArrayElement = nil
+		o1, _ := json.Marshal(oldPod.Status)
+		o2, _ := json.Marshal(status.status)
+		_, diff := jsondiff.Compare(o1, o2, &opts)
+		if len(diff) != 0 {
+			p := fmt.Sprintf("./pod_status/%s/%s/", oldPod.Namespace, oldPod.Name)
+			os.MkdirAll(p, os.ModePerm)
+			ioutil.WriteFile(path.Join(p, time.Now().String()), []byte(diff), os.ModePerm)
+		}
+	}
 	mergedStatus := mergePodStatus(oldPod.Status, status.status, m.podDeletionSafety.PodCouldHaveRunningContainers(oldPod)) // ✅
 
 	newPod, patchBytes, unchanged, err := statusutil.PatchPodStatus(context.TODO(), m.kubeClient, oldPod.Namespace, oldPod.Name, oldPod.UID, oldPod.Status, mergedStatus)
@@ -256,6 +279,7 @@ func (m *manager) syncPod(uid types.UID, status versionedPodStatus) {
 		klog.InfoS("Failed to update status for oldPod", "oldPod", klog.KObj(oldPod), "err", err)
 		return
 	}
+
 	if unchanged {
 		klog.V(3).InfoS("Status for oldPod is up-to-date", "oldPod", klog.KObj(oldPod), "statusVersion", status.version)
 	} else {

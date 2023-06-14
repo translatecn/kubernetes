@@ -271,10 +271,9 @@ func (e *quotaEvaluator) checkQuotas(quotas []corev1.ResourceQuota, admissionAtt
 		return
 	}
 
-	// now go through and try to issue updates.  Things get a little weird here:
-	// 1. check to see if the quota changed.  If not, skip.
-	// 2. if the quota changed and the update passes, be happy
-	// 3. if the quota changed and the update fails, add the original to a retry list
+	// 在更新资源配额时,代码先检查是否有更改.如果没有更改,则跳过更新.
+	// 如果有更改,则尝试进行更新.如果更新成功,则表示更新完成.
+	// 如果更新失败,则将原始资源配额添加到重试列表中,以便稍后重试更新.
 	var updatedFailedQuotas []corev1.ResourceQuota
 	var lastErr error
 	for i := range quotas {

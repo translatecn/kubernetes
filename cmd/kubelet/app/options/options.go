@@ -175,7 +175,7 @@ func NewKubeletConfiguration() (*kubeletconfig.KubeletConfiguration, error) {
 		return nil, err
 	}
 	versioned := &v1beta1.KubeletConfiguration{}
-	scheme.Default(versioned)
+	scheme.Default(versioned) // ✈️
 	config := &kubeletconfig.KubeletConfiguration{}
 	if err := scheme.Convert(versioned, config, nil); err != nil {
 		return nil, err

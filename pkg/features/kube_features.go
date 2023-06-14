@@ -361,10 +361,10 @@ const (
 	// 增加了对kubelet的支持,以检测node关闭并在节点关闭之前优雅地终止pod.
 	GracefulNodeShutdown featuregate.Feature = "GracefulNodeShutdown"
 
-	// owner: @wzshiming
+	// GracefulNodeShutdownBasedOnPodPriority owner: @wzshiming
 	// alpha: v1.23
 	// beta:  v1.24
-	// Make the kubelet use shutdown configuration based on pod priority values for graceful shutdown.
+	// 让kubelet使用基于pod优先级值的关机配置来实现安全关机。
 	GracefulNodeShutdownBasedOnPodPriority featuregate.Feature = "GracefulNodeShutdownBasedOnPodPriority"
 
 	// owner: @arjunrn @mwielgus @josephburnett

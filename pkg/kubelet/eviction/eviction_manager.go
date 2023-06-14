@@ -49,40 +49,34 @@ const (
 )
 
 const (
-	// signalEphemeralContainerFsLimit is amount of storage available on filesystem requested by the container
-	signalEphemeralContainerFsLimit string = "ephemeralcontainerfs.limit"
-	// signalEphemeralPodFsLimit is amount of storage available on filesystem requested by the pod
-	signalEphemeralPodFsLimit string = "ephemeralpodfs.limit"
-	// signalEmptyDirFsLimit is amount of storage available on filesystem requested by an emptyDir
-	signalEmptyDirFsLimit string = "emptydirfs.limit"
+	signalEphemeralContainerFsLimit string = "ephemeralcontainerfs.limit" // 指在容器运行期间创建的存储,用于临时存储容器中的数据.针对单个容器
+	signalEphemeralPodFsLimit       string = "ephemeralpodfs.limit"       // 针对整个 Pod
+	signalEmptyDirFsLimit           string = "emptydirfs.limit"
 )
 
 // ManagerImpl implements Manager
 type ManagerImpl struct {
-	clock         clock.WithTicker
-	config        Config
-	killPodFunc   KillPodFunc   // killpod的方法
-	mirrorPodFunc MirrorPodFunc // 获取静态pod的mirror pod 方法
-	imageGC       ImageGC       // 当node出现diskPressure condition时,imageGC进行unused images删除操作以回收disk space.
-	containerGC   ContainerGC
-	sync.RWMutex
-	nodeConditions               []v1.NodeConditionType   //  当前节点存在的问题集合
-	nodeConditionsLastObservedAt nodeConditionsObservedAt // 记录 nodecontions 上一次观察的时间
-	// nodeRef is a reference to the node
-	nodeRef *v1.ObjectReference
-	// used to record events about the node
-	recorder                  record.EventRecorder
-	summaryProvider           stats.SummaryProvider                   // 提供node和node上所有pods的最新status数据汇总,即 NodeStats and []PodStats.
-	thresholdsFirstObservedAt thresholdsObservedAt                    // 记录第一次阈值的时间
-	thresholdsMet             []evictionapi.Threshold                 // 保存已经触发但还没解决的Thresholds,包括那些处于grace period等待阶段的Thresholds.
-	signalToRankFunc          map[evictionapi.Signal]rankFunc         // 定义各Resource进行evict挑选时的排名方法.
-	signalToNodeReclaimFuncs  map[evictionapi.Signal]nodeReclaimFuncs // 定义各Resource进行回收时调用的方法
-	// last observations from synchronize
-	lastObservations              signalObservations
-	dedicatedImageFs              *bool               // 指示imagefs是否位于与rootfs不同的设备上
-	thresholdNotifiers            []ThresholdNotifier // 内存阈值通知器集合
-	thresholdsLastUpdated         time.Time           // 上次thresholdNotifiers发通知的时间
-	localStorageCapacityIsolation bool                // 是否支持本地存储容量隔离
+	clock                         clock.WithTicker
+	config                        Config
+	killPodFunc                   KillPodFunc                             // killpod的方法
+	mirrorPodFunc                 MirrorPodFunc                           // 获取静态pod的mirror pod 方法
+	imageGC                       ImageGC                                 // 当node出现diskPressure condition时,imageGC进行unused images删除操作以回收disk space.
+	containerGC                   ContainerGC                             //
+	sync.RWMutex                                                          //
+	nodeConditions                []v1.NodeConditionType                  //  当前节点存在的问题集合
+	nodeConditionsLastObservedAt  nodeConditionsObservedAt                // 记录 nodecontions 上一次观察的时间
+	nodeRef                       *v1.ObjectReference                     // nodeRef is a reference to the node
+	recorder                      record.EventRecorder                    //
+	summaryProvider               stats.SummaryProvider                   // 提供node和node上所有pods的最新status数据汇总,即 NodeStats and []PodStats.
+	thresholdsFirstObservedAt     thresholdsObservedAt                    // 记录第一次阈值的时间
+	thresholdsMet                 []evictionapi.Threshold                 // 保存已经触发但还没解决的Thresholds,包括那些处于grace period等待阶段的Thresholds.
+	signalToRankFunc              map[evictionapi.Signal]rankFunc         // 定义各Resource进行evict挑选时的排名方法.
+	signalToNodeReclaimFuncs      map[evictionapi.Signal]nodeReclaimFuncs // 定义各Resource进行回收时调用的方法
+	lastObservations              signalObservations                      //
+	dedicatedImageFs              *bool                                   // 指示imagefs是否位于与rootfs不同的设备上
+	thresholdNotifiers            []ThresholdNotifier                     // 内存阈值通知器集合
+	thresholdsLastUpdated         time.Time                               // 上次thresholdNotifiers发通知的时间
+	localStorageCapacityIsolation bool                                    // 是否支持本地存储容量隔离,默认为true
 }
 
 // ensure it implements the required interface
@@ -115,52 +109,9 @@ func NewManager(
 		thresholdsFirstObservedAt:     thresholdsObservedAt{},
 		dedicatedImageFs:              nil,
 		thresholdNotifiers:            []ThresholdNotifier{},
-		localStorageCapacityIsolation: localStorageCapacityIsolation,
+		localStorageCapacityIsolation: localStorageCapacityIsolation, // ✅
 	}
 	return manager, manager // ; 用于创建pod时的admit
-}
-
-// Admit 评估一个pod是否可以被允许创建.
-// 用node的压力状态 做pod是否准入的依据,相当于影响调度的结果
-func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
-	m.RLock()
-	defer m.RUnlock()
-	if len(m.nodeConditions) == 0 { // 如果 node现在没有压力状态那么准入
-		return lifecycle.PodAdmitResult{Admit: true}
-	}
-	// Admit Critical pods even under resource pressure since they are required for system stability.
-	// https://github.com/kubernetes/kubernetes/issues/40573 has more details.
-	if kubelettypes.IsCriticalPod(attrs.Pod) { // 如果是静态pod或者SystemCriticalPriority的高优则忽略节点压力状态准入
-		return lifecycle.PodAdmitResult{Admit: true}
-	}
-
-	// Conditions other than memory pressure reject all pods
-	// 如果当前节点只有内存的压力,那么pod的qos类型为 非 BestEffort[最低] 则准入
-	nodeOnlyHasMemoryPressureCondition := hasNodeCondition(m.nodeConditions, v1.NodeMemoryPressure) && len(m.nodeConditions) == 1
-	if nodeOnlyHasMemoryPressureCondition {
-		notBestEffort := v1.PodQOSBestEffort != v1qos.GetPodQOS(attrs.Pod)
-		if notBestEffort {
-			// 不是努力送达
-			return lifecycle.PodAdmitResult{Admit: true} // 低优先级的不让进、高优先级的让进
-		}
-
-		// 如果是BestEffort则要根据它的容忍类型判断
-
-		if v1helper.TolerationsTolerateTaint(attrs.Pod.Spec.Tolerations, &v1.Taint{
-			Key:    v1.TaintNodeMemoryPressure,
-			Effect: v1.TaintEffectNoSchedule,
-		}) {
-			return lifecycle.PodAdmitResult{Admit: true} // 低优先级、但是容忍这个污点让进
-		}
-	}
-
-	// reject pods when under memory pressure (if pod is best effort), or if under disk pressure.
-	klog.InfoS("无法将pod分配到节点上.", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
-	return lifecycle.PodAdmitResult{
-		Admit:   false,
-		Reason:  Reason, // ✅
-		Message: fmt.Sprintf(nodeConditionMessageFmt, m.nodeConditions),
-	}
 }
 
 // Start 启动控制循环以观察和响应计算资源不足的情况.
@@ -223,12 +174,14 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 	// 如果我们没事做,就回去吧
 	thresholds := m.config.Thresholds
 	if len(thresholds) == 0 && !m.localStorageCapacityIsolation {
-		return nil
+		return nil // 不会进来
 	}
 
-	klog.V(3).InfoS("Eviction manager: synchronize housekeeping")
-	if m.dedicatedImageFs == nil { // 指示imagefs是否位于与rootfs不同的设备上
+	klog.V(3).InfoS("Eviction Manager 正在同步 Pod 的 housekeeping（即清理、维护）操作")
+	if m.dedicatedImageFs == nil { // 指示imagefs是否位于与rootfs不同的设备上  /
 		// 如果imagefs与rootfs在不同的设备上,则返回true. 是否有专用的 image fs
+		// /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+		// /var/lib/kubelet
 		hasImageFs, ok := diskInfoProvider.HasDedicatedImageFs(ctx) // ✅
 		if ok != nil {
 			return nil
@@ -250,7 +203,7 @@ func (m *ManagerImpl) synchronize(diskInfoProvider DiskInfoProvider, podFunc Act
 
 	if m.clock.Since(m.thresholdsLastUpdated) > notifierRefreshInterval {
 		m.thresholdsLastUpdated = m.clock.Now()
-		for _, notifier := range m.thresholdNotifiers {
+		for _, notifier := range m.thresholdNotifiers { // 需要开启 KernelMemcgNotification
 			if err := notifier.UpdateThreshold(summary); err != nil {
 				klog.InfoS("Eviction manager: failed to update notifier", "notifier", notifier.Description(), "err", err)
 			}
@@ -560,6 +513,8 @@ func (m *ManagerImpl) containerEphemeralStorageLimitEviction(podStats statsapi.P
 	return false
 }
 
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
 func (m *ManagerImpl) evictPod(pod *v1.Pod, gracePeriodOverride int64, evictMsg string, annotations map[string]string, condition *v1.PodCondition) bool {
 	// If the pod is marked as critical and static, and support for critical pod annotations is enabled,
 	// do not evict such pods. Static pods are not re-admitted after evictions.
@@ -572,7 +527,7 @@ func (m *ManagerImpl) evictPod(pod *v1.Pod, gracePeriodOverride int64, evictMsg 
 	m.recorder.AnnotatedEventf(pod, annotations, v1.EventTypeWarning, Reason, evictMsg)
 	// this is a blocking call and should only return when the pod and its containers are killed.
 	klog.V(3).InfoS("Evicting pod", "pod", klog.KObj(pod), "podUID", pod.UID, "message", evictMsg)
-	err := m.killPodFunc(pod, true, &gracePeriodOverride, func(status *v1.PodStatus) {
+	err := m.killPodFunc(pod, true, &gracePeriodOverride, func(status *v1.PodStatus) { // ✅
 		status.Phase = v1.PodFailed
 		status.Reason = Reason
 		status.Message = evictMsg
@@ -586,4 +541,47 @@ func (m *ManagerImpl) evictPod(pod *v1.Pod, gracePeriodOverride int64, evictMsg 
 		klog.InfoS("Eviction manager: pod is evicted successfully", "pod", klog.KObj(pod))
 	}
 	return true
+}
+
+// Admit 评估一个pod是否可以被允许创建.
+// 用node的压力状态 做pod是否准入的依据,相当于影响调度的结果
+func (m *ManagerImpl) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult { // ✅
+	m.RLock()
+	defer m.RUnlock()
+	if len(m.nodeConditions) == 0 { // 如果 node现在没有压力状态那么准入
+		return lifecycle.PodAdmitResult{Admit: true}
+	}
+	// Admit Critical pods even under resource pressure since they are required for system stability.
+	// https://github.com/kubernetes/kubernetes/issues/40573 has more details.
+	if kubelettypes.IsCriticalPod(attrs.Pod) { // 如果是静态pod或者SystemCriticalPriority的高优则忽略节点压力状态准入
+		return lifecycle.PodAdmitResult{Admit: true}
+	}
+
+	// Conditions other than memory pressure reject all pods
+	// 如果当前节点只有内存的压力,那么pod的qos类型为 非 BestEffort[最低] 则准入
+	nodeOnlyHasMemoryPressureCondition := hasNodeCondition(m.nodeConditions, v1.NodeMemoryPressure) && len(m.nodeConditions) == 1
+	if nodeOnlyHasMemoryPressureCondition {
+		notBestEffort := v1.PodQOSBestEffort != v1qos.GetPodQOS(attrs.Pod)
+		if notBestEffort {
+			// 不是努力送达
+			return lifecycle.PodAdmitResult{Admit: true} // 低优先级的不让进、高优先级的让进
+		}
+
+		// 如果是BestEffort则要根据它的容忍类型判断
+
+		if v1helper.TolerationsTolerateTaint(attrs.Pod.Spec.Tolerations, &v1.Taint{
+			Key:    v1.TaintNodeMemoryPressure,
+			Effect: v1.TaintEffectNoSchedule,
+		}) {
+			return lifecycle.PodAdmitResult{Admit: true} // 低优先级、但是容忍这个污点让进
+		}
+	}
+
+	// reject pods when under memory pressure (if pod is best effort), or if under disk pressure.
+	klog.InfoS("无法将pod分配到节点上.", "pod", klog.KObj(attrs.Pod), "nodeCondition", m.nodeConditions)
+	return lifecycle.PodAdmitResult{
+		Admit:   false,
+		Reason:  Reason, // ✅
+		Message: fmt.Sprintf(nodeConditionMessageFmt, m.nodeConditions),
+	}
 }

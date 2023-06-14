@@ -3,6 +3,7 @@ package kubelet
 import "os"
 
 func Init(args []string) []string {
+	_ = os.RemoveAll("./pod_status")
 	name, _ := os.Hostname()
 	if os.Getenv("DEBUG") != "" || name == "vm" {
 	} else {

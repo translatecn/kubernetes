@@ -295,7 +295,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	imageCredentialProviderBinDir string,
 	registerNode bool,
 	registerWithTaints []v1.Taint,
-	allowedUnsafeSysctls []string, //
+	allowedUnsafeSysctls []string, // ✅
 	experimentalMounterPath string,
 	kernelMemcgNotification bool,
 	experimentalNodeAllocatableIgnoreEvictionThreshold bool,
@@ -819,70 +819,15 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		kubeDeps.Recorder,
 		nodeRef,
 		klet.clock,
-		kubeCfg.LocalStorageCapacityIsolation,
+		kubeCfg.LocalStorageCapacityIsolation, // ✅
 	)
 	//- evictionManager做本机驱逐pod的判定和清除
 	//- evictionAdmitHandler用来kubelet创建Pod前进依据本机的资源压力进行准入检查
 	klet.evictionManager = evictionManager
-
-	//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查,满足条件后才会继续创建Pod,通过Admit方法来检查
-	var _ = new(eviction.ManagerImpl).Admit
-	klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler) // ✅
-
-	// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.
-	// Hence, we concatenate those two lists.
-	//安全的、被允许的系统tls总是可以在规范中用作不安全的系统tls.
-	//因此,我们将这两个列表连接起来.
-	safeAndUnsafeSysctls := append(sysctl.SafeSysctlAllowlist(), allowedUnsafeSysctls...) // 安全的sysctl指令、被允许的不安全指令
-	sysctlsAllowlist, err := sysctl.NewAllowlist(safeAndUnsafeSysctls)
-	if err != nil {
-		return nil, err
-	}
-	klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist) // 主要是判断 sysctl 与pod Sc 是否冲突✅
-
-	// enable active deadline handler
-	activeDeadlineHandler, err := newActiveDeadlineHandler(klet.statusManager, kubeDeps.Recorder, klet.clock)
-	if err != nil {
-		return nil, err
-	}
-	klet.AddPodSyncLoopHandler(activeDeadlineHandler)
-	klet.AddPodSyncHandler(activeDeadlineHandler)
-
-	{
-		// myself
-
-		//var _ = klet.containerManager.(*cm.ContainerManagerImpl).
-		//TopologyManager.(*topologymanager.ScopeManager).Scope.(*topologymanager.ContainerScope).Admit // 默认是容器级
-		//var _ = klet.containerManager.(*cm.ContainerManagerImpl).
-		//	TopologyManager.(*topologymanager.ScopeManager).Scope.(*topologymanager.PodScope).Admit
-	}
-
-	klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // TODO
-
-	criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // pod 准入失败恢复器  ✅
-		klet.GetActivePods,
-		killPodNow(klet.podWorkers, kubeDeps.Recorder), // ✅
-		kubeDeps.Recorder,
-	)
-
-	klet.admitHandlers.AddPodAdmitHandler( // ✅
-		lifecycle.NewPredicateAdmitHandler(
-			klet.getNodeAnyWay,
-			criticalPodAdmissionHandler,
-			klet.containerManager.UpdatePluginResources,
-		),
-	)
 	// apply functional Option's
 	for _, opt := range kubeDeps.Options {
 		opt(klet)
 	}
-
-	if sysruntime.GOOS == "linux" {
-		// AppArmor is a Linux kernel security module and it does not support other operating systems.
-		klet.appArmorValidator = apparmor.NewValidator()
-		klet.softAdmitHandlers.AddPodAdmitHandler(lifecycle.NewAppArmorAdmitHandler(klet.appArmorValidator))
-	}
-
 	leaseDuration := time.Duration(kubeCfg.NodeLeaseDurationSeconds) * time.Second
 	renewInterval := time.Duration(float64(leaseDuration) * nodeLeaseRenewIntervalFraction)
 	klet.nodeLeaseController = lease.NewController( // ✅
@@ -908,14 +853,68 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		ShutdownGracePeriodRequested:     kubeCfg.ShutdownGracePeriod.Duration,
 		ShutdownGracePeriodCriticalPods:  kubeCfg.ShutdownGracePeriodCriticalPods.Duration,
 		ShutdownGracePeriodByPodPriority: kubeCfg.ShutdownGracePeriodByPodPriority,
-		StateDirectory:                   rootDirectory,
+		StateDirectory:                   rootDirectory, // /var/lib/kubelet
 	})
 	klet.shutdownManager = shutdownManager
 	klet.usernsManager, err = MakeUserNsManager(klet)
 	if err != nil {
 		return nil, err
 	}
-	klet.admitHandlers.AddPodAdmitHandler(shutdownAdmitHandler) // ✅
+
+	{
+		//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查,满足条件后才会继续创建Pod,通过Admit方法来检查
+		var _ = new(eviction.ManagerImpl).Admit
+		klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler) // ✅
+		// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.
+		// Hence, we concatenate those two lists.
+		//安全的、被允许的系统tls总是可以在规范中用作不安全的系统tls.
+		//因此,我们将这两个列表连接起来.
+		safeAndUnsafeSysctls := append(sysctl.SafeSysctlAllowlist(), allowedUnsafeSysctls...)
+		sysctlsAllowlist, err := sysctl.NewAllowlist(safeAndUnsafeSysctls)
+		if err != nil {
+			return nil, err
+		}
+		klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist)                                            // ✅ 安全的sysctl指令、被允许的不安全指令                                     // 主要是判断 sysctl 与pod Sc 是否冲突✅
+		klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // TODO
+
+		criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // ✅ 当资源不足时，尝试驱逐优先级低的pod
+			klet.GetActivePods,
+			killPodNow(klet.podWorkers, kubeDeps.Recorder),
+			kubeDeps.Recorder,
+		)
+		var _ = criticalPodAdmissionHandler.HandleAdmissionFailure
+		klet.admitHandlers.AddPodAdmitHandler( // ✅
+			lifecycle.NewPredicateAdmitHandler(
+				klet.getNodeAnyWay,
+				criticalPodAdmissionHandler,
+				klet.containerManager.UpdatePluginResources,
+			),
+		)
+
+		klet.admitHandlers.AddPodAdmitHandler(shutdownAdmitHandler) // ✅
+
+	}
+	if sysruntime.GOOS == "linux" {
+		// AppArmor is a Linux kernel security module and it does not support other operating systems.
+		klet.appArmorValidator = apparmor.NewValidator()
+		klet.softAdmitHandlers.AddPodAdmitHandler(lifecycle.NewAppArmorAdmitHandler(klet.appArmorValidator))
+	}
+	// enable active deadline handler
+	activeDeadlineHandler, err := newActiveDeadlineHandler(klet.statusManager, kubeDeps.Recorder, klet.clock)
+	if err != nil {
+		return nil, err
+	}
+	klet.AddPodSyncLoopHandler(activeDeadlineHandler)
+	klet.AddPodSyncHandler(activeDeadlineHandler)
+
+	{
+		// myself
+
+		//var _ = klet.containerManager.(*cm.ContainerManagerImpl).
+		//TopologyManager.(*topologymanager.ScopeManager).Scope.(*topologymanager.ContainerScope).Admit // 默认是容器级
+		//var _ = klet.containerManager.(*cm.ContainerManagerImpl).
+		//	TopologyManager.(*topologymanager.ScopeManager).Scope.(*topologymanager.PodScope).Admit
+	}
 
 	// Finally, put the most recent version of the config on the Kubelet, so
 	// people can see how it was configured.
@@ -1026,8 +1025,6 @@ type Kubelet struct {
 	setNodeStatusFuncs                      []func(context.Context, *v1.Node) error // 在tryUpdateNodeStatus loop中调用的处理程序✅
 	lastNodeUnschedulableLock               sync.Mutex                              //
 	lastNodeUnschedulable                   bool                                    // 是否维护上一次的Node.Spec.Unschedulable的值
-	admitHandlers                           lifecycle.PodAdmitHandlers              // Pod 准入处理程序列表.✅
-	softAdmitHandlers                       lifecycle.PodAdmitHandlers              // 用于在 Kubelet 准入 Pod 后但在运行之前对其进行处理.如果一个 Pod 被 softAdmitHandler 拒绝,它将被保留在 Pending 状态中.
 	lifecycle.PodSyncLoopHandlers                                                   // Pod 同步循环处理程序列表.
 	lifecycle.PodSyncHandlers                                                       // Pod 同步处理程序列表.
 	podsPerCore                             int                                     // 每个 CPU 核心允许的 Pod 数量.
@@ -1044,6 +1041,10 @@ type Kubelet struct {
 	runtimeClassManager                     *runtimeclass.Manager                   // 用于处理 RuntimeClass 对象的 runtimeclass.Manager 实例.
 	shutdownManager                         nodeshutdown.Manager                    // 用于协调节点关机的 nodeshutdown.Manager 实例.
 	usernsManager                           *usernsManager                          // 用于管理用户命名空间的 usernsManager 实例.
+
+	admitHandlers     lifecycle.PodAdmitHandlers // canAdmitPod Pod 准入处理程序列表.✅
+	softAdmitHandlers lifecycle.PodAdmitHandlers // canRunPod 用于在 Kubelet 准入 Pod 后但在运行之前对其进行处理.如果一个 Pod 被 softAdmitHandler 拒绝,它将被保留在 Pending 状态中.
+
 }
 
 // 启动容器运行时之后需要初始化内部模块

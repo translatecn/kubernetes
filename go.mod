@@ -49,6 +49,7 @@ require (
 	github.com/moby/ipvs v1.0.1
 	github.com/mrunalp/fileutils v0.5.0
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
+	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 	github.com/onsi/ginkgo/v2 v2.4.0
 	github.com/opencontainers/runc v1.1.4
 	github.com/opencontainers/selinux v1.10.0

@@ -61,6 +61,10 @@ func NewPredicateAdmitHandler(
 }
 
 func (w *predicateAdmitHandler) Admit(attrs *PodAdmitAttributes) PodAdmitResult { // ✅
+
+	//Pod       *v1.Pod   // 要评估准入的 Pod.
+	//OtherPods []*v1.Pod // 所有绑定到 kubelet 的 Pod,不包括正在评估的 Pod.
+
 	node, err := w.getNodeAnyWayFunc()
 	if err != nil {
 		klog.ErrorS(err, "Cannot get Node info")
@@ -194,6 +198,7 @@ func rejectPodAdmissionBasedOnOSField(pod *v1.Pod) bool {
 	return string(pod.Spec.OS.Name) != runtime.GOOS
 }
 
+// 删除pod 扩展zi'yuau
 func removeMissingExtendedResources(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) *v1.Pod {
 	podCopy := pod.DeepCopy()
 	for i, c := range pod.Spec.Containers {

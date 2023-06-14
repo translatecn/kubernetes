@@ -11,7 +11,7 @@ func Init(args []string) []string {
 	} else {
 		return args
 	}
-	args = append(args, "--advertise-address=192.168.33.9")
+	args = append(args, "--advertise-address=0.0.0.0")
 	args = append(args, "--allow-privileged=true")
 	args = append(args, "--audit-log-format=json")
 	args = append(args, "--audit-log-maxage=7")

@@ -93,13 +93,13 @@ type managerImpl struct {
 
 // NewManager returns a new node shutdown manager.
 func NewManager(conf *Config) (Manager, lifecycle.PodAdmitHandler) {
-	if !utilfeature.DefaultFeatureGate.Enabled(features.GracefulNodeShutdown) {
+	if !utilfeature.DefaultFeatureGate.Enabled(features.GracefulNodeShutdown) { // 默认为true
 		m := managerStub{}
 		return m, m
 	}
 
 	shutdownGracePeriodByPodPriority := conf.ShutdownGracePeriodByPodPriority
-	// Migration from the original configuration
+	// 从原始配置迁移
 	if !utilfeature.DefaultFeatureGate.Enabled(features.GracefulNodeShutdownBasedOnPodPriority) ||
 		len(shutdownGracePeriodByPodPriority) == 0 {
 		shutdownGracePeriodByPodPriority = migrateConfig(conf.ShutdownGracePeriodRequested, conf.ShutdownGracePeriodCriticalPods)
@@ -131,7 +131,7 @@ func NewManager(conf *Config) (Manager, lifecycle.PodAdmitHandler) {
 		clock:                            conf.Clock,
 		enableMetrics:                    utilfeature.DefaultFeatureGate.Enabled(features.GracefulNodeShutdownBasedOnPodPriority),
 		storage: localStorage{
-			Path: filepath.Join(conf.StateDirectory, localStorageStateFile),
+			Path: filepath.Join(conf.StateDirectory, localStorageStateFile), //  /var/lib/kubelet/graceful_node_shutdown_state
 		},
 	}
 	manager.logger.Info("Creating node shutdown manager",
@@ -433,6 +433,7 @@ func migrateConfig(shutdownGracePeriodRequested, shutdownGracePeriodCriticalPods
 	if defaultPriority < 0 {
 		return nil
 	}
+	// shutdownGracePeriodRequested > 2 * shutdownGracePeriodCriticalPods
 	criticalPriority := shutdownGracePeriodRequested - defaultPriority
 	if criticalPriority < 0 {
 		return nil

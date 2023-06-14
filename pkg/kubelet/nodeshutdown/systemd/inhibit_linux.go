@@ -48,7 +48,7 @@ type DBusCon struct {
 }
 
 func NewDBusCon() (*DBusCon, error) {
-	conn, err := dbus.SystemBus()
+	conn, err := dbus.SystemBus() // 返回一个共享连接到system bus，如果还没有连接到它。
 	if err != nil {
 		return nil, err
 	}

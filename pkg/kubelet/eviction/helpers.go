@@ -965,58 +965,9 @@ func isAllocatableEvictionThreshold(threshold evictionapi.Threshold) bool {
 	return threshold.Signal == evictionapi.SignalAllocatableMemoryAvailable
 }
 
-// buildSignalToRankFunc 注册各个eviction signal所对应的资源排序方法
-func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
-	signalToRankFunc := map[evictionapi.Signal]rankFunc{
-		evictionapi.SignalMemoryAvailable:            rankMemoryPressure,
-		evictionapi.SignalAllocatableMemoryAvailable: rankMemoryPressure,
-		evictionapi.SignalPIDAvailable:               rankPIDPressure,
-	}
-	// todo ,这里为什么这么区分
-	// usage of an imagefs is optional
-	if withImageFs { // 使用了不用的磁盘         imagefs 使用了单独
-		// 统计数组里边的子项,
-		signalToRankFunc[evictionapi.SignalNodeFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
-		signalToRankFunc[evictionapi.SignalNodeFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
-		// with an imagefs, imagefs pod rank func for eviction only includes rootfs
-		signalToRankFunc[evictionapi.SignalImageFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot}, v1.ResourceEphemeralStorage)
-		signalToRankFunc[evictionapi.SignalImageFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot}, resourceInodes)
-	} else {
-		// without an imagefs, nodefs pod rank func for eviction looks at all fs stats.
-		// since imagefs and nodefs share a common device, they share common ranking functions.
-		signalToRankFunc[evictionapi.SignalNodeFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
-		signalToRankFunc[evictionapi.SignalNodeFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
-		signalToRankFunc[evictionapi.SignalImageFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
-		signalToRankFunc[evictionapi.SignalImageFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
-	}
-	return signalToRankFunc
-}
-
 // PodIsEvicted 如果报告的pod状态是由于驱逐而导致的,则返回true.
 func PodIsEvicted(podStatus v1.PodStatus) bool {
 	return podStatus.Phase == v1.PodFailed && podStatus.Reason == Reason
-}
-
-// buildSignalToNodeReclaimFuncs 注册节点资源回收方法
-func buildSignalToNodeReclaimFuncs(imageGC ImageGC, containerGC ContainerGC, withImageFs bool) map[evictionapi.Signal]nodeReclaimFuncs {
-	signalToReclaimFunc := map[evictionapi.Signal]nodeReclaimFuncs{}
-	// usage of an imagefs is optional
-	if withImageFs {
-		// with an imagefs, nodefs pressure should just delete logs
-		signalToReclaimFunc[evictionapi.SignalNodeFsAvailable] = nodeReclaimFuncs{}
-		signalToReclaimFunc[evictionapi.SignalNodeFsInodesFree] = nodeReclaimFuncs{}
-		// with an imagefs, imagefs pressure should  删除无用镜像
-		signalToReclaimFunc[evictionapi.SignalImageFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
-		signalToReclaimFunc[evictionapi.SignalImageFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
-	} else {
-		// without an imagefs, nodefs pressure should delete logs, and  删除无用镜像
-		// since imagefs and nodefs share a common device, they share common reclaim functions
-		signalToReclaimFunc[evictionapi.SignalNodeFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
-		signalToReclaimFunc[evictionapi.SignalNodeFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
-		signalToReclaimFunc[evictionapi.SignalImageFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
-		signalToReclaimFunc[evictionapi.SignalImageFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
-	}
-	return signalToReclaimFunc
 }
 
 // evictionMessage constructs a useful message about why an eviction occurred, and annotations to provide metadata about the eviction
@@ -1075,4 +1026,75 @@ func getThresholdMetInfo(resourceToReclaim v1.ResourceName, thresholds []evictio
 		}
 	}
 	return nil, nil
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+// buildSignalToRankFunc 注册各个eviction signal所对应的资源排序方法
+func buildSignalToRankFunc(withImageFs bool) map[evictionapi.Signal]rankFunc {
+	signalToRankFunc := map[evictionapi.Signal]rankFunc{
+		evictionapi.SignalMemoryAvailable:            rankMemoryPressure,
+		evictionapi.SignalAllocatableMemoryAvailable: rankMemoryPressure,
+		evictionapi.SignalPIDAvailable:               rankPIDPressure,
+	}
+	// todo ,这里为什么这么区分
+	// usage of an imagefs is optional
+	// /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+	// /var/lib/kubelet
+	//const (
+	//	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息.     /var/lib/kubelet/pods/<pod-id>/volumes/kubernetes.io~local-volume/
+	//	fsStatsLogs              fsStatsType = "logs"              //   pod 日志的统计信息        /var/lib/docker/containers/<container-id>/<container-id>-json.log
+	//	fsStatsRoot              fsStatsType = "root"              //   pod 容器可写层的统计信息   /
+	//)
+	//	SignalNodeFsAvailable            Signal = "nodefs.available"            // 节点文件系统上可用的存储量
+	//	SignalNodeFsInodesFree           Signal = "nodefs.inodesFree"           // 节点文件系统上可用的inode数量
+	//	SignalImageFsAvailable           Signal = "imagefs.available"           // 容器运行时使用的文件系统上可用的存储量
+	//	SignalImageFsInodesFree          Signal = "imagefs.inodesFree"          // 容器运行时使用的文件系统上可用的inode数量
+
+	if withImageFs { // 使用了不用的磁盘
+
+		signalToRankFunc[evictionapi.SignalNodeFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
+		signalToRankFunc[evictionapi.SignalNodeFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
+		signalToRankFunc[evictionapi.SignalImageFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot}, v1.ResourceEphemeralStorage)
+		signalToRankFunc[evictionapi.SignalImageFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot}, resourceInodes)
+	} else {
+		signalToRankFunc[evictionapi.SignalNodeFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
+		signalToRankFunc[evictionapi.SignalNodeFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
+		signalToRankFunc[evictionapi.SignalImageFsAvailable] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, v1.ResourceEphemeralStorage)
+		signalToRankFunc[evictionapi.SignalImageFsInodesFree] = rankDiskPressureFunc([]fsStatsType{fsStatsRoot, fsStatsLogs, fsStatsLocalVolumeSource}, resourceInodes)
+	}
+	return signalToRankFunc
+}
+
+// buildSignalToNodeReclaimFuncs 注册节点资源回收方法
+func buildSignalToNodeReclaimFuncs(imageGC ImageGC, containerGC ContainerGC, withImageFs bool) map[evictionapi.Signal]nodeReclaimFuncs {
+	signalToReclaimFunc := map[evictionapi.Signal]nodeReclaimFuncs{}
+	// /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+	// /var/lib/kubelet
+	//const (
+	//	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息.     /var/lib/kubelet/pods/<pod-id>/volumes/kubernetes.io~local-volume/
+	//	fsStatsLogs              fsStatsType = "logs"              //   pod 日志的统计信息        /var/lib/docker/containers/<container-id>/<container-id>-json.log
+	//	fsStatsRoot              fsStatsType = "root"              //   pod 容器可写层的统计信息   /
+	//)
+	//	SignalNodeFsAvailable            Signal = "nodefs.available"            // 节点文件系统上可用的存储量
+	//	SignalNodeFsInodesFree           Signal = "nodefs.inodesFree"           // 节点文件系统上可用的inode数量
+	//	SignalImageFsAvailable           Signal = "imagefs.available"           // 容器运行时使用的文件系统上可用的存储量
+	//	SignalImageFsInodesFree          Signal = "imagefs.inodesFree"          // 容器运行时使用的文件系统上可用的inode数量
+
+	if withImageFs {
+		// with an imagefs, nodefs pressure should just delete logs
+		signalToReclaimFunc[evictionapi.SignalNodeFsAvailable] = nodeReclaimFuncs{}
+		signalToReclaimFunc[evictionapi.SignalNodeFsInodesFree] = nodeReclaimFuncs{}
+		// with an imagefs, imagefs pressure should  删除无用镜像
+		signalToReclaimFunc[evictionapi.SignalImageFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
+		signalToReclaimFunc[evictionapi.SignalImageFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
+	} else {
+		// without an imagefs, nodefs pressure should delete logs, and  删除无用镜像
+		// since imagefs and nodefs share a common device, they share common reclaim functions
+		signalToReclaimFunc[evictionapi.SignalNodeFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
+		signalToReclaimFunc[evictionapi.SignalNodeFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
+		signalToReclaimFunc[evictionapi.SignalImageFsAvailable] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
+		signalToReclaimFunc[evictionapi.SignalImageFsInodesFree] = nodeReclaimFuncs{containerGC.DeleteAllUnusedContainers, imageGC.DeleteUnusedImages}
+	}
+	return signalToReclaimFunc
 }

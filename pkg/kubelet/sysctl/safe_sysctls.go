@@ -28,10 +28,10 @@ package sysctl
 // - 它是隔离的,即对同一节点上的任何其他 Pod 没有影响时,sysctl 被称为安全.
 func SafeSysctlAllowlist() []string {
 	return []string{
-		"kernel.shm_rmid_forced",       // =1 表示是否强制将共享内存和一个进程联系在一起,这样的话可以通过杀死进程来释放共享内存
-		"net.ipv4.ip_local_port_range", // 表示允许使用的端口范围
-		"net.ipv4.tcp_syncookies",
-		"net.ipv4.ping_group_range",
-		"net.ipv4.ip_unprivileged_port_start",
+		"kernel.shm_rmid_forced",              // =1 表示是否强制将共享内存和一个进程联系在一起,这样的话可以通过杀死进程来释放共享内存
+		"net.ipv4.ip_local_port_range",        // 表示允许使用的端口范围
+		"net.ipv4.tcp_syncookies",             // 是否打开SYN Cookie功能 ,防止syn 攻击
+		"net.ipv4.ping_group_range",           // 允许使用ICMP套接字的组ID的范围，默认值为1 0
+		"net.ipv4.ip_unprivileged_port_start", // 是命名空间粒度的配置，定义了非特权端口的最小值。特权端口需要root或 CAP_NET_BIND_SERVICE 才能绑定。默认值为1024.
 	}
 }

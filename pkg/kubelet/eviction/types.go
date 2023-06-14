@@ -31,9 +31,9 @@ import (
 type fsStatsType string // 定义要收集的文件系统统计信息的类型.
 
 const (
-	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息.
-	fsStatsLogs              fsStatsType = "logs"              //   pod 日志的统计信息
-	fsStatsRoot              fsStatsType = "root"              //   pod 容器可写层的统计信息
+	fsStatsLocalVolumeSource fsStatsType = "localVolumeSource" //   pod 本地卷的统计信息.     /var/lib/kubelet/pods/<pod-id>/volumes/kubernetes.io~local-volume/
+	fsStatsLogs              fsStatsType = "logs"              //   pod 日志的统计信息        /var/lib/docker/containers/<container-id>/<container-id>-json.log
+	fsStatsRoot              fsStatsType = "root"              //   pod 容器可写层的统计信息   /
 )
 
 // Config holds information about how eviction is configured.
@@ -143,9 +143,7 @@ type NotifierFactory interface {
 type ThresholdNotifier interface {
 	// Start calls the notifier function when the CgroupNotifier notifies the ThresholdNotifier that an event occurred
 	Start()
-	// UpdateThreshold updates the memory cgroup threshold based on the metrics provided.
-	// Calling UpdateThreshold with recent metrics allows the ThresholdNotifier to trigger at the
-	// eviction threshold more accurately
+
 	UpdateThreshold(summary *statsapi.Summary) error
 	// Description produces a relevant string describing the Memory Threshold Notifier
 	Description() string

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: x
+  labels:
+    app: x
+spec:
+  containers:
+    - name: x
+      image: acejilam/test:v1
+      startupProbe:
+        failureThreshold: 10
+        httpGet:
+          path: /start
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 3
+        periodSeconds: 2
+        successThreshold: 1
+        timeoutSeconds: 2
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /liveness
+          port: 8080
+          scheme: HTTP
+        initialDelaySeconds: 3
+        periodSeconds: 2
+        successThreshold: 1
+        timeoutSeconds: 2
+  nodeName: vm

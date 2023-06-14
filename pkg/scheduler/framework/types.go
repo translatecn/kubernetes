@@ -429,7 +429,7 @@ func (r *Resource) Add(rl v1.ResourceMap) {
 			r.MilliCPU += rQuant.MilliValue()
 		case v1.ResourceMemory:
 			r.Memory += rQuant.Value()
-		case v1.ResourcePods: // 啥意思?
+		case v1.ResourcePods: // pod 数
 			r.AllowedPodNumber += int(rQuant.Value())
 		case v1.ResourceEphemeralStorage:
 			r.EphemeralStorage += rQuant.Value()
