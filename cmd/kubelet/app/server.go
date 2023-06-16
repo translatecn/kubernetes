@@ -698,7 +698,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 				return err
 			}
 		}
-		experimentalQOSReserved, err := cm.ParseQOSReserved(s.QOSReserved)
+		experimentalQOSReserved, err := cm.ParseQOSReserved(s.QOSReserved) // 资源按照百分比预留
 		if err != nil {
 			return err
 		}
@@ -714,7 +714,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		var topologyManagerPolicyOptions map[string]string
 		if utilfeature.DefaultFeatureGate.Enabled(features.TopologyManager) {
 			if utilfeature.DefaultFeatureGate.Enabled(features.TopologyManagerPolicyOptions) {
-				topologyManagerPolicyOptions = s.TopologyManagerPolicyOptions
+				topologyManagerPolicyOptions = s.TopologyManagerPolicyOptions // ✅
 			} else if s.TopologyManagerPolicyOptions != nil {
 				return fmt.Errorf("topology manager policy options %v require feature gates %q, %q enabled",
 					s.TopologyManagerPolicyOptions, features.TopologyManager, features.TopologyManagerPolicyOptions)
@@ -729,10 +729,10 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 				SystemCgroupsName:     s.SystemCgroups,
 				KubeletCgroupsName:    s.KubeletCgroups,
 				KubeletOOMScoreAdj:    s.OOMScoreAdj,
-				CgroupsPerQOS:         s.CgroupsPerQOS,
-				CgroupRoot:            s.CgroupRoot,
-				CgroupDriver:          s.CgroupDriver,
-				KubeletRootDir:        s.RootDirectory,
+				CgroupsPerQOS:         s.CgroupsPerQOS, // ✅
+				CgroupRoot:            s.CgroupRoot,    // ✅
+				CgroupDriver:          s.CgroupDriver,  // ✅  默认cgroupfs
+				KubeletRootDir:        s.RootDirectory, // ✅
 				ProtectKernelDefaults: s.ProtectKernelDefaults,
 				NodeAllocatableConfig: cm.NodeAllocatableConfig{
 					KubeReservedCgroupName:   s.KubeReservedCgroup,
@@ -752,11 +752,11 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 				ExperimentalPodPidsLimit:                 s.PodPidsLimit,
 				EnforceCPULimits:                         s.CPUCFSQuota,
 				CPUCFSQuotaPeriod:                        s.CPUCFSQuotaPeriod.Duration,
-				ExperimentalTopologyManagerPolicy:        s.TopologyManagerPolicy,
-				ExperimentalTopologyManagerScope:         s.TopologyManagerScope,
-				ExperimentalTopologyManagerPolicyOptions: topologyManagerPolicyOptions,
+				ExperimentalTopologyManagerPolicy:        s.TopologyManagerPolicy,      // ✅
+				ExperimentalTopologyManagerScope:         s.TopologyManagerScope,       // ✅
+				ExperimentalTopologyManagerPolicyOptions: topologyManagerPolicyOptions, // ✅
 			},
-			s.FailSwapOn, //
+			s.FailSwapOn, // true
 			kubeDeps.Recorder,
 			kubeDeps.KubeClient,
 		)

@@ -874,22 +874,20 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		if err != nil {
 			return nil, err
 		}
-		klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist)                                            // ✅ 安全的sysctl指令、被允许的不安全指令                                     // 主要是判断 sysctl 与pod Sc 是否冲突✅
+		klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist)                                            // ✅ 安全的sysctl指令、被允许的不安全指令   主要是判断 sysctl 与pod Sc 是否冲突✅
 		klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // TODO
 
-		criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // ✅ 当资源不足时，尝试驱逐优先级低的pod
+		criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // ✅ 当资源不足时,尝试驱逐优先级低的pod
 			klet.GetActivePods,
 			killPodNow(klet.podWorkers, kubeDeps.Recorder),
 			kubeDeps.Recorder,
 		)
 		var _ = criticalPodAdmissionHandler.HandleAdmissionFailure
-		klet.admitHandlers.AddPodAdmitHandler( // ✅
-			lifecycle.NewPredicateAdmitHandler(
-				klet.getNodeAnyWay,
-				criticalPodAdmissionHandler,
-				klet.containerManager.UpdatePluginResources,
-			),
-		)
+		klet.admitHandlers.AddPodAdmitHandler(lifecycle.NewPredicateAdmitHandler( // ✅
+			klet.getNodeAnyWay,
+			criticalPodAdmissionHandler,
+			klet.containerManager.UpdatePluginResources,
+		))
 
 		klet.admitHandlers.AddPodAdmitHandler(shutdownAdmitHandler) // ✅
 

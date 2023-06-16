@@ -85,7 +85,7 @@ func (m *fakeManager) GetCPUAffinity(podUID, containerName string) cpuset.CPUSet
 	return cpuset.CPUSet{}
 }
 
-// NewFakeManager creates empty/fake cpu manager
+// NewFakeManager creates empty/fake cpu CpuManager
 func NewFakeManager() Manager {
 	return &fakeManager{
 		state: state.NewMemoryState(),

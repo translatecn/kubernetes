@@ -38,6 +38,7 @@ func Stats() (*statsapi.RlimitStats, error) {
 	taskMax := int64(-1)
 	// Calculate the mininum of kernel.pid_max and kernel.threads-max as they both specify the
 	// system-wide limit on the number of tasks.
+	// 取较小值
 	for _, file := range []string{"/proc/sys/kernel/pid_max", "/proc/sys/kernel/threads-max"} {
 		if content, err := os.ReadFile(file); err == nil {
 			if limit, err := strconv.ParseInt(string(content[:len(content)-1]), 10, 64); err == nil {

@@ -30,6 +30,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+//https://blog.csdn.net/dkx523121943/article/details/81545799
+
 const (
 	logindService   = "org.freedesktop.login1"
 	logindObject    = dbus.ObjectPath("/org/freedesktop/login1")
@@ -48,7 +50,7 @@ type DBusCon struct {
 }
 
 func NewDBusCon() (*DBusCon, error) {
-	conn, err := dbus.SystemBus() // 返回一个共享连接到system bus，如果还没有连接到它。
+	conn, err := dbus.SystemBus() // 返回一个共享连接到system bus,如果还没有连接到它.
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +60,36 @@ func NewDBusCon() (*DBusCon, error) {
 	}, nil
 }
 
-// InhibitLock is a lock obtained after creating an systemd inhibitor by calling InhibitShutdown().
-type InhibitLock uint32
+const (
+	logindConfigDirectory = "/etc/systemd/logind.conf.d/"
+	kubeletLogindConf     = "99-kubelet.conf"
+)
 
-// CurrentInhibitDelay returns the current delay inhibitor timeout value as configured in logind.conf(5).
+// OverrideInhibitDelay 用于覆盖   系统关闭或睡眠请求延迟的最长时间
+func (bus *DBusCon) OverrideInhibitDelay(inhibitDelayMax time.Duration) error {
+	err := os.MkdirAll(logindConfigDirectory, 0755)
+	if err != nil {
+		return fmt.Errorf("failed creating %v directory: %w", logindConfigDirectory, err)
+	}
+
+	// This attempts to set the `InhibitDelayMaxUSec` dbus property of logind which is MaxInhibitDelay measured in microseconds.
+	// The corresponding logind config file property is named `InhibitDelayMaxSec` and is measured in seconds which is set via logind.conf config.
+	// Refer to https://www.freedesktop.org/software/systemd/man/logind.conf.html for more details.
+
+	inhibitOverride := fmt.Sprintf(`# Kubelet logind override
+[Login]
+InhibitDelayMaxSec=%.0f
+`, inhibitDelayMax.Seconds())
+
+	logindOverridePath := filepath.Join(logindConfigDirectory, kubeletLogindConf)
+	if err := os.WriteFile(logindOverridePath, []byte(inhibitOverride), 0644); err != nil {
+		return fmt.Errorf("failed writing logind shutdown inhibit override file %v: %w", logindOverridePath, err)
+	}
+
+	return nil
+}
+
+// CurrentInhibitDelay 读取 logind.conf 系统关闭或睡眠请求延迟的最长时间.
 // see https://www.freedesktop.org/software/systemd/man/logind.conf.html for more details.
 func (bus *DBusCon) CurrentInhibitDelay() (time.Duration, error) {
 	obj := bus.SystemBus.Object(logindService, logindObject)
@@ -80,7 +108,29 @@ func (bus *DBusCon) CurrentInhibitDelay() (time.Duration, error) {
 	return duration, nil
 }
 
-// InhibitShutdown creates an systemd inhibitor by calling logind's Inhibt() and returns the inhibitor lock
+// ReloadLogindConf uses dbus to send a SIGHUP to the systemd-logind service causing logind to reload it's configuration.
+func (bus *DBusCon) ReloadLogindConf() error {
+	systemdService := "org.freedesktop.systemd1"
+	systemdObject := "/org/freedesktop/systemd1"
+	systemdInterface := "org.freedesktop.systemd1.Manager"
+
+	obj := bus.SystemBus.Object(systemdService, dbus.ObjectPath(systemdObject))
+	unit := "systemd-logind.service"
+	who := "all"
+	var signal int32 = 1 // SIGHUP
+
+	call := obj.Call(systemdInterface+".KillUnit", 0, unit, who, signal)
+	if call.Err != nil {
+		return fmt.Errorf("unable to reload logind conf: %w", call.Err)
+	}
+
+	return nil
+}
+
+// InhibitLock is a lock obtained after creating an systemd inhibitor by calling InhibitShutdown().
+type InhibitLock uint32
+
+// InhibitShutdown inhibitor lock 可以用于阻止系统关机.
 // see https://www.freedesktop.org/wiki/Software/systemd/inhibit/ for more details.
 func (bus *DBusCon) InhibitShutdown() (InhibitLock, error) {
 	obj := bus.SystemBus.Object(logindService, logindObject)
@@ -114,25 +164,6 @@ func (bus *DBusCon) ReleaseInhibitLock(lock InhibitLock) error {
 	return nil
 }
 
-// ReloadLogindConf uses dbus to send a SIGHUP to the systemd-logind service causing logind to reload it's configuration.
-func (bus *DBusCon) ReloadLogindConf() error {
-	systemdService := "org.freedesktop.systemd1"
-	systemdObject := "/org/freedesktop/systemd1"
-	systemdInterface := "org.freedesktop.systemd1.Manager"
-
-	obj := bus.SystemBus.Object(systemdService, dbus.ObjectPath(systemdObject))
-	unit := "systemd-logind.service"
-	who := "all"
-	var signal int32 = 1 // SIGHUP
-
-	call := obj.Call(systemdInterface+".KillUnit", 0, unit, who, signal)
-	if call.Err != nil {
-		return fmt.Errorf("unable to reload logind conf: %w", call.Err)
-	}
-
-	return nil
-}
-
 // MonitorShutdown detects the a node shutdown by watching for "PrepareForShutdown" logind events.
 // see https://www.freedesktop.org/wiki/Software/systemd/inhibit/ for more details.
 func (bus *DBusCon) MonitorShutdown() (<-chan bool, error) {
@@ -155,12 +186,12 @@ func (bus *DBusCon) MonitorShutdown() (<-chan bool, error) {
 				return
 			}
 			if event == nil || len(event.Body) == 0 {
-				klog.ErrorS(nil, "Failed obtaining shutdown event, PrepareForShutdown event was empty")
+				klog.ErrorS(nil, "获取关机事件失败,PrepareForShutdown事件为空.")
 				continue
 			}
 			shutdownActive, ok := event.Body[0].(bool)
 			if !ok {
-				klog.ErrorS(nil, "Failed obtaining shutdown event, PrepareForShutdown event was not bool type as expected")
+				klog.ErrorS(nil, "获取关机事件失败,PrepareForShutdown事件不是预期的bool类型")
 				continue
 			}
 			shutdownChan <- shutdownActive
@@ -168,33 +199,4 @@ func (bus *DBusCon) MonitorShutdown() (<-chan bool, error) {
 	}()
 
 	return shutdownChan, nil
-}
-
-const (
-	logindConfigDirectory = "/etc/systemd/logind.conf.d/"
-	kubeletLogindConf     = "99-kubelet.conf"
-)
-
-// OverrideInhibitDelay writes a config file to logind overriding InhibitDelayMaxSec to the value desired.
-func (bus *DBusCon) OverrideInhibitDelay(inhibitDelayMax time.Duration) error {
-	err := os.MkdirAll(logindConfigDirectory, 0755)
-	if err != nil {
-		return fmt.Errorf("failed creating %v directory: %w", logindConfigDirectory, err)
-	}
-
-	// This attempts to set the `InhibitDelayMaxUSec` dbus property of logind which is MaxInhibitDelay measured in microseconds.
-	// The corresponding logind config file property is named `InhibitDelayMaxSec` and is measured in seconds which is set via logind.conf config.
-	// Refer to https://www.freedesktop.org/software/systemd/man/logind.conf.html for more details.
-
-	inhibitOverride := fmt.Sprintf(`# Kubelet logind override
-[Login]
-InhibitDelayMaxSec=%.0f
-`, inhibitDelayMax.Seconds())
-
-	logindOverridePath := filepath.Join(logindConfigDirectory, kubeletLogindConf)
-	if err := os.WriteFile(logindOverridePath, []byte(inhibitOverride), 0644); err != nil {
-		return fmt.Errorf("failed writing logind shutdown inhibit override file %v: %w", logindOverridePath, err)
-	}
-
-	return nil
 }

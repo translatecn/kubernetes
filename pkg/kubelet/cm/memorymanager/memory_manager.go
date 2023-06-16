@@ -37,7 +37,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/status"
 )
 
-// memoryManagerStateFileName is the file name where memory manager stores its state
+// memoryManagerStateFileName is the file name where memory MemoryManager stores its state
 const memoryManagerStateFileName = "memory_manager_state"
 
 // ActivePodsFunc is a function that returns a list of active pods
@@ -76,7 +76,7 @@ type Manager interface {
 	GetMemory(podUID, containerName string) []state.Block
 }
 
-type manager struct {
+type MemoryManager struct {
 	sync.Mutex
 	policy Policy
 
@@ -114,10 +114,17 @@ type manager struct {
 	pendingAdmissionPod *v1.Pod
 }
 
-var _ Manager = &manager{}
+var _ Manager = &MemoryManager{}
 
-// NewManager returns new instance of the memory manager
-func NewManager(policyName string, machineInfo *cadvisorapi.MachineInfo, nodeAllocatableReservation v1.ResourceMap, reservedMemory []kubeletconfig.MemoryReservation, stateFileDirectory string, affinity topologymanager.Store) (Manager, error) {
+// NewManager returns new instance of the memory MemoryManager
+func NewManager(
+	policyName string,
+	machineInfo *cadvisorapi.MachineInfo,
+	nodeAllocatableReservation v1.ResourceMap,
+	reservedMemory []kubeletconfig.MemoryReservation,
+	stateFileDirectory string,
+	affinity topologymanager.Store,
+) (Manager, error) {
 	var policy Policy
 
 	switch policyType(policyName) {
@@ -140,7 +147,7 @@ func NewManager(policyName string, machineInfo *cadvisorapi.MachineInfo, nodeAll
 		return nil, fmt.Errorf("unknown policy: \"%s\"", policyName)
 	}
 
-	manager := &manager{
+	manager := &MemoryManager{
 		policy:             policy,
 		stateFileDirectory: stateFileDirectory,
 	}
@@ -148,8 +155,8 @@ func NewManager(policyName string, machineInfo *cadvisorapi.MachineInfo, nodeAll
 	return manager, nil
 }
 
-// Start starts the memory manager under the kubelet and calls policy start
-func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error {
+// Start starts the memory MemoryManager under the kubelet and calls policy start
+func (m *MemoryManager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error {
 	klog.InfoS("Starting memorymanager", "policy", m.policy.Name())
 	m.sourcesReady = sourcesReady
 	m.activePods = activePods
@@ -159,7 +166,7 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 
 	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, memoryManagerStateFileName, m.policy.Name())
 	if err != nil {
-		klog.ErrorS(err, "Could not initialize checkpoint manager, please drain node and remove policy state file")
+		klog.ErrorS(err, "Could not initialize checkpoint MemoryManager, please drain node and remove policy state file")
 		return err
 	}
 	m.state = stateImpl
@@ -175,8 +182,8 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 	return nil
 }
 
-// AddContainer saves the value of requested memory for the guaranteed pod under the state and set memory affinity according to the topolgy manager
-func (m *manager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
+// AddContainer saves the value of requested memory for the guaranteed pod under the state and set memory affinity according to the topolgy MemoryManager
+func (m *MemoryManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -197,7 +204,7 @@ func (m *manager) AddContainer(pod *v1.Pod, container *v1.Container, containerID
 }
 
 // GetMemoryNUMANodes provides NUMA nodes that used to allocate the container memory
-func (m *manager) GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container) sets.Int {
+func (m *MemoryManager) GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container) sets.Int {
 	// Get NUMA node affinity of blocks assigned to the container during Allocate()
 	numaNodes := sets.NewInt()
 	for _, block := range m.state.GetMemoryBlocks(string(pod.UID), container.Name) {
@@ -217,7 +224,7 @@ func (m *manager) GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container) sets.
 }
 
 // Allocate is called to pre-allocate memory resources during Pod admission.
-func (m *manager) Allocate(pod *v1.Pod, container *v1.Container) error {
+func (m *MemoryManager) Allocate(pod *v1.Pod, container *v1.Container) error {
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
@@ -237,7 +244,7 @@ func (m *manager) Allocate(pod *v1.Pod, container *v1.Container) error {
 }
 
 // RemoveContainer removes the container from the state
-func (m *manager) RemoveContainer(containerID string) error {
+func (m *MemoryManager) RemoveContainer(containerID string) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -253,13 +260,13 @@ func (m *manager) RemoveContainer(containerID string) error {
 	return nil
 }
 
-// State returns the state of the manager
-func (m *manager) State() state.Reader {
+// State returns the state of the MemoryManager
+func (m *MemoryManager) State() state.Reader {
 	return m.state
 }
 
-// GetPodTopologyHints returns the topology hints for the topology manager
-func (m *manager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint {
+// GetPodTopologyHints returns the topology hints for the topology MemoryManager
+func (m *MemoryManager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint {
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
@@ -270,8 +277,8 @@ func (m *manager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.
 	return m.policy.GetPodTopologyHints(m.state, pod)
 }
 
-// GetTopologyHints returns the topology hints for the topology manager
-func (m *manager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
+// GetTopologyHints returns the topology hints for the topology MemoryManager
+func (m *MemoryManager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
@@ -283,7 +290,7 @@ func (m *manager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[str
 }
 
 // TODO: move the method to the upper level, to re-use it under the CPU and memory managers
-func (m *manager) removeStaleState() {
+func (m *MemoryManager) removeStaleState() {
 	// Only once all sources are ready do we attempt to remove any stale state.
 	// This ensures that the call to `m.activePods()` below will succeed with
 	// the actual active pods list.
@@ -333,7 +340,7 @@ func (m *manager) removeStaleState() {
 	})
 }
 
-func (m *manager) policyRemoveContainerByRef(podUID string, containerName string) {
+func (m *MemoryManager) policyRemoveContainerByRef(podUID string, containerName string) {
 	m.policy.RemoveContainer(m.state, podUID, containerName)
 	m.containerMap.RemoveByContainerRef(podUID, containerName)
 }
@@ -432,16 +439,16 @@ func getSystemReservedMemory(machineInfo *cadvisorapi.MachineInfo, nodeAllocatab
 }
 
 // GetAllocatableMemory returns the amount of allocatable memory for each NUMA node
-func (m *manager) GetAllocatableMemory() []state.Block {
+func (m *MemoryManager) GetAllocatableMemory() []state.Block {
 	return m.allocatableMemory
 }
 
 // GetMemory returns the memory allocated by a container from NUMA nodes
-func (m *manager) GetMemory(podUID, containerName string) []state.Block {
+func (m *MemoryManager) GetMemory(podUID, containerName string) []state.Block {
 	return m.state.GetMemoryBlocks(podUID, containerName)
 }
 
-func (m *manager) setPodPendingAdmission(pod *v1.Pod) {
+func (m *MemoryManager) setPodPendingAdmission(pod *v1.Pod) {
 	m.Lock()
 	defer m.Unlock()
 

@@ -30,30 +30,6 @@ type NUMAInfo struct {
 	NUMADistances NUMADistances
 }
 
-func NewNUMAInfo(topology []cadvisorapi.Node, opts PolicyOptions) (*NUMAInfo, error) {
-	var numaNodes []int
-	distances := map[int][]uint64{}
-	for _, node := range topology {
-		numaNodes = append(numaNodes, node.Id)
-
-		var nodeDistance []uint64
-		if opts.PreferClosestNUMA {
-			nodeDistance = node.Distances
-			if nodeDistance == nil {
-				return nil, fmt.Errorf("error getting NUMA distances from cadvisor")
-			}
-		}
-		distances[node.Id] = nodeDistance
-	}
-
-	numaInfo := &NUMAInfo{
-		Nodes:         numaNodes,
-		NUMADistances: distances,
-	}
-
-	return numaInfo, nil
-}
-
 func (n *NUMAInfo) Narrowest(m1 bitmask.BitMask, m2 bitmask.BitMask) bitmask.BitMask {
 	if m1.IsNarrowerThan(m2) {
 		return m1
@@ -106,4 +82,28 @@ func (d NUMADistances) CalculateAverageFor(bm bitmask.BitMask) float64 {
 	}
 
 	return sum / count
+}
+
+func NewNUMAInfo(topology []cadvisorapi.Node, opts PolicyOptions) (*NUMAInfo, error) {
+	var numaNodes []int
+	distances := map[int][]uint64{}
+	for _, node := range topology {
+		numaNodes = append(numaNodes, node.Id)
+
+		var nodeDistance []uint64
+		if opts.PreferClosestNUMA {
+			nodeDistance = node.Distances
+			if nodeDistance == nil {
+				return nil, fmt.Errorf("error getting NUMA distances from cadvisor")
+			}
+		}
+		distances[node.Id] = nodeDistance
+	}
+
+	numaInfo := &NUMAInfo{
+		Nodes:         numaNodes,
+		NUMADistances: distances,
+	}
+
+	return numaInfo, nil
 }

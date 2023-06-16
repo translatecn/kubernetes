@@ -51,21 +51,6 @@ const (
 
 var RootCgroupName = CgroupName([]string{})
 
-// NewCgroupName composes a new cgroup name.
-// Use RootCgroupName as base to start at the root.
-// This function does some basic check for invalid characters at the name.
-func NewCgroupName(base CgroupName, components ...string) CgroupName {
-	for _, component := range components {
-		// Forbit using "_" in internal names. When remapping internal
-		// names to systemd cgroup driver, we want to remap "-" => "_",
-		// so we forbid "_" so that we can always reverse the mapping.
-		if strings.Contains(component, "/") || strings.Contains(component, "_") {
-			panic(fmt.Errorf("invalid character in component [%q] of CgroupName", component))
-		}
-	}
-	return CgroupName(append(append([]string{}, base...), components...))
-}
-
 func escapeSystemdCgroupName(part string) string {
 	return strings.Replace(part, "-", "_", -1)
 }
@@ -112,14 +97,6 @@ func (cgroupName CgroupName) ToCgroupfs() string {
 	return "/" + path.Join(cgroupName...)
 }
 
-func ParseCgroupfsToCgroupName(name string) CgroupName {
-	components := strings.Split(strings.TrimPrefix(name, "/"), "/")
-	if len(components) == 1 && components[0] == "" {
-		components = []string{}
-	}
-	return CgroupName(components)
-}
-
 func IsSystemdStyleName(name string) bool {
 	return strings.HasSuffix(name, systemdSuffix)
 }
@@ -142,14 +119,6 @@ type cgroupManagerImpl struct {
 // Make sure that cgroupManagerImpl implements the CgroupManager interface
 var _ CgroupManager = &cgroupManagerImpl{}
 
-// NewCgroupManager is a factory method that returns a CgroupManager
-func NewCgroupManager(cs *CgroupSubsystems, cgroupDriver string) CgroupManager {
-	return &cgroupManagerImpl{
-		subsystems: cs,
-		useSystemd: cgroupDriver == "systemd",
-	}
-}
-
 // Name converts the cgroup to the driver specific value in cgroupfs form.
 // This always returns a valid cgroupfs path even when systemd driver is in use!
 func (m *cgroupManagerImpl) Name(name CgroupName) string {
@@ -165,16 +134,6 @@ func (m *cgroupManagerImpl) CgroupName(name string) CgroupName {
 		return ParseSystemdToCgroupName(name)
 	}
 	return ParseCgroupfsToCgroupName(name)
-}
-
-// buildCgroupPaths builds a path to each cgroup subsystem for the specified name.
-func (m *cgroupManagerImpl) buildCgroupPaths(name CgroupName) map[string]string {
-	cgroupFsAdaptedName := m.Name(name)
-	cgroupPaths := make(map[string]string, len(m.subsystems.MountPoints))
-	for key, val := range m.subsystems.MountPoints {
-		cgroupPaths[key] = path.Join(val, cgroupFsAdaptedName)
-	}
-	return cgroupPaths
 }
 
 // buildCgroupUnifiedPath builds a path to the specified name.
@@ -221,55 +180,6 @@ func (m *cgroupManagerImpl) libctCgroupConfig(in *CgroupConfig, needResources bo
 	return config
 }
 
-// Validate checks if all subsystem cgroups already exist
-func (m *cgroupManagerImpl) Validate(name CgroupName) error {
-	if libcontainercgroups.IsCgroup2UnifiedMode() {
-		cgroupPath := m.buildCgroupUnifiedPath(name)
-		neededControllers := getSupportedUnifiedControllers()
-		enabledControllers, err := readUnifiedControllers(cgroupPath)
-		if err != nil {
-			return fmt.Errorf("could not read controllers for cgroup %q: %w", name, err)
-		}
-		difference := neededControllers.Difference(enabledControllers)
-		if difference.Len() > 0 {
-			return fmt.Errorf("cgroup %q has some missing controllers: %v", name, strings.Join(difference.List(), ", "))
-		}
-		return nil // valid V2 cgroup
-	}
-
-	// Get map of all cgroup paths on the system for the particular cgroup
-	cgroupPaths := m.buildCgroupPaths(name)
-
-	// the presence of alternative control groups not known to runc confuses
-	// the kubelet existence checks.
-	// ideally, we would have a mechanism in runc to support Exists() logic
-	// scoped to the set control groups it understands.  this is being discussed
-	// in https://github.com/opencontainers/runc/issues/1440
-	// once resolved, we can remove this code.
-	allowlistControllers := sets.NewString("cpu", "cpuacct", "cpuset", "memory", "systemd", "pids")
-
-	if _, ok := m.subsystems.MountPoints["hugetlb"]; ok {
-		allowlistControllers.Insert("hugetlb")
-	}
-	var missingPaths []string
-	// If even one cgroup path doesn't exist, then the cgroup doesn't exist.
-	for controller, path := range cgroupPaths {
-		// ignore mounts we don't care about
-		if !allowlistControllers.Has(controller) {
-			continue
-		}
-		if !libcontainercgroups.PathExists(path) {
-			missingPaths = append(missingPaths, path)
-		}
-	}
-
-	if len(missingPaths) > 0 {
-		return fmt.Errorf("cgroup %q has some missing paths: %v", name, strings.Join(missingPaths, ", "))
-	}
-
-	return nil // valid V1 cgroup
-}
-
 // Exists checks if all subsystem cgroups already exist
 func (m *cgroupManagerImpl) Exists(name CgroupName) bool {
 	return m.Validate(name) == nil
@@ -307,36 +217,10 @@ func getCpuWeight(cpuShares *uint64) uint64 {
 	return 1 + ((*cpuShares-2)*9999)/262142
 }
 
-// readUnifiedControllers 获取所有支持的子系统
-func readUnifiedControllers(path string) (sets.String, error) {
-	controllersFileContent, err := os.ReadFile(filepath.Join(path, "cgroup.controllers"))
-	if err != nil {
-		return nil, err
-	}
-	controllers := strings.Fields(string(controllersFileContent))
-	return sets.NewString(controllers...), nil
-}
-
 var (
 	availableRootControllersOnce sync.Once
 	availableRootControllers     sets.String
 )
-
-// getSupportedUnifiedControllers 返回一组在cgroup v2上运行时支持的控制器
-func getSupportedUnifiedControllers() sets.String {
-	// 这是Kubelet使用的一组控制器
-	supportedControllers := sets.NewString("cpu", "cpuset", "memory", "hugetlb", "pids")
-	// Memoize the set of controllers that are present in the root cgroup
-	availableRootControllersOnce.Do(func() {
-		var err error
-		availableRootControllers, err = readUnifiedControllers(cmutil.CgroupRoot)
-		if err != nil {
-			panic(fmt.Errorf("cannot read cgroup controllers at %s", cmutil.CgroupRoot))
-		}
-	})
-	// Return the set of controllers that are supported both by the Kubelet and by the kernel
-	return supportedControllers.Intersection(availableRootControllers)
-}
 
 func (m *cgroupManagerImpl) toResources(resourceConfig *ResourceConfig) *libcontainerconfigs.Resources { // ✅
 	resources := &libcontainerconfigs.Resources{
@@ -531,6 +415,8 @@ func (m *cgroupManagerImpl) ReduceCPULimits(cgroupName CgroupName) error {
 	return m.Update(containerConfig) // ✅
 }
 
+// ------------------------------------------------------------------------------------------------------------------
+
 // MemoryUsage returns the current memory usage of the specified cgroup,
 // as read from cgroupfs.
 func (m *cgroupManagerImpl) MemoryUsage(name CgroupName) (int64, error) {
@@ -548,4 +434,116 @@ func (m *cgroupManagerImpl) MemoryUsage(name CgroupName) (int64, error) {
 	}
 	val, err := fscommon.GetCgroupParamUint(path, file)
 	return int64(val), err
+}
+func ParseCgroupfsToCgroupName(name string) CgroupName {
+	components := strings.Split(strings.TrimPrefix(name, "/"), "/")
+	if len(components) == 1 && components[0] == "" {
+		components = []string{}
+	}
+	return CgroupName(components)
+}
+
+// NewCgroupManager is a factory method that returns a CgroupManager
+func NewCgroupManager(cs *CgroupSubsystems, cgroupDriver string) CgroupManager {
+	return &cgroupManagerImpl{
+		subsystems: cs,
+		useSystemd: cgroupDriver == "systemd",
+	}
+}
+
+// getSupportedUnifiedControllers 返回一组在cgroup v2上运行时支持的控制器
+func getSupportedUnifiedControllers() sets.String {
+	// 这是Kubelet使用的一组控制器
+	supportedControllers := sets.NewString("cpu", "cpuset", "memory", "hugetlb", "pids")
+	// Memoize the set of controllers that are present in the root cgroup
+	availableRootControllersOnce.Do(func() {
+		var err error
+		availableRootControllers, err = readUnifiedControllers(cmutil.CgroupRoot)
+		if err != nil {
+			panic(fmt.Errorf("cannot read cgroup controllers at %s", cmutil.CgroupRoot))
+		}
+	})
+	// Return the set of controllers that are supported both by the Kubelet and by the kernel
+	return supportedControllers.Intersection(availableRootControllers)
+}
+
+// readUnifiedControllers 获取所有支持的子系统
+func readUnifiedControllers(path string) (sets.String, error) {
+	controllersFileContent, err := os.ReadFile(filepath.Join(path, "cgroup.controllers"))
+	if err != nil {
+		return nil, err
+	}
+	controllers := strings.Fields(string(controllersFileContent))
+	return sets.NewString(controllers...), nil
+}
+
+// buildCgroupPaths builds a path to each cgroup subsystem for the specified name.
+func (m *cgroupManagerImpl) buildCgroupPaths(name CgroupName) map[string]string {
+	cgroupFsAdaptedName := m.Name(name)
+	cgroupPaths := make(map[string]string, len(m.subsystems.MountPoints))
+	for key, val := range m.subsystems.MountPoints {
+		cgroupPaths[key] = path.Join(val, cgroupFsAdaptedName)
+	}
+	return cgroupPaths
+}
+
+// Validate checks if all subsystem cgroups already exist
+func (m *cgroupManagerImpl) Validate(name CgroupName) error {
+	if libcontainercgroups.IsCgroup2UnifiedMode() {
+		cgroupPath := m.buildCgroupUnifiedPath(name)
+		neededControllers := getSupportedUnifiedControllers()
+		enabledControllers, err := readUnifiedControllers(cgroupPath)
+		if err != nil {
+			return fmt.Errorf("could not read controllers for cgroup %q: %w", name, err)
+		}
+		difference := neededControllers.Difference(enabledControllers)
+		if difference.Len() > 0 {
+			return fmt.Errorf("cgroup %q has some missing controllers: %v", name, strings.Join(difference.List(), ", "))
+		}
+		return nil // valid V2 cgroup
+	}
+
+	// Get map of all cgroup paths on the system for the particular cgroup
+	cgroupPaths := m.buildCgroupPaths(name) // []
+
+	// the presence of alternative control groups not known to runc confuses
+	// the kubelet existence checks.
+	// ideally, we would have a mechanism in runc to support Exists() logic
+	// scoped to the set control groups it understands.  this is being discussed
+	// in https://github.com/opencontainers/runc/issues/1440
+	// once resolved, we can remove this code.
+	allowlistControllers := sets.NewString("cpu", "cpuacct", "cpuset", "memory", "systemd", "pids")
+
+	if _, ok := m.subsystems.MountPoints["hugetlb"]; ok {
+		allowlistControllers.Insert("hugetlb")
+	}
+	var missingPaths []string
+	// If even one cgroup path doesn't exist, then the cgroup doesn't exist.
+	for controller, path := range cgroupPaths {
+		// ignore mounts we don't care about
+		if !allowlistControllers.Has(controller) {
+			continue
+		}
+		if !libcontainercgroups.PathExists(path) {
+			missingPaths = append(missingPaths, path)
+		}
+	}
+
+	if len(missingPaths) > 0 {
+		return fmt.Errorf("cgroup %q has some missing paths: %v", name, strings.Join(missingPaths, ", "))
+	}
+
+	return nil // valid V1 cgroup
+}
+
+func NewCgroupName(base CgroupName, components ...string) CgroupName {
+	for _, component := range components {
+		// Forbit using "_" in internal names. When remapping internal
+		// names to systemd cgroup driver, we want to remap "-" => "_",
+		// so we forbid "_" so that we can always reverse the mapping.
+		if strings.Contains(component, "/") || strings.Contains(component, "_") {
+			panic(fmt.Errorf("invalid character in component [%q] of CgroupName", component))
+		}
+	}
+	return CgroupName(append(append([]string{}, base...), components...))
 }

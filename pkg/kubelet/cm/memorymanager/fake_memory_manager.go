@@ -86,7 +86,7 @@ func (m *fakeManager) GetMemory(podUID, containerName string) []state.Block {
 	return []state.Block{}
 }
 
-// NewFakeManager creates empty/fake memory manager
+// NewFakeManager creates empty/fake memory MemoryManager
 func NewFakeManager() Manager {
 	return &fakeManager{
 		state: state.NewMemoryState(),

@@ -108,15 +108,6 @@ type PodReusableDevices map[string]map[string]sets.String
 func (s *sourcesReadyStub) AddSource(source string) {}
 func (s *sourcesReadyStub) AllReady() bool          { return true }
 
-// NewManagerImpl creates a new manager.
-func NewManagerImpl(topology []cadvisorapi.Node, topologyAffinityStore topologymanager.Store) (*ManagerImpl, error) {
-	socketPath := pluginapi.KubeletSocket
-	if runtime.GOOS == "windows" {
-		socketPath = os.Getenv("SYSTEMDRIVE") + pluginapi.KubeletSocketWindows
-	}
-	return newManagerImpl(socketPath, topology, topologyAffinityStore)
-}
-
 func newManagerImpl(socketPath string, topology []cadvisorapi.Node, topologyAffinityStore topologymanager.Store) (*ManagerImpl, error) {
 	klog.V(2).InfoS("Creating Device Plugin manager", "path", socketPath)
 
@@ -1017,4 +1008,15 @@ func (m *ManagerImpl) setPodPendingAdmission(pod *v1.Pod) {
 	defer m.mutex.Unlock()
 
 	m.pendingAdmissionPod = pod
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+
+// NewManagerImpl creates a new manager.
+func NewManagerImpl(topology []cadvisorapi.Node, topologyAffinityStore topologymanager.Store) (*ManagerImpl, error) {
+	socketPath := pluginapi.KubeletSocket
+	if runtime.GOOS == "windows" {
+		socketPath = os.Getenv("SYSTEMDRIVE") + pluginapi.KubeletSocketWindows
+	}
+	return newManagerImpl(socketPath, topology, topologyAffinityStore)
 }

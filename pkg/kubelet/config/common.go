@@ -65,7 +65,7 @@ func applyDefaults(pod *api.Pod, source string, isFile bool, nodeName types.Node
 		} else {
 			fmt.Fprintf(hasher, "url:%s", source)
 		}
-		pod.UID = types.UID(hex.EncodeToString(hasher.Sum(nil)[0:]))
+		pod.UID = types.UID(hex.EncodeToString(hasher.Sum(nil)[0:])) // 静态PODID
 		klog.V(5).InfoS("Generated UID", "pod", klog.KObj(pod), "podUID", pod.UID, "source", source)
 	}
 

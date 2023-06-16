@@ -100,7 +100,7 @@ func GetNetworkDevices(sysfs sysfs.SysFs) ([]info.NetInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	netDevices := []info.NetInfo{}
+	var netDevices []info.NetInfo
 	for _, dev := range devs {
 		name := dev.Name()
 		// Ignore docker, loopback, and veth devices.
@@ -146,6 +146,174 @@ func GetNetworkDevices(sysfs sysfs.SysFs) ([]info.NetInfo, error) {
 		netDevices = append(netDevices, netInfo)
 	}
 	return netDevices, nil
+}
+
+func getNetworkStats(name string, sysFs sysfs.SysFs) (info.InterfaceStats, error) {
+	var stats info.InterfaceStats
+	var err error
+	stats.Name = name
+	stats.RxBytes, err = sysFs.GetNetworkStatValue(name, "rx_bytes")
+	if err != nil {
+		return stats, err
+	}
+	stats.RxPackets, err = sysFs.GetNetworkStatValue(name, "rx_packets")
+	if err != nil {
+		return stats, err
+	}
+	stats.RxErrors, err = sysFs.GetNetworkStatValue(name, "rx_errors")
+	if err != nil {
+		return stats, err
+	}
+	stats.RxDropped, err = sysFs.GetNetworkStatValue(name, "rx_dropped")
+	if err != nil {
+		return stats, err
+	}
+	stats.TxBytes, err = sysFs.GetNetworkStatValue(name, "tx_bytes")
+	if err != nil {
+		return stats, err
+	}
+	stats.TxPackets, err = sysFs.GetNetworkStatValue(name, "tx_packets")
+	if err != nil {
+		return stats, err
+	}
+	stats.TxErrors, err = sysFs.GetNetworkStatValue(name, "tx_errors")
+	if err != nil {
+		return stats, err
+	}
+	stats.TxDropped, err = sysFs.GetNetworkStatValue(name, "tx_dropped")
+	if err != nil {
+		return stats, err
+	}
+	return stats, nil
+}
+
+func getCpusByPhysicalPackageID(sysFs sysfs.SysFs, cpusPaths []string) (map[int][]string, error) { // ✅
+	cpuPathsByPhysicalPackageID := make(map[int][]string)
+	for _, cpuPath := range cpusPaths {
+
+		rawPhysicalPackageID, err := sysFs.GetCPUPhysicalPackageID(cpuPath) // 获取逻辑对应哪个CPU
+		if os.IsNotExist(err) {
+			klog.Warningf("Cannot read physical package id for %s, physical_package_id file does not exist, err: %s", cpuPath, err)
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+
+		physicalPackageID, err := strconv.Atoi(rawPhysicalPackageID)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := cpuPathsByPhysicalPackageID[physicalPackageID]; !ok {
+			cpuPathsByPhysicalPackageID[physicalPackageID] = make([]string, 0)
+		}
+
+		cpuPathsByPhysicalPackageID[physicalPackageID] = append(cpuPathsByPhysicalPackageID[physicalPackageID], cpuPath) // 存储 每个物理CPU下 有哪些逻辑核
+	}
+	return cpuPathsByPhysicalPackageID, nil
+}
+
+// getCoresInfo 返回有关物理核、逻辑核、物理CPU 序号的信息
+func getCoresInfo(sysFs sysfs.SysFs, cpuDirs []string) ([]info.Core, error) {
+	cores := make([]info.Core, 0, len(cpuDirs))
+	for _, cpuDir := range cpuDirs {
+		cpuID, err := getMatchedInt(cpuDirRegExp, cpuDir) // 逻辑核ID
+		if err != nil {
+			return nil, fmt.Errorf("unexpected format of CPU directory, cpuDirRegExp %s, cpuDir: %s", cpuDirRegExp, cpuDir)
+		}
+		if !sysFs.IsCPUOnline(cpuDir) { // 从内核热插拔机制的角度决定CPU状态
+			continue
+		}
+
+		rawPhysicalID, err := sysFs.GetCoreID(cpuDir) // 物理核
+		if os.IsNotExist(err) {
+			klog.Warningf("Cannot read core id for %s, core_id file does not exist, err: %s", cpuDir, err)
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+		physicalID, err := strconv.Atoi(rawPhysicalID)
+		if err != nil {
+			return nil, err
+		}
+
+		rawPhysicalPackageID, err := sysFs.GetCPUPhysicalPackageID(cpuDir) // 物理CPU
+		if os.IsNotExist(err) {
+			klog.Warningf("Cannot read physical package id for %s, physical_package_id file does not exist, err: %s", cpuDir, err)
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+
+		physicalPackageID, err := strconv.Atoi(rawPhysicalPackageID)
+		if err != nil {
+			return nil, err
+		}
+
+		coreIDx := -1
+		for id, core := range cores {
+			if core.Id == physicalID && core.SocketID == physicalPackageID {
+				coreIDx = id
+			}
+		}
+		if coreIDx == -1 {
+			cores = append(cores, info.Core{})
+			coreIDx = len(cores) - 1
+		}
+		desiredCore := &cores[coreIDx]
+
+		desiredCore.Id = physicalID
+		desiredCore.SocketID = physicalPackageID
+
+		if len(desiredCore.Threads) == 0 {
+			desiredCore.Threads = []int{cpuID}
+		} else {
+			desiredCore.Threads = append(desiredCore.Threads, cpuID)
+		}
+
+	}
+	return cores, nil
+}
+
+// GetCacheInfo return information about a cache accessible from the given cpu thread
+func GetCacheInfo(sysFs sysfs.SysFs, id int /* 逻辑核ID */) ([]sysfs.CacheInfo, error) {
+	caches, err := sysFs.GetCaches(id)
+	if err != nil {
+		return nil, err
+	}
+
+	info := []sysfs.CacheInfo{}
+	for _, cache := range caches {
+		if !strings.HasPrefix(cache.Name(), "index") {
+			continue
+		}
+		cacheInfo, err := sysFs.GetCacheInfo(id, cache.Name()) // 获取 1,2,3 级缓存信息
+		if err != nil {
+			return nil, err
+		}
+		info = append(info, cacheInfo)
+	}
+	return info, nil
+}
+
+// getNodeMemInfo returns information about total memory for NUMA node
+func getNodeMemInfo(sysFs sysfs.SysFs, nodeDir string) (uint64, error) {
+	rawMem, err := sysFs.GetMemInfo(nodeDir) // /sys/devices/system/node/node0
+	if err != nil {
+		//Ignore if per-node info is not available.
+		klog.Warningf("Found node without memory information, nodeDir: %s", nodeDir)
+		return 0, nil
+	}
+	matches := memoryCapacityRegexp.FindStringSubmatch(rawMem)
+	if len(matches) != 2 {
+		return 0, fmt.Errorf("failed to match regexp in output: %q", string(rawMem))
+	}
+	memory, err := strconv.ParseUint(matches[1], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	memory = memory * 1024 // Convert to bytes
+	return uint64(memory), nil
 }
 
 // GetHugePagesInfo returns information about pre-allocated huge pages
@@ -194,11 +362,11 @@ func GetNodesInfo(sysFs sysfs.SysFs) ([]info.Node, int, error) {
 	nodes := []info.Node{}
 	allLogicalCoresCount := 0
 
-	nodesDirs, err := sysFs.GetNodesPaths()
+	nodesDirs, err := sysFs.GetNodesPaths() // 有几个物理CPU
 	if err != nil {
 		return nil, 0, err
 	}
-
+	getCPUTopology(sysFs)
 	if len(nodesDirs) == 0 {
 		klog.Warningf("Nodes topology is not available, providing CPU topology")
 		return getCPUTopology(sysFs)
@@ -211,11 +379,11 @@ func GetNodesInfo(sysFs sysfs.SysFs) ([]info.Node, int, error) {
 		}
 		node := info.Node{Id: id}
 
-		cpuDirs, err := sysFs.GetCPUsPaths(nodeDir)
+		cpuDirs, err := sysFs.GetCPUsPaths(nodeDir) // 获取所有逻辑核序号
 		if len(cpuDirs) == 0 {
 			klog.Warningf("Found node without any CPU, nodeDir: %s, number of cpuDirs %d, err: %v", nodeDir, len(cpuDirs), err)
 		} else {
-			cores, err := getCoresInfo(sysFs, cpuDirs)
+			cores, err := getCoresInfo(sysFs, cpuDirs) // 返回有关物理核、逻辑核、物理CPU 序号的信息
 			if err != nil {
 				return nil, 0, err
 			}
@@ -225,14 +393,12 @@ func GetNodesInfo(sysFs sysfs.SysFs) ([]info.Node, int, error) {
 			}
 		}
 
-		// On some Linux platforms(such as Arm64 guest kernel), cache info may not exist.
-		// So, we should ignore error here.
-		err = addCacheInfo(sysFs, &node)
+		err = addCacheInfo(sysFs, &node) // 每个物理CPU、物理核 的缓存信息
 		if err != nil {
 			klog.V(1).Infof("Found node without cache information, nodeDir: %s", nodeDir)
 		}
 
-		node.Memory, err = getNodeMemInfo(sysFs, nodeDir)
+		node.Memory, err = getNodeMemInfo(sysFs, nodeDir) // /sys/devices/system/node/node0
 		if err != nil {
 			return nil, 0, err
 		}
@@ -253,150 +419,8 @@ func GetNodesInfo(sysFs sysfs.SysFs) ([]info.Node, int, error) {
 	return nodes, allLogicalCoresCount, err
 }
 
-func getCPUTopology(sysFs sysfs.SysFs) ([]info.Node, int, error) {
-	nodes := []info.Node{}
-
-	cpusPaths, err := sysFs.GetCPUsPaths(cpusPath)
-	if err != nil {
-		return nil, 0, err
-	}
-	cpusCount := len(cpusPaths)
-
-	if cpusCount == 0 {
-		err = fmt.Errorf("Any CPU is not available, cpusPath: %s", cpusPath)
-		return nil, 0, err
-	}
-
-	cpusByPhysicalPackageID, err := getCpusByPhysicalPackageID(sysFs, cpusPaths)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	if len(cpusByPhysicalPackageID) == 0 {
-		klog.Warningf("Cannot read any physical package id for any CPU")
-		return nil, cpusCount, nil
-	}
-
-	for physicalPackageID, cpus := range cpusByPhysicalPackageID {
-		node := info.Node{Id: physicalPackageID}
-
-		cores, err := getCoresInfo(sysFs, cpus)
-		if err != nil {
-			return nil, 0, err
-		}
-		node.Cores = cores
-
-		// On some Linux platforms(such as Arm64 guest kernel), cache info may not exist.
-		// So, we should ignore error here.
-		err = addCacheInfo(sysFs, &node)
-		if err != nil {
-			klog.V(1).Infof("Found cpu without cache information, cpuPath: %s", cpus)
-		}
-		nodes = append(nodes, node)
-	}
-	return nodes, cpusCount, nil
-}
-
-func getCpusByPhysicalPackageID(sysFs sysfs.SysFs, cpusPaths []string) (map[int][]string, error) {
-	cpuPathsByPhysicalPackageID := make(map[int][]string)
-	for _, cpuPath := range cpusPaths {
-
-		rawPhysicalPackageID, err := sysFs.GetCPUPhysicalPackageID(cpuPath)
-		if os.IsNotExist(err) {
-			klog.Warningf("Cannot read physical package id for %s, physical_package_id file does not exist, err: %s", cpuPath, err)
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-
-		physicalPackageID, err := strconv.Atoi(rawPhysicalPackageID)
-		if err != nil {
-			return nil, err
-		}
-
-		if _, ok := cpuPathsByPhysicalPackageID[physicalPackageID]; !ok {
-			cpuPathsByPhysicalPackageID[physicalPackageID] = make([]string, 0)
-		}
-
-		cpuPathsByPhysicalPackageID[physicalPackageID] = append(cpuPathsByPhysicalPackageID[physicalPackageID], cpuPath)
-	}
-	return cpuPathsByPhysicalPackageID, nil
-}
-
-// addCacheInfo adds information about cache for NUMA node
-func addCacheInfo(sysFs sysfs.SysFs, node *info.Node) error {
-	for coreID, core := range node.Cores {
-		threadID := core.Threads[0] //get any thread for core
-		caches, err := GetCacheInfo(sysFs, threadID)
-		if err != nil {
-			return err
-		}
-
-		numThreadsPerCore := len(core.Threads)
-		numThreadsPerNode := len(node.Cores) * numThreadsPerCore
-
-		for _, cache := range caches {
-			c := info.Cache{
-				Id:    cache.Id,
-				Size:  cache.Size,
-				Level: cache.Level,
-				Type:  cache.Type,
-			}
-			if cache.Level > cacheLevel2 {
-				if cache.Cpus == numThreadsPerNode {
-					// Add a node level cache.
-					cacheFound := false
-					for _, nodeCache := range node.Caches {
-						if nodeCache == c {
-							cacheFound = true
-						}
-					}
-					if !cacheFound {
-						node.Caches = append(node.Caches, c)
-					}
-				} else {
-					// Add uncore cache, for architecture in which l3 cache only shared among some cores.
-					uncoreCacheFound := false
-					for _, uncoreCache := range node.Cores[coreID].UncoreCaches {
-						if uncoreCache == c {
-							uncoreCacheFound = true
-						}
-					}
-					if !uncoreCacheFound {
-						node.Cores[coreID].UncoreCaches = append(node.Cores[coreID].UncoreCaches, c)
-					}
-				}
-			} else if cache.Cpus == numThreadsPerCore {
-				// Add core level cache
-				node.Cores[coreID].Caches = append(node.Cores[coreID].Caches, c)
-			}
-			// Ignore unknown caches.
-		}
-	}
-	return nil
-}
-
-// getNodeMemInfo returns information about total memory for NUMA node
-func getNodeMemInfo(sysFs sysfs.SysFs, nodeDir string) (uint64, error) {
-	rawMem, err := sysFs.GetMemInfo(nodeDir)
-	if err != nil {
-		//Ignore if per-node info is not available.
-		klog.Warningf("Found node without memory information, nodeDir: %s", nodeDir)
-		return 0, nil
-	}
-	matches := memoryCapacityRegexp.FindStringSubmatch(rawMem)
-	if len(matches) != 2 {
-		return 0, fmt.Errorf("failed to match regexp in output: %q", string(rawMem))
-	}
-	memory, err := strconv.ParseUint(matches[1], 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	memory = memory * 1024 // Convert to bytes
-	return uint64(memory), nil
-}
-
 // getDistances returns information about distances between NUMA nodes
+// 与其他物理CPU之间的距离
 func getDistances(sysFs sysfs.SysFs, nodeDir string) ([]uint64, error) {
 	rawDistance, err := sysFs.GetDistances(nodeDir)
 	if err != nil {
@@ -417,130 +441,59 @@ func getDistances(sysFs sysfs.SysFs, nodeDir string) ([]uint64, error) {
 	return distances, nil
 }
 
-// getCoresInfo returns information about physical cores
-func getCoresInfo(sysFs sysfs.SysFs, cpuDirs []string) ([]info.Core, error) {
-	cores := make([]info.Core, 0, len(cpuDirs))
-	for _, cpuDir := range cpuDirs {
-		cpuID, err := getMatchedInt(cpuDirRegExp, cpuDir)
-		if err != nil {
-			return nil, fmt.Errorf("unexpected format of CPU directory, cpuDirRegExp %s, cpuDir: %s", cpuDirRegExp, cpuDir)
+// GetOnlineCPUs returns available cores.
+func GetOnlineCPUs(topology []info.Node) []int {
+	onlineCPUs := make([]int, 0)
+	for _, node := range topology {
+		for _, core := range node.Cores {
+			onlineCPUs = append(onlineCPUs, core.Threads...)
 		}
-		if !sysFs.IsCPUOnline(cpuDir) {
-			continue
-		}
-
-		rawPhysicalID, err := sysFs.GetCoreID(cpuDir)
-		if os.IsNotExist(err) {
-			klog.Warningf("Cannot read core id for %s, core_id file does not exist, err: %s", cpuDir, err)
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-		physicalID, err := strconv.Atoi(rawPhysicalID)
-		if err != nil {
-			return nil, err
-		}
-
-		rawPhysicalPackageID, err := sysFs.GetCPUPhysicalPackageID(cpuDir)
-		if os.IsNotExist(err) {
-			klog.Warningf("Cannot read physical package id for %s, physical_package_id file does not exist, err: %s", cpuDir, err)
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-
-		physicalPackageID, err := strconv.Atoi(rawPhysicalPackageID)
-		if err != nil {
-			return nil, err
-		}
-
-		coreIDx := -1
-		for id, core := range cores {
-			if core.Id == physicalID && core.SocketID == physicalPackageID {
-				coreIDx = id
-			}
-		}
-		if coreIDx == -1 {
-			cores = append(cores, info.Core{})
-			coreIDx = len(cores) - 1
-		}
-		desiredCore := &cores[coreIDx]
-
-		desiredCore.Id = physicalID
-		desiredCore.SocketID = physicalPackageID
-
-		if len(desiredCore.Threads) == 0 {
-			desiredCore.Threads = []int{cpuID}
-		} else {
-			desiredCore.Threads = append(desiredCore.Threads, cpuID)
-		}
-
 	}
-	return cores, nil
+	return onlineCPUs
 }
 
-// GetCacheInfo return information about a cache accessible from the given cpu thread
-func GetCacheInfo(sysFs sysfs.SysFs, id int) ([]sysfs.CacheInfo, error) {
-	caches, err := sysFs.GetCaches(id)
+func getCPUTopology(sysFs sysfs.SysFs) ([]info.Node, int, error) {
+	nodes := []info.Node{}
+
+	cpusPaths, err := sysFs.GetCPUsPaths(cpusPath) // /sys/devices/system/cpu   ,   逻辑核
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+	cpusCount := len(cpusPaths)
+
+	if cpusCount == 0 {
+		err = fmt.Errorf("Any CPU is not available, cpusPath: %s", cpusPath)
+		return nil, 0, err
 	}
 
-	info := []sysfs.CacheInfo{}
-	for _, cache := range caches {
-		if !strings.HasPrefix(cache.Name(), "index") {
-			continue
-		}
-		cacheInfo, err := sysFs.GetCacheInfo(id, cache.Name())
+	cpusByPhysicalPackageID, err := getCpusByPhysicalPackageID(sysFs, cpusPaths) // 每个物理CPU下 有哪些逻辑核
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if len(cpusByPhysicalPackageID) == 0 {
+		klog.Warningf("Cannot read any physical package id for any CPU")
+		return nil, cpusCount, nil
+	}
+
+	for physicalPackageID, cpus := range cpusByPhysicalPackageID {
+		node := info.Node{Id: physicalPackageID}
+
+		cores, err := getCoresInfo(sysFs, cpus) // 返回有关物理核、逻辑核、物理CPU 序号的信息
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
-		info = append(info, cacheInfo)
-	}
-	return info, nil
-}
+		node.Cores = cores
 
-func getNetworkStats(name string, sysFs sysfs.SysFs) (info.InterfaceStats, error) {
-	var stats info.InterfaceStats
-	var err error
-	stats.Name = name
-	stats.RxBytes, err = sysFs.GetNetworkStatValue(name, "rx_bytes")
-	if err != nil {
-		return stats, err
+		// On some Linux platforms(such as Arm64 guest kernel), cache info may not exist.
+		// So, we should ignore error here.
+		err = addCacheInfo(sysFs, &node) // 每个物理CPU、物理核 的缓存信息
+		if err != nil {
+			klog.V(1).Infof("Found cpu without cache information, cpuPath: %s", cpus)
+		}
+		nodes = append(nodes, node)
 	}
-	stats.RxPackets, err = sysFs.GetNetworkStatValue(name, "rx_packets")
-	if err != nil {
-		return stats, err
-	}
-	stats.RxErrors, err = sysFs.GetNetworkStatValue(name, "rx_errors")
-	if err != nil {
-		return stats, err
-	}
-	stats.RxDropped, err = sysFs.GetNetworkStatValue(name, "rx_dropped")
-	if err != nil {
-		return stats, err
-	}
-	stats.TxBytes, err = sysFs.GetNetworkStatValue(name, "tx_bytes")
-	if err != nil {
-		return stats, err
-	}
-	stats.TxPackets, err = sysFs.GetNetworkStatValue(name, "tx_packets")
-	if err != nil {
-		return stats, err
-	}
-	stats.TxErrors, err = sysFs.GetNetworkStatValue(name, "tx_errors")
-	if err != nil {
-		return stats, err
-	}
-	stats.TxDropped, err = sysFs.GetNetworkStatValue(name, "tx_dropped")
-	if err != nil {
-		return stats, err
-	}
-	return stats, nil
-}
-
-func GetSystemUUID(sysFs sysfs.SysFs) (string, error) {
-	return sysFs.GetSystemUUID()
+	return nodes, cpusCount, nil
 }
 
 func getMatchedInt(rgx *regexp.Regexp, str string) (int, error) {
@@ -555,24 +508,71 @@ func getMatchedInt(rgx *regexp.Regexp, str string) (int, error) {
 	return valInt, nil
 }
 
+func GetSystemUUID(sysFs sysfs.SysFs) (string, error) {
+	return sysFs.GetSystemUUID()
+}
+
+// addCacheInfo 记录每个物理CPU、物理核 的缓存信息
+func addCacheInfo(sysFs sysfs.SysFs, node *info.Node /* 物理CPU */) error { // ✅
+	for coreID, core := range node.Cores { // 物理核
+		threadID := core.Threads[0]                  // 获取每个物理核的第一个逻辑核ID
+		caches, err := GetCacheInfo(sysFs, threadID) // 获取 123级缓存信息
+		if err != nil {
+			return err
+		}
+
+		numThreadsPerCore := len(core.Threads)                   // 每个物理核的  逻辑核数量
+		numThreadsPerNode := len(node.Cores) * numThreadsPerCore // 物理CPU 有多少逻辑核
+
+		for _, cache := range caches {
+			c := info.Cache{
+				Id:    cache.Id,
+				Size:  cache.Size,
+				Level: cache.Level,
+				Type:  cache.Type,
+			}
+			if cache.Level > cacheLevel2 {
+				if cache.Cpus == numThreadsPerNode { // 被一个物理CPU上的所有逻辑核共享
+					// Add a node level cache.
+					cacheFound := false
+					for _, nodeCache := range node.Caches {
+						if nodeCache == c {
+							cacheFound = true
+						}
+					}
+					if !cacheFound {
+						node.Caches = append(node.Caches, c)
+					}
+				} else {
+					// Add uncore cache, for architecture in which l3 cache only shared among some cores.
+					// 添加非核心缓存,用于l3缓存仅在某些核心之间共享的架构.
+					uncoreCacheFound := false
+					for _, uncoreCache := range node.Cores[coreID].UncoreCaches {
+						if uncoreCache == c {
+							uncoreCacheFound = true
+						}
+					}
+					if !uncoreCacheFound {
+						node.Cores[coreID].UncoreCaches = append(node.Cores[coreID].UncoreCaches, c)
+					}
+				}
+			} else if cache.Cpus == numThreadsPerCore {
+				// Add core level cache
+				node.Cores[coreID].Caches = append(node.Cores[coreID].Caches, c)
+			}
+			// Ignore unknown caches.
+		}
+	}
+	return nil
+}
+
 // GetSocketFromCPU returns Socket ID of passed CPU. If is not present, returns -1.
-func GetSocketFromCPU(topology []info.Node, cpu int) int {
+func GetSocketFromCPU(topology []info.Node, cpu int /*逻辑核序号*/) int {
 	for _, node := range topology {
 		found, coreID := node.FindCoreByThread(cpu)
 		if found {
-			return node.Cores[coreID].SocketID
+			return node.Cores[coreID].SocketID // 物理核对应的 物理CPU序号
 		}
 	}
 	return -1
-}
-
-// GetOnlineCPUs returns available cores.
-func GetOnlineCPUs(topology []info.Node) []int {
-	onlineCPUs := make([]int, 0)
-	for _, node := range topology {
-		for _, core := range node.Cores {
-			onlineCPUs = append(onlineCPUs, core.Threads...)
-		}
-	}
-	return onlineCPUs
 }

@@ -33,7 +33,7 @@ var _ Policy = &nonePolicy{}
 // PolicyNone name of none policy
 const PolicyNone policyName = "none"
 
-// NewNonePolicy returns a cpuset manager policy that does nothing
+// NewNonePolicy returns a cpuset CpuManager policy that does nothing
 func NewNonePolicy(cpuPolicyOptions map[string]string) (Policy, error) {
 	if len(cpuPolicyOptions) > 0 {
 		return nil, fmt.Errorf("None policy: received unsupported options=%v", cpuPolicyOptions)

@@ -40,19 +40,19 @@ type FsInfo struct {
 type Node struct {
 	Id int `json:"node_id"`
 	// Per-node memory
-	Memory    uint64          `json:"memory"`
-	HugePages []HugePagesInfo `json:"hugepages"`
-	Cores     []Core          `json:"cores"`
-	Caches    []Cache         `json:"caches"`
+	Memory    uint64          `json:"memory"`    // 每个物理CPU 上的可使用的内存
+	HugePages []HugePagesInfo `json:"hugepages"` // 内存大页信息
+	Cores     []Core          `json:"cores"`     // 所有物理核信息  （物理核、逻辑核、物理CPU 序号的信息）
+	Caches    []Cache         `json:"caches"`    // >=L3级以上的CPU级缓存
 	Distances []uint64        `json:"distances"`
 }
 
 type Core struct {
-	Id           int     `json:"core_id"`
-	Threads      []int   `json:"thread_ids"`
-	Caches       []Cache `json:"caches"`
-	UncoreCaches []Cache `json:"uncore_caches"`
-	SocketID     int     `json:"socket_id"`
+	Id           int     `json:"core_id"`       // 物理核序号
+	Threads      []int   `json:"thread_ids"`    // 逻辑核序号
+	Caches       []Cache `json:"caches"`        // 1-2 级缓存
+	UncoreCaches []Cache `json:"uncore_caches"` // >2 的非核心共享缓存
+	SocketID     int     `json:"socket_id"`     // 物理cpu序号
 }
 
 type Cache struct {
@@ -219,7 +219,7 @@ type MachineInfo struct {
 
 	DiskMap        map[string]DiskInfo `json:"disk_map"`        // 磁盘分布
 	NetworkDevices []NetInfo           `json:"network_devices"` // 网络驱动
-	Topology       []Node              `json:"topology"`        // 机器信息拓扑,描述了cpu/memory 布局
+	Topology       []Node              `json:"topology"`        // 机器信息拓扑,描述了cpu/memory 布局   ✅
 
 	// Cloud provider the machine belongs to.
 	CloudProvider CloudProvider `json:"cloud_provider"`
@@ -263,7 +263,7 @@ func (m *MachineInfo) Clone() *MachineInfo {
 		Filesystems:      m.Filesystems,
 		DiskMap:          diskMap,
 		NetworkDevices:   m.NetworkDevices,
-		Topology:         m.Topology,
+		Topology:         m.Topology, // ✅
 		CloudProvider:    m.CloudProvider,
 		InstanceType:     m.InstanceType,
 		InstanceID:       m.InstanceID,

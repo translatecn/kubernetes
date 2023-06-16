@@ -34,12 +34,8 @@ const (
 // CapacityFromMachineInfo returns the capacity of the resources from the machine info.
 func CapacityFromMachineInfo(info *cadvisorapi.MachineInfo) v1.ResourceMap {
 	c := v1.ResourceMap{
-		v1.ResourceCPU: *resource.NewMilliQuantity(
-			int64(info.NumCores*1000),
-			resource.DecimalSI),
-		v1.ResourceMemory: *resource.NewQuantity(
-			int64(info.MemoryCapacity),
-			resource.BinarySI),
+		v1.ResourceCPU:    *resource.NewMilliQuantity(int64(info.NumCores*1000), resource.DecimalSI),
+		v1.ResourceMemory: *resource.NewQuantity(int64(info.MemoryCapacity), resource.BinarySI),
 	}
 
 	// if huge pages are enabled, we report them as a schedulable resource on the node

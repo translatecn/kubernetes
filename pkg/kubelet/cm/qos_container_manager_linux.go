@@ -59,21 +59,6 @@ type qosContainerManagerImpl struct {
 	qosReserved        map[v1.ResourceName]int64
 }
 
-func NewQOSContainerManager(subsystems *CgroupSubsystems, cgroupRoot CgroupName, nodeConfig NodeConfig, cgroupManager CgroupManager) (QOSContainerManager, error) {
-	if !nodeConfig.CgroupsPerQOS {
-		return &qosContainerManagerNoop{
-			cgroupRoot: cgroupRoot,
-		}, nil
-	}
-
-	return &qosContainerManagerImpl{
-		subsystems:    subsystems,
-		cgroupManager: cgroupManager,
-		cgroupRoot:    cgroupRoot,
-		qosReserved:   nodeConfig.QOSReserved,
-	}, nil
-}
-
 func (m *qosContainerManagerImpl) GetQOSContainersInfo() QOSContainersInfo {
 	return m.qosContainersInfo
 }
@@ -395,4 +380,21 @@ func (m *qosContainerManagerNoop) Start(_ func() v1.ResourceMap, _ ActivePodsFun
 
 func (m *qosContainerManagerNoop) UpdateCgroups() error {
 	return nil
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+
+func NewQOSContainerManager(subsystems *CgroupSubsystems, cgroupRoot CgroupName, nodeConfig NodeConfig, cgroupManager CgroupManager) (QOSContainerManager, error) {
+	if !nodeConfig.CgroupsPerQOS {
+		return &qosContainerManagerNoop{
+			cgroupRoot: cgroupRoot,
+		}, nil
+	}
+
+	return &qosContainerManagerImpl{
+		subsystems:    subsystems,
+		cgroupManager: cgroupManager,
+		cgroupRoot:    cgroupRoot,
+		qosReserved:   nodeConfig.QOSReserved,
+	}, nil
 }

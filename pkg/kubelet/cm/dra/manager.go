@@ -40,18 +40,6 @@ type ManagerImpl struct {
 	kubeClient clientset.Interface
 }
 
-// NewManagerImpl creates a new manager.
-func NewManagerImpl(kubeClient clientset.Interface) (*ManagerImpl, error) {
-	klog.V(2).InfoS("Creating DRA manager")
-
-	manager := &ManagerImpl{
-		cache:      newClaimInfoCache(),
-		kubeClient: kubeClient,
-	}
-
-	return manager, nil
-}
-
 // Generate container annotations using CDI UpdateAnnotations API.
 func generateCDIAnnotations(
 	claimUID types.UID,
@@ -252,4 +240,16 @@ func (m *ManagerImpl) UnprepareResources(pod *v1.Pod) error {
 // unprepare resources
 func (m *ManagerImpl) PodMightNeedToUnprepareResources(UID types.UID) bool {
 	return m.cache.hasPodReference(UID)
+}
+
+// NewManagerImpl creates a new manager.
+func NewManagerImpl(kubeClient clientset.Interface) (*ManagerImpl, error) {
+	klog.V(2).InfoS("Creating DRA manager")
+
+	manager := &ManagerImpl{
+		cache:      newClaimInfoCache(),
+		kubeClient: kubeClient,
+	}
+
+	return manager, nil
 }

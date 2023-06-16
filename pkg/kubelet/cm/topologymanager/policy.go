@@ -23,11 +23,8 @@ import (
 
 // Policy interface for Topology Manager Pod Admit Result
 type Policy interface {
-	// Returns Policy Name
-	Name() string
-	// Returns a merged TopologyHint based on input from hint providers
-	// and a Pod Admit Handler Response based on hints and policy type
-	Merge(providersHints []map[string][]TopologyHint) (TopologyHint, bool)
+	Name() string                                                          // 拓扑策略
+	Merge(providersHints []map[string][]TopologyHint) (TopologyHint, bool) // 根据来自不同提示提供者的拓扑提示信息,合并生成一个最终的拓扑提示,并返回一个布尔值,表示是否应该接受该拓扑提示.
 }
 
 // Merge a TopologyHints permutation to a single hint by performing a bitwise-AND

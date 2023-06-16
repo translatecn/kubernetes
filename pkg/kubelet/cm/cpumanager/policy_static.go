@@ -51,7 +51,7 @@ func (e SMTAlignmentError) Type() string {
 	return ErrorSMTAlignment
 }
 
-// staticPolicy is a CPU manager policy that does not change CPU
+// StaticPolicy is a CPU CpuManager policy that does not change CPU
 // assignments for exclusively pinned guaranteed containers after the main
 // container process starts.
 //
@@ -83,18 +83,18 @@ func (e SMTAlignmentError) Type() string {
 //     These are stored as explicit assignments in the state.
 //
 // When an exclusive allocation is made, the static policy also updates the
-// default cpuset in the state abstraction. The CPU manager's periodic
+// default cpuset in the state abstraction. The CPU CpuManager's periodic
 // reconcile loop takes care of rewriting the cpuset in cgroupfs for any
 // containers that may be running in the shared pool. For this reason,
 // applications running within exclusively-allocated containers must tolerate
-// potentially sharing their allocated CPUs for up to the CPU manager
+// potentially sharing their allocated CPUs for up to the CPU CpuManager
 // reconcile period.
-type staticPolicy struct {
+type StaticPolicy struct {
 	// cpu socket topology
 	topology *topology.CPUTopology
 	// set of CPUs that is not available for exclusive assignment
 	reserved cpuset.CPUSet
-	// topology manager reference to get container Topology affinity
+	// topology CpuManager reference to get container Topology affinity
 	affinity topologymanager.Store
 	// set of CPUs to reuse across allocations in a pod
 	cpusToReuse map[string]cpuset.CPUSet
@@ -102,10 +102,10 @@ type staticPolicy struct {
 	options StaticPolicyOptions
 }
 
-// Ensure staticPolicy implements Policy interface
-var _ Policy = &staticPolicy{}
+// Ensure StaticPolicy implements Policy interface
+var _ Policy = &StaticPolicy{}
 
-// NewStaticPolicy returns a CPU manager policy that does not change CPU
+// NewStaticPolicy returns a CPU CpuManager policy that does not change CPU
 // assignments for exclusively pinned guaranteed containers after the main
 // container process starts.
 func NewStaticPolicy(topology *topology.CPUTopology, numReservedCPUs int, reservedCPUs cpuset.CPUSet, affinity topologymanager.Store, cpuPolicyOptions map[string]string) (Policy, error) {
@@ -120,7 +120,7 @@ func NewStaticPolicy(topology *topology.CPUTopology, numReservedCPUs int, reserv
 
 	klog.InfoS("Static policy created with configuration", "options", opts)
 
-	policy := &staticPolicy{
+	policy := &StaticPolicy{
 		topology:    topology,
 		affinity:    affinity,
 		cpusToReuse: make(map[string]cpuset.CPUSet),
@@ -151,11 +151,11 @@ func NewStaticPolicy(topology *topology.CPUTopology, numReservedCPUs int, reserv
 	return policy, nil
 }
 
-func (p *staticPolicy) Name() string {
+func (p *StaticPolicy) Name() string {
 	return string(PolicyStatic)
 }
 
-func (p *staticPolicy) Start(s state.State) error {
+func (p *StaticPolicy) Start(s state.State) error {
 	if err := p.validateState(s); err != nil {
 		klog.ErrorS(err, "Static policy invalid state, please drain node and remove policy state file")
 		return err
@@ -163,7 +163,7 @@ func (p *staticPolicy) Start(s state.State) error {
 	return nil
 }
 
-func (p *staticPolicy) validateState(s state.State) error {
+func (p *StaticPolicy) validateState(s state.State) error {
 	tmpAssignments := s.GetCPUAssignments()
 	tmpDefaultCPUset := s.GetDefaultCPUSet()
 
@@ -201,9 +201,9 @@ func (p *staticPolicy) validateState(s state.State) error {
 	// 3. It's possible that the set of available CPUs has changed since
 	// the state was written. This can be due to for example
 	// offlining a CPU when kubelet is not running. If this happens,
-	// CPU manager will run into trouble when later it tries to
+	// CPU CpuManager will run into trouble when later it tries to
 	// assign non-existent CPUs to containers. Validate that the
-	// topology that was received during CPU manager startup matches with
+	// topology that was received during CPU CpuManager startup matches with
 	// the set of CPUs stored in the state.
 	totalKnownCPUs := tmpDefaultCPUset.Clone()
 	tmpCPUSets := []cpuset.CPUSet{}
@@ -222,16 +222,16 @@ func (p *staticPolicy) validateState(s state.State) error {
 }
 
 // GetAllocatableCPUs returns the total set of CPUs available for allocation.
-func (p *staticPolicy) GetAllocatableCPUs(s state.State) cpuset.CPUSet {
+func (p *StaticPolicy) GetAllocatableCPUs(s state.State) cpuset.CPUSet {
 	return p.topology.CPUDetails.CPUs().Difference(p.reserved)
 }
 
 // GetAvailableCPUs returns the set of unassigned CPUs minus the reserved set.
-func (p *staticPolicy) GetAvailableCPUs(s state.State) cpuset.CPUSet {
+func (p *StaticPolicy) GetAvailableCPUs(s state.State) cpuset.CPUSet {
 	return s.GetDefaultCPUSet().Difference(p.reserved)
 }
 
-func (p *staticPolicy) updateCPUsToReuse(pod *v1.Pod, container *v1.Container, cset cpuset.CPUSet) {
+func (p *StaticPolicy) updateCPUsToReuse(pod *v1.Pod, container *v1.Container, cset cpuset.CPUSet) {
 	// If pod entries to m.cpusToReuse other than the current pod exist, delete them.
 	for podUID := range p.cpusToReuse {
 		if podUID != string(pod.UID) {
@@ -255,7 +255,7 @@ func (p *staticPolicy) updateCPUsToReuse(pod *v1.Pod, container *v1.Container, c
 	p.cpusToReuse[string(pod.UID)] = p.cpusToReuse[string(pod.UID)].Difference(cset)
 }
 
-func (p *staticPolicy) Allocate(s state.State, pod *v1.Pod, container *v1.Container) (rerr error) {
+func (p *StaticPolicy) Allocate(s state.State, pod *v1.Pod, container *v1.Container) (rerr error) {
 	numCPUs := p.guaranteedCPUs(pod, container)
 	if numCPUs == 0 {
 		// container belongs in the shared pool (nothing to do; use default cpuset)
@@ -321,7 +321,7 @@ func getAssignedCPUsOfSiblings(s state.State, podUID string, containerName strin
 	return cset
 }
 
-func (p *staticPolicy) RemoveContainer(s state.State, podUID string, containerName string) error {
+func (p *StaticPolicy) RemoveContainer(s state.State, podUID string, containerName string) error {
 	klog.InfoS("Static policy: RemoveContainer", "podUID", podUID, "containerName", containerName)
 	cpusInUse := getAssignedCPUsOfSiblings(s, podUID, containerName)
 	if toRelease, ok := s.GetCPUSet(podUID, containerName); ok {
@@ -333,7 +333,7 @@ func (p *staticPolicy) RemoveContainer(s state.State, podUID string, containerNa
 	return nil
 }
 
-func (p *staticPolicy) allocateCPUs(s state.State, numCPUs int, numaAffinity bitmask.BitMask, reusableCPUs cpuset.CPUSet) (cpuset.CPUSet, error) {
+func (p *StaticPolicy) allocateCPUs(s state.State, numCPUs int, numaAffinity bitmask.BitMask, reusableCPUs cpuset.CPUSet) (cpuset.CPUSet, error) {
 	klog.InfoS("AllocateCPUs", "numCPUs", numCPUs, "socket", numaAffinity)
 
 	allocatableCPUs := p.GetAvailableCPUs(s).Union(reusableCPUs)
@@ -370,7 +370,7 @@ func (p *staticPolicy) allocateCPUs(s state.State, numCPUs int, numaAffinity bit
 	return result, nil
 }
 
-func (p *staticPolicy) guaranteedCPUs(pod *v1.Pod, container *v1.Container) int {
+func (p *StaticPolicy) guaranteedCPUs(pod *v1.Pod, container *v1.Container) int {
 	if v1qos.GetPodQOS(pod) != v1.PodQOSGuaranteed {
 		return 0
 	}
@@ -384,7 +384,7 @@ func (p *staticPolicy) guaranteedCPUs(pod *v1.Pod, container *v1.Container) int 
 	return int(cpuQuantity.Value())
 }
 
-func (p *staticPolicy) podGuaranteedCPUs(pod *v1.Pod) int {
+func (p *StaticPolicy) podGuaranteedCPUs(pod *v1.Pod) int {
 	// The maximum of requested CPUs by init containers.
 	requestedByInitContainers := 0
 	for _, container := range pod.Spec.InitContainers {
@@ -411,7 +411,7 @@ func (p *staticPolicy) podGuaranteedCPUs(pod *v1.Pod) int {
 	return requestedByAppContainers
 }
 
-func (p *staticPolicy) takeByTopology(availableCPUs cpuset.CPUSet, numCPUs int) (cpuset.CPUSet, error) {
+func (p *StaticPolicy) takeByTopology(availableCPUs cpuset.CPUSet, numCPUs int) (cpuset.CPUSet, error) {
 	if p.options.DistributeCPUsAcrossNUMA {
 		cpuGroupSize := 1
 		if p.options.FullPhysicalCPUsOnly {
@@ -422,7 +422,7 @@ func (p *staticPolicy) takeByTopology(availableCPUs cpuset.CPUSet, numCPUs int) 
 	return takeByTopologyNUMAPacked(p.topology, availableCPUs, numCPUs)
 }
 
-func (p *staticPolicy) GetTopologyHints(s state.State, pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
+func (p *StaticPolicy) GetTopologyHints(s state.State, pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
 	// Get a count of how many guaranteed CPUs have been requested.
 	requested := p.guaranteedCPUs(pod, container)
 
@@ -469,7 +469,7 @@ func (p *staticPolicy) GetTopologyHints(s state.State, pod *v1.Pod, container *v
 	}
 }
 
-func (p *staticPolicy) GetPodTopologyHints(s state.State, pod *v1.Pod) map[string][]topologymanager.TopologyHint {
+func (p *StaticPolicy) GetPodTopologyHints(s state.State, pod *v1.Pod) map[string][]topologymanager.TopologyHint {
 	// Get a count of how many guaranteed CPUs have been requested by Pod.
 	requested := p.podGuaranteedCPUs(pod)
 
@@ -533,7 +533,7 @@ func (p *staticPolicy) GetPodTopologyHints(s state.State, pod *v1.Pod) map[strin
 // It follows the convention of marking all hints that have the same number of
 // bits set as the narrowest matching NUMANodeAffinity with 'Preferred: true', and
 // marking all others with 'Preferred: false'.
-func (p *staticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reusableCPUs cpuset.CPUSet, request int) []topologymanager.TopologyHint {
+func (p *StaticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reusableCPUs cpuset.CPUSet, request int) []topologymanager.TopologyHint {
 	// Initialize minAffinitySize to include all NUMA Nodes.
 	minAffinitySize := p.topology.CPUDetails.NUMANodes().Size()
 
@@ -597,7 +597,7 @@ func (p *staticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reu
 }
 
 // isHintSocketAligned function return true if numa nodes in hint are socket aligned.
-func (p *staticPolicy) isHintSocketAligned(hint topologymanager.TopologyHint, minAffinitySize int) bool {
+func (p *StaticPolicy) isHintSocketAligned(hint topologymanager.TopologyHint, minAffinitySize int) bool {
 	numaNodesBitMask := hint.NUMANodeAffinity.GetBits()
 	numaNodesPerSocket := p.topology.NumNUMANodes / p.topology.NumSockets
 	if numaNodesPerSocket == 0 {
@@ -610,7 +610,7 @@ func (p *staticPolicy) isHintSocketAligned(hint topologymanager.TopologyHint, mi
 }
 
 // getAlignedCPUs return set of aligned CPUs based on numa affinity mask and configured policy options.
-func (p *staticPolicy) getAlignedCPUs(numaAffinity bitmask.BitMask, allocatableCPUs cpuset.CPUSet) cpuset.CPUSet {
+func (p *StaticPolicy) getAlignedCPUs(numaAffinity bitmask.BitMask, allocatableCPUs cpuset.CPUSet) cpuset.CPUSet {
 	alignedCPUs := cpuset.NewCPUSet()
 	numaBits := numaAffinity.GetBits()
 

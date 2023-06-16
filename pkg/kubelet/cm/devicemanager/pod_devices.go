@@ -41,13 +41,6 @@ type podDevices struct {
 	devs map[string]containerDevices // Keyed by podUID.
 }
 
-// NewPodDevices is a function that returns object of podDevices type with its own guard
-// RWMutex and a map where key is a pod UID and value contains
-// container devices information of type containerDevices.
-func newPodDevices() *podDevices {
-	return &podDevices{devs: make(map[string]containerDevices)}
-}
-
 func (pdev *podDevices) pods() sets.String {
 	pdev.RLock()
 	defer pdev.RUnlock()
@@ -405,4 +398,13 @@ func (rdev ResourceDeviceInstances) Filter(cond map[string]sets.String) Resource
 		}
 	}
 	return filtered
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+
+// NewPodDevices is a function that returns object of podDevices type with its own guard
+// RWMutex and a map where key is a pod UID and value contains
+// container devices information of type containerDevices.
+func newPodDevices() *podDevices {
+	return &podDevices{devs: make(map[string]containerDevices)}
 }

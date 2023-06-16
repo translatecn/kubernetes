@@ -330,7 +330,7 @@ func GetPodConditionFromList(conditions []v1.PodCondition, conditionType v1.PodC
 // UpdatePodCondition updates existing pod condition or creates a new one. Sets LastTransitionTime to now if the
 // status has changed.
 // Returns true if pod condition has changed or has been added.
-func UpdatePodCondition(status *v1.PodStatus, condition *v1.PodCondition) bool {
+func UpdatePodCondition(status *v1.PodStatus, condition *v1.PodCondition) bool { // ✅
 	condition.LastTransitionTime = metav1.Now()
 	// Try to find this pod condition.
 	conditionIndex, oldCondition := GetPodCondition(status, condition.Type)

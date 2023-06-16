@@ -53,7 +53,6 @@ type CgroupManager interface {
 	// Destroy the cgroup.
 	Destroy(*CgroupConfig) error
 	Update(*CgroupConfig) error
-	// Validate checks if the cgroup is valid
 	Validate(name CgroupName) error
 	// Exists checks if the cgroup already exists
 	Exists(name CgroupName) bool

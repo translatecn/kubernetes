@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	DefaultPriorityWhenNoDefaultClassExists = 0 // 用于设置没有指定任何优先级类且没有标记为默认的优先级类的pod的优先级。
+	DefaultPriorityWhenNoDefaultClassExists = 0 // 用于设置没有指定任何优先级类且没有标记为默认的优先级类的pod的优先级.
 	// HighestUserDefinablePriority 用户定义的优先级类的最高优先级.优先级大于10亿的值保留给Kubernetes系统使用.
 	HighestUserDefinablePriority = int32(1000000000)
 	SystemCriticalPriority       = 2 * HighestUserDefinablePriority // 关键系统组件的优先级值范围的开始.

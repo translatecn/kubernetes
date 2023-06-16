@@ -45,42 +45,19 @@ const (
 // managers (secret, configmap) are discovering object changes.
 type ResourceChangeDetectionStrategy string
 
-// Enum settings for different strategies of kubelet managers.
+// 用于设置 kubelet 管理器的不同策略
 const (
-	// GetChangeDetectionStrategy is a mode in which kubelet fetches
-	// necessary objects directly from apiserver.
-	GetChangeDetectionStrategy ResourceChangeDetectionStrategy = "Get"
-	// TTLCacheChangeDetectionStrategy is a mode in which kubelet uses
-	// ttl cache for object directly fetched from apiserver.
-	TTLCacheChangeDetectionStrategy ResourceChangeDetectionStrategy = "Cache"
-	// WatchChangeDetectionStrategy is a mode in which kubelet uses
-	// watches to observe changes to objects that are in its interest.
-	WatchChangeDetectionStrategy ResourceChangeDetectionStrategy = "Watch"
-	// RestrictedTopologyManagerPolicy is a mode in which kubelet only allows
-	// pods with optimal NUMA node alignment for requested resources
-	RestrictedTopologyManagerPolicy = "restricted"
-	// BestEffortTopologyManagerPolicy is a mode in which kubelet will favour
-	// pods with NUMA alignment of CPU and device resources.
-	BestEffortTopologyManagerPolicy = "best-effort"
-	// NoneTopologyManagerPolicy is a mode in which kubelet has no knowledge
-	// of NUMA alignment of a pod's CPU and device resources.
-	NoneTopologyManagerPolicy = "none"
-	// SingleNumaNodeTopologyManagerPolicy is a mode in which kubelet only allows
-	// pods with a single NUMA alignment of CPU and device resources.
-	SingleNumaNodeTopologyManagerPolicy = "single-numa-node"
-	// ContainerTopologyManagerScope represents that
-	// topology policy is applied on a per-container basis.
-	ContainerTopologyManagerScope = "container"
-	// PodTopologyManagerScope represents that
-	// topology policy is applied on a per-pod basis.
-	PodTopologyManagerScope = "pod"
-	// NoneMemoryManagerPolicy is a memory manager none policy, under the none policy
-	// the memory manager will not pin containers memory of guaranteed pods
-	NoneMemoryManagerPolicy = "None"
-	// StaticMemoryManagerPolicy is a memory manager static policy, under the static policy
-	// the memory manager will try to pin containers memory of guaranteed pods to the smallest
-	// possible sub-set of NUMA nodes
-	StaticMemoryManagerPolicy = "Static"
+	GetChangeDetectionStrategy          ResourceChangeDetectionStrategy = "Get"              // kubelet 从 apiserver 直接获取必要的对象.
+	TTLCacheChangeDetectionStrategy     ResourceChangeDetectionStrategy = "Cache"            // kubelet 使用 ttl 缓存来获取从 apiserver 直接获取的对象.
+	WatchChangeDetectionStrategy        ResourceChangeDetectionStrategy = "Watch"            // kubelet 使用 watch 来观察感兴趣的对象的变化.
+	RestrictedTopologyManagerPolicy                                     = "restricted"       // 分配的资源无法正确对齐,它将导致 pod 准入失败
+	BestEffortTopologyManagerPolicy                                     = "best-effort"      // 尝试尽可能地对齐 NUMA 节点上的分配
+	NoneTopologyManagerPolicy                                           = "none"             // 不会尝试进行任何资源调整
+	SingleNumaNodeTopologyManagerPolicy                                 = "single-numa-node" // 只有当所有请求的 CPU 和设备都可以从一个 NUMA 节点分配时,pod 准入才会通过.
+	ContainerTopologyManagerScope                                       = "container"        // 拓扑策略适用于每个容器
+	PodTopologyManagerScope                                             = "pod"              // 拓扑策略适用于每个 Pod.
+	NoneMemoryManagerPolicy                                             = "None"             //
+	StaticMemoryManagerPolicy                                           = "Static"           // 尝试将保证pod的容器内存固定到NUMA节点的最小子集
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

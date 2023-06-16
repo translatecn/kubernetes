@@ -27,16 +27,7 @@ import (
 )
 
 const (
-	// maxAllowableNUMANodes specifies the maximum number of NUMA Nodes that
-	// the TopologyManager supports on the underlying machine.
-	//
-	// At present, having more than this number of NUMA Nodes will result in a
-	// state explosion when trying to enumerate possible NUMAAffinity masks and
-	// generate hints for them. As such, if more NUMA Nodes than this are
-	// present on a machine and the TopologyManager is enabled, an error will
-	// be returned and the TopologyManager will not be loaded.
-	maxAllowableNUMANodes = 8
-	// ErrorTopologyAffinity represents the type for a TopologyAffinityError
+	maxAllowableNUMANodes = 8 // 最多8个CPU,在处理大量NUMA节点时,生成和管理NUMAAffinity掩码的复杂性会显著增加,可能导致性能下降或系统不稳定.
 	ErrorTopologyAffinity = "TopologyAffinityError"
 )
 
@@ -57,7 +48,7 @@ type Manager interface {
 	lifecycle.PodAdmitHandler
 	// AddHintProvider adds a hint provider to ScopeManager to indicate the hint provider
 	// wants to be consulted with when making topology hints
-	AddHintProvider(HintProvider)
+	AddHintProvider(HintProvider) // 向ScopeManager添加一个程序,以指示在创建拓扑提示时要咨询的提示提供程序
 	// AddContainer adds pod to Manager for tracking
 	AddContainer(pod *v1.Pod, container *v1.Container, containerID string) // 从manager 跟踪中添加pod
 	RemoveContainer(containerID string) error                              // 从manager 跟踪中移除pod
@@ -83,10 +74,7 @@ type HintProvider interface {
 	// GetPodTopologyHints returns a map of resource names to a list of possible
 	// concrete resource allocations per Pod in terms of NUMA locality hints.
 	GetPodTopologyHints(pod *v1.Pod) map[string][]TopologyHint
-	// Allocate triggers resource allocation to occur on the HintProvider after
-	// all hints have been gathered and the aggregated Hint is available via a
-	// call to Store.GetAffinity().
-	Allocate(pod *v1.Pod, container *v1.Container) error
+	Allocate(pod *v1.Pod, container *v1.Container) error // 资源分配
 }
 
 // Store interface is to allow Hint Providers to retrieve pod affinity
@@ -126,15 +114,43 @@ func (th *TopologyHint) LessThan(other TopologyHint) bool {
 
 var _ Manager = &ScopeManager{}
 
+func (m *ScopeManager) GetAffinity(podUID string, containerName string) TopologyHint {
+	return m.Scope.GetAffinity(podUID, containerName)
+}
+
+func (m *ScopeManager) GetPolicy() Policy {
+	return m.Scope.GetPolicy()
+}
+
+func (m *ScopeManager) AddHintProvider(h HintProvider) {
+	m.Scope.AddHintProvider(h)
+}
+
+func (m *ScopeManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
+	m.Scope.AddContainer(pod, container, containerID)
+}
+
+func (m *ScopeManager) RemoveContainer(containerID string) error {
+	return m.Scope.RemoveContainer(containerID)
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+func (m *ScopeManager) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
+	klog.InfoS("Topology Admit Handler")
+	pod := attrs.Pod
+
+	return m.Scope.Admit(pod)
+}
 func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topologyScopeName string, topologyPolicyOptions map[string]string) (Manager, error) {
 	klog.InfoS("Creating topology ScopeManager with policy per Scope", "topologyPolicyName", topologyPolicyName, "topologyScopeName", topologyScopeName)
 
-	opts, err := NewPolicyOptions(topologyPolicyOptions)
+	opts, err := NewPolicyOptions(topologyPolicyOptions) // ✅
 	if err != nil {
 		return nil, err
 	}
 
-	numaInfo, err := NewNUMAInfo(topology, opts)
+	numaInfo, err := NewNUMAInfo(topology, opts) // ✅
 	if err != nil {
 		return nil, fmt.Errorf("cannot discover NUMA topology: %w", err)
 	}
@@ -177,31 +193,4 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 	}
 
 	return manager, nil
-}
-
-func (m *ScopeManager) GetAffinity(podUID string, containerName string) TopologyHint {
-	return m.Scope.GetAffinity(podUID, containerName)
-}
-
-func (m *ScopeManager) GetPolicy() Policy {
-	return m.Scope.GetPolicy()
-}
-
-func (m *ScopeManager) AddHintProvider(h HintProvider) {
-	m.Scope.AddHintProvider(h)
-}
-
-func (m *ScopeManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
-	m.Scope.AddContainer(pod, container, containerID)
-}
-
-func (m *ScopeManager) RemoveContainer(containerID string) error {
-	return m.Scope.RemoveContainer(containerID)
-}
-
-func (m *ScopeManager) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
-	klog.InfoS("Topology Admit Handler")
-	pod := attrs.Pod
-
-	return m.Scope.Admit(pod)
 }

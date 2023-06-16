@@ -34,11 +34,11 @@ import (
 
 // 抢占
 
-const message = "为了让关键pod进入，先发制人\n "
+const message = "为了让关键pod进入,先发制人\n "
 
-//在容器编排系统如Kubernetes中，Preemption通常指的是当节点资源不足时，系统可以暂停正在运行的Pod，将其资源分配给更高优先级的Pod，以确保系统的正常运行。
-//Kubernetes中的Preemption通常与Pod的调度器和调度策略一起使用，以确保Pod能够在节点上得到合适的资源，同时最大化节点的利用率。
-//例如，Kubernetes中可以使用Pod的Priority和QoS Class来定义Pod的优先级和资源需求，以便在资源不足时进行Preemption和重新调度。
+//在容器编排系统如Kubernetes中,Preemption通常指的是当节点资源不足时,系统可以暂停正在运行的Pod,将其资源分配给更高优先级的Pod,以确保系统的正常运行.
+//Kubernetes中的Preemption通常与Pod的调度器和调度策略一起使用,以确保Pod能够在节点上得到合适的资源,同时最大化节点的利用率.
+//例如,Kubernetes中可以使用Pod的Priority和QoS Class来定义Pod的优先级和资源需求,以便在资源不足时进行Preemption和重新调度.
 
 // CriticalPodAdmissionHandler is an AdmissionFailureHandler that handles admission failure for Critical Pods.
 // If the ONLY admission failures are due to insufficient resources, then CriticalPodAdmissionHandler evicts pods

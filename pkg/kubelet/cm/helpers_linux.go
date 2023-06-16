@@ -275,15 +275,6 @@ func getCgroupSubsystemsV2() (*CgroupSubsystems, error) {
 	}, nil
 }
 
-// GetCgroupSubsystems returns information about the mounted cgroup subsystems
-func GetCgroupSubsystems() (*CgroupSubsystems, error) {
-	if libcontainercgroups.IsCgroup2UnifiedMode() {
-		return getCgroupSubsystemsV2()
-	}
-
-	return getCgroupSubsystemsV1()
-}
-
 // getCgroupProcs takes a cgroup directory name as an argument
 // reads through the cgroup's procs file and returns a list of tgid's.
 // It returns an empty list if a procs file doesn't exists
@@ -340,4 +331,12 @@ func GetKubeletContainer(kubeletCgroups string) (string, error) {
 		return cont, nil
 	}
 	return kubeletCgroups, nil
+}
+
+// GetCgroupSubsystems returns information about the mounted cgroup subsystems
+func GetCgroupSubsystems() (*CgroupSubsystems, error) {
+	if libcontainercgroups.IsCgroup2UnifiedMode() {
+		return getCgroupSubsystemsV2()
+	}
+	return getCgroupSubsystemsV1()
 }

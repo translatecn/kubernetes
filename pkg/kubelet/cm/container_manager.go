@@ -76,7 +76,7 @@ type ContainerManager interface {
 	GetPluginRegistrationHandler() cache.PluginHandler                                             // 插件注册
 
 	ShouldResetExtendedResourceCapacity() bool                      // 决定扩展资源是否清理
-	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // pod准入控制器
+	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // pod资源准入控制器
 	// GetNodeAllocatableAbsolute returns the absolute value of Node Allocatable which is primarily useful for enforcement.
 	GetNodeAllocatableAbsolute() v1.ResourceMap
 
@@ -99,9 +99,9 @@ type NodeConfig struct {
 	KubeletCgroupsName    string
 	KubeletOOMScoreAdj    int32
 	ContainerRuntime      string
-	CgroupsPerQOS         bool
-	CgroupRoot            string
-	CgroupDriver          string
+	CgroupsPerQOS         bool   // ✅
+	CgroupRoot            string // ✅
+	CgroupDriver          string // ✅
 	KubeletRootDir        string
 	ProtectKernelDefaults bool
 	NodeAllocatableConfig
@@ -114,9 +114,9 @@ type NodeConfig struct {
 	ExperimentalPodPidsLimit                 int64 // 进程数限制
 	EnforceCPULimits                         bool
 	CPUCFSQuotaPeriod                        time.Duration
-	ExperimentalTopologyManagerScope         string            //
-	ExperimentalTopologyManagerPolicy        string            //
-	ExperimentalTopologyManagerPolicyOptions map[string]string //
+	ExperimentalTopologyManagerScope         string            // ✅
+	ExperimentalTopologyManagerPolicy        string            // ✅
+	ExperimentalTopologyManagerPolicyOptions map[string]string // ✅
 }
 
 // NodeAllocatableConfig 存储节点可分配资源的配置信息

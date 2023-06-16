@@ -31,13 +31,13 @@ const (
 
 var (
 	alphaOptions = sets.NewString(
-		PreferClosestNUMANodes,
+		PreferClosestNUMANodes, // 最接近numa节点
 	)
 	betaOptions   = sets.NewString()
 	stableOptions = sets.NewString()
 )
 
-func CheckPolicyOptionAvailable(option string) error {
+func CheckPolicyOptionAvailable(option string) error { // 起码得在一个,且相应的开关得打开
 	if !alphaOptions.Has(option) && !betaOptions.Has(option) && !stableOptions.Has(option) {
 		return fmt.Errorf("unknown Topology Manager Policy option: %q", option)
 	}

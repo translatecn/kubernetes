@@ -54,11 +54,9 @@ type scope struct {
 	name  string
 	// Mapping of a Pods mapping of Containers and their TopologyHints
 	// Indexed by PodUID to ContainerName
-	podTopologyHints podTopologyHints
-	// The list of components registered with the Manager
-	hintProviders []HintProvider
-	// Topology Manager Policy
-	policy Policy
+	podTopologyHints podTopologyHints //
+	hintProviders    []HintProvider   // 注册的一系列资源管理器,cpu、memory、device
+	policy           Policy           // 'none', 'best-effort', 'restricted', 'single-numa-node'
 	// Mapping of (PodUid, ContainerName) to ContainerID for Adding/Removing Pods from PodTopologyHints mapping
 	podMap containermap.ContainerMap
 }
@@ -145,6 +143,9 @@ func (s *scope) admitPolicyNone(pod *v1.Pod) lifecycle.PodAdmitResult {
 // but topologymanager do not track providers anymore
 func (s *scope) allocateAlignedResources(pod *v1.Pod, container *v1.Container) error {
 	for _, provider := range s.hintProviders {
+		//var _ = new(cpumanager.CpuManager).Allocate
+		//var _ = new(memorymanager.MemoryManager).Allocate
+		//var _ = new(devicemanager.ManagerImpl).Allocate
 		err := provider.Allocate(pod, container)
 		if err != nil {
 			return err

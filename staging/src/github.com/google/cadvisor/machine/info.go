@@ -104,7 +104,7 @@ func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.Mach
 		klog.Errorf("Failed to get network devices: %v", err)
 	}
 
-	topology, numCores, err := GetTopology(sysFs) // 拓扑结构
+	topology, numCores, err := GetTopology(sysFs) // ✅ 拓扑结构
 	if err != nil {
 		klog.Errorf("Failed to get topology information: %v", err)
 	}
@@ -132,7 +132,7 @@ func Info(sysFs sysfs.SysFs, fsInfo fs.FsInfo, inHostNamespace bool) (*info.Mach
 		HugePages:        hugePagesInfo,
 		DiskMap:          diskMap,
 		NetworkDevices:   netDevices,
-		Topology:         topology,
+		Topology:         topology, // ✅
 		MachineID:        getInfoFromFiles(filepath.Join(rootFs, *machineIDFilePath)),
 		SystemUUID:       systemUUID,
 		BootID:           getInfoFromFiles(filepath.Join(rootFs, *bootIDFilePath)),

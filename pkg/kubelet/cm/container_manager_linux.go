@@ -182,192 +182,6 @@ func validateSystemRequirements(mountUtil mount.Interface) (features, error) {
 	return f, nil
 }
 
-// NewContainerManager TODO(vmarmol): 为系统容器添加限制
-// 获取指定容器的绝对名称.
-// 空容器名禁用使用指定的容器.
-func NewContainerManager(
-	mountUtil mount.Interface,
-	cadvisorInterface cadvisor.Interface,
-	nodeConfig NodeConfig,
-	failSwapOn bool, // 告诉Kubelet,如果在节点上启用了swap,则启动失败.
-	recorder record.EventRecorder,
-	kubeClient clientset.Interface,
-) (ContainerManager, error) {
-	subsystems, err := GetCgroupSubsystems() // 子系统
-	if err != nil {
-		return nil, fmt.Errorf("failed to get mounted cgroup subsystems: %v", err)
-	}
-
-	if failSwapOn { // swap开启时,kubelet不能运行,检查一下
-		// 检查swap是否开启.Kubelet不支持在启用swap的情况下运行.
-		swapFile := "/proc/swaps"
-		swapData, err := os.ReadFile(swapFile)
-		if err != nil {
-			if os.IsNotExist(err) {
-				klog.InfoS("File does not exist, assuming that swap is disabled", "path", swapFile)
-			} else {
-				return nil, err
-			}
-		} else {
-			swapData = bytes.TrimSpace(swapData) // extra trailing \n
-			swapLines := strings.Split(string(swapData), "\n")
-
-			// If there is more than one line (table headers) in /proc/swaps, swap is enabled and we should
-			// error out unless --fail-swap-on is set to false.
-			if len(swapLines) > 1 {
-				return nil, fmt.Errorf("running with swap on is not supported, please disable swap! or set --fail-swap-on flag to false. /proc/swaps contained: %v", swapLines)
-			}
-		}
-	}
-
-	// 通过cadvisorInterface提供的获取节点信息的方法获取machineInfo,从中获取资源的容量信息,遍历后取值
-	var internalCapacity = v1.ResourceMap{}
-	// It is safe to invoke `MachineInfo` on cAdvisor before logically initializing cAdvisor here because
-	// machine info is computed and cached once as part of cAdvisor object creation.
-	// But `RootFsInfo` and `ImagesFsInfo` are not available at this moment so they will be called later during manager starts
-	machineInfo, err := cadvisorInterface.MachineInfo()
-	if err != nil {
-		return nil, err
-	}
-	capacity := cadvisor.CapacityFromMachineInfo(machineInfo)
-	for k, v := range capacity {
-		internalCapacity[k] = v
-	}
-	pidlimits, err := pidlimit.Stats()
-	if err == nil && pidlimits != nil && pidlimits.MaxPID != nil {
-		internalCapacity[pidlimit.PIDs] = *resource.NewQuantity(
-			int64(*pidlimits.MaxPID),
-			resource.DecimalSI)
-	}
-
-	// Turn CgroupRoot from a string (in cgroupfs path format) to internal CgroupName
-	cgroupRoot := ParseCgroupfsToCgroupName(nodeConfig.CgroupRoot)
-	cgroupManager := NewCgroupManager(subsystems, nodeConfig.CgroupDriver)
-	// Check if Cgroup-root actually exists on the node
-	if nodeConfig.CgroupsPerQOS {
-		// this does default to / when enabled, but this tests against regressions.
-		if nodeConfig.CgroupRoot == "" {
-			return nil, fmt.Errorf("invalid configuration: cgroups-per-qos was specified and cgroup-root was not specified. To enable the QoS cgroup hierarchy you need to specify a valid cgroup-root")
-		}
-
-		// we need to check that the cgroup root actually exists for each subsystem
-		// of note, we always use the cgroupfs driver when performing this check since
-		// the input is provided in that format.
-		// this is important because we do not want any name conversion to occur.
-		if err := cgroupManager.Validate(cgroupRoot); err != nil {
-			return nil, fmt.Errorf("invalid configuration: %w", err)
-		}
-		klog.InfoS("Container manager verified user specified cgroup-root exists", "cgroupRoot", cgroupRoot)
-		// Include the top level cgroup for enforcing node allocatable into cgroup-root.
-		// This way, all sub modules can avoid having to understand the concept of node allocatable.
-		cgroupRoot = NewCgroupName(cgroupRoot, defaultNodeAllocatableCgroupName)
-	}
-	klog.InfoS("Creating Container Manager object based on Node Config", "nodeConfig", nodeConfig)
-
-	qosContainerManager, err := NewQOSContainerManager(subsystems, cgroupRoot, nodeConfig, cgroupManager)
-	if err != nil {
-		return nil, err
-	}
-
-	cm := &ContainerManagerImpl{
-		cadvisorInterface:   cadvisorInterface,
-		mountUtil:           mountUtil,
-		NodeConfig:          nodeConfig,
-		subsystems:          subsystems,
-		cgroupManager:       cgroupManager,
-		capacity:            capacity,
-		internalCapacity:    internalCapacity,
-		cgroupRoot:          cgroupRoot,
-		recorder:            recorder,
-		qosContainerManager: qosContainerManager,
-	}
-
-	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
-		cm.TopologyManager, err = topologymanager.NewManager(
-			machineInfo.Topology,                                // 机器拓扑信息
-			nodeConfig.ExperimentalTopologyManagerPolicy,        // 实验性拓扑管理器策略
-			nodeConfig.ExperimentalTopologyManagerScope,         // 实验性拓扑管理器范围
-			nodeConfig.ExperimentalTopologyManagerPolicyOptions, // 实验性拓扑管理器策略配置
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-	} else {
-		cm.TopologyManager = topologymanager.NewFakeManager()
-	}
-
-	klog.InfoS("Creating device plugin manager")
-	cm.DeviceManager, err = devicemanager.NewManagerImpl(machineInfo.Topology, cm.TopologyManager)
-	if err != nil {
-		return nil, err
-	}
-	cm.TopologyManager.AddHintProvider(cm.DeviceManager)
-
-	// initialize DRA manager
-	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DynamicResourceAllocation) {
-		klog.InfoS("Creating Dynamic Resource Allocation (DRA) manager")
-		cm.draManager, err = dra.NewManagerImpl(kubeClient)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Initialize CPU manager
-	cm.cpuManager, err = cpumanager.NewManager(
-		nodeConfig.CPUManagerPolicy,
-		nodeConfig.CPUManagerPolicyOptions,
-		nodeConfig.CPUManagerReconcilePeriod,
-		machineInfo,
-		nodeConfig.NodeAllocatableConfig.ReservedSystemCPUs,
-		cm.GetNodeAllocatableReservation(), // 资源预留
-		nodeConfig.KubeletRootDir,
-		cm.TopologyManager,
-	)
-	if err != nil {
-		klog.ErrorS(err, "Failed to initialize cpu manager")
-		return nil, err
-	}
-	cm.TopologyManager.AddHintProvider(cm.cpuManager)
-
-	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.MemoryManager) {
-		cm.memoryManager, err = memorymanager.NewManager(
-			nodeConfig.ExperimentalMemoryManagerPolicy,
-			machineInfo,
-			cm.GetNodeAllocatableReservation(),
-			nodeConfig.ExperimentalMemoryManagerReservedMemory,
-			nodeConfig.KubeletRootDir,
-			cm.TopologyManager,
-		)
-		if err != nil {
-			klog.ErrorS(err, "Failed to initialize memory manager")
-			return nil, err
-		}
-		cm.TopologyManager.AddHintProvider(cm.memoryManager)
-	}
-
-	return cm, nil
-}
-
-func (cm *ContainerManagerImpl) NewPodContainerManager() PodContainerManager {
-	if cm.NodeConfig.CgroupsPerQOS {
-		return &podContainerManagerImpl{
-			qosContainersInfo: cm.GetQOSContainersInfo(),
-			subsystems:        cm.subsystems,
-			cgroupManager:     cm.cgroupManager,
-			podPidsLimit:      cm.ExperimentalPodPidsLimit,
-			enforceCPULimits:  cm.EnforceCPULimits,
-			// cpuCFSQuotaPeriod is in microseconds. NodeConfig.CPUCFSQuotaPeriod is time.Duration (measured in nano seconds).
-			// Convert (cm.CPUCFSQuotaPeriod) [nanoseconds] / time.Microsecond (1000) to get cpuCFSQuotaPeriod in microseconds.
-			cpuCFSQuotaPeriod: uint64(cm.CPUCFSQuotaPeriod / time.Microsecond),
-		}
-	}
-	return &podContainerManagerNoop{
-		cgroupRoot: cm.cgroupRoot,
-	}
-}
-
 func (cm *ContainerManagerImpl) InternalContainerLifecycle() InternalContainerLifecycle {
 	return &internalContainerLifecycleImpl{cm.cpuManager, cm.memoryManager, cm.TopologyManager}
 }
@@ -673,14 +487,6 @@ func (cm *ContainerManagerImpl) UpdatePluginResources(node *schedulerframework.N
 	return cm.DeviceManager.UpdatePluginResources(node, attrs)
 }
 
-// GetAllocateResourcesPodAdmitHandler 检查有创建 pod 所需要的资源
-func (cm *ContainerManagerImpl) GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler {
-	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
-		return cm.TopologyManager // 默认开启
-	}
-	return cm.TopologyManager // 默认开启,已修改代码
-}
-
 func (cm *ContainerManagerImpl) SystemCgroupsLimit() v1.ResourceMap {
 	cpuLimit := int64(0)
 
@@ -690,9 +496,7 @@ func (cm *ContainerManagerImpl) SystemCgroupsLimit() v1.ResourceMap {
 	}
 
 	return v1.ResourceMap{
-		v1.ResourceCPU: *resource.NewMilliQuantity(
-			cpuLimit,
-			resource.DecimalSI),
+		v1.ResourceCPU: *resource.NewMilliQuantity(cpuLimit, resource.DecimalSI),
 	}
 }
 
@@ -999,4 +803,198 @@ func (cm *ContainerManagerImpl) PodMightNeedToUnprepareResources(UID types.UID) 
 	}
 
 	return false
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+// GetAllocateResourcesPodAdmitHandler 检查有创建 pod 所需要的资源
+func (cm *ContainerManagerImpl) GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler {
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
+		return cm.TopologyManager // 默认开启
+	}
+	return cm.TopologyManager // 默认开启,已修改代码
+}
+
+// NewContainerManager TODO(vmarmol): 为系统容器添加限制
+// 获取指定容器的绝对名称.
+// 空容器名禁用使用指定的容器.
+func NewContainerManager(
+	mountUtil mount.Interface,
+	cadvisorInterface cadvisor.Interface,
+	nodeConfig NodeConfig,
+	failSwapOn bool, // true 告诉Kubelet,如果在节点上启用了swap,则启动失败.
+	recorder record.EventRecorder,
+	kubeClient clientset.Interface,
+) (ContainerManager, error) {
+	subsystems, err := GetCgroupSubsystems() // 子系统
+	if err != nil {
+		return nil, fmt.Errorf("failed to get mounted cgroup subsystems: %v", err)
+	}
+
+	if failSwapOn {
+		// swap开启时,kubelet不能运行,检查一下
+		// 检查swap是否开启.Kubelet不支持在启用swap的情况下运行.
+		swapFile := "/proc/swaps"
+		swapData, err := os.ReadFile(swapFile)
+		if err != nil {
+			if os.IsNotExist(err) {
+				klog.InfoS("File does not exist, assuming that swap is disabled", "path", swapFile)
+			} else {
+				return nil, err
+			}
+		} else {
+			swapData = bytes.TrimSpace(swapData) // extra trailing \n
+			swapLines := strings.Split(string(swapData), "\n")
+
+			// If there is more than one line (table headers) in /proc/swaps, swap is enabled and we should
+			// error out unless --fail-swap-on is set to false.
+			if len(swapLines) > 1 {
+				return nil, fmt.Errorf("running with swap on is not supported, please disable swap! or set --fail-swap-on flag to false. /proc/swaps contained: %v", swapLines)
+			}
+		}
+	}
+
+	// 通过cadvisorInterface提供的获取节点信息的方法获取machineInfo,从中获取资源的容量信息,遍历后取值
+	var internalCapacity = v1.ResourceMap{}
+	// It is safe to invoke `MachineInfo` on cAdvisor before logically initializing cAdvisor here because
+	// machine info is computed and cached once as part of cAdvisor object creation.
+	// But `RootFsInfo` and `ImagesFsInfo` are not available at this moment so they will be called later during manager starts
+	machineInfo, err := cadvisorInterface.MachineInfo()
+	if err != nil {
+		return nil, err
+	}
+	capacity := cadvisor.CapacityFromMachineInfo(machineInfo)
+	for k, v := range capacity {
+		internalCapacity[k] = v
+	}
+	pidlimits, err := pidlimit.Stats()
+	if err == nil && pidlimits != nil && pidlimits.MaxPID != nil {
+		internalCapacity[pidlimit.PIDs] = *resource.NewQuantity(int64(*pidlimits.MaxPID), resource.DecimalSI)
+	}
+
+	// Turn CgroupRoot from a string (in cgroupfs path format) to internal CgroupName
+	cgroupRoot := ParseCgroupfsToCgroupName(nodeConfig.CgroupRoot)
+	cgroupManager := NewCgroupManager(subsystems, nodeConfig.CgroupDriver)
+	// Check if Cgroup-root actually exists on the node
+	if nodeConfig.CgroupsPerQOS {
+		// this does default to / when enabled, but this tests against regressions.
+		if nodeConfig.CgroupRoot == "" {
+			return nil, fmt.Errorf("invalid configuration: cgroups-per-qos was specified and cgroup-root was not specified. To enable the QoS cgroup hierarchy you need to specify a valid cgroup-root")
+		}
+
+		// we need to check that the cgroup root actually exists for each subsystem
+		// of note, we always use the cgroupfs driver when performing this check since
+		// the input is provided in that format.
+		// this is important because we do not want any name conversion to occur.
+		if err := cgroupManager.Validate(cgroupRoot); err != nil {
+			return nil, fmt.Errorf("invalid configuration: %w", err)
+		}
+		klog.InfoS("Container manager verified user specified cgroup-root exists", "cgroupRoot", cgroupRoot)
+		// Include the top level cgroup for enforcing node allocatable into cgroup-root.
+		// This way, all sub modules can avoid having to understand the concept of node allocatable.
+		cgroupRoot = NewCgroupName(cgroupRoot, defaultNodeAllocatableCgroupName)
+	}
+	klog.InfoS("Creating Container Manager object based on Node Config", "nodeConfig", nodeConfig)
+
+	qosContainerManager, err := NewQOSContainerManager(subsystems, cgroupRoot /* /sys/fs/cgroup/kubepods.slice */, nodeConfig, cgroupManager)
+	if err != nil {
+		return nil, err
+	}
+
+	cm := &ContainerManagerImpl{
+		cadvisorInterface:   cadvisorInterface,
+		mountUtil:           mountUtil,
+		NodeConfig:          nodeConfig,
+		subsystems:          subsystems,
+		cgroupManager:       cgroupManager,
+		capacity:            capacity,
+		internalCapacity:    internalCapacity,
+		cgroupRoot:          cgroupRoot,
+		recorder:            recorder,
+		qosContainerManager: qosContainerManager,
+	}
+
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
+		cm.TopologyManager, err = topologymanager.NewManager(
+			machineInfo.Topology,                                // 机器拓扑信息
+			nodeConfig.ExperimentalTopologyManagerPolicy,        // 实验性拓扑管理器策略
+			nodeConfig.ExperimentalTopologyManagerScope,         // 实验性拓扑管理器范围
+			nodeConfig.ExperimentalTopologyManagerPolicyOptions, // 实验性拓扑管理器策略配置
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		cm.TopologyManager = topologymanager.NewFakeManager()
+	}
+
+	klog.InfoS("Creating device plugin manager")
+	cm.DeviceManager, err = devicemanager.NewManagerImpl(machineInfo.Topology, cm.TopologyManager) // 设备插件服务服务端
+	if err != nil {
+		return nil, err
+	}
+	cm.TopologyManager.AddHintProvider(cm.DeviceManager)
+
+	// initialize DRA manager
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.DynamicResourceAllocation) {
+		klog.InfoS("Creating Dynamic Resource Allocation (DRA) manager")
+		cm.draManager, err = dra.NewManagerImpl(kubeClient)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Initialize CPU manager
+	cm.cpuManager, err = cpumanager.NewManager(
+		nodeConfig.CPUManagerPolicy,
+		nodeConfig.CPUManagerPolicyOptions,
+		nodeConfig.CPUManagerReconcilePeriod,
+		machineInfo,
+		nodeConfig.NodeAllocatableConfig.ReservedSystemCPUs,
+		cm.GetNodeAllocatableReservation(), // 资源预留
+		nodeConfig.KubeletRootDir,          // "/var/lib/kubelet"
+		cm.TopologyManager,
+	)
+	if err != nil {
+		klog.ErrorS(err, "Failed to initialize cpu manager")
+		return nil, err
+	}
+	cm.TopologyManager.AddHintProvider(cm.cpuManager)
+
+	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.MemoryManager) {
+		cm.memoryManager, err = memorymanager.NewManager(
+			nodeConfig.ExperimentalMemoryManagerPolicy,
+			machineInfo,
+			cm.GetNodeAllocatableReservation(),
+			nodeConfig.ExperimentalMemoryManagerReservedMemory,
+			nodeConfig.KubeletRootDir, // "/var/lib/kubelet"
+			cm.TopologyManager,
+		)
+		if err != nil {
+			klog.ErrorS(err, "Failed to initialize memory manager")
+			return nil, err
+		}
+		cm.TopologyManager.AddHintProvider(cm.memoryManager)
+	}
+
+	return cm, nil
+}
+func (cm *ContainerManagerImpl) NewPodContainerManager() PodContainerManager {
+	if cm.NodeConfig.CgroupsPerQOS { // true
+		return &podContainerManagerImpl{
+			qosContainersInfo: cm.GetQOSContainersInfo(),
+			subsystems:        cm.subsystems,
+			cgroupManager:     cm.cgroupManager,
+			podPidsLimit:      cm.ExperimentalPodPidsLimit,
+			enforceCPULimits:  cm.EnforceCPULimits,
+			// cpuCFSQuotaPeriod is in microseconds. NodeConfig.CPUCFSQuotaPeriod is time.Duration (measured in nano seconds).
+			// Convert (cm.CPUCFSQuotaPeriod) [nanoseconds] / time.Microsecond (1000) to get cpuCFSQuotaPeriod in microseconds.
+			cpuCFSQuotaPeriod: uint64(cm.CPUCFSQuotaPeriod / time.Microsecond),
+		}
+	}
+	return &podContainerManagerNoop{
+		cgroupRoot: cm.cgroupRoot,
+	}
 }

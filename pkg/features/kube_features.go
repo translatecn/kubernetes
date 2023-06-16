@@ -364,7 +364,7 @@ const (
 	// GracefulNodeShutdownBasedOnPodPriority owner: @wzshiming
 	// alpha: v1.23
 	// beta:  v1.24
-	// 让kubelet使用基于pod优先级值的关机配置来实现安全关机。
+	// 让kubelet使用基于pod优先级值的关机配置来实现安全关机.
 	GracefulNodeShutdownBasedOnPodPriority featuregate.Feature = "GracefulNodeShutdownBasedOnPodPriority"
 
 	// owner: @arjunrn @mwielgus @josephburnett
@@ -821,25 +821,24 @@ const (
 	// 使资源管理人员能够做出与NUMA一致的决策
 	TopologyManager featuregate.Feature = "TopologyManager"
 
-	// owner: @PiotrProkop
+	// TopologyManagerPolicyAlphaOptions owner: @PiotrProkop
 	// kep: https://kep.k8s.io/3545
 	// alpha: v1.26
 	//
-	// Allow fine-tuning of topology manager policies with alpha options.
-	// This feature gate:
-	// - will guard *a group* of topology manager options whose quality level is alpha.
-	// - will never graduate to beta or stable.
+	// 允许使用alpha选项微调拓扑管理器策略.
+	// 此feature :
+	// -将保护一组质量级别为alpha的拓扑管理器选项.
+	// -永远不会升级到测试版或稳定版
 	TopologyManagerPolicyAlphaOptions featuregate.Feature = "TopologyManagerPolicyAlphaOptions"
 
-	// owner: @PiotrProkop
+	// TopologyManagerPolicyBetaOptions owner: @PiotrProkop
 	// kep: https://kep.k8s.io/3545
 	// alpha: v1.26
 	//
-	// Allow fine-tuning of topology manager policies with beta options.
-	// This feature gate:
-	// - will guard *a group* of topology manager options whose quality level is beta.
-	// - is thus *introduced* as beta
-	// - will never graduate to stable.
+	// 允许使用 beta 选项微调拓扑管理器策略.
+	// 此feature :
+	// -将保护一组质量级别为beta的拓扑管理器选项.
+	// -永远不会升级到测试版或稳定版
 	TopologyManagerPolicyBetaOptions featuregate.Feature = "TopologyManagerPolicyBetaOptions"
 
 	// owner: @PiotrProkop

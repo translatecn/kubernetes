@@ -66,11 +66,11 @@ type Manager interface {
 	AddContainer(p *v1.Pod, c *v1.Container, containerID string)
 
 	// RemoveContainer is called after Kubelet decides to kill or delete a
-	// container. After this call, the CPU manager stops trying to reconcile
+	// container. After this call, the CPU CpuManager stops trying to reconcile
 	// that container and any CPUs dedicated to the container are freed.
 	RemoveContainer(containerID string) error
 
-	// State returns a read-only interface to the internal CPU manager state.
+	// State returns a read-only interface to the internal CPU CpuManager state.
 	State() state.Reader
 
 	// GetTopologyHints implements the topologymanager.HintProvider Interface
@@ -95,7 +95,7 @@ type Manager interface {
 	GetCPUAffinity(podUID, containerName string) cpuset.CPUSet
 }
 
-type manager struct {
+type CpuManager struct {
 	sync.Mutex
 	policy                     Policy                    // CPU 分配策略.
 	reconcilePeriod            time.Duration             // 状态同步的时间间隔.
@@ -113,14 +113,14 @@ type manager struct {
 	pendingAdmissionPod        *v1.Pod                   // 保存在准入阶段 的pod
 }
 
-var _ Manager = &manager{}
+var _ Manager = &CpuManager{}
 
 type sourcesReadyStub struct{}
 
 func (s *sourcesReadyStub) AddSource(source string) {}
 func (s *sourcesReadyStub) AllReady() bool          { return true }
 
-// NewManager creates new cpu manager based on provided policy
+// NewManager creates new cpu CpuManager based on provided policy
 func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconcilePeriod time.Duration, machineInfo *cadvisorapi.MachineInfo, specificCPUs cpuset.CPUSet, nodeAllocatableReservation v1.ResourceMap, stateFileDirectory string, affinity topologymanager.Store) (Manager, error) {
 	var topo *topology.CPUTopology
 	var policy Policy
@@ -168,7 +168,7 @@ func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconc
 		return nil, fmt.Errorf("unknown policy: \"%s\"", cpuPolicyName)
 	}
 
-	manager := &manager{
+	manager := &CpuManager{
 		policy:                     policy,
 		reconcilePeriod:            reconcilePeriod,
 		lastUpdateState:            state.NewMemoryState(),
@@ -180,8 +180,8 @@ func NewManager(cpuPolicyName string, cpuPolicyOptions map[string]string, reconc
 	return manager, nil
 }
 
-func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error {
-	klog.InfoS("Starting CPU manager", "policy", m.policy.Name())
+func (m *CpuManager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error {
+	klog.InfoS("Starting CPU CpuManager", "policy", m.policy.Name())
 	klog.InfoS("Reconciling", "reconcilePeriod", m.reconcilePeriod)
 	m.sourcesReady = sourcesReady
 	m.activePods = activePods
@@ -191,7 +191,7 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 
 	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap) // 保留 cpuset 默认值
 	if err != nil {
-		klog.ErrorS(err, "Could not initialize checkpoint manager, please drain node and remove policy state file")
+		klog.ErrorS(err, "Could not initialize checkpoint CpuManager, please drain node and remove policy state file")
 		return err
 	}
 	m.state = stateImpl
@@ -213,7 +213,7 @@ func (m *manager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesRe
 	return nil
 }
 
-func (m *manager) Allocate(p *v1.Pod, c *v1.Container) error {
+func (m *CpuManager) Allocate(p *v1.Pod, c *v1.Container) error {
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(p)
@@ -234,7 +234,7 @@ func (m *manager) Allocate(p *v1.Pod, c *v1.Container) error {
 	return nil
 }
 
-func (m *manager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
+func (m *CpuManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
 	m.Lock()
 	defer m.Unlock()
 	if cset, exists := m.state.GetCPUSet(string(pod.UID), container.Name); exists {
@@ -243,7 +243,7 @@ func (m *manager) AddContainer(pod *v1.Pod, container *v1.Container, containerID
 	m.containerMap.Add(string(pod.UID), container.Name, containerID)
 }
 
-func (m *manager) RemoveContainer(containerID string) error {
+func (m *CpuManager) RemoveContainer(containerID string) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -256,7 +256,7 @@ func (m *manager) RemoveContainer(containerID string) error {
 	return nil
 }
 
-func (m *manager) policyRemoveContainerByID(containerID string) error {
+func (m *CpuManager) policyRemoveContainerByID(containerID string) error {
 	podUID, containerName, err := m.containerMap.GetContainerRef(containerID)
 	if err != nil {
 		return nil
@@ -271,7 +271,7 @@ func (m *manager) policyRemoveContainerByID(containerID string) error {
 	return err
 }
 
-func (m *manager) policyRemoveContainerByRef(podUID string, containerName string) error {
+func (m *CpuManager) policyRemoveContainerByRef(podUID string, containerName string) error {
 	err := m.policy.RemoveContainer(m.state, podUID, containerName)
 	if err == nil {
 		m.lastUpdateState.Delete(podUID, containerName)
@@ -281,11 +281,11 @@ func (m *manager) policyRemoveContainerByRef(podUID string, containerName string
 	return err
 }
 
-func (m *manager) State() state.Reader {
+func (m *CpuManager) State() state.Reader {
 	return m.state
 }
 
-func (m *manager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
+func (m *CpuManager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
@@ -295,7 +295,7 @@ func (m *manager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[str
 	return m.policy.GetTopologyHints(m.state, pod, container)
 }
 
-func (m *manager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint {
+func (m *CpuManager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint {
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
@@ -305,7 +305,7 @@ func (m *manager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.
 	return m.policy.GetPodTopologyHints(m.state, pod)
 }
 
-func (m *manager) GetAllocatableCPUs() cpuset.CPUSet {
+func (m *CpuManager) GetAllocatableCPUs() cpuset.CPUSet {
 	return m.allocatableCPUs.Clone()
 }
 
@@ -315,7 +315,7 @@ type reconciledContainer struct {
 	containerID   string
 }
 
-func (m *manager) removeStaleState() {
+func (m *CpuManager) removeStaleState() {
 	// Only once all sources are ready do we attempt to remove any stale state.
 	// This ensures that the call to `m.activePods()` below will succeed with
 	// the actual active pods list.
@@ -373,7 +373,7 @@ func (m *manager) removeStaleState() {
 
 // 这句话的意思是继续保持所有 pod 的 CPU 集合与它们之间分配的 CPU 保持同步,并保证它们之间的 CPU 分配是正确的.
 // 这可能是与 CPU 分配和拓扑有关的功能,它确保每个 pod 分配到的 CPU 是正确的,并且 pod 之间的 CPU 分配没有冲突.
-func (m *manager) reconcileState() (success []reconciledContainer, failure []reconciledContainer) {
+func (m *CpuManager) reconcileState() (success []reconciledContainer, failure []reconciledContainer) {
 	ctx := context.Background()
 	success = []reconciledContainer{}
 	failure = []reconciledContainer{}
@@ -482,7 +482,7 @@ func findContainerStatusByName(status *v1.PodStatus, name string) (*v1.Container
 	return nil, fmt.Errorf("unable to find status for container with name %v in pod status (it may not be running)", name)
 }
 
-func (m *manager) updateContainerCPUSet(ctx context.Context, containerID string, cpus cpuset.CPUSet) error {
+func (m *CpuManager) updateContainerCPUSet(ctx context.Context, containerID string, cpus cpuset.CPUSet) error {
 	// TODO: Consider adding a `ResourceConfigForContainer` helper in
 	// helpers_linux.go similar to what exists for pods.
 	// It would be better to pass the full container resources here instead of
@@ -497,7 +497,7 @@ func (m *manager) updateContainerCPUSet(ctx context.Context, containerID string,
 		})
 }
 
-func (m *manager) GetExclusiveCPUs(podUID, containerName string) cpuset.CPUSet {
+func (m *CpuManager) GetExclusiveCPUs(podUID, containerName string) cpuset.CPUSet {
 	if result, ok := m.state.GetCPUSet(podUID, containerName); ok {
 		return result
 	}
@@ -505,11 +505,11 @@ func (m *manager) GetExclusiveCPUs(podUID, containerName string) cpuset.CPUSet {
 	return cpuset.CPUSet{}
 }
 
-func (m *manager) GetCPUAffinity(podUID, containerName string) cpuset.CPUSet {
+func (m *CpuManager) GetCPUAffinity(podUID, containerName string) cpuset.CPUSet {
 	return m.state.GetCPUSetOrDefault(podUID, containerName)
 }
 
-func (m *manager) setPodPendingAdmission(pod *v1.Pod) {
+func (m *CpuManager) setPodPendingAdmission(pod *v1.Pod) {
 	m.Lock()
 	defer m.Unlock()
 

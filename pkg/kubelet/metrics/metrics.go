@@ -502,7 +502,7 @@ var (
 		&metrics.GaugeOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           "graceful_shutdown_start_time_seconds",
-			Help:           "Last graceful shutdown start time since unix epoch in seconds",
+			Help:           "最后一次正常关机开始时间(以秒为单位)",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)

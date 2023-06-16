@@ -62,7 +62,7 @@ type NodeStats struct {
 // RlimitStats are stats rlimit of OS.
 type RlimitStats struct {
 	Time                  metav1.Time `json:"time"`              // 这些统计信息的更新时间.
-	MaxPID                *int64      `json:"maxpid,omitempty"`  //操作系统中可用的最大进程数（在Linux上是线程数）,参见getrlimit(2)中的RLIMIT_NPROC.操作系统的进程ID数量上限.
+	MaxPID                *int64      `json:"maxpid,omitempty"`  // 操作系统中可用的最大进程数（在Linux上是线程数）,参见getrlimit(2)中的RLIMIT_NPROC.操作系统的进程ID数量上限.
 	NumOfRunningProcesses *int64      `json:"curproc,omitempty"` // 操作系统中正在运行的进程数（在Linux上是线程数）.
 }
 

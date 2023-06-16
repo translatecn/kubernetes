@@ -44,7 +44,7 @@ type staticPolicy struct {
 	machineInfo *cadvisorapi.MachineInfo
 	// reserved contains memory that reserved for kube
 	systemReserved systemReservedMemory
-	// topology manager reference to get container Topology affinity
+	// topology MemoryManager reference to get container Topology affinity
 	affinity topologymanager.Store
 	// initContainersReusableMemory contains the memory allocated for init containers that can be reused
 	initContainersReusableMemory reusableMemory
@@ -114,8 +114,8 @@ func (p *staticPolicy) Allocate(s state.State, pod *v1.Pod, container *v1.Contai
 
 	machineState := s.GetMachineState()
 	bestHint := &hint
-	// topology manager returned the hint with NUMA affinity nil
-	// we should use the default NUMA affinity calculated the same way as for the topology manager
+	// topology MemoryManager returned the hint with NUMA affinity nil
+	// we should use the default NUMA affinity calculated the same way as for the topology MemoryManager
 	if hint.NUMANodeAffinity == nil {
 		defaultHint, err := p.getDefaultHint(machineState, pod, requestedResources)
 		if err != nil {
@@ -128,7 +128,7 @@ func (p *staticPolicy) Allocate(s state.State, pod *v1.Pod, container *v1.Contai
 		bestHint = defaultHint
 	}
 
-	// topology manager returns the hint that does not satisfy completely the container request
+	// topology MemoryManager returns the hint that does not satisfy completely the container request
 	// we should extend this hint to the one who will satisfy the request and include the current hint
 	if !isAffinitySatisfyRequest(machineState, bestHint.NUMANodeAffinity, requestedResources) {
 		extendedHint, err := p.extendTopologyManagerHint(machineState, pod, requestedResources, bestHint.NUMANodeAffinity)
@@ -745,9 +745,9 @@ func isAffinitySatisfyRequest(machineState state.NUMANodeMap, mask bitmask.BitMa
 	return true
 }
 
-// extendTopologyManagerHint extends the topology manager hint, in case when it does not satisfy to the container request
-// the topology manager uses bitwise AND to merge all topology hints into the best one, so in case of the restricted policy,
-// it possible that we will get the subset of hint that we provided to the topology manager, in this case we want to extend
+// extendTopologyManagerHint extends the topology MemoryManager hint, in case when it does not satisfy to the container request
+// the topology MemoryManager uses bitwise AND to merge all topology hints into the best one, so in case of the restricted policy,
+// it possible that we will get the subset of hint that we provided to the topology MemoryManager, in this case we want to extend
 // it to the original one
 func (p *staticPolicy) extendTopologyManagerHint(machineState state.NUMANodeMap, pod *v1.Pod, requestedResources map[v1.ResourceName]uint64, mask bitmask.BitMask) (*topologymanager.TopologyHint, error) {
 	hints := p.calculateHints(machineState, pod, requestedResources)

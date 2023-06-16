@@ -121,9 +121,9 @@ func NewStaticPolicyOptions(policyOptions map[string]string) (StaticPolicyOption
 // ValidateStaticPolicyOptions ensures that the requested policy options are compatible with the machine on which the CPUManager is running.
 func ValidateStaticPolicyOptions(opts StaticPolicyOptions, topology *topology.CPUTopology, topologyManager topologymanager.Store) error {
 	if opts.AlignBySocket {
-		// Not compatible with topology manager single-numa-node policy option.
+		// Not compatible with topology CpuManager single-numa-node policy option.
 		if topologyManager.GetPolicy().Name() == topologymanager.PolicySingleNumaNode {
-			return fmt.Errorf("Topolgy manager %s policy is incompatible with CPUManager %s policy option", topologymanager.PolicySingleNumaNode, AlignBySocketOption)
+			return fmt.Errorf("Topolgy CpuManager %s policy is incompatible with CPUManager %s policy option", topologymanager.PolicySingleNumaNode, AlignBySocketOption)
 		}
 		// Not compatible with topology when number of sockets are more than number of NUMA nodes.
 		if topology.NumSockets > topology.NumNUMANodes {

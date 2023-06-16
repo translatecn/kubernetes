@@ -186,9 +186,8 @@ type KubeletConfiguration struct { // --config
 	// for no container. Rolling back the flag requires a reboot.
 	SystemCgroups string
 	CgroupRoot    string // CgroupRoot是用于pod的根cgroup如果启用了CgroupsPerQOS,则这是QoS cgroup层次结构的根.
-	CgroupsPerQOS bool   // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup,所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下.
-	// driver that the kubelet uses to manipulate cgroups on the host (cgroupfs or systemd)
-	CgroupDriver string
+	CgroupsPerQOS bool   // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup,所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下.   默认true
+	CgroupDriver  string // kubelet用来在主机上操作cgroups的驱动程序(cgroupfs或systemd)
 	// CPUManagerPolicy is the name of the policy to use.
 	// Requires the CPUManager feature gate to be enabled.
 	CPUManagerPolicy string
@@ -287,7 +286,7 @@ type KubeletConfiguration struct { // --config
 	// features. This field modifies piecemeal the built-in default values from
 	// "k8s.io/kubernetes/pkg/features/kube_features.go".
 	FeatureGates map[string]bool
-	FailSwapOn   bool // 告诉Kubelet,如果在节点上启用了swap,则启动失败.
+	FailSwapOn   bool // 告诉Kubelet,如果在节点上启用了swap,则启动失败.默认为true
 	// memorySwap configures swap memory available to container workloads.
 	// +featureGate=NodeSwap
 	// +optional
