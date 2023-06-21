@@ -30,16 +30,15 @@ type DeviceManagerCheckpoint interface {
 	GetDataInLatestFormat() ([]PodDevicesEntry, map[string][]string)
 }
 
-// DevicesPerNUMA represents device ids obtained from device plugin per NUMA node id
-type DevicesPerNUMA map[int64][]string
+type DevicesPerNUMA map[int64][]string // 表示从设备插件获取的每个NUMA节点ID的设备ID。
 
 // PodDevicesEntry connects pod information to devices
 type PodDevicesEntry struct {
 	PodUID        string
 	ContainerName string
 	ResourceName  string
-	DeviceIDs     DevicesPerNUMA
-	AllocResp     []byte
+	DeviceIDs     DevicesPerNUMA // 表示分配给该Pod和容器的设备ID。它是一个映射，将每个NUMA节点与相应的设备ID列表关联起来。
+	AllocResp     []byte         // 表示与设备分配相关的响应信息的字节数组。
 }
 
 // checkpointData struct is used to store pod to device allocation information
@@ -59,17 +58,6 @@ type Data struct {
 // NewDevicesPerNUMA is a function that creates DevicesPerNUMA map
 func NewDevicesPerNUMA() DevicesPerNUMA {
 	return make(DevicesPerNUMA)
-}
-
-// Devices is a function that returns all device ids for all NUMA nodes
-// and represent it as sets.String
-func (dev DevicesPerNUMA) Devices() sets.String {
-	result := sets.NewString()
-
-	for _, devs := range dev {
-		result.Insert(devs...)
-	}
-	return result
 }
 
 // New returns an instance of Checkpoint - must be an alias for the most recent version
@@ -106,4 +94,15 @@ func (cp *Data) VerifyChecksum() error {
 // checkpoint format, *not* in the original format stored on disk.
 func (cp *Data) GetDataInLatestFormat() ([]PodDevicesEntry, map[string][]string) {
 	return cp.Data.PodDeviceEntries, cp.Data.RegisteredDevices
+}
+
+// Devices is a function that returns all device ids for all NUMA nodes
+// and represent it as sets.String
+func (dev DevicesPerNUMA) Devices() sets.String {
+	result := sets.NewString()
+
+	for _, devs := range dev {
+		result.Insert(devs...)
+	}
+	return result
 }

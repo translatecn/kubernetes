@@ -55,44 +55,23 @@ type ActivePodsFunc func() []*v1.Pod
 type ManagerImpl struct {
 	checkpointdir string
 
-	endpoints map[string]endpointInfo // Key is ResourceName
-	mutex     sync.Mutex
-
-	server plugin.Server
-
-	// activePods is a method for listing active pods on the node
-	// so the amount of pluginResources requested by existing pods
-	// could be counted when updating allocated devices
-	activePods ActivePodsFunc
-
-	// sourcesReady provides the readiness of kubelet configuration sources such as apiserver update readiness.
-	// We use it to determine when we can purge inactive pods from checkpointed state.
-	sourcesReady config.SourcesReady
-
-	// allDevices holds all the devices currently registered to the device manager
-	allDevices ResourceDeviceInstances
-
-	// healthyDevices contains all of the registered healthy resourceNames and their exported device IDs.
-	healthyDevices map[string]sets.String
+	endpoints      map[string]endpointInfo // Key is ResourceName
+	mutex          sync.Mutex              //
+	server         plugin.Server
+	activePods     ActivePodsFunc          //
+	sourcesReady   config.SourcesReady     // kubelet配置源的就绪状态,确定何时可以从检查点状态中清除不活动的Pod
+	allDevices     ResourceDeviceInstances // 保存当前注册到设备管理器的所有设备
+	healthyDevices map[string]sets.String  // 包含所有已注册的健康资源名称及其导出的设备id。
 
 	// unhealthyDevices contains all of the unhealthy devices and their exported device IDs.
-	unhealthyDevices  map[string]sets.String
-	allocatedDevices  map[string]sets.String // 可分配的资源  ,key:resourceName
-	podDevices        *podDevices            // 包含pod到已分配设备的映射.
-	checkpointManager checkpointmanager.CheckpointManager
-
-	// List of NUMA Nodes available on the underlying machine
-	numaNodes []int
-
-	// Store of Topology Affinties that the Device Manager can query.
-	topologyAffinityStore topologymanager.Store
-
-	// devicesToReuse contains devices that can be reused as they have been allocated to
-	// init containers.
-	devicesToReuse PodReusableDevices
-
-	// pendingAdmissionPod contain the pod during the admission phase
-	pendingAdmissionPod *v1.Pod
+	unhealthyDevices      map[string]sets.String              //
+	allocatedDevices      map[string]sets.String              // 已经使用的设备  ,key:resourceName
+	podDevices            *podDevices                         // 包含pod到已分配设备的映射.
+	checkpointManager     checkpointmanager.CheckpointManager //
+	numaNodes             []int                               // 物理CPU 序号
+	topologyAffinityStore topologymanager.Store               // 设备管理器可以查询的拓扑亲和性的存储。
+	devicesToReuse        PodReusableDevices                  // 包含可以重用的设备，因为它们已分配给初始化容器。
+	pendingAdmissionPod   *v1.Pod                             // 当前在准入阶段的pod
 }
 
 type endpointInfo struct {
@@ -107,48 +86,6 @@ type PodReusableDevices map[string]map[string]sets.String
 
 func (s *sourcesReadyStub) AddSource(source string) {}
 func (s *sourcesReadyStub) AllReady() bool          { return true }
-
-func newManagerImpl(socketPath string, topology []cadvisorapi.Node, topologyAffinityStore topologymanager.Store) (*ManagerImpl, error) {
-	klog.V(2).InfoS("Creating Device Plugin manager", "path", socketPath)
-
-	var numaNodes []int
-	for _, node := range topology {
-		numaNodes = append(numaNodes, node.Id)
-	}
-
-	manager := &ManagerImpl{
-		endpoints: make(map[string]endpointInfo),
-
-		allDevices:            NewResourceDeviceInstances(),
-		healthyDevices:        make(map[string]sets.String),
-		unhealthyDevices:      make(map[string]sets.String),
-		allocatedDevices:      make(map[string]sets.String),
-		podDevices:            newPodDevices(),
-		numaNodes:             numaNodes,
-		topologyAffinityStore: topologyAffinityStore,
-		devicesToReuse:        make(PodReusableDevices),
-	}
-
-	server, err := plugin.NewServer(socketPath, manager, manager)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create plugin server: %v", err)
-	}
-
-	manager.server = server
-	manager.checkpointdir, _ = filepath.Split(server.SocketPath())
-
-	// The following structures are populated with real implementations in manager.Start()
-	// Before that, initializes them to perform no-op operations.
-	manager.activePods = func() []*v1.Pod { return []*v1.Pod{} }
-	manager.sourcesReady = &sourcesReadyStub{}
-	checkpointManager, err := checkpointmanager.NewCheckpointManager(manager.checkpointdir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize checkpoint manager: %v", err)
-	}
-	manager.checkpointManager = checkpointManager
-
-	return manager, nil
-}
 
 // CleanupPluginDirectory is to remove all existing unix sockets
 // from /var/lib/kubelet/device-plugins on Device Plugin Manager start
@@ -284,41 +221,6 @@ func (m *ManagerImpl) Start(activePods ActivePodsFunc, sourcesReady config.Sourc
 // without a prior Start.
 func (m *ManagerImpl) Stop() error {
 	return m.server.Stop()
-}
-
-// Allocate is the call that you can use to allocate a set of devices
-// from the registered device plugins.
-func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
-	// The pod is during the admission phase. We need to save the pod to avoid it
-	// being cleaned before the admission ended
-	m.setPodPendingAdmission(pod)
-
-	if _, ok := m.devicesToReuse[string(pod.UID)]; !ok {
-		m.devicesToReuse[string(pod.UID)] = make(map[string]sets.String)
-	}
-	// If pod entries to m.devicesToReuse other than the current pod exist, delete them.
-	for podUID := range m.devicesToReuse {
-		if podUID != string(pod.UID) {
-			delete(m.devicesToReuse, podUID)
-		}
-	}
-	// Allocate resources for init containers first as we know the caller always loops
-	// through init containers before looping through app containers. Should the caller
-	// ever change those semantics, this logic will need to be amended.
-	for _, initContainer := range pod.Spec.InitContainers {
-		if container.Name == initContainer.Name {
-			if err := m.allocateContainerResources(pod, container, m.devicesToReuse[string(pod.UID)]); err != nil {
-				return err
-			}
-			m.podDevices.addContainerAllocatedResources(string(pod.UID), container.Name, m.devicesToReuse[string(pod.UID)])
-			return nil
-		}
-	}
-	if err := m.allocateContainerResources(pod, container, m.devicesToReuse[string(pod.UID)]); err != nil {
-		return err
-	}
-	m.podDevices.removeContainerAllocatedResources(string(pod.UID), container.Name, m.devicesToReuse[string(pod.UID)])
-	return nil
 }
 
 // UpdatePluginResources 基于已经分配给pod的设备信息 更新节点资源.
@@ -485,47 +387,21 @@ func (m *ManagerImpl) getCheckpointV1() (checkpoint.DeviceManagerCheckpoint, err
 	return cp, err
 }
 
-// UpdateAllocatedDevices frees any Devices that are bound to terminated pods.
-func (m *ManagerImpl) UpdateAllocatedDevices() {
-	if !m.sourcesReady.AllReady() {
-		return
-	}
-
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	activeAndAdmittedPods := m.activePods()
-	if m.pendingAdmissionPod != nil {
-		activeAndAdmittedPods = append(activeAndAdmittedPods, m.pendingAdmissionPod)
-	}
-
-	podsToBeRemoved := m.podDevices.pods()
-	for _, pod := range activeAndAdmittedPods {
-		podsToBeRemoved.Delete(string(pod.UID))
-	}
-	if len(podsToBeRemoved) <= 0 {
-		return
-	}
-	klog.V(3).InfoS("Pods to be removed", "podUIDs", podsToBeRemoved.List())
-	m.podDevices.delete(podsToBeRemoved.List())
-	// Regenerated allocatedDevices after we update pod allocation information.
-	m.allocatedDevices = m.podDevices.devices()
-}
-
-// Returns list of device Ids we need to allocate with Allocate rpc call.
-// Returns empty list in case we don't need to issue the Allocate rpc call.
+// 确定是否需要通过Allocate rpc调用来分配设备资源。
+// 如果需要分配设备资源，则返回需要分配的设备ID列表。
+// 如果不需要分配设备资源，则返回空列表，表示不需要发出Allocate rpc调用。
+// 这可以用于优化资源分配的效率，避免不必要的Allocate rpc调用。
 func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, required int, reusableDevices sets.String) (sets.String, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	needed := required
 	// Gets list of devices that have already been allocated.
 	// This can happen if a container restarts for example.
-	devices := m.podDevices.containerDevices(podUID, contName, resource)
+	devices := m.podDevices.containerDevices(podUID, contName, resource) // 同一种资源可能有多个设备  p4
 	if devices != nil {
 		klog.V(3).InfoS("Found pre-allocated devices for resource on pod", "resourceName", resource, "containerName", contName, "podUID", string(podUID), "devices", devices.List())
 		needed = needed - devices.Len()
-		// A pod's resource is not expected to change once admitted by the API server,
-		// so just fail loudly here. We can revisit this part if this no longer holds.
+		// 在API服务器接受Pod后，不希望Pod的资源发生更改。如果发生了更改，代码会直接失败并抛出错误。这是基于一个假设，即一旦Pod被接受，其资源应该是不可更改的。如果这个假设不再成立，可能需要重新审视代码的这部分逻辑。
 		if needed != 0 {
 			return nil, fmt.Errorf("pod %q container %q changed request for resource %q from %d to %d", string(podUID), contName, resource, devices.Len(), required)
 		}
@@ -539,15 +415,12 @@ func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, requi
 	if _, ok := m.healthyDevices[resource]; !ok {
 		return nil, fmt.Errorf("can't allocate unregistered device %s", resource)
 	}
-
-	// Declare the list of allocated devices.
-	// This will be populated and returned below.
+	// 已分配的设备列表
 	allocated := sets.NewString()
 
-	// Create a closure to help with device allocation
-	// Returns 'true' once no more devices need to be allocated.
 	allocateRemainingFrom := func(devices sets.String) bool {
-		for device := range devices.Difference(allocated) {
+		//在不再需要分配设备时返回true。这个闭包函数可能会用于在设备分配过程中判断是否还需要继续分配设备。
+		for device := range devices.Difference(allocated) { // devices-allocated
 			m.allocatedDevices[resource].Insert(device)
 			allocated.Insert(device)
 			needed--
@@ -563,20 +436,21 @@ func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, requi
 		m.allocatedDevices[resource] = sets.NewString()
 	}
 
-	// Allocates from reusableDevices list first.
+	// Allocates from reusableDevices list first.container
+	// 判断临时容器 的资源 够不够让container 复用
 	if allocateRemainingFrom(reusableDevices) {
 		return allocated, nil
 	}
 
 	// Gets Devices in use.
-	devicesInUse := m.allocatedDevices[resource]
+	devicesInUse := m.allocatedDevices[resource] // 已经使用的设备
 	// Gets Available devices.
-	available := m.healthyDevices[resource].Difference(devicesInUse)
+	available := m.healthyDevices[resource].Difference(devicesInUse) // 健康的，没有在使用的资源
 	if available.Len() < needed {
 		return nil, fmt.Errorf("requested number of devices unavailable for %s. Requested: %d, Available: %d", resource, needed, available.Len())
 	}
 
-	// Filters available Devices based on NUMA affinity.
+	// 根据NUMA亲和性进行设备筛选的操作。在设备分配过程中，可能会根据NUMA节点的亲和性来选择合适的设备。通过筛选可用的设备，可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点，以提高性能和效率。
 	aligned, unaligned, noAffinity := m.filterByAffinity(podUID, contName, resource, available)
 
 	// If we can allocate all remaining devices from the set of aligned ones, then
@@ -629,17 +503,15 @@ func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, requi
 	return nil, fmt.Errorf("unexpectedly allocated less resources than required. Requested: %d, Got: %d", required, required-needed)
 }
 
-func (m *ManagerImpl) filterByAffinity(podUID, contName, resource string, available sets.String) (sets.String, sets.String, sets.String) {
-	// If alignment information is not available, just pass the available list back.
+// 根据NUMA亲和性进行设备筛选的操作。在设备分配过程中，可能会根据NUMA节点的亲和性来选择合适的设备。通过筛选可用的设备，可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点，以提高性能和效率。
+func (m *ManagerImpl) filterByAffinity(podUID, contName, resource string, available sets.String) (aligned, unaligned, noAffinity sets.String) {
+	// 如果没有可用的对齐信息，那么就直接将可用的设备列表返回。
 	hint := m.topologyAffinityStore.GetAffinity(podUID, contName)
 	if !m.deviceHasTopologyAlignment(resource) || hint.NUMANodeAffinity == nil {
 		return sets.NewString(), sets.NewString(), available
 	}
-
-	// Build a map of NUMA Nodes to the devices associated with them. A
-	// device may be associated to multiple NUMA nodes at the same time. If an
-	// available device does not have any NUMA Nodes associated with it, add it
-	// to a list of NUMA Nodes for the fake NUMANode -1.
+	// 建立NUMA节点到与其相关联的设备的映射。一个设备可以同时关联多个NUMA节点。
+	// 如果一个可用的设备没有任何NUMA节点与它相关联，将它添加到一个NUMA节点列表中，为假的NUMANode -1。
 	perNodeDevices := make(map[int]sets.String)
 	for d := range available {
 		if m.allDevices[resource][d].Topology == nil || len(m.allDevices[resource][d].Topology.Nodes) == 0 {
@@ -726,19 +598,14 @@ func (m *ManagerImpl) filterByAffinity(podUID, contName, resource string, availa
 	return sets.NewString(fromAffinity...), sets.NewString(notFromAffinity...), sets.NewString(withoutTopology...)
 }
 
-// allocateContainerResources attempts to allocate all of required device
-// plugin resources for the input container, issues an Allocate rpc request
-// for each new device resource requirement, processes their AllocateResponses,
-// and updates the cached containerDevices on success.
+// allocateContainerResources 尝试为输入容器分配所有所需的设备插件资源，为每个新的设备资源需求发出一个allocate rpc请求，处理它们的 allocater responses，并在成功时更新缓存的containerDevices。
 func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Container, devicesToReuse map[string]sets.String) error {
 	podUID := string(pod.UID)
 	contName := container.Name
 	allocatedDevicesUpdated := false
 	needsUpdateCheckpoint := false
-	// Extended resources are not allowed to be overcommitted.
-	// Since device plugin advertises extended resources,
-	// therefore Requests must be equal to Limits and iterating
-	// over the Limits should be sufficient.
+	// 确保在资源调度过程中，扩展资源的使用不会超过其限制。它假设设备插件会提供有关扩展资源的信息，包括请求(Requests)和限制(Limits)。
+	// 通过迭代限制列表，可以检查每个扩展资源的请求和限制是否相等，以确保资源的正确分配和使用。
 	for k, v := range container.Resources.Limits {
 		resource := string(k)
 		needed := int(v.Value())
@@ -746,10 +613,9 @@ func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Cont
 		if !m.isDevicePluginResource(resource) {
 			continue
 		}
-		// Updates allocatedDevices to garbage collect any stranded resources
-		// before doing the device plugin allocation.
+		// 更新allocatedDevices，以便在进行设备插件分配之前对任何搁浅的资源进行垃圾收集。
 		if !allocatedDevicesUpdated {
-			m.UpdateAllocatedDevices()
+			m.UpdateAllocatedDevices() // ✅
 			allocatedDevicesUpdated = true
 		}
 		allocDevices, err := m.devicesToAllocate(podUID, contName, resource, needed, devicesToReuse[resource])
@@ -967,19 +833,6 @@ func (m *ManagerImpl) sanitizeNodeAllocatable(node *schedulerframework.NodeInfo)
 	}
 }
 
-func (m *ManagerImpl) isDevicePluginResource(resource string) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	_, registeredResource := m.healthyDevices[resource]
-	_, allocatedResource := m.allocatedDevices[resource]
-	// Return true if this is either an active device plugin resource or
-	// a resource we have previously allocated.
-	if registeredResource || allocatedResource {
-		return true
-	}
-	return false
-}
-
 // GetAllocatableDevices returns information about all the healthy devices known to the manager
 func (m *ManagerImpl) GetAllocatableDevices() ResourceDeviceInstances {
 	m.mutex.Lock()
@@ -1019,4 +872,115 @@ func NewManagerImpl(topology []cadvisorapi.Node, topologyAffinityStore topologym
 		socketPath = os.Getenv("SYSTEMDRIVE") + pluginapi.KubeletSocketWindows
 	}
 	return newManagerImpl(socketPath, topology, topologyAffinityStore)
+}
+
+func newManagerImpl(socketPath string, topology []cadvisorapi.Node, topologyAffinityStore topologymanager.Store) (*ManagerImpl, error) {
+	klog.V(2).InfoS("Creating Device Plugin manager", "path", socketPath)
+
+	var numaNodes []int
+	for _, node := range topology {
+		numaNodes = append(numaNodes, node.Id)
+	}
+
+	manager := &ManagerImpl{
+		endpoints: make(map[string]endpointInfo),
+
+		allDevices:            NewResourceDeviceInstances(),
+		healthyDevices:        make(map[string]sets.String),
+		unhealthyDevices:      make(map[string]sets.String),
+		allocatedDevices:      make(map[string]sets.String),
+		podDevices:            newPodDevices(),
+		numaNodes:             numaNodes,
+		topologyAffinityStore: topologyAffinityStore,
+		devicesToReuse:        make(PodReusableDevices),
+	}
+
+	server, err := plugin.NewServer(socketPath, manager, manager)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create plugin server: %v", err)
+	}
+
+	manager.server = server
+	manager.checkpointdir, _ = filepath.Split(server.SocketPath())
+
+	// The following structures are populated with real implementations in manager.Start()
+	// Before that, initializes them to perform no-op operations.
+	manager.activePods = func() []*v1.Pod { return []*v1.Pod{} }
+	manager.sourcesReady = &sourcesReadyStub{}
+	checkpointManager, err := checkpointmanager.NewCheckpointManager(manager.checkpointdir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize checkpoint manager: %v", err)
+	}
+	manager.checkpointManager = checkpointManager
+
+	return manager, nil
+}
+
+// Allocate 分配已注册插件的资源
+func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
+	// pod 在准入阶段，应该先保存它，避免在结束前 丢失数据
+	m.setPodPendingAdmission(pod)
+
+	if _, ok := m.devicesToReuse[string(pod.UID)]; !ok {
+		m.devicesToReuse[string(pod.UID)] = make(map[string]sets.String)
+	}
+	// 如果m.devicesToReuse中存在当前pod以外的pod条目，请删除它们。
+	for podUID := range m.devicesToReuse {
+		if podUID != string(pod.UID) {
+			delete(m.devicesToReuse, podUID)
+		}
+	}
+	//首先为init容器分配资源，因为我们知道调用者总是在遍历应用程序容器之前循环遍历init容器。如果调用者更改了这些语义，则需要修改此逻辑。
+	for _, initContainer := range pod.Spec.InitContainers {
+		if container.Name == initContainer.Name {
+			if err := m.allocateContainerResources(pod, container, m.devicesToReuse[string(pod.UID)]); err != nil {
+				return err
+			}
+			m.podDevices.addContainerAllocatedResources(string(pod.UID), container.Name, m.devicesToReuse[string(pod.UID)])
+			return nil
+		}
+	}
+	if err := m.allocateContainerResources(pod, container, m.devicesToReuse[string(pod.UID)]); err != nil {
+		return err
+	}
+	m.podDevices.removeContainerAllocatedResources(string(pod.UID), container.Name, m.devicesToReuse[string(pod.UID)])
+	return nil
+}
+func (m *ManagerImpl) isDevicePluginResource(resource string) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	_, registeredResource := m.healthyDevices[resource]
+	_, allocatedResource := m.allocatedDevices[resource]
+	// Return true if this is either an active device plugin resource or
+	// a resource we have previously allocated.
+	if registeredResource || allocatedResource {
+		return true
+	}
+	return false
+}
+
+// UpdateAllocatedDevices 释放任何绑定到终止pod的设备。
+func (m *ManagerImpl) UpdateAllocatedDevices() {
+	if !m.sourcesReady.AllReady() { // kubelet配置源的就绪状态
+		return
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	activeAndAdmittedPods := m.activePods()
+	if m.pendingAdmissionPod != nil {
+		activeAndAdmittedPods = append(activeAndAdmittedPods, m.pendingAdmissionPod)
+	}
+
+	podsToBeRemoved := m.podDevices.pods()
+	for _, pod := range activeAndAdmittedPods {
+		podsToBeRemoved.Delete(string(pod.UID))
+	}
+	if len(podsToBeRemoved) <= 0 {
+		return
+	}
+	klog.V(3).InfoS("Pods to be removed", "podUIDs", podsToBeRemoved.List())
+	m.podDevices.delete(podsToBeRemoved.List()) // 移除不存在的pod占用的设备
+	m.allocatedDevices = m.podDevices.devices() // 在更新了Pod的分配信息之后，重新生成已分配设备
 }

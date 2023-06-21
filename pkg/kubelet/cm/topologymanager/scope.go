@@ -50,25 +50,17 @@ type Scope interface {
 }
 
 type scope struct {
-	mutex sync.Mutex
-	name  string
-	// Mapping of a Pods mapping of Containers and their TopologyHints
-	// Indexed by PodUID to ContainerName
-	podTopologyHints podTopologyHints //
-	hintProviders    []HintProvider   // 注册的一系列资源管理器,cpu、memory、device
-	policy           Policy           // 'none', 'best-effort', 'restricted', 'single-numa-node'
-	// Mapping of (PodUid, ContainerName) to ContainerID for Adding/Removing Pods from PodTopologyHints mapping
-	podMap containermap.ContainerMap
+	mutex            sync.Mutex
+	name             string                    // 策略名
+	podTopologyHints podTopologyHints          // 用于存储Pod的容器映射以及它们的拓扑提示信息。
+	hintProviders    []HintProvider            // 注册的一系列资源管理器,cpu、memory、device
+	policy           Policy                    // 'none', 'best-effort', 'restricted', 'single-numa-node'
+	podMap           containermap.ContainerMap // maps (containerID)->(*v1.Pod, *v1.Container) 用于向PodTopologyHints映射中添加/删除Pod。
+
 }
 
 func (s *scope) Name() string {
 	return s.name
-}
-
-func (s *scope) getTopologyHints(podUID string, containerName string) TopologyHint {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return s.podTopologyHints[podUID][containerName]
 }
 
 func (s *scope) setTopologyHints(podUID string, containerName string, th TopologyHint) {
@@ -79,10 +71,6 @@ func (s *scope) setTopologyHints(podUID string, containerName string, th Topolog
 		s.podTopologyHints[podUID] = make(map[string]TopologyHint)
 	}
 	s.podTopologyHints[podUID][containerName] = th
-}
-
-func (s *scope) GetAffinity(podUID string, containerName string) TopologyHint {
-	return s.getTopologyHints(podUID, containerName)
 }
 
 func (s *scope) GetPolicy() Policy {
@@ -143,13 +131,22 @@ func (s *scope) admitPolicyNone(pod *v1.Pod) lifecycle.PodAdmitResult {
 // but topologymanager do not track providers anymore
 func (s *scope) allocateAlignedResources(pod *v1.Pod, container *v1.Container) error {
 	for _, provider := range s.hintProviders {
+		//var _ = new(devicemanager.ManagerImpl).Allocate
 		//var _ = new(cpumanager.CpuManager).Allocate
 		//var _ = new(memorymanager.MemoryManager).Allocate
-		//var _ = new(devicemanager.ManagerImpl).Allocate
 		err := provider.Allocate(pod, container)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+func (s *scope) GetAffinity(podUID string, containerName string) TopologyHint {
+	return s.getTopologyHints(podUID, containerName)
+}
+
+func (s *scope) getTopologyHints(podUID string, containerName string) TopologyHint {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return s.podTopologyHints[podUID][containerName]
 }

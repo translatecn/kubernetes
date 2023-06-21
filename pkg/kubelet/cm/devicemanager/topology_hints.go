@@ -136,16 +136,6 @@ func (m *ManagerImpl) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymana
 	return deviceHints
 }
 
-func (m *ManagerImpl) deviceHasTopologyAlignment(resource string) bool {
-	// If any device has Topology NUMANodes available, we assume they care about alignment.
-	for _, device := range m.allDevices[resource] {
-		if device.Topology != nil && len(device.Topology.Nodes) > 0 {
-			return true
-		}
-	}
-	return false
-}
-
 func (m *ManagerImpl) getAvailableDevices(resource string) sets.String {
 	// Strip all devices in use from the list of healthy ones.
 	return m.healthyDevices[resource].Difference(m.allocatedDevices[resource])
@@ -296,4 +286,14 @@ func (m *ManagerImpl) getPodDeviceRequest(pod *v1.Pod) map[string]int {
 	}
 
 	return podRequests
+}
+
+func (m *ManagerImpl) deviceHasTopologyAlignment(resource string) bool {
+	// 如果任何设备都有可用的拓扑numodes，我们假设它们关心对齐。
+	for _, device := range m.allDevices[resource] {
+		if device.Topology != nil && len(device.Topology.Nodes) > 0 {
+			return true
+		}
+	}
+	return false
 }

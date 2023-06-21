@@ -28,10 +28,8 @@ import (
 )
 
 type deviceAllocateInfo struct {
-	// deviceIds contains device Ids allocated to this container for the given resourceName.
-	deviceIds checkpoint.DevicesPerNUMA
-	// allocResp contains cached rpc AllocateResponse.
-	allocResp *pluginapi.ContainerAllocateResponse
+	deviceIds checkpoint.DevicesPerNUMA            // 分配给该容器的设备ID.它是一个映射，将每个NUMA节点与相应的设备ID列表关联起来。每个设备ID代表一个已分配的设备。
+	allocResp *pluginapi.ContainerAllocateResponse // 存储了与设备分配相关的一些响应信息
 }
 
 type resourceAllocateInfo map[string]deviceAllocateInfo // Keyed by resourceName.
@@ -98,24 +96,6 @@ func (pdev *podDevices) podDevices(podUID, resource string) sets.String {
 		ret = ret.Union(pdev.containerDevices(podUID, contName, resource))
 	}
 	return ret
-}
-
-// Returns list of device Ids allocated to the given container for the given resource.
-// Returns nil if we don't have cached state for the given <podUID, contName, resource>.
-func (pdev *podDevices) containerDevices(podUID, contName, resource string) sets.String {
-	pdev.RLock()
-	defer pdev.RUnlock()
-	if _, podExists := pdev.devs[podUID]; !podExists {
-		return nil
-	}
-	if _, contExists := pdev.devs[podUID][contName]; !contExists {
-		return nil
-	}
-	devs, resourceExists := pdev.devs[podUID][contName][resource]
-	if !resourceExists {
-		return nil
-	}
-	return devs.deviceIds.Devices()
 }
 
 // Populates allocatedResources with the device resources allocated to the specified <podUID, contName>.
@@ -407,4 +387,21 @@ func (rdev ResourceDeviceInstances) Filter(cond map[string]sets.String) Resource
 // container devices information of type containerDevices.
 func newPodDevices() *podDevices {
 	return &podDevices{devs: make(map[string]containerDevices)}
+}
+
+// 获取给定容器和资源的设备分配情况。
+func (pdev *podDevices) containerDevices(podUID, contName, resource string) sets.String {
+	pdev.RLock()
+	defer pdev.RUnlock()
+	if _, podExists := pdev.devs[podUID]; !podExists {
+		return nil
+	}
+	if _, contExists := pdev.devs[podUID][contName]; !contExists {
+		return nil
+	}
+	devs, resourceExists := pdev.devs[podUID][contName][resource]
+	if !resourceExists {
+		return nil
+	}
+	return devs.deviceIds.Devices()
 }

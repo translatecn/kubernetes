@@ -55,26 +55,6 @@ type server struct {
 	clients    map[string]Client
 }
 
-// NewServer returns an initialized device plugin registration server.
-func NewServer(socketPath string, rh RegistrationHandler, ch ClientHandler) (Server, error) {
-	if socketPath == "" || !filepath.IsAbs(socketPath) {
-		return nil, fmt.Errorf(errBadSocket+" %s", socketPath)
-	}
-
-	dir, name := filepath.Split(socketPath)
-
-	klog.V(2).InfoS("Creating device plugin registration server", "version", api.Version, "socket", socketPath)
-	s := &server{
-		socketName: name,
-		socketDir:  dir,
-		rhandler:   rh,
-		chandler:   ch,
-		clients:    make(map[string]Client),
-	}
-
-	return s, nil
-}
-
 func (s *server) Start() error {
 	klog.V(2).InfoS("Starting device plugin registration server")
 
@@ -187,4 +167,24 @@ func (s *server) visitClients(visit func(r string, c Client)) {
 		s.mutex.Lock()
 	}
 	s.mutex.Unlock()
+}
+
+// NewServer returns an initialized device plugin registration server.
+func NewServer(socketPath string, rh RegistrationHandler, ch ClientHandler) (Server, error) {
+	if socketPath == "" || !filepath.IsAbs(socketPath) {
+		return nil, fmt.Errorf(errBadSocket+" %s", socketPath)
+	}
+
+	dir, name := filepath.Split(socketPath)
+
+	klog.V(2).InfoS("Creating device plugin registration server", "version", api.Version, "socket", socketPath)
+	s := &server{
+		socketName: name,
+		socketDir:  dir,
+		rhandler:   rh,
+		chandler:   ch,
+		clients:    make(map[string]Client),
+	}
+
+	return s, nil
 }

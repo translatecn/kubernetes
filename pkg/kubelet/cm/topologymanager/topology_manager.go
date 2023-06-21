@@ -112,28 +112,6 @@ func (th *TopologyHint) LessThan(other TopologyHint) bool {
 	return th.NUMANodeAffinity.IsNarrowerThan(other.NUMANodeAffinity)
 }
 
-var _ Manager = &ScopeManager{}
-
-func (m *ScopeManager) GetAffinity(podUID string, containerName string) TopologyHint {
-	return m.Scope.GetAffinity(podUID, containerName)
-}
-
-func (m *ScopeManager) GetPolicy() Policy {
-	return m.Scope.GetPolicy()
-}
-
-func (m *ScopeManager) AddHintProvider(h HintProvider) {
-	m.Scope.AddHintProvider(h)
-}
-
-func (m *ScopeManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
-	m.Scope.AddContainer(pod, container, containerID)
-}
-
-func (m *ScopeManager) RemoveContainer(containerID string) error {
-	return m.Scope.RemoveContainer(containerID)
-}
-
 // ------------------------------------------------------------------------------------------------------------------------
 
 func (m *ScopeManager) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
@@ -193,4 +171,26 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 	}
 
 	return manager, nil
+}
+
+var _ Manager = &ScopeManager{}
+
+func (m *ScopeManager) GetAffinity(podUID string, containerName string) TopologyHint {
+	return m.Scope.GetAffinity(podUID, containerName)
+}
+
+func (m *ScopeManager) GetPolicy() Policy {
+	return m.Scope.GetPolicy()
+}
+
+func (m *ScopeManager) AddHintProvider(h HintProvider) {
+	m.Scope.AddHintProvider(h)
+}
+
+func (m *ScopeManager) AddContainer(pod *v1.Pod, container *v1.Container, containerID string) {
+	m.Scope.AddContainer(pod, container, containerID)
+}
+
+func (m *ScopeManager) RemoveContainer(containerID string) error {
+	return m.Scope.RemoveContainer(containerID)
 }
