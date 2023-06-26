@@ -62,21 +62,6 @@ func (pdev *podDevices) hasPod(podUID string) bool {
 	return podExists
 }
 
-func (pdev *podDevices) insert(podUID, contName, resource string, devices checkpoint.DevicesPerNUMA, resp *pluginapi.ContainerAllocateResponse) {
-	pdev.Lock()
-	defer pdev.Unlock()
-	if _, podExists := pdev.devs[podUID]; !podExists {
-		pdev.devs[podUID] = make(containerDevices)
-	}
-	if _, contExists := pdev.devs[podUID][contName]; !contExists {
-		pdev.devs[podUID][contName] = make(resourceAllocateInfo)
-	}
-	pdev.devs[podUID][contName][resource] = deviceAllocateInfo{
-		deviceIds: devices,
-		allocResp: resp,
-	}
-}
-
 func (pdev *podDevices) delete(pods []string) {
 	pdev.Lock()
 	defer pdev.Unlock()
@@ -130,26 +115,6 @@ func (pdev *podDevices) removeContainerAllocatedResources(podUID, contName strin
 	for resource, devices := range resources {
 		allocatedResources[resource] = allocatedResources[resource].Difference(devices.deviceIds.Devices())
 	}
-}
-
-// Returns all of devices allocated to the pods being tracked, keyed by resourceName.
-func (pdev *podDevices) devices() map[string]sets.String {
-	ret := make(map[string]sets.String)
-	pdev.RLock()
-	defer pdev.RUnlock()
-	for _, containerDevices := range pdev.devs {
-		for _, resources := range containerDevices {
-			for resource, devices := range resources {
-				if _, exists := ret[resource]; !exists {
-					ret[resource] = sets.NewString()
-				}
-				if devices.allocResp != nil {
-					ret[resource] = ret[resource].Union(devices.deviceIds.Devices())
-				}
-			}
-		}
-	}
-	return ret
 }
 
 // Turns podDevices to checkpointData.
@@ -404,4 +369,38 @@ func (pdev *podDevices) containerDevices(podUID, contName, resource string) sets
 		return nil
 	}
 	return devs.deviceIds.Devices()
+}
+func (pdev *podDevices) insert(podUID, contName, resource string, devices checkpoint.DevicesPerNUMA, resp *pluginapi.ContainerAllocateResponse) {
+	pdev.Lock()
+	defer pdev.Unlock()
+	if _, podExists := pdev.devs[podUID]; !podExists {
+		pdev.devs[podUID] = make(containerDevices)
+	}
+	if _, contExists := pdev.devs[podUID][contName]; !contExists {
+		pdev.devs[podUID][contName] = make(resourceAllocateInfo)
+	}
+	pdev.devs[podUID][contName][resource] = deviceAllocateInfo{
+		deviceIds: devices,
+		allocResp: resp,
+	}
+}
+
+// Returns all of devices allocated to the pods being tracked, keyed by resourceName.
+func (pdev *podDevices) devices() map[string]sets.String {
+	ret := make(map[string]sets.String)
+	pdev.RLock()
+	defer pdev.RUnlock()
+	for _, containerDevices := range pdev.devs {
+		for _, resources := range containerDevices {
+			for resource, devices := range resources {
+				if _, exists := ret[resource]; !exists {
+					ret[resource] = sets.NewString()
+				}
+				if devices.allocResp != nil {
+					ret[resource] = ret[resource].Union(devices.deviceIds.Devices())
+				}
+			}
+		}
+	}
+	return ret
 }

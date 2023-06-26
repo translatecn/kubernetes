@@ -307,25 +307,6 @@ func (m *ManagerImpl) GetCapacity() (v1.ResourceMap, v1.ResourceMap, []string) {
 	return capacity, allocatable, deletedResources.UnsortedList()
 }
 
-// Checkpoints device to container allocation information to disk.
-func (m *ManagerImpl) writeCheckpoint() error {
-	m.mutex.Lock()
-	registeredDevs := make(map[string][]string)
-	for resource, devices := range m.healthyDevices {
-		registeredDevs[resource] = devices.UnsortedList()
-	}
-	data := checkpoint.New(m.podDevices.toCheckpointData(),
-		registeredDevs)
-	m.mutex.Unlock()
-	err := m.checkpointManager.CreateCheckpoint(kubeletDeviceManagerCheckpoint, data)
-	if err != nil {
-		err2 := fmt.Errorf("failed to write checkpoint file %q: %v", kubeletDeviceManagerCheckpoint, err)
-		klog.InfoS("Failed to write checkpoint file", "err", err)
-		return err2
-	}
-	return nil
-}
-
 // Reads device to container allocation information from disk, and populates
 // m.allocatedDevices accordingly.
 func (m *ManagerImpl) readCheckpoint() error {
@@ -382,219 +363,6 @@ func (m *ManagerImpl) getCheckpointV1() (checkpoint.DeviceManagerCheckpoint, err
 	cp := checkpoint.NewV1(devEntries, registeredDevs)
 	err := m.checkpointManager.GetCheckpoint(kubeletDeviceManagerCheckpoint, cp)
 	return cp, err
-}
-
-// 确定是否需要通过Allocate rpc调用来分配设备资源.
-// 如果需要分配设备资源,则返回需要分配的设备ID列表.
-// 如果不需要分配设备资源,则返回空列表,表示不需要发出Allocate rpc调用.
-// 这可以用于优化资源分配的效率,避免不必要的Allocate rpc调用.
-func (m *ManagerImpl) devicesToAllocate(podUID, containerName, resource string, required int, reusableDevices sets.String) (sets.String, error) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	needed := required
-	//获取已经分配的设备列表。
-	//如果容器重新启动，就会发生这种情况。
-	devices := m.podDevices.containerDevices(podUID, containerName, resource) // 同一种资源可能有多个设备  p4
-	if devices != nil {
-		klog.V(3).InfoS("Found pre-allocated devices for resource on pod", "resourceName", resource, "containerName", containerName, "podUID", string(podUID), "devices", devices.List())
-		needed = needed - devices.Len()
-		// 在API服务器接受Pod后,不希望Pod的资源发生更改.如果发生了更改,代码会直接失败并抛出错误.这是基于一个假设,即一旦Pod被接受,其资源应该是不可更改的.如果这个假设不再成立,可能需要重新审视代码的这部分逻辑.
-		if needed != 0 {
-			return nil, fmt.Errorf("pod %q container %q changed request for resource %q from %d to %d", string(podUID), containerName, resource, devices.Len(), required)
-		}
-	}
-	if needed == 0 {
-		// No change, no work.
-		return nil, nil
-	}
-	klog.V(3).InfoS("需要为pod分配设备", "deviceNumber", needed, "resourceName", resource, "podUID", string(podUID), "containerName", containerName)
-	// Check if resource registered with devicemanager
-	if _, ok := m.healthyDevices[resource]; !ok {
-		return nil, fmt.Errorf("无法分配未注册的设备 %s", resource)
-	}
-	// 已分配的设备列表
-	allocated := sets.NewString()
-
-	allocateRemainingFrom := func(devices sets.String) bool {
-		//在不再需要分配设备时返回true.这个闭包函数可能会用于在设备分配过程中判断是否还需要继续分配设备.
-		for device := range devices.Difference(allocated) { // devices-allocated
-			m.allocatedDevices[resource].Insert(device)
-			allocated.Insert(device)
-			needed--
-			if needed == 0 {
-				return true
-			}
-		}
-		return false
-	}
-
-	// Needs to allocate additional devices.
-	if m.allocatedDevices[resource] == nil {
-		m.allocatedDevices[resource] = sets.NewString()
-	}
-
-	// Allocates from reusableDevices list first.container
-	// 判断上一次申请的，是不是恰好够这一次使用
-	if allocateRemainingFrom(reusableDevices) {
-		return allocated, nil
-	}
-
-	// Gets Devices in use.
-	// 已经在使用的
-	devicesInUse := m.allocatedDevices[resource] // 已经使用的设备
-	// Gets Available devices.
-	// 剩余可用d
-	available := m.healthyDevices[resource].Difference(devicesInUse) // 健康的,没有在使用的资源
-	if available.Len() < needed {                                    // 还需要申请的
-		return nil, fmt.Errorf("请求的设备数量不可用 for %s. Requested: %d, Available: %d", resource, needed, available.Len())
-	}
-
-	// 根据NUMA亲和性进行设备筛选的操作.在设备分配过程中,可能会根据NUMA节点的亲和性来选择合适的设备.
-	// 通过筛选可用的设备,可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点,以提高性能和效率.
-	aligned, unaligned, noAffinity := m.filterByAffinity(podUID, containerName, resource, available)
-
-	if needed < aligned.Len() { // 从对齐的设备集合中分配所有剩余的设备
-		// 首先从首选设备列表中分配（如果有的话）
-		preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, containerName, resource, aligned.Union(allocated), allocated, required)
-		if err != nil {
-			return nil, err
-		}
-		if allocateRemainingFrom(preferred.Intersection(aligned)) {
-			return allocated, nil
-		}
-		// Then fallback to allocate from the aligned set if no preferred list
-		// is returned (or not enough devices are returned in that list).
-		if allocateRemainingFrom(aligned) {
-			return allocated, nil
-		}
-
-		return nil, fmt.Errorf("unexpectedly allocated less resources than required. Requested: %d, Got: %d", required, required-needed)
-	}
-
-	// If we can't allocate all remaining devices from the set of aligned ones,
-	// then start by first allocating all of the  aligned devices (to ensure
-	// that the alignment guaranteed by the TopologyManager is honored).
-	if allocateRemainingFrom(aligned) {
-		return allocated, nil
-	}
-
-	// Then give the plugin the chance to influence the decision on any
-	// remaining devices to allocate.
-	preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, containerName, resource, available.Union(allocated), allocated, required)
-	if err != nil {
-		return nil, err
-	}
-	if allocateRemainingFrom(preferred.Intersection(available)) {
-		return allocated, nil
-	}
-
-	// Finally, if the plugin did not return a preferred allocation (or didn't
-	// return a large enough one), then fall back to allocating the remaining
-	// devices from the 'unaligned' and 'noAffinity' sets.
-	if allocateRemainingFrom(unaligned) {
-		return allocated, nil
-	}
-	if allocateRemainingFrom(noAffinity) {
-		return allocated, nil
-	}
-
-	return nil, fmt.Errorf("unexpectedly allocated less resources than required. Requested: %d, Got: %d", required, required-needed)
-}
-
-// allocateContainerResources 尝试为 容器分配所有所需的设备插件资源,为每个新的设备资源需求发出一个allocate rpc请求,处理它们的 allocater responses,并在成功时更新缓存的containerDevices.
-func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Container, devicesToReuse map[string]sets.String) error {
-	podUID := string(pod.UID)
-	contName := container.Name
-	allocatedDevicesUpdated := false
-	needsUpdateCheckpoint := false
-	// 确保在资源调度过程中,扩展资源的使用不会超过其限制.它假设设备插件会提供有关扩展资源的信息,包括请求(Requests)和限制(Limits).
-	// 通过迭代限制列表,可以检查每个扩展资源的请求和限制是否相等,以确保资源的正确分配和使用.
-	for k, v := range container.Resources.Limits {
-		resource := string(k)
-		needed := int(v.Value())
-		klog.V(3).InfoS("Looking for needed resources", "needed", needed, "resourceName", resource)
-		if !m.isDevicePluginResource(resource) {
-			continue
-		}
-		// 只在第一次更新allocatedDevices, 以便在进行设备插件分配之前对任何搁浅的资源进行垃圾收集.
-		if !allocatedDevicesUpdated {
-			m.UpdateAllocatedDevices() // ✅
-			allocatedDevicesUpdated = true
-		}
-		allocDevices, err := m.devicesToAllocate(podUID, contName, resource, needed, devicesToReuse[resource])
-		if err != nil {
-			return err
-		}
-		if allocDevices == nil || len(allocDevices) <= 0 {
-			continue
-		}
-
-		needsUpdateCheckpoint = true
-
-		startRPCTime := time.Now()
-		// Manager.Allocate involves RPC calls to device plugin, which
-		// could be heavy-weight. Therefore we want to perform this operation outside
-		// mutex lock. Note if Allocate call fails, we may leave container resources
-		// partially allocated for the failed container. We rely on UpdateAllocatedDevices()
-		// to garbage collect these resources later. Another side effect is that if
-		// we have X resource A and Y resource B in total, and two containers, container1
-		// and container2 both require X resource A and Y resource B. Both allocation
-		// requests may fail if we serve them in mixed order.
-		// TODO: may revisit this part later if we see inefficient resource allocation
-		// in real use as the result of this. Should also consider to parallelize device
-		// plugin Allocate grpc calls if it becomes common that a container may require
-		// resources from multiple device plugins.
-		m.mutex.Lock()
-		eI, ok := m.endpoints[resource]
-		m.mutex.Unlock()
-		if !ok {
-			m.mutex.Lock()
-			m.allocatedDevices = m.podDevices.devices()
-			m.mutex.Unlock()
-			return fmt.Errorf("unknown Device Plugin %s", resource)
-		}
-
-		devs := allocDevices.UnsortedList()
-		// TODO: refactor this part of code to just append a ContainerAllocationRequest
-		// in a passed in AllocateRequest pointer, and issues a single Allocate call per pod.
-		klog.V(3).InfoS("Making allocation request for device plugin", "devices", devs, "resourceName", resource)
-		resp, err := eI.e.allocate(devs)
-		metrics.DevicePluginAllocationDuration.WithLabelValues(resource).Observe(metrics.SinceInSeconds(startRPCTime))
-		if err != nil {
-			// In case of allocation failure, we want to restore m.allocatedDevices
-			// to the actual allocated state from m.podDevices.
-			m.mutex.Lock()
-			m.allocatedDevices = m.podDevices.devices()
-			m.mutex.Unlock()
-			return err
-		}
-
-		if len(resp.ContainerResponses) == 0 {
-			return fmt.Errorf("no containers return in allocation response %v", resp)
-		}
-
-		allocDevicesWithNUMA := checkpoint.NewDevicesPerNUMA()
-		// Update internal cached podDevices state.
-		m.mutex.Lock()
-		for dev := range allocDevices {
-			if m.allDevices[resource][dev].Topology == nil || len(m.allDevices[resource][dev].Topology.Nodes) == 0 {
-				allocDevicesWithNUMA[nodeWithoutTopology] = append(allocDevicesWithNUMA[nodeWithoutTopology], dev)
-				continue
-			}
-			for idx := range m.allDevices[resource][dev].Topology.Nodes {
-				node := m.allDevices[resource][dev].Topology.Nodes[idx]
-				allocDevicesWithNUMA[node.ID] = append(allocDevicesWithNUMA[node.ID], dev)
-			}
-		}
-		m.mutex.Unlock()
-		m.podDevices.insert(podUID, contName, resource, allocDevicesWithNUMA, resp.ContainerResponses[0])
-	}
-
-	if needsUpdateCheckpoint {
-		return m.writeCheckpoint()
-	}
-
-	return nil
 }
 
 // checkPodActive checks if the given pod is still in activePods list
@@ -680,8 +448,6 @@ func (m *ManagerImpl) callPreStartContainerIfNeeded(podUID, contName, resource s
 	return nil
 }
 
-// callGetPreferredAllocationIfAvailable issues GetPreferredAllocation grpc
-// call for device plugin resource with GetPreferredAllocationAvailable option set.
 // 与设备插件进行通信，并了解设备插件是否支持获取首选设备分配信息的功能。
 func (m *ManagerImpl) callGetPreferredAllocationIfAvailable(podUID, contName, resource string, available, mustInclude sets.String, size int) (sets.String, error) {
 	eI, ok := m.endpoints[resource]
@@ -690,12 +456,12 @@ func (m *ManagerImpl) callGetPreferredAllocationIfAvailable(podUID, contName, re
 	}
 
 	if eI.opts == nil || !eI.opts.GetPreferredAllocationAvailable {
-		klog.V(4).InfoS("Plugin options indicate to skip GetPreferredAllocation for resource", "resourceName", resource)
+		klog.V(4).InfoS("插件选项指示跳过对资源的GetPreferredAllocation调用。", "resourceName", resource)
 		return nil, nil
 	}
 
 	m.mutex.Unlock()
-	klog.V(4).InfoS("Issuing a GetPreferredAllocation call for container", "containerName", contName, "podUID", string(podUID))
+	klog.V(4).InfoS("调用GetPreferredAllocation来获取容器的首选分配信息", "containerName", contName, "podUID", string(podUID))
 	resp, err := eI.e.getPreferredAllocation(available.UnsortedList(), mustInclude.UnsortedList(), size)
 	m.mutex.Lock()
 	if err != nil {
@@ -843,6 +609,7 @@ func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
 	m.podDevices.removeContainerAllocatedResources(string(pod.UID), container.Name, m.devicesToReuse[string(pod.UID)])
 	return nil
 }
+
 func (m *ManagerImpl) isDevicePluginResource(resource string) bool {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -984,4 +751,233 @@ func (m *ManagerImpl) filterByAffinity(podUID, containerName, resource string, a
 	// Return all three lists containing the full set of devices across them.
 	// pod填写了对应的node序号， 根据每个node绑定的设备拓扑 进行分组
 	return sets.NewString(fromAffinity...), sets.NewString(notFromAffinity...), sets.NewString(withoutTopology...)
+}
+
+// 确定是否需要通过Allocate rpc调用来分配设备资源.
+// 如果需要分配设备资源,则返回需要分配的设备ID列表.
+// 如果不需要分配设备资源,则返回空列表,表示不需要发出Allocate rpc调用.
+// 这可以用于优化资源分配的效率,避免不必要的Allocate rpc调用.
+func (m *ManagerImpl) devicesToAllocate(podUID, containerName, resource string, required int, reusableDevices sets.String) (sets.String, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	needed := required
+	//获取已经分配的设备列表。
+	//如果容器重新启动，就会发生这种情况。
+	devices := m.podDevices.containerDevices(podUID, containerName, resource) // 同一种资源可能有多个设备  p4
+	if devices != nil {
+		klog.V(3).InfoS("Found pre-allocated devices for resource on pod", "resourceName", resource, "containerName", containerName, "podUID", string(podUID), "devices", devices.List())
+		needed = needed - devices.Len()
+		// 在API服务器接受Pod后,不希望Pod的资源发生更改.如果发生了更改,代码会直接失败并抛出错误.这是基于一个假设,即一旦Pod被接受,其资源应该是不可更改的.如果这个假设不再成立,可能需要重新审视代码的这部分逻辑.
+		if needed != 0 {
+			return nil, fmt.Errorf("pod %q container %q changed request for resource %q from %d to %d", string(podUID), containerName, resource, devices.Len(), required)
+		}
+	}
+	if needed == 0 {
+		// No change, no work.
+		return nil, nil
+	}
+	klog.V(3).InfoS("需要为pod分配设备", "deviceNumber", needed, "resourceName", resource, "podUID", string(podUID), "containerName", containerName)
+	// Check if resource registered with devicemanager
+	if _, ok := m.healthyDevices[resource]; !ok {
+		return nil, fmt.Errorf("无法分配未注册的设备 %s", resource)
+	}
+	// 已分配的设备列表
+	allocated := sets.NewString()
+
+	allocateRemainingFrom := func(devices sets.String) bool {
+		//在不再需要分配设备时返回true.这个闭包函数可能会用于在设备分配过程中判断是否还需要继续分配设备.
+		for device := range devices.Difference(allocated) { // devices-allocated
+			m.allocatedDevices[resource].Insert(device)
+			allocated.Insert(device)
+			needed--
+			if needed == 0 {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Needs to allocate additional devices.
+	if m.allocatedDevices[resource] == nil {
+		m.allocatedDevices[resource] = sets.NewString()
+	}
+
+	// Allocates from reusableDevices list first.container
+	// 判断上一次申请的，是不是恰好够这一次使用
+	if allocateRemainingFrom(reusableDevices) {
+		return allocated, nil
+	}
+
+	// Gets Devices in use.
+	// 已经在使用的
+	devicesInUse := m.allocatedDevices[resource] // 已经使用的设备
+	// Gets Available devices.
+	// 剩余可用d
+	available := m.healthyDevices[resource].Difference(devicesInUse) // 健康的,没有在使用的资源
+	if available.Len() < needed {                                    // 还需要申请的
+		return nil, fmt.Errorf("请求的设备数量不可用 for %s. Requested: %d, Available: %d", resource, needed, available.Len())
+	}
+
+	// 根据NUMA亲和性进行设备筛选的操作.在设备分配过程中,可能会根据NUMA节点的亲和性来选择合适的设备.
+	// 通过筛选可用的设备,可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点,以提高性能和效率.
+	// 没有在使用的资源
+	aligned, unaligned, noAffinity := m.filterByAffinity(podUID, containerName, resource, available)
+
+	if needed < aligned.Len() { // 从对齐的设备集合中分配所有剩余的设备
+		// 首先从首选设备列表中分配（如果有的话）
+		preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, containerName, resource, aligned.Union(allocated), allocated, required)
+		if err != nil {
+			return nil, err
+		}
+		if allocateRemainingFrom(preferred.Intersection(aligned)) { // 使用优先设备
+			return allocated, nil
+		}
+		// Then fallback to allocate from the aligned set if no preferred list
+		// is returned (or not enough devices are returned in that list).
+		if allocateRemainingFrom(aligned) {
+			return allocated, nil
+		}
+
+		return nil, fmt.Errorf("意外地分配的资源少于所需的数量. Requested: %d, Got: %d", required, required-needed)
+	}
+
+	//那么首先分配所有对齐的设备（以确保 TopologyManager 所保证的对齐性得到遵守）。
+	if allocateRemainingFrom(aligned) {
+		return allocated, nil
+	}
+
+	// 首选设备
+	preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, containerName, resource, available.Union(allocated), allocated, required)
+	if err != nil {
+		return nil, err
+	}
+	if allocateRemainingFrom(preferred.Intersection(available)) {
+		return allocated, nil
+	}
+
+	// 如果插件没有返回首选的分配（或者返回的分配不够大），那么就从“unaligned”和“noAffinity”集合中分配剩余的设备。
+	if allocateRemainingFrom(unaligned) {
+		return allocated, nil
+	}
+	if allocateRemainingFrom(noAffinity) {
+		return allocated, nil
+	}
+
+	return nil, fmt.Errorf("意外地分配的资源比所需的资源少。. Requested: %d, Got: %d", required, required-needed)
+}
+
+// allocateContainerResources 尝试为 容器分配所有所需的设备插件资源,为每个新的设备资源需求发出一个allocate rpc请求,处理它们的 allocater responses,并在成功时更新缓存的containerDevices.
+func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Container, devicesToReuse map[string]sets.String) error {
+	podUID := string(pod.UID)
+	contName := container.Name
+	allocatedDevicesUpdated := false
+	needsUpdateCheckpoint := false
+	// 确保在资源调度过程中,扩展资源的使用不会超过其限制.它假设设备插件会提供有关扩展资源的信息,包括请求(Requests)和限制(Limits).
+	// 通过迭代限制列表,可以检查每个扩展资源的请求和限制是否相等,以确保资源的正确分配和使用.
+	for k, v := range container.Resources.Limits {
+		resource := string(k)
+		needed := int(v.Value())
+		klog.V(3).InfoS("Looking for needed resources", "needed", needed, "resourceName", resource)
+		if !m.isDevicePluginResource(resource) {
+			continue
+		}
+		// 只在第一次更新allocatedDevices, 以便在进行设备插件分配之前对任何搁浅的资源进行垃圾收集.
+		if !allocatedDevicesUpdated {
+			m.UpdateAllocatedDevices() // ✅
+			allocatedDevicesUpdated = true
+		}
+		// 设备插件返回的符合亲和性需要的设备列表,没有真的 分配
+		allocDevices, err := m.devicesToAllocate(podUID, contName, resource, needed, devicesToReuse[resource])
+		if err != nil {
+			return err
+		}
+		// 不需要分配资源
+		if allocDevices == nil || len(allocDevices) <= 0 {
+			continue
+		}
+
+		needsUpdateCheckpoint = true
+
+		startRPCTime := time.Now()
+		// Manager.Allocate involves RPC calls to device plugin, which
+		// could be heavy-weight. Therefore we want to perform this operation outside
+		// mutex lock. Note if Allocate call fails, we may leave container resources
+		// partially allocated for the failed container. We rely on UpdateAllocatedDevices()
+		// to garbage collect these resources later. Another side effect is that if
+		// we have X resource A and Y resource B in total, and two containers, container1
+		// and container2 both require X resource A and Y resource B. Both allocation
+		// requests may fail if we serve them in mixed order.
+		// TODO: may revisit this part later if we see inefficient resource allocation
+		// in real use as the result of this. Should also consider to parallelize device
+		// plugin Allocate grpc calls if it becomes common that a container may require
+		// resources from multiple device plugins.
+		m.mutex.Lock()
+		eI, ok := m.endpoints[resource]
+		m.mutex.Unlock()
+		if !ok {
+			m.mutex.Lock()
+			m.allocatedDevices = m.podDevices.devices()
+			m.mutex.Unlock()
+			return fmt.Errorf("unknown Device Plugin %s", resource)
+		}
+
+		devs := allocDevices.UnsortedList()
+		// TODO: refactor this part of code to just append a ContainerAllocationRequest
+		// in a passed in AllocateRequest pointer, and issues a single Allocate call per pod.
+		klog.V(3).InfoS("Making allocation request for device plugin", "devices", devs, "resourceName", resource)
+		resp, err := eI.e.allocate(devs)
+		metrics.DevicePluginAllocationDuration.WithLabelValues(resource).Observe(metrics.SinceInSeconds(startRPCTime))
+		if err != nil {
+			// In case of allocation failure, we want to restore m.allocatedDevices
+			// to the actual allocated state from m.podDevices.
+			m.mutex.Lock()
+			m.allocatedDevices = m.podDevices.devices()
+			m.mutex.Unlock()
+			return err
+		}
+
+		if len(resp.ContainerResponses) == 0 {
+			return fmt.Errorf("分配响应中没有返回容器 %v", resp)
+		}
+
+		allocDevicesWithNUMA := checkpoint.NewDevicesPerNUMA()
+		// Update internal cached podDevices state.
+		m.mutex.Lock()
+		for dev := range allocDevices {
+			if m.allDevices[resource][dev].Topology == nil || len(m.allDevices[resource][dev].Topology.Nodes) == 0 {
+				allocDevicesWithNUMA[nodeWithoutTopology] = append(allocDevicesWithNUMA[nodeWithoutTopology], dev)
+				continue
+			}
+			for idx := range m.allDevices[resource][dev].Topology.Nodes {
+				node := m.allDevices[resource][dev].Topology.Nodes[idx]
+				allocDevicesWithNUMA[node.ID] = append(allocDevicesWithNUMA[node.ID], dev)
+			}
+		}
+		m.mutex.Unlock()
+		m.podDevices.insert(podUID, contName, resource, allocDevicesWithNUMA, resp.ContainerResponses[0])
+	}
+
+	if needsUpdateCheckpoint {
+		return m.writeCheckpoint()
+	}
+
+	return nil
+}
+
+// Checkpoints device to container allocation information to disk.
+func (m *ManagerImpl) writeCheckpoint() error {
+	m.mutex.Lock()
+	registeredDevs := make(map[string][]string)
+	for resource, devices := range m.healthyDevices {
+		registeredDevs[resource] = devices.UnsortedList()
+	}
+	data := checkpoint.New(m.podDevices.toCheckpointData(), registeredDevs)
+	m.mutex.Unlock()
+	err := m.checkpointManager.CreateCheckpoint(kubeletDeviceManagerCheckpoint, data)
+	if err != nil {
+		err2 := fmt.Errorf("failed to write checkpoint file %q: %v", kubeletDeviceManagerCheckpoint, err)
+		klog.InfoS("Failed to write checkpoint file", "err", err)
+		return err2
+	}
+	return nil
 }

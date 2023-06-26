@@ -60,20 +60,6 @@ func NewDevicesPerNUMA() DevicesPerNUMA {
 	return make(DevicesPerNUMA)
 }
 
-// New returns an instance of Checkpoint - must be an alias for the most recent version
-func New(devEntries []PodDevicesEntry, devices map[string][]string) DeviceManagerCheckpoint {
-	return newV2(devEntries, devices)
-}
-
-func newV2(devEntries []PodDevicesEntry, devices map[string][]string) DeviceManagerCheckpoint {
-	return &Data{
-		Data: checkpointData{
-			PodDeviceEntries:  devEntries,
-			RegisteredDevices: devices,
-		},
-	}
-}
-
 // MarshalCheckpoint returns marshalled data
 func (cp *Data) MarshalCheckpoint() ([]byte, error) {
 	cp.Checksum = checksum.New(cp.Data)
@@ -105,4 +91,20 @@ func (dev DevicesPerNUMA) Devices() sets.String {
 		result.Insert(devs...)
 	}
 	return result
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+// New returns an instance of Checkpoint - must be an alias for the most recent version
+func New(devEntries []PodDevicesEntry, devices map[string][]string) DeviceManagerCheckpoint {
+	return newV2(devEntries, devices)
+}
+
+func newV2(devEntries []PodDevicesEntry, devices map[string][]string) DeviceManagerCheckpoint {
+	return &Data{
+		Data: checkpointData{
+			PodDeviceEntries:  devEntries,
+			RegisteredDevices: devices,
+		},
+	}
 }

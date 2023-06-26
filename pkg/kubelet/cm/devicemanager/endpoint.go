@@ -30,12 +30,12 @@ import (
 // for managing gRPC communications with the device plugin and caching
 // device states reported by the device plugin.
 type endpoint interface {
-	getPreferredAllocation(available, mustInclude []string, size int) (*pluginapi.PreferredAllocationResponse, error)
-	allocate(devs []string) (*pluginapi.AllocateResponse, error)
-	preStartContainer(devs []string) (*pluginapi.PreStartContainerResponse, error)
-	setStopTime(t time.Time)
-	isStopped() bool
-	stopGracePeriodExpired() bool
+	getPreferredAllocation(available, mustInclude []string, size int) (*pluginapi.PreferredAllocationResponse, error) // 用于获取首选设备分配信息。
+	allocate(devs []string) (*pluginapi.AllocateResponse, error)                                                      // allocate 方法用于分配设备。
+	preStartContainer(devs []string) (*pluginapi.PreStartContainerResponse, error)                                    // preStartContainer 方法在容器启动前执行一些操作。
+	setStopTime(t time.Time)                                                                                          // setStopTime 方法设置停止时间。
+	isStopped() bool                                                                                                  // isStopped 方法检查 endpoint 是否已停止。
+	stopGracePeriodExpired() bool                                                                                     // stopGracePeriodExpired 方法检查停止优雅期是否已过期。
 }
 
 type endpointImpl struct {

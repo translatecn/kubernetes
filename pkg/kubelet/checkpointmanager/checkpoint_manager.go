@@ -34,14 +34,10 @@ type Checkpoint interface {
 
 // CheckpointManager provides the interface to manage checkpoint
 type CheckpointManager interface {
-	// CreateCheckpoint persists checkpoint in CheckpointStore. checkpointKey is the key for utilstore to locate checkpoint.
-	// For file backed utilstore, checkpointKey is the file name to write the checkpoint data.
 	CreateCheckpoint(checkpointKey string, checkpoint Checkpoint) error
-	// GetCheckpoint retrieves checkpoint from CheckpointStore.
 	GetCheckpoint(checkpointKey string, checkpoint Checkpoint) error
-	// WARNING: RemoveCheckpoint will not return error if checkpoint does not exist.
 	RemoveCheckpoint(checkpointKey string) error
-	ListCheckpoints() ([]string, error) // 返回检查点列表
+	ListCheckpoints() ([]string, error)
 }
 
 // impl is an implementation of CheckpointManager. It persists checkpoint in CheckpointStore
