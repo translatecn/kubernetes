@@ -19,6 +19,7 @@ func Init(args []string) []string {
 	args = append(args, "--pod-infra-container-image=sealos.hub:5000/pause:3.9")
 	args = append(args, "--container-runtime=remote")
 	args = append(args, "--runtime-request-timeout=15m")
+	args = append(args, "--cpu-manager-policy=static")
 	args = append(args, "--kernel-memcg-notification=true")
 	args = append(args, "--container-runtime-endpoint=unix:///run/containerd/containerd.sock")
 	args = append(args, "--image-service-endpoint=unix:///var/run/image-cri-shim.sock")

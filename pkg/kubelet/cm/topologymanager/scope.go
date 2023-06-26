@@ -52,25 +52,14 @@ type Scope interface {
 type scope struct {
 	mutex            sync.Mutex
 	name             string                    // 策略名
-	podTopologyHints podTopologyHints          // 用于存储Pod的容器映射以及它们的拓扑提示信息。
+	podTopologyHints podTopologyHints          // 用于存储Pod的容器映射以及它们的拓扑提示信息.
 	hintProviders    []HintProvider            // 注册的一系列资源管理器,cpu、memory、device
 	policy           Policy                    // 'none', 'best-effort', 'restricted', 'single-numa-node'
-	podMap           containermap.ContainerMap // maps (containerID)->(*v1.Pod, *v1.Container) 用于向PodTopologyHints映射中添加/删除Pod。
-
+	podMap           containermap.ContainerMap // maps (containerID)->(*v1.Pod, *v1.Container) 用于向PodTopologyHints映射中添加/删除Pod.
 }
 
 func (s *scope) Name() string {
 	return s.name
-}
-
-func (s *scope) setTopologyHints(podUID string, containerName string, th TopologyHint) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	if s.podTopologyHints[podUID] == nil {
-		s.podTopologyHints[podUID] = make(map[string]TopologyHint)
-	}
-	s.podTopologyHints[podUID][containerName] = th
 }
 
 func (s *scope) GetPolicy() Policy {
@@ -149,4 +138,13 @@ func (s *scope) getTopologyHints(podUID string, containerName string) TopologyHi
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return s.podTopologyHints[podUID][containerName]
+}
+func (s *scope) setTopologyHints(podUID string, containerName string, th TopologyHint) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if s.podTopologyHints[podUID] == nil {
+		s.podTopologyHints[podUID] = make(map[string]TopologyHint)
+	}
+	s.podTopologyHints[podUID][containerName] = th
 }

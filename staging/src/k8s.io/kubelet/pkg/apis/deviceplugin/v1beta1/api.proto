@@ -27,7 +27,7 @@ service Registration {
 message DevicePluginOptions {
 	// Indicates if PreStartContainer call is required before each container start
 	bool pre_start_required = 1;
-	// Indicates if GetPreferredAllocation is implemented and available for calling
+	// 指示GetPreferredAllocation方法是否已经在代码中实现，并且可以被调用。GetPreferredAllocation是一个特定的功能，用于获取首选设备的分配信息。
 	bool get_preferred_allocation_available = 2;
 }
 

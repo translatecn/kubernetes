@@ -53,24 +53,21 @@ type ActivePodsFunc func() []*v1.Pod
 
 // ManagerImpl is the structure in charge of managing Device Plugins.
 type ManagerImpl struct {
-	checkpointdir string
-
-	endpoints      map[string]endpointInfo // Key is ResourceName
-	mutex          sync.Mutex              //
-	server         plugin.Server
-	activePods     ActivePodsFunc          //
-	sourcesReady   config.SourcesReady     // kubelet配置源的就绪状态,确定何时可以从检查点状态中清除不活动的Pod
-	allDevices     ResourceDeviceInstances // 保存当前注册到设备管理器的所有设备
-	healthyDevices map[string]sets.String  // 包含所有已注册的健康资源名称及其导出的设备id。
-
-	// unhealthyDevices contains all of the unhealthy devices and their exported device IDs.
-	unhealthyDevices      map[string]sets.String              //
+	checkpointdir         string
+	endpoints             map[string]endpointInfo             // Key is ResourceName
+	mutex                 sync.Mutex                          //
+	server                plugin.Server                       //
+	activePods            ActivePodsFunc                      //
+	sourcesReady          config.SourcesReady                 // kubelet配置源的就绪状态,确定何时可以从检查点状态中清除不活动的Pod
+	allDevices            ResourceDeviceInstances             // 保存当前注册到设备管理器的所有设备
+	healthyDevices        map[string]sets.String              // 包含所有已注册的健康资源名称及其导出的设备id.
+	unhealthyDevices      map[string]sets.String              // unhealthyDevices contains all of the unhealthy devices and their exported device IDs.
 	allocatedDevices      map[string]sets.String              // 已经使用的设备  ,key:resourceName
 	podDevices            *podDevices                         // 包含pod到已分配设备的映射.
 	checkpointManager     checkpointmanager.CheckpointManager //
 	numaNodes             []int                               // 物理CPU 序号
-	topologyAffinityStore topologymanager.Store               // 设备管理器可以查询的拓扑亲和性的存储。
-	devicesToReuse        PodReusableDevices                  // 包含可以重用的设备，因为它们已分配给初始化容器。
+	topologyAffinityStore topologymanager.Store               // 设备管理器可以查询的拓扑亲和性的存储.
+	devicesToReuse        PodReusableDevices                  // 包含每个pod 可以重用的设备,因为它们已分配给初始化容器.
 	pendingAdmissionPod   *v1.Pod                             // 当前在准入阶段的pod
 }
 
@@ -387,39 +384,39 @@ func (m *ManagerImpl) getCheckpointV1() (checkpoint.DeviceManagerCheckpoint, err
 	return cp, err
 }
 
-// 确定是否需要通过Allocate rpc调用来分配设备资源。
-// 如果需要分配设备资源，则返回需要分配的设备ID列表。
-// 如果不需要分配设备资源，则返回空列表，表示不需要发出Allocate rpc调用。
-// 这可以用于优化资源分配的效率，避免不必要的Allocate rpc调用。
-func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, required int, reusableDevices sets.String) (sets.String, error) {
+// 确定是否需要通过Allocate rpc调用来分配设备资源.
+// 如果需要分配设备资源,则返回需要分配的设备ID列表.
+// 如果不需要分配设备资源,则返回空列表,表示不需要发出Allocate rpc调用.
+// 这可以用于优化资源分配的效率,避免不必要的Allocate rpc调用.
+func (m *ManagerImpl) devicesToAllocate(podUID, containerName, resource string, required int, reusableDevices sets.String) (sets.String, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	needed := required
-	// Gets list of devices that have already been allocated.
-	// This can happen if a container restarts for example.
-	devices := m.podDevices.containerDevices(podUID, contName, resource) // 同一种资源可能有多个设备  p4
+	//获取已经分配的设备列表。
+	//如果容器重新启动，就会发生这种情况。
+	devices := m.podDevices.containerDevices(podUID, containerName, resource) // 同一种资源可能有多个设备  p4
 	if devices != nil {
-		klog.V(3).InfoS("Found pre-allocated devices for resource on pod", "resourceName", resource, "containerName", contName, "podUID", string(podUID), "devices", devices.List())
+		klog.V(3).InfoS("Found pre-allocated devices for resource on pod", "resourceName", resource, "containerName", containerName, "podUID", string(podUID), "devices", devices.List())
 		needed = needed - devices.Len()
-		// 在API服务器接受Pod后，不希望Pod的资源发生更改。如果发生了更改，代码会直接失败并抛出错误。这是基于一个假设，即一旦Pod被接受，其资源应该是不可更改的。如果这个假设不再成立，可能需要重新审视代码的这部分逻辑。
+		// 在API服务器接受Pod后,不希望Pod的资源发生更改.如果发生了更改,代码会直接失败并抛出错误.这是基于一个假设,即一旦Pod被接受,其资源应该是不可更改的.如果这个假设不再成立,可能需要重新审视代码的这部分逻辑.
 		if needed != 0 {
-			return nil, fmt.Errorf("pod %q container %q changed request for resource %q from %d to %d", string(podUID), contName, resource, devices.Len(), required)
+			return nil, fmt.Errorf("pod %q container %q changed request for resource %q from %d to %d", string(podUID), containerName, resource, devices.Len(), required)
 		}
 	}
 	if needed == 0 {
 		// No change, no work.
 		return nil, nil
 	}
-	klog.V(3).InfoS("Need devices to allocate for pod", "deviceNumber", needed, "resourceName", resource, "podUID", string(podUID), "containerName", contName)
+	klog.V(3).InfoS("需要为pod分配设备", "deviceNumber", needed, "resourceName", resource, "podUID", string(podUID), "containerName", containerName)
 	// Check if resource registered with devicemanager
 	if _, ok := m.healthyDevices[resource]; !ok {
-		return nil, fmt.Errorf("can't allocate unregistered device %s", resource)
+		return nil, fmt.Errorf("无法分配未注册的设备 %s", resource)
 	}
 	// 已分配的设备列表
 	allocated := sets.NewString()
 
 	allocateRemainingFrom := func(devices sets.String) bool {
-		//在不再需要分配设备时返回true。这个闭包函数可能会用于在设备分配过程中判断是否还需要继续分配设备。
+		//在不再需要分配设备时返回true.这个闭包函数可能会用于在设备分配过程中判断是否还需要继续分配设备.
 		for device := range devices.Difference(allocated) { // devices-allocated
 			m.allocatedDevices[resource].Insert(device)
 			allocated.Insert(device)
@@ -437,27 +434,28 @@ func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, requi
 	}
 
 	// Allocates from reusableDevices list first.container
-	// 判断临时容器 的资源 够不够让container 复用
+	// 判断上一次申请的，是不是恰好够这一次使用
 	if allocateRemainingFrom(reusableDevices) {
 		return allocated, nil
 	}
 
 	// Gets Devices in use.
+	// 已经在使用的
 	devicesInUse := m.allocatedDevices[resource] // 已经使用的设备
 	// Gets Available devices.
-	available := m.healthyDevices[resource].Difference(devicesInUse) // 健康的，没有在使用的资源
-	if available.Len() < needed {
-		return nil, fmt.Errorf("requested number of devices unavailable for %s. Requested: %d, Available: %d", resource, needed, available.Len())
+	// 剩余可用d
+	available := m.healthyDevices[resource].Difference(devicesInUse) // 健康的,没有在使用的资源
+	if available.Len() < needed {                                    // 还需要申请的
+		return nil, fmt.Errorf("请求的设备数量不可用 for %s. Requested: %d, Available: %d", resource, needed, available.Len())
 	}
 
-	// 根据NUMA亲和性进行设备筛选的操作。在设备分配过程中，可能会根据NUMA节点的亲和性来选择合适的设备。通过筛选可用的设备，可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点，以提高性能和效率。
-	aligned, unaligned, noAffinity := m.filterByAffinity(podUID, contName, resource, available)
+	// 根据NUMA亲和性进行设备筛选的操作.在设备分配过程中,可能会根据NUMA节点的亲和性来选择合适的设备.
+	// 通过筛选可用的设备,可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点,以提高性能和效率.
+	aligned, unaligned, noAffinity := m.filterByAffinity(podUID, containerName, resource, available)
 
-	// If we can allocate all remaining devices from the set of aligned ones, then
-	// give the plugin the chance to influence which ones to allocate from that set.
-	if needed < aligned.Len() {
-		// First allocate from the preferred devices list (if available).
-		preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, contName, resource, aligned.Union(allocated), allocated, required)
+	if needed < aligned.Len() { // 从对齐的设备集合中分配所有剩余的设备
+		// 首先从首选设备列表中分配（如果有的话）
+		preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, containerName, resource, aligned.Union(allocated), allocated, required)
 		if err != nil {
 			return nil, err
 		}
@@ -482,7 +480,7 @@ func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, requi
 
 	// Then give the plugin the chance to influence the decision on any
 	// remaining devices to allocate.
-	preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, contName, resource, available.Union(allocated), allocated, required)
+	preferred, err := m.callGetPreferredAllocationIfAvailable(podUID, containerName, resource, available.Union(allocated), allocated, required)
 	if err != nil {
 		return nil, err
 	}
@@ -503,109 +501,14 @@ func (m *ManagerImpl) devicesToAllocate(podUID, contName, resource string, requi
 	return nil, fmt.Errorf("unexpectedly allocated less resources than required. Requested: %d, Got: %d", required, required-needed)
 }
 
-// 根据NUMA亲和性进行设备筛选的操作。在设备分配过程中，可能会根据NUMA节点的亲和性来选择合适的设备。通过筛选可用的设备，可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点，以提高性能和效率。
-func (m *ManagerImpl) filterByAffinity(podUID, contName, resource string, available sets.String) (aligned, unaligned, noAffinity sets.String) {
-	// 如果没有可用的对齐信息，那么就直接将可用的设备列表返回。
-	hint := m.topologyAffinityStore.GetAffinity(podUID, contName)
-	if !m.deviceHasTopologyAlignment(resource) || hint.NUMANodeAffinity == nil {
-		return sets.NewString(), sets.NewString(), available
-	}
-	// 建立NUMA节点到与其相关联的设备的映射。一个设备可以同时关联多个NUMA节点。
-	// 如果一个可用的设备没有任何NUMA节点与它相关联，将它添加到一个NUMA节点列表中，为假的NUMANode -1。
-	perNodeDevices := make(map[int]sets.String)
-	for d := range available {
-		if m.allDevices[resource][d].Topology == nil || len(m.allDevices[resource][d].Topology.Nodes) == 0 {
-			if _, ok := perNodeDevices[nodeWithoutTopology]; !ok {
-				perNodeDevices[nodeWithoutTopology] = sets.NewString()
-			}
-			perNodeDevices[nodeWithoutTopology].Insert(d)
-			continue
-		}
-
-		for _, node := range m.allDevices[resource][d].Topology.Nodes {
-			if _, ok := perNodeDevices[int(node.ID)]; !ok {
-				perNodeDevices[int(node.ID)] = sets.NewString()
-			}
-			perNodeDevices[int(node.ID)].Insert(d)
-		}
-	}
-
-	// Get a flat list of all of the nodes associated with available devices.
-	var nodes []int
-	for node := range perNodeDevices {
-		nodes = append(nodes, node)
-	}
-
-	// Sort the list of nodes by:
-	// 1) Nodes contained in the 'hint's affinity set
-	// 2) Nodes not contained in the 'hint's affinity set
-	// 3) The fake NUMANode of -1 (assuming it is included in the list)
-	// Within each of the groups above, sort the nodes by how many devices they contain
-	sort.Slice(nodes, func(i, j int) bool {
-		// If one or the other of nodes[i] or nodes[j] is in the 'hint's affinity set
-		if hint.NUMANodeAffinity.IsSet(nodes[i]) && hint.NUMANodeAffinity.IsSet(nodes[j]) {
-			return perNodeDevices[nodes[i]].Len() < perNodeDevices[nodes[j]].Len()
-		}
-		if hint.NUMANodeAffinity.IsSet(nodes[i]) {
-			return true
-		}
-		if hint.NUMANodeAffinity.IsSet(nodes[j]) {
-			return false
-		}
-
-		// If one or the other of nodes[i] or nodes[j] is the fake NUMA node -1 (they can't both be)
-		if nodes[i] == nodeWithoutTopology {
-			return false
-		}
-		if nodes[j] == nodeWithoutTopology {
-			return true
-		}
-
-		// Otherwise both nodes[i] and nodes[j] are real NUMA nodes that are not in the 'hint's' affinity list.
-		return perNodeDevices[nodes[i]].Len() < perNodeDevices[nodes[j]].Len()
-	})
-
-	// Generate three sorted lists of devices. Devices in the first list come
-	// from valid NUMA Nodes contained in the affinity mask. Devices in the
-	// second list come from valid NUMA Nodes not in the affinity mask. Devices
-	// in the third list come from devices with no NUMA Node association (i.e.
-	// those mapped to the fake NUMA Node -1). Because we loop through the
-	// sorted list of NUMA nodes in order, within each list, devices are sorted
-	// by their connection to NUMA Nodes with more devices on them.
-	var fromAffinity []string
-	var notFromAffinity []string
-	var withoutTopology []string
-	for d := range available {
-		// Since the same device may be associated with multiple NUMA Nodes. We
-		// need to be careful not to add each device to multiple lists. The
-		// logic below ensures this by breaking after the first NUMA node that
-		// has the device is encountered.
-		for _, n := range nodes {
-			if perNodeDevices[n].Has(d) {
-				if n == nodeWithoutTopology {
-					withoutTopology = append(withoutTopology, d)
-				} else if hint.NUMANodeAffinity.IsSet(n) {
-					fromAffinity = append(fromAffinity, d)
-				} else {
-					notFromAffinity = append(notFromAffinity, d)
-				}
-				break
-			}
-		}
-	}
-
-	// Return all three lists containing the full set of devices across them.
-	return sets.NewString(fromAffinity...), sets.NewString(notFromAffinity...), sets.NewString(withoutTopology...)
-}
-
-// allocateContainerResources 尝试为输入容器分配所有所需的设备插件资源，为每个新的设备资源需求发出一个allocate rpc请求，处理它们的 allocater responses，并在成功时更新缓存的containerDevices。
+// allocateContainerResources 尝试为 容器分配所有所需的设备插件资源,为每个新的设备资源需求发出一个allocate rpc请求,处理它们的 allocater responses,并在成功时更新缓存的containerDevices.
 func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Container, devicesToReuse map[string]sets.String) error {
 	podUID := string(pod.UID)
 	contName := container.Name
 	allocatedDevicesUpdated := false
 	needsUpdateCheckpoint := false
-	// 确保在资源调度过程中，扩展资源的使用不会超过其限制。它假设设备插件会提供有关扩展资源的信息，包括请求(Requests)和限制(Limits)。
-	// 通过迭代限制列表，可以检查每个扩展资源的请求和限制是否相等，以确保资源的正确分配和使用。
+	// 确保在资源调度过程中,扩展资源的使用不会超过其限制.它假设设备插件会提供有关扩展资源的信息,包括请求(Requests)和限制(Limits).
+	// 通过迭代限制列表,可以检查每个扩展资源的请求和限制是否相等,以确保资源的正确分配和使用.
 	for k, v := range container.Resources.Limits {
 		resource := string(k)
 		needed := int(v.Value())
@@ -613,7 +516,7 @@ func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Cont
 		if !m.isDevicePluginResource(resource) {
 			continue
 		}
-		// 更新allocatedDevices，以便在进行设备插件分配之前对任何搁浅的资源进行垃圾收集。
+		// 只在第一次更新allocatedDevices, 以便在进行设备插件分配之前对任何搁浅的资源进行垃圾收集.
 		if !allocatedDevicesUpdated {
 			m.UpdateAllocatedDevices() // ✅
 			allocatedDevicesUpdated = true
@@ -756,7 +659,7 @@ func (m *ManagerImpl) callPreStartContainerIfNeeded(podUID, contName, resource s
 
 	if eI.opts == nil || !eI.opts.PreStartRequired {
 		m.mutex.Unlock()
-		klog.V(4).InfoS("Plugin options indicate to skip PreStartContainer for resource", "resourceName", resource)
+		klog.V(4).InfoS("跳过资源的PreStartContainer", "resourceName", resource)
 		return nil
 	}
 
@@ -779,10 +682,11 @@ func (m *ManagerImpl) callPreStartContainerIfNeeded(podUID, contName, resource s
 
 // callGetPreferredAllocationIfAvailable issues GetPreferredAllocation grpc
 // call for device plugin resource with GetPreferredAllocationAvailable option set.
+// 与设备插件进行通信，并了解设备插件是否支持获取首选设备分配信息的功能。
 func (m *ManagerImpl) callGetPreferredAllocationIfAvailable(podUID, contName, resource string, available, mustInclude sets.String, size int) (sets.String, error) {
 	eI, ok := m.endpoints[resource]
 	if !ok {
-		return nil, fmt.Errorf("endpoint not found in cache for a registered resource: %s", resource)
+		return nil, fmt.Errorf("在已注册的资源的缓存中找不到对应的端点。%s", resource)
 	}
 
 	if eI.opts == nil || !eI.opts.GetPreferredAllocationAvailable {
@@ -856,13 +760,6 @@ func (m *ManagerImpl) ShouldResetExtendedResourceCapacity() bool {
 	return len(checkpoints) == 0
 }
 
-func (m *ManagerImpl) setPodPendingAdmission(pod *v1.Pod) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	m.pendingAdmissionPod = pod
-}
-
 // -------------------------------------------------------------------------------------------------------------------
 
 // NewManagerImpl creates a new manager.
@@ -918,19 +815,19 @@ func newManagerImpl(socketPath string, topology []cadvisorapi.Node, topologyAffi
 
 // Allocate 分配已注册插件的资源
 func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
-	// pod 在准入阶段，应该先保存它，避免在结束前 丢失数据
+	// pod 在准入阶段,应该先保存它,避免在结束前 丢失数据
 	m.setPodPendingAdmission(pod)
 
 	if _, ok := m.devicesToReuse[string(pod.UID)]; !ok {
 		m.devicesToReuse[string(pod.UID)] = make(map[string]sets.String)
 	}
-	// 如果m.devicesToReuse中存在当前pod以外的pod条目，请删除它们。
+	// 如果m.devicesToReuse中存在当前pod以外的pod条目,请删除它们.
 	for podUID := range m.devicesToReuse {
 		if podUID != string(pod.UID) {
 			delete(m.devicesToReuse, podUID)
 		}
 	}
-	//首先为init容器分配资源，因为我们知道调用者总是在遍历应用程序容器之前循环遍历init容器。如果调用者更改了这些语义，则需要修改此逻辑。
+	//首先为init容器分配资源,因为我们知道调用者总是在遍历应用程序容器之前循环遍历init容器.如果调用者更改了这些语义,则需要修改此逻辑.
 	for _, initContainer := range pod.Spec.InitContainers {
 		if container.Name == initContainer.Name {
 			if err := m.allocateContainerResources(pod, container, m.devicesToReuse[string(pod.UID)]); err != nil {
@@ -959,7 +856,7 @@ func (m *ManagerImpl) isDevicePluginResource(resource string) bool {
 	return false
 }
 
-// UpdateAllocatedDevices 释放任何绑定到终止pod的设备。
+// UpdateAllocatedDevices 释放任何绑定到终止pod的设备.
 func (m *ManagerImpl) UpdateAllocatedDevices() {
 	if !m.sourcesReady.AllReady() { // kubelet配置源的就绪状态
 		return
@@ -982,5 +879,109 @@ func (m *ManagerImpl) UpdateAllocatedDevices() {
 	}
 	klog.V(3).InfoS("Pods to be removed", "podUIDs", podsToBeRemoved.List())
 	m.podDevices.delete(podsToBeRemoved.List()) // 移除不存在的pod占用的设备
-	m.allocatedDevices = m.podDevices.devices() // 在更新了Pod的分配信息之后，重新生成已分配设备
+	m.allocatedDevices = m.podDevices.devices() // 在更新了Pod的分配信息之后,重新生成已分配设备
+}
+
+func (m *ManagerImpl) setPodPendingAdmission(pod *v1.Pod) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.pendingAdmissionPod = pod
+}
+
+// 根据NUMA亲和性进行设备筛选的操作.在设备分配过程中,可能会根据NUMA节点的亲和性来选择合适的设备.通过筛选可用的设备,可以确保将设备分配给与容器或任务具有相同NUMA节点亲和性的节点,以提高性能和效率.
+func (m *ManagerImpl) filterByAffinity(podUID, containerName, resource string, available sets.String) (aligned, unaligned, noAffinity sets.String) {
+	// 如果没有可用的对齐信息,那么就直接将可用的设备列表返回.
+	hint := m.topologyAffinityStore.GetAffinity(podUID, containerName)
+	// 判断这种资源是不是需要numa对齐
+	if !m.deviceHasTopologyAlignment(resource) || hint.NUMANodeAffinity == nil {
+		return sets.NewString(), sets.NewString(), available
+	}
+	// 建立NUMA节点到与其相关联的设备的映射.一个设备可以同时关联多个NUMA节点.
+	// 如果一个可用的设备没有任何NUMA节点与它相关联,将它添加到一个NUMA节点列表中,为假的NUMANode -1.
+	perNodeDevices := make(map[int]sets.String)
+	for d := range available {
+		if m.allDevices[resource][d].Topology == nil || len(m.allDevices[resource][d].Topology.Nodes) == 0 {
+			if _, ok := perNodeDevices[nodeWithoutTopology]; !ok {
+				perNodeDevices[nodeWithoutTopology] = sets.NewString()
+			}
+			perNodeDevices[nodeWithoutTopology].Insert(d)
+			continue
+		}
+
+		for _, node := range m.allDevices[resource][d].Topology.Nodes {
+			if _, ok := perNodeDevices[int(node.ID)]; !ok {
+				perNodeDevices[int(node.ID)] = sets.NewString()
+			}
+			perNodeDevices[int(node.ID)].Insert(d)
+		}
+	}
+
+	// Get a flat list of all of the nodes associated with available devices.
+	var nodes []int
+	for node := range perNodeDevices {
+		nodes = append(nodes, node)
+	}
+
+	// 这段代码的作用是对节点列表进行排序。排序规则如下：
+	//
+	//1) 首先将节点列表中与给定的'hint'节点亲和性集合中包含的节点排在前面。
+	//2) 然后将节点列表中与给定的'hint'节点亲和性集合中不包含的节点排在后面。
+	//3) 如果列表中包含一个虚拟的NUMANode节点编号为-1的节点（假设存在），将其排在最后。
+	//
+	//在每个上述分组内，再根据节点所包含的设备数量进行排序。
+	sort.Slice(nodes, func(i, j int) bool {
+		// If one or the other of nodes[i] or nodes[j] is in the 'hint's affinity set
+		if hint.NUMANodeAffinity.IsSet(nodes[i]) && hint.NUMANodeAffinity.IsSet(nodes[j]) {
+			return perNodeDevices[nodes[i]].Len() < perNodeDevices[nodes[j]].Len()
+		}
+		if hint.NUMANodeAffinity.IsSet(nodes[i]) {
+			return true
+		}
+		if hint.NUMANodeAffinity.IsSet(nodes[j]) {
+			return false
+		}
+
+		// If one or the other of nodes[i] or nodes[j] is the fake NUMA node -1 (they can't both be)
+		if nodes[i] == nodeWithoutTopology {
+			return false
+		}
+		if nodes[j] == nodeWithoutTopology {
+			return true
+		}
+
+		// Otherwise both nodes[i] and nodes[j] are real NUMA nodes that are not in the 'hint's' affinity list.
+		return perNodeDevices[nodes[i]].Len() < perNodeDevices[nodes[j]].Len()
+	})
+
+	// 这段代码的作用是生成三个已排序的设备列表。其中，
+	// 第一个列表中的设备来自于亲和性掩码中包含的有效NUMA节点。
+	// 第二个列表中的设备来自于亲和性掩码中不包含的有效NUMA节点。
+	// 第三个列表中的设备来自于没有与任何NUMA节点关联的设备（即映射到虚拟NUMA节点-1的设备）。
+	// 由于我们按顺序遍历已排序的NUMA节点列表，在每个列表中，设备按其与具有更多设备的NUMA节点的连接进行排序。
+	var fromAffinity []string
+	var notFromAffinity []string
+	var withoutTopology []string
+	for d := range available {
+		// Since the same device may be associated with multiple NUMA Nodes. We
+		// need to be careful not to add each device to multiple lists. The
+		// logic below ensures this by breaking after the first NUMA node that
+		// has the device is encountered.
+		for _, n := range nodes {
+			if perNodeDevices[n].Has(d) {
+				if n == nodeWithoutTopology {
+					withoutTopology = append(withoutTopology, d)
+				} else if hint.NUMANodeAffinity.IsSet(n) {
+					fromAffinity = append(fromAffinity, d)
+				} else {
+					notFromAffinity = append(notFromAffinity, d)
+				}
+				break
+			}
+		}
+	}
+
+	// Return all three lists containing the full set of devices across them.
+	// pod填写了对应的node序号， 根据每个node绑定的设备拓扑 进行分组
+	return sets.NewString(fromAffinity...), sets.NewString(notFromAffinity...), sets.NewString(withoutTopology...)
 }

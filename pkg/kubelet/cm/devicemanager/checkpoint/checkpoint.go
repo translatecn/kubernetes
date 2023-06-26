@@ -30,15 +30,15 @@ type DeviceManagerCheckpoint interface {
 	GetDataInLatestFormat() ([]PodDevicesEntry, map[string][]string)
 }
 
-type DevicesPerNUMA map[int64][]string // 表示从设备插件获取的每个NUMA节点ID的设备ID。
+type DevicesPerNUMA map[int64][]string // 表示从设备插件获取的每个NUMA节点ID的设备ID.
 
 // PodDevicesEntry connects pod information to devices
 type PodDevicesEntry struct {
 	PodUID        string
 	ContainerName string
 	ResourceName  string
-	DeviceIDs     DevicesPerNUMA // 表示分配给该Pod和容器的设备ID。它是一个映射，将每个NUMA节点与相应的设备ID列表关联起来。
-	AllocResp     []byte         // 表示与设备分配相关的响应信息的字节数组。
+	DeviceIDs     DevicesPerNUMA // 表示分配给该Pod和容器的设备ID.它是一个映射,将每个NUMA节点与相应的设备ID列表关联起来.
+	AllocResp     []byte         // 表示与设备分配相关的响应信息的字节数组.
 }
 
 // checkpointData struct is used to store pod to device allocation information

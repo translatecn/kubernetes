@@ -28,7 +28,7 @@ import (
 )
 
 type deviceAllocateInfo struct {
-	deviceIds checkpoint.DevicesPerNUMA            // 分配给该容器的设备ID.它是一个映射，将每个NUMA节点与相应的设备ID列表关联起来。每个设备ID代表一个已分配的设备。
+	deviceIds checkpoint.DevicesPerNUMA            // 分配给该容器的设备ID.它是一个映射,将每个NUMA节点与相应的设备ID列表关联起来.每个设备ID代表一个已分配的设备.
 	allocResp *pluginapi.ContainerAllocateResponse // 存储了与设备分配相关的一些响应信息
 }
 
@@ -389,7 +389,7 @@ func newPodDevices() *podDevices {
 	return &podDevices{devs: make(map[string]containerDevices)}
 }
 
-// 获取给定容器和资源的设备分配情况。
+// 获取给定容器某种资源的设备分配情况.
 func (pdev *podDevices) containerDevices(podUID, contName, resource string) sets.String {
 	pdev.RLock()
 	defer pdev.RUnlock()

@@ -253,13 +253,10 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 	f.ContainerRuntimeOptions.AddFlags(fs)
 	f.addOSFlags(fs)
 
-	fs.StringVar(&f.KubeletConfigFile, "config", f.KubeletConfigFile, "The Kubelet will load its initial configuration from this file. The path may be absolute or relative; relative paths start at the Kubelet's current working directory. Omit this flag to use the built-in default configuration values. Command-line flags override configuration from this file.")
-	fs.StringVar(&f.KubeConfig, "kubeconfig", f.KubeConfig, "使用--kubeconfig指定与api-server 通信的配置.")
+	fs.StringVar(&f.KubeletConfigFile, "config", f.KubeletConfigFile, "kubelet 本身运行需要的配置")
+	fs.StringVar(&f.KubeConfig, "kubeconfig", f.KubeConfig, "使用--kubeconfig指定与api-server 通信的配置.没有会自动生成 ")
 
-	fs.StringVar(&f.BootstrapKubeconfig, "bootstrap-kubeconfig", f.BootstrapKubeconfig, "Path to a kubeconfig file that will be used to get client certificate for kubelet. "+
-		"If the file specified by --kubeconfig does not exist, the bootstrap kubeconfig is used to request a client certificate from the API server. "+
-		"On success, a kubeconfig file referencing the generated client certificate and key is written to the path specified by --kubeconfig. "+
-		"The client certificate and key file will be stored in the directory pointed by --cert-dir.")
+	fs.StringVar(&f.BootstrapKubeconfig, "bootstrap-kubeconfig", f.BootstrapKubeconfig, "优先使用kubeconfig,没有kubeconfig 在使用,并生成kubeconfig")
 
 	fs.StringVar(&f.HostnameOverride, "hostname-override", f.HostnameOverride, "If non-empty, will use this string as identification instead of the actual hostname. If --cloud-provider is set, the cloud provider determines the name of the node (consult cloud provider documentation to determine if and how the hostname is used).")
 

@@ -289,7 +289,7 @@ func (m *ManagerImpl) getPodDeviceRequest(pod *v1.Pod) map[string]int {
 }
 
 func (m *ManagerImpl) deviceHasTopologyAlignment(resource string) bool {
-	// 如果任何设备都有可用的拓扑numodes，我们假设它们关心对齐。
+	// 如果任何设备都有可用的拓扑numodes,我们假设它们关心对齐.
 	for _, device := range m.allDevices[resource] {
 		if device.Topology != nil && len(device.Topology.Nodes) > 0 {
 			return true
