@@ -153,7 +153,7 @@ func NewManager(
 		reservedCPUs, ok := nodeAllocatableReservation[v1.ResourceCPU]
 		if !ok {
 			// The static policy cannot initialize without this information.
-			return nil, fmt.Errorf("[cpumanager] unable to determine reserved CPU resources for static policy")
+			return nil, fmt.Errorf("[cpumanager] 无法确定静态策略的保留CPU资源.")
 		}
 		if reservedCPUs.IsZero() {
 			// The static policy requires this to be nonzero. Zero CPU reservation
@@ -161,7 +161,7 @@ func NewManager(
 			// either we would violate our guarantee of exclusivity or need to evict
 			// any pod that has at least one container that requires zero CPUs.
 			// See the comments in policy_static.go for more details.
-			return nil, fmt.Errorf("[cpumanager] the static policy requires systemreserved.cpu + kubereserved.cpu to be greater than zero")
+			return nil, fmt.Errorf("[cpumanager] 静态策略要求systemreserved.cpu + kubereserved.cpu必须大于零.")
 		}
 
 		// Take the ceiling of the reservation, since fractional CPUs cannot be

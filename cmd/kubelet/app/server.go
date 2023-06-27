@@ -671,7 +671,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		}
 		if reservedSystemCPUs.Size() > 0 {
 			// at cmd option validation phase it is tested either --system-reserved-cgroup or --kube-reserved-cgroup is specified, so overwrite should be ok
-			klog.InfoS("Option --reserved-cpus is specified, it will overwrite the cpu setting in KubeReserved and SystemReserved", "kubeReservedCPUs", s.KubeReserved, "systemReservedCPUs", s.SystemReserved)
+			klog.InfoS("Option --reserved-cpus 如果指定了cpu,则会覆盖KubeReserved和SystemReserved中的cpu设置.", "kubeReservedCPUs", s.KubeReserved, "systemReservedCPUs", s.SystemReserved)
 			if s.KubeReserved != nil {
 				delete(s.KubeReserved, "cpu")
 			}

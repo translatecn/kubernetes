@@ -255,16 +255,10 @@ func (f *KubeletFlags) AddFlags(mainfs *pflag.FlagSet) {
 
 	fs.StringVar(&f.KubeletConfigFile, "config", f.KubeletConfigFile, "kubelet 本身运行需要的配置")
 	fs.StringVar(&f.KubeConfig, "kubeconfig", f.KubeConfig, "使用--kubeconfig指定与api-server 通信的配置.没有会自动生成 ")
-
 	fs.StringVar(&f.BootstrapKubeconfig, "bootstrap-kubeconfig", f.BootstrapKubeconfig, "优先使用kubeconfig,没有kubeconfig 在使用,并生成kubeconfig")
-
 	fs.StringVar(&f.HostnameOverride, "hostname-override", f.HostnameOverride, "If non-empty, will use this string as identification instead of the actual hostname. If --cloud-provider is set, the cloud provider determines the name of the node (consult cloud provider documentation to determine if and how the hostname is used).")
-
 	fs.StringVar(&f.NodeIP, "node-ip", f.NodeIP, "IP address (or comma-separated dual-stack IP addresses) of the node. If unset, kubelet will use the node's default IPv4 address, if any, or its default IPv6 address if it has no IPv4 addresses. You can pass '::' to make it prefer the default IPv6 address rather than the default IPv4 address.")
-
-	fs.StringVar(&f.CertDirectory, "cert-dir", f.CertDirectory, "The directory where the TLS certs are located. "+
-		"If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.")
-
+	fs.StringVar(&f.CertDirectory, "cert-dir", f.CertDirectory, "The directory where the TLS certs are located. If --tls-cert-file and --tls-private-key-file are provided, this flag will be ignored.")
 	fs.StringVar(&f.RootDirectory, "root-dir", f.RootDirectory, "kubelet 管理的文件目录 (volume mounts,etc).")
 
 	fs.StringVar(&f.RemoteRuntimeEndpoint, "container-runtime-endpoint", f.RemoteRuntimeEndpoint, "The endpoint of remote runtime service. Unix Domain Sockets are supported on Linux, while npipe and tcp endpoints are supported on Windows. Examples:'unix:///path/to/runtime.sock', 'npipe:////./pipe/runtime'")
@@ -344,45 +338,25 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.Int32Var(&c.ReadOnlyPort, "read-only-port", c.ReadOnlyPort, "The read-only port for the Kubelet to serve on with no authentication/authorization (set to 0 to disable)")
 
 	// Authentication
-	fs.BoolVar(&c.Authentication.Anonymous.Enabled, "anonymous-auth", c.Authentication.Anonymous.Enabled,
-		"Enables anonymous requests to the Kubelet server. Requests that are not rejected by another "+
-			"authentication method are treated as anonymous requests. Anonymous requests have a username "+
-			"of system:anonymous, and a group name of system:unauthenticated.")
-	fs.BoolVar(&c.Authentication.Webhook.Enabled, "authentication-token-webhook", c.Authentication.Webhook.Enabled,
-		"Use the TokenReview API to determine authentication for bearer tokens.")
-	fs.DurationVar(&c.Authentication.Webhook.CacheTTL.Duration, "authentication-token-webhook-cache-ttl", c.Authentication.Webhook.CacheTTL.Duration,
-		"The duration to cache responses from the webhook token authenticator.")
-	fs.StringVar(&c.Authentication.X509.ClientCAFile, "client-ca-file", c.Authentication.X509.ClientCAFile,
-		"If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file "+
-			"is authenticated with an identity corresponding to the CommonName of the client certificate.")
+	fs.BoolVar(&c.Authentication.Anonymous.Enabled, "anonymous-auth", c.Authentication.Anonymous.Enabled, "Enables anonymous requests to the Kubelet server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of system:anonymous, and a group name of system:unauthenticated.")
+	fs.BoolVar(&c.Authentication.Webhook.Enabled, "authentication-token-webhook", c.Authentication.Webhook.Enabled, "Use the TokenReview API to determine authentication for bearer tokens.")
+	fs.DurationVar(&c.Authentication.Webhook.CacheTTL.Duration, "authentication-token-webhook-cache-ttl", c.Authentication.Webhook.CacheTTL.Duration, "The duration to cache responses from the webhook token authenticator.")
+	fs.StringVar(&c.Authentication.X509.ClientCAFile, "client-ca-file", c.Authentication.X509.ClientCAFile, "If set, any request presenting a client certificate signed by one of the authorities in the client-ca-file is authenticated with an identity corresponding to the CommonName of the client certificate.")
 
 	// Authorization
-	fs.StringVar((*string)(&c.Authorization.Mode), "authorization-mode", string(c.Authorization.Mode),
-		"Authorization mode for Kubelet server. Valid options are AlwaysAllow or Webhook. "+
-			"Webhook mode uses the SubjectAccessReview API to determine authorization.")
-	fs.DurationVar(&c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "authorization-webhook-cache-authorized-ttl", c.Authorization.Webhook.CacheAuthorizedTTL.Duration,
-		"The duration to cache 'authorized' responses from the webhook authorizer.")
-	fs.DurationVar(&c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "authorization-webhook-cache-unauthorized-ttl", c.Authorization.Webhook.CacheUnauthorizedTTL.Duration,
-		"The duration to cache 'unauthorized' responses from the webhook authorizer.")
+	fs.StringVar((*string)(&c.Authorization.Mode), "authorization-mode", string(c.Authorization.Mode), "Authorization mode for Kubelet server. Valid options are AlwaysAllow or Webhook. Webhook mode uses the SubjectAccessReview API to determine authorization.")
+	fs.DurationVar(&c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "authorization-webhook-cache-authorized-ttl", c.Authorization.Webhook.CacheAuthorizedTTL.Duration, "The duration to cache 'authorized' responses from the webhook authorizer.")
+	fs.DurationVar(&c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "authorization-webhook-cache-unauthorized-ttl", c.Authorization.Webhook.CacheUnauthorizedTTL.Duration, "The duration to cache 'unauthorized' responses from the webhook authorizer.")
 
-	fs.StringVar(&c.TLSCertFile, "tls-cert-file", c.TLSCertFile,
-		"File containing x509 Certificate used for serving HTTPS (with intermediate certs, if any, concatenated after server cert). "+
-			"If --tls-cert-file and --tls-private-key-file are not provided, a self-signed certificate and key "+
-			"are generated for the public address and saved to the directory passed to --cert-dir.")
+	fs.StringVar(&c.TLSCertFile, "tls-cert-file", c.TLSCertFile, "File containing x509 Certificate used for serving HTTPS (with intermediate certs, if any, concatenated after server cert). If --tls-cert-file and --tls-private-key-file are not provided, a self-signed certificate and key are generated for the public address and saved to the directory passed to --cert-dir.")
 	fs.StringVar(&c.TLSPrivateKeyFile, "tls-private-key-file", c.TLSPrivateKeyFile, "File containing x509 private key matching --tls-cert-file.")
 	fs.BoolVar(&c.ServerTLSBootstrap, "rotate-server-certificates", c.ServerTLSBootstrap, "Auto-request and rotate the kubelet serving certificates by requesting new certificates from the kube-apiserver when the certificate expiration approaches. Requires the RotateKubeletServerCertificate feature gate to be enabled, and approval of the submitted CertificateSigningRequest objects.")
 
 	tlsCipherPreferredValues := cliflag.PreferredTLSCipherNames()
 	tlsCipherInsecureValues := cliflag.InsecureTLSCipherNames()
-	fs.StringSliceVar(&c.TLSCipherSuites, "tls-cipher-suites", c.TLSCipherSuites,
-		"Comma-separated list of cipher suites for the server. "+
-			"If omitted, the default Go cipher suites will be used. \n"+
-			"Preferred values: "+strings.Join(tlsCipherPreferredValues, ", ")+". \n"+
-			"Insecure values: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
+	fs.StringSliceVar(&c.TLSCipherSuites, "tls-cipher-suites", c.TLSCipherSuites, "Comma-separated list of cipher suites for the server. If omitted, the default Go cipher suites will be used. \nPreferred values: "+strings.Join(tlsCipherPreferredValues, ", ")+". \nInsecure values: "+strings.Join(tlsCipherInsecureValues, ", ")+".")
 	tlsPossibleVersions := cliflag.TLSPossibleVersions()
-	fs.StringVar(&c.TLSMinVersion, "tls-min-version", c.TLSMinVersion,
-		"Minimum TLS version supported. "+
-			"Possible values: "+strings.Join(tlsPossibleVersions, ", "))
+	fs.StringVar(&c.TLSMinVersion, "tls-min-version", c.TLSMinVersion, "Minimum TLS version supported. Possible values: "+strings.Join(tlsPossibleVersions, ", "))
 	fs.BoolVar(&c.RotateCertificates, "rotate-certificates", c.RotateCertificates, "<Warning: Beta feature> Auto rotate the kubelet client certificates by requesting new certificates from the kube-apiserver when the certificate expiration approaches.")
 
 	fs.Int32Var(&c.RegistryPullQPS, "registry-qps", c.RegistryPullQPS, "If > 0, limit registry pull QPS to this value.  If 0, unlimited.")
@@ -415,9 +389,9 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.BoolVar(&c.CgroupsPerQOS, "cgroups-per-qos", c.CgroupsPerQOS, "Enable creation of QoS cgroup hierarchy, if true top level QoS and pod cgroups are created.")
 	fs.StringVar(&c.CgroupDriver, "cgroup-driver", c.CgroupDriver, "kubelet用来在主机上操作cgroups的驱动程序(cgroupfs或systemd),默认 cgroupfs")
 	fs.StringVar(&c.CgroupRoot, "cgroup-root", c.CgroupRoot, "Optional root cgroup to use for pods. This is handled by the container runtime on a best effort basis. Default: '', which means use the container runtime default.")
-	fs.StringVar(&c.CPUManagerPolicy, "cpu-manager-policy", c.CPUManagerPolicy, "CPU Manager policy to use. Possible values: 'none', 'static'.")
-	fs.Var(cliflag.NewMapStringStringNoSplit(&c.CPUManagerPolicyOptions), "cpu-manager-policy-options", "A set of key=value CPU Manager policy options to use, to fine tune their behaviour. If not supplied, keep the default behaviour.")
-	fs.DurationVar(&c.CPUManagerReconcilePeriod.Duration, "cpu-manager-reconcile-period", c.CPUManagerReconcilePeriod.Duration, "<Warning: Alpha feature> CPU Manager reconciliation period. Examples: '10s', or '1m'. If not supplied, defaults to 'NodeStatusUpdateFrequency'")
+	fs.StringVar(&c.CPUManagerPolicy, "cpu-manager-policy", c.CPUManagerPolicy, "CPU管理策略. Possible values: 'none', 'static'.")
+	fs.Var(cliflag.NewMapStringStringNoSplit(&c.CPUManagerPolicyOptions), "cpu-manager-policy-options", "一组k=v, CPU管理器策略选项,用于微调它们的行为.如果没有提供,则保持默认行为.")
+	fs.DurationVar(&c.CPUManagerReconcilePeriod.Duration, "cpu-manager-reconcile-period", c.CPUManagerReconcilePeriod.Duration, "<Warning: Alpha feature> CPU管理器对账周期. Examples: '10s', or '1m'. If not supplied, defaults to 'NodeStatusUpdateFrequency'")
 	fs.Var(cliflag.NewMapStringString(&c.QOSReserved), "qos-reserved", "<Warning: Alpha feature> A set of ResourceName=Percentage (e.g. memory=50%) pairs that describe how pod resource requests are reserved at the QoS level. Currently only memory is supported. Requires the QOSReserved feature gate to be enabled.")
 	fs.StringVar(&c.TopologyManagerPolicy, "topology-manager-policy", c.TopologyManagerPolicy, "拓扑管理器策略.可能的值: 'none', 'best-effort', 'restricted', 'single-numa-node'.")
 	fs.DurationVar(&c.RuntimeRequestTimeout.Duration, "runtime-request-timeout", c.RuntimeRequestTimeout.Duration, "Timeout of all runtime requests except long running request - pull, logs, exec and attach. When timeout exceeded, kubelet will cancel the request, throw out an error and retry later.")

@@ -57713,7 +57713,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"enableServer": {
 						SchemaProps: spec.SchemaProps{
-							Description: "enableServer enables Kubelet's secured server. Note: Kubelet's insecure port is controlled by the readOnlyPort option. Default: true",
+							Description: "enableServer enables Kubelet's secured server.2 Note: Kubelet's insecure port is controlled by the readOnlyPort option. Default: true",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

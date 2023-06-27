@@ -64,42 +64,9 @@ func (s *server) ValidatePlugin(pluginName string, endpoint string, versions []s
 	return nil
 }
 
-func (s *server) connectClient(name string, socketPath string) error {
-	c := NewPluginClient(name, socketPath, s.chandler)
-
-	s.registerClient(name, c)
-	if err := c.Connect(); err != nil {
-		s.deregisterClient(name)
-		klog.ErrorS(err, "Failed to connect to new client", "resource", name)
-		return err
-	}
-
-	go func() {
-		s.runClient(name, c)
-	}()
-
-	return nil
-}
-
 func (s *server) disconnectClient(name string, c Client) error {
 	s.deregisterClient(name)
 	return c.Disconnect()
-}
-
-func (s *server) registerClient(name string, c Client) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	s.clients[name] = c
-	klog.V(2).InfoS("Registered client", "name", name)
-}
-
-func (s *server) deregisterClient(name string) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	delete(s.clients, name)
-	klog.V(2).InfoS("Deregistered client", "name", name)
 }
 
 func (s *server) runClient(name string, c Client) {
@@ -119,4 +86,35 @@ func (s *server) getClient(name string) Client {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return s.clients[name]
+}
+func (s *server) registerClient(name string, c Client) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.clients[name] = c
+	klog.V(2).InfoS("Registered client", "name", name)
+}
+
+func (s *server) deregisterClient(name string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	delete(s.clients, name)
+	klog.V(2).InfoS("Deregistered client", "name", name)
+}
+func (s *server) connectClient(name string, socketPath string) error {
+	c := NewPluginClient(name, socketPath, s.chandler)
+
+	s.registerClient(name, c)
+	if err := c.Connect(); err != nil {
+		s.deregisterClient(name)
+		klog.ErrorS(err, "Failed to connect to new client", "resource", name)
+		return err
+	}
+
+	go func() {
+		s.runClient(name, c)
+	}()
+
+	return nil
 }

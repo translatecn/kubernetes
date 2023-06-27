@@ -51,88 +51,24 @@ type server struct {
 	wg         sync.WaitGroup
 	grpc       *grpc.Server
 	rhandler   RegistrationHandler
-	chandler   ClientHandler
+	chandler   ClientHandler // 当与设备插件建立好链接、断开连接、的钩子
 	clients    map[string]Client
 }
 
-func (s *server) Start() error {
-	klog.V(2).InfoS("Starting device plugin registration server")
-
-	if err := os.MkdirAll(s.socketDir, 0750); err != nil {
-		klog.ErrorS(err, "Failed to create the device plugin socket directory", "directory", s.socketDir)
-		return err
-	}
-
-	if selinux.GetEnabled() {
-		if err := selinux.SetFileLabel(s.socketDir, config.KubeletPluginsDirSELinuxLabel); err != nil {
-			klog.InfoS("Unprivileged containerized plugins might not work. Could not set selinux context on socket dir", "path", s.socketDir, "err", err)
-		}
-	}
-
-	// For now we leave cleanup of the *entire* directory up to the Handler
-	// (even though we should in theory be able to just wipe the whole directory)
-	// because the Handler stores its checkpoint file (amongst others) in here.
-	if err := s.rhandler.CleanupPluginDirectory(s.socketDir); err != nil {
-		klog.ErrorS(err, "Failed to cleanup the device plugin directory", "directory", s.socketDir)
-		return err
-	}
-
-	ln, err := net.Listen("unix", s.SocketPath())
-	if err != nil {
-		klog.ErrorS(err, "Failed to listen to socket while starting device plugin registry")
-		return err
-	}
-
-	s.wg.Add(1)
-	s.grpc = grpc.NewServer([]grpc.ServerOption{}...)
-
-	api.RegisterRegistrationServer(s.grpc, s)
-	go func() {
-		defer s.wg.Done()
-		s.grpc.Serve(ln)
-	}()
-
-	return nil
-}
-
-func (s *server) Stop() error {
-	s.visitClients(func(r string, c Client) {
-		if err := s.disconnectClient(r, c); err != nil {
-			klog.InfoS("Error disconnecting device plugin client", "resourceName", r, "err", err)
-		}
-	})
-
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	if s.grpc == nil {
-		return nil
-	}
-
-	s.grpc.Stop()
-	s.wg.Wait()
-	s.grpc = nil
-
-	return nil
-}
-
-func (s *server) SocketPath() string {
-	return filepath.Join(s.socketDir, s.socketName)
-}
-
+// Register grpc 服务端提供的功能
 func (s *server) Register(ctx context.Context, r *api.RegisterRequest) (*api.Empty, error) {
-	klog.InfoS("Got registration request from device plugin with resource", "resourceName", r.ResourceName)
+	klog.InfoS("收到来自具有资源的设备插件的注册请求.", "resourceName", r.ResourceName)
 	metrics.DevicePluginRegistrationCount.WithLabelValues(r.ResourceName).Inc()
 
 	if !s.isVersionCompatibleWithPlugin(r.Version) {
 		err := fmt.Errorf(errUnsupportedVersion, r.Version, api.SupportedVersions)
-		klog.InfoS("Bad registration request from device plugin with resource", "resourceName", r.ResourceName, "err", err)
+		klog.InfoS("来自具有资源的设备插件的注册请求有问题.", "resourceName", r.ResourceName, "err", err)
 		return &api.Empty{}, err
 	}
 
 	if !v1helper.IsExtendedResourceName(core.ResourceName(r.ResourceName)) {
 		err := fmt.Errorf(errInvalidResourceName, r.ResourceName)
-		klog.InfoS("Bad registration request from device plugin", "err", err)
+		klog.InfoS("来自设备插件的注册请求有问题.", "err", err)
 		return &api.Empty{}, err
 	}
 
@@ -149,6 +85,8 @@ func (s *server) isVersionCompatibleWithPlugin(versions ...string) bool {
 	// multiple versions in the future, we may need to extend this function to return a supported version.
 	// E.g., say kubelet supports v1beta1 and v1beta2, and we get v1alpha1 and v1beta1 from a device plugin,
 	// this function should return v1beta1
+	// TODO（vikasc）：目前这还可以,因为我们只支持单个版本.当我们将来需要支持多个版本时,可能需要扩展此函数以返回支持的版本.
+	// 例如,假设kubelet支持v1beta1和v1beta2,并且我们从设备插件获取到v1alpha1和v1beta1,此函数应该返回v1beta1.
 	for _, version := range versions {
 		for _, supportedVersion := range api.SupportedVersions {
 			if version == supportedVersion {
@@ -177,7 +115,7 @@ func NewServer(socketPath string, rh RegistrationHandler, ch ClientHandler) (Ser
 
 	dir, name := filepath.Split(socketPath)
 
-	klog.V(2).InfoS("Creating device plugin registration server", "version", api.Version, "socket", socketPath)
+	klog.V(2).InfoS("创建设备插件注册服务器.", "version", api.Version, "socket", socketPath)
 	s := &server{
 		socketName: name,
 		socketDir:  dir,
@@ -187,4 +125,68 @@ func NewServer(socketPath string, rh RegistrationHandler, ch ClientHandler) (Ser
 	}
 
 	return s, nil
+}
+
+func (s *server) Stop() error {
+	s.visitClients(func(r string, c Client) {
+		if err := s.disconnectClient(r, c); err != nil {
+			klog.InfoS("Error disconnecting device plugin client", "resourceName", r, "err", err)
+		}
+	})
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if s.grpc == nil {
+		return nil
+	}
+
+	s.grpc.Stop()
+	s.wg.Wait()
+	s.grpc = nil
+
+	return nil
+}
+func (s *server) SocketPath() string {
+	return filepath.Join(s.socketDir, s.socketName)
+}
+func (s *server) Start() error {
+	klog.V(2).InfoS("Starting device plugin registration server")
+
+	if err := os.MkdirAll(s.socketDir, 0750); err != nil {
+		klog.ErrorS(err, "Failed to create the device plugin socket directory", "directory", s.socketDir)
+		return err
+	}
+
+	if selinux.GetEnabled() {
+		if err := selinux.SetFileLabel(s.socketDir, config.KubeletPluginsDirSELinuxLabel); err != nil {
+			klog.InfoS("非特权容器化插件可能无法正常工作.无法在套接字目录上设置 SELinux 上下文.", "path", s.socketDir, "err", err)
+		}
+	}
+
+	// For now we leave cleanup of the *entire* directory up to the Handler
+	// (even though we should in theory be able to just wipe the whole directory)
+	// because the Handler stores its checkpoint file (amongst others) in here.
+	// 目前,我们将整个目录的清理工作留给处理程序（尽管理论上我们应该能够只清除整个目录）,因为处理程序在这里存储其检查点文件（以及其他文件）.
+	if err := s.rhandler.CleanupPluginDirectory(s.socketDir); err != nil {
+		klog.ErrorS(err, "清理设备插件目录失败.", "directory", s.socketDir)
+		return err
+	}
+
+	ln, err := net.Listen("unix", s.SocketPath())
+	if err != nil {
+		klog.ErrorS(err, "在启动设备插件注册表时,无法监听套接字.")
+		return err
+	}
+
+	s.wg.Add(1)
+	s.grpc = grpc.NewServer([]grpc.ServerOption{}...)
+
+	api.RegisterRegistrationServer(s.grpc, s)
+	go func() {
+		defer s.wg.Done()
+		s.grpc.Serve(ln)
+	}()
+
+	return nil
 }

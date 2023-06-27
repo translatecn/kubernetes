@@ -66,37 +66,16 @@ const (
 type KubeletConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 
-	// enableServer enables Kubelet's secured server.
+	// enableServer enables Kubelet's secured server.2
 	// Note: Kubelet's insecure port is controlled by the readOnlyPort option.
 	// Default: true
-	EnableServer *bool `json:"enableServer,omitempty"`
-	// staticPodPath is the path to the directory containing local (static) pods to
-	// run, or the path to a single static pod file.
-	// Default: ""
-	// +optional
-	StaticPodPath string `json:"staticPodPath,omitempty"`
-	// syncFrequency is the max period between synchronizing running
-	// containers and config.
-	// Default: "1m"
-	// +optional
-	SyncFrequency metav1.Duration `json:"syncFrequency,omitempty"`
-	// fileCheckFrequency is the duration between checking config files for
-	// new data.
-	// Default: "20s"
-	// +optional
-	FileCheckFrequency metav1.Duration `json:"fileCheckFrequency,omitempty"`
-	// httpCheckFrequency is the duration between checking http for new data.
-	// Default: "20s"
-	// +optional
-	HTTPCheckFrequency metav1.Duration `json:"httpCheckFrequency,omitempty"`
-	// staticPodURL is the URL for accessing static pods to run.
-	// Default: ""
-	// +optional
-	StaticPodURL string `json:"staticPodURL,omitempty"`
-	// staticPodURLHeader is a map of slices with HTTP headers to use when accessing the podURL.
-	// Default: nil
-	// +optional
-	StaticPodURLHeader map[string][]string `json:"staticPodURLHeader,omitempty"`
+	EnableServer       *bool               `json:"enableServer,omitempty"`
+	StaticPodPath      string              `json:"staticPodPath,omitempty"`      // 静态pod的文件夹 Default: ""
+	SyncFrequency      metav1.Duration     `json:"syncFrequency,omitempty"`      // 周期性全量同步容器、配置的间隔 Default: "1m"
+	FileCheckFrequency metav1.Duration     `json:"fileCheckFrequency,omitempty"` // 静态pod文件检查周期 Default: "20s"
+	HTTPCheckFrequency metav1.Duration     `json:"httpCheckFrequency,omitempty"` // 静态pod http 检查周期 Default: "20s"
+	StaticPodURL       string              `json:"staticPodURL,omitempty"`       // 获取静态文件列表的地址 Default: ""
+	StaticPodURLHeader map[string][]string `json:"staticPodURLHeader,omitempty"` // 获取静态文件列表的地址,需要使用一些 HTTP 头部信息 Default: nil
 	// address is the IP address for the Kubelet to serve on (set to 0.0.0.0
 	// for all interfaces).
 	// Default: "0.0.0.0"
@@ -106,14 +85,8 @@ type KubeletConfiguration struct {
 	// The port number must be between 1 and 65535, inclusive.
 	// Default: 10250
 	// +optional
-	Port int32 `json:"port,omitempty"`
-	// readOnlyPort is the read-only port for the Kubelet to serve on with
-	// no authentication/authorization.
-	// The port number must be between 1 and 65535, inclusive.
-	// Setting this field to 0 disables the read-only service.
-	// Default: 0 (disabled)
-	// +optional
-	ReadOnlyPort int32 `json:"readOnlyPort,omitempty"`
+	Port         int32 `json:"port,omitempty"`
+	ReadOnlyPort int32 `json:"readOnlyPort,omitempty"` // 0 禁用
 	// tlsCertFile is the file containing x509 Certificate for HTTPS. (CA cert,
 	// if any, concatenated after server cert). If tlsCertFile and
 	// tlsPrivateKeyFile are not provided, a self-signed certificate
@@ -221,13 +194,8 @@ type KubeletConfiguration struct {
 	// host's search domains.
 	// Default: ""
 	// +optional
-	ClusterDomain string `json:"clusterDomain,omitempty"`
-	// clusterDNS is a list of IP addresses for the cluster DNS server. If set,
-	// kubelet will configure all containers to use this for DNS resolution
-	// instead of the host's DNS servers.
-	// Default: nil
-	// +optional
-	ClusterDNS []string `json:"clusterDNS,omitempty"`
+	ClusterDomain string   `json:"clusterDomain,omitempty"`
+	ClusterDNS    []string `json:"clusterDNS,omitempty"` // 逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用	// Default: nil
 	// streamingConnectionIdleTimeout is the maximum time a streaming connection
 	// can be idle before the connection is automatically closed.
 	// Default: "4h"
@@ -251,42 +219,15 @@ type KubeletConfiguration struct {
 	// Default: "5m"
 	// +optional
 	NodeStatusReportFrequency metav1.Duration `json:"nodeStatusReportFrequency,omitempty"`
-	// nodeLeaseDurationSeconds is Kubelet将在其相应的Lease上设置的持续时间.
-	// NodeLease provides an indicator of node health by having the Kubelet create and
-	// periodically renew a lease, named after the node, in the kube-node-lease namespace.
-	// If the lease expires, the node can be considered unhealthy.
-	// The lease is currently renewed every 10s, per KEP-0009. In the future, the lease renewal
-	// interval may be set based on the lease duration.
-	// The field value must be greater than 0.
-	// Default: 40
-	// +optional
-	NodeLeaseDurationSeconds int32 `json:"nodeLeaseDurationSeconds,omitempty"`
+	NodeLeaseDurationSeconds  int32           `json:"nodeLeaseDurationSeconds,omitempty"` // nodeLeaseDurationSeconds  Kubelet将在其相应的Lease上设置的持续时间. 	// Default: 40
 	// imageMinimumGCAge is the minimum age for an unused image before it is
 	// garbage collected.
 	// Default: "2m"
 	// +optional
-	ImageMinimumGCAge metav1.Duration `json:"imageMinimumGCAge,omitempty"`
-	// imageGCHighThresholdPercent is the percent of disk usage after which
-	// image garbage collection is always run. The percent is calculated by
-	// dividing this field value by 100, so this field must be between 0 and
-	// 100, inclusive. When specified, the value must be greater than
-	// imageGCLowThresholdPercent.
-	// Default: 85
-	// +optional
-	ImageGCHighThresholdPercent *int32 `json:"imageGCHighThresholdPercent,omitempty"`
-	// imageGCLowThresholdPercent is the percent of disk usage before which
-	// image garbage collection is never run. Lowest disk usage to garbage
-	// collect to. The percent is calculated by dividing this field value by 100,
-	// so the field value must be between 0 and 100, inclusive. When specified, the
-	// value must be less than imageGCHighThresholdPercent.
-	// Default: 80
-	// +optional
-	ImageGCLowThresholdPercent *int32 `json:"imageGCLowThresholdPercent,omitempty"`
-	// volumeStatsAggPeriod is the frequency for calculating and caching volume
-	// disk usage for all pods.
-	// Default: "1m"
-	// +optional
-	VolumeStatsAggPeriod metav1.Duration `json:"volumeStatsAggPeriod,omitempty"`
+	ImageMinimumGCAge           metav1.Duration `json:"imageMinimumGCAge,omitempty"`
+	ImageGCHighThresholdPercent *int32          `json:"imageGCHighThresholdPercent,omitempty"` // 运行image GC的磁盘使用百分比.取值范围为[0,100],不启用image gcc回收,defau.
+	ImageGCLowThresholdPercent  *int32          `json:"imageGCLowThresholdPercent,omitempty"`  // 在此之前从未运行image GC的磁盘使用百分比.要进行垃圾收集的磁盘使用率最低.取值必须在[0,100]范围内,且不能大于--image-gc-high-threshold   default 80
+	VolumeStatsAggPeriod        metav1.Duration `json:"volumeStatsAggPeriod,omitempty"`        // 计算和缓存所有pod卷磁盘使用量的频率  default 1m
 	// kubeletCgroups is the absolute name of cgroups to isolate the kubelet in
 	// Default: ""
 	// +optional
@@ -298,21 +239,9 @@ type KubeletConfiguration struct {
 	// Default: ""
 	// +optional
 	SystemCgroups string `json:"systemCgroups,omitempty"`
-	// cgroupRoot is the root cgroup to use for pods. This is handled by the
-	// container runtime on a best effort basis.
-	// +optional
-	CgroupRoot string `json:"cgroupRoot,omitempty"`
-	// cgroupsPerQOS enable QoS based CGroup hierarchy: top level CGroups for QoS classes
-	// and all Burstable and BestEffort Pods are brought up under their specific top level
-	// QoS CGroup.
-	// Default: true
-	// +optional
-	CgroupsPerQOS *bool `json:"cgroupsPerQOS,omitempty"`
-	// cgroupDriver is the driver kubelet uses to manipulate CGroups on the host (cgroupfs
-	// or systemd).
-	// Default: "cgroupfs"
-	// +optional
-	CgroupDriver string `json:"cgroupDriver,omitempty"`
+	CgroupRoot    string `json:"cgroupRoot,omitempty"`    // CgroupRoot是用于pod的根cgroup如果启用了CgroupsPerQOS,则这是QoS cgroup层次结构的根.
+	CgroupsPerQOS *bool  `json:"cgroupsPerQOS,omitempty"` // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup,所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下.   默认true
+	CgroupDriver  string `json:"cgroupDriver,omitempty"`  // kubelet用来在主机上操作cgroups的驱动程序(cgroupfs或systemd)Default: "cgroupfs"
 	// cpuManagerPolicy is the name of the policy to use.
 	// Requires the CPUManager feature gate to be enabled.
 	// Default: "None"
@@ -348,7 +277,7 @@ type KubeletConfiguration struct {
 	// Policies other than "none" require the TopologyManager feature gate to be enabled.
 	// Default: "none"
 	// +optional
-	TopologyManagerPolicy string `json:"topologyManagerPolicy,omitempty"`
+	TopologyManagerPolicy string `json:"topologyManagerPolicy,omitempty"` // 策略名称,除了 "none" 之外的策略需要启用 TopologyManager 功能门控.一般都开启
 	// topologyManagerScope represents the scope of topology hint generation
 	// that topology manager requests and hint providers generate. Valid values include:
 	//
@@ -358,13 +287,8 @@ type KubeletConfiguration struct {
 	// "pod" scope requires the TopologyManager feature gate to be enabled.
 	// Default: "container"
 	// +optional
-	TopologyManagerScope string `json:"topologyManagerScope,omitempty"`
-	// TopologyManagerPolicyOptions is a set of key=value which allows to set extra options
-	// to fine tune the behaviour of the topology manager policies.
-	// Requires  both the "TopologyManager" and "TopologyManagerPolicyOptions" feature gates to be enabled.
-	// Default: nil
-	// +optional
-	TopologyManagerPolicyOptions map[string]string `json:"topologyManagerPolicyOptions,omitempty"`
+	TopologyManagerScope         string            `json:"topologyManagerScope,omitempty"`         // 拓扑管理器请求和提示提供程序生成的拓扑提示的范围. Default: "container"
+	TopologyManagerPolicyOptions map[string]string `json:"topologyManagerPolicyOptions,omitempty"` // 一组key=value,它允许设置额外的选项来微调拓扑管理器策略的行为.	// Default: nil
 	// qosReserved is a set of resource name to percentage pairs that specify
 	// the minimum percentage of a resource reserved for exclusive use by the
 	// guaranteed QoS tier.
@@ -392,30 +316,20 @@ type KubeletConfiguration struct {
 	// Default: "promiscuous-bridge"
 	// +optional
 	HairpinMode string `json:"hairpinMode,omitempty"`
-	// maxPods is the maximum 可以在Kubelet上运行的pod的数量.
-	// The value must be a non-negative integer.
-	// Default: 110
-	// +optional
-	MaxPods int32 `json:"maxPods,omitempty"`
+	MaxPods     int32  `json:"maxPods,omitempty"` // maxPods is the maximum 可以在Kubelet上运行的pod的数量. Default: 110
 	// podCIDR is the CIDR to use for pod IP addresses, only used in standalone mode.
 	// In cluster mode, this is obtained from the control plane.
 	// Default: ""
 	// +optional
-	PodCIDR string `json:"podCIDR,omitempty"`
-	// pod中pid的最大数目.Default: -1
-	// +optional
-	PodPidsLimit *int64 `json:"podPidsLimit,omitempty"`
+	PodCIDR      string `json:"podCIDR,omitempty"`
+	PodPidsLimit *int64 `json:"podPidsLimit,omitempty"` // pod中pid的最大数目.Default: -1
 	// resolvConf is the resolver configuration file used as the basis
 	// for the container DNS resolution configuration.
 	// If set to the empty string, will override the default and effectively disable DNS lookups.
 	// Default: "/etc/resolv.conf"
 	// +optional
 	ResolverConfig *string `json:"resolvConf,omitempty"`
-	// runOnce causes the Kubelet to check the API server once for pods,
-	// run those in addition to the pods specified by static pod files, and exit.
-	// Default: false
-	// +optional
-	RunOnce bool `json:"runOnce,omitempty"`
+	RunOnce        bool    `json:"runOnce,omitempty"` // Kubelet 仅检查一次 API 服务器以获取 Pod,运行这些 Pod 并在完成后退出,除了静态 Pod 文件中指定的 Pod 之外Default: false
 	// cpuCFSQuota enables CPU CFS quota enforcement for containers that
 	// specify CPU limits.
 	// Default: true
@@ -513,19 +427,8 @@ type KubeletConfiguration struct {
 	// Default: true
 	// +optional
 	EnableControllerAttachDetach *bool `json:"enableControllerAttachDetach,omitempty"`
-	// protectKernelDefaults, if true, causes the Kubelet to error if kernel
-	// flags are not as it expects. Otherwise the Kubelet will attempt to modify
-	// kernel flags to match its expectation.
-	// Default: false
-	// +optional
-	ProtectKernelDefaults bool `json:"protectKernelDefaults,omitempty"`
-	// makeIPTablesUtilChains, if true, causes the Kubelet ensures a set of iptables rules
-	// are present on host.
-	// These rules will serve as utility rules for various components, e.g. kube-proxy.
-	// The rules will be created based on iptablesMasqueradeBit and iptablesDropBit.
-	// Default: true
-	// +optional
-	MakeIPTablesUtilChains *bool `json:"makeIPTablesUtilChains,omitempty"`
+	ProtectKernelDefaults        bool  `json:"protectKernelDefaults,omitempty"`  // 如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期.	// Default: false
+	MakeIPTablesUtilChains       *bool `json:"makeIPTablesUtilChains,omitempty"` // 如果为true, kubelet将确保主机上存在iptables实用程序规则.这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建.// Default: true
 	// iptablesMasqueradeBit is the bit of the iptables fwmark space to mark for SNAT.
 	// Values must be within the range [0, 31]. Must be different from other mark bits.
 	// Warning: Please match the value of the corresponding parameter in kube-proxy.
@@ -544,10 +447,7 @@ type KubeletConfiguration struct {
 	// Default: nil
 	// +optional
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
-	// failSwapOn tells the Kubelet to fail to start if swap is enabled on the node.
-	// Default: true
-	// +optional
-	FailSwapOn *bool `json:"failSwapOn,omitempty"`
+	FailSwapOn   *bool           `json:"failSwapOn,omitempty"` // 告诉Kubelet,如果在节点上启用了swap,则启动失败.默认为true
 	// memorySwap configures swap memory available to container workloads.
 	// +featureGate=NodeSwap
 	// +optional
@@ -572,24 +472,8 @@ type KubeletConfiguration struct {
 	// Default: "Watch"
 	// +optional
 	ConfigMapAndSecretChangeDetectionStrategy ResourceChangeDetectionStrategy `json:"configMapAndSecretChangeDetectionStrategy,omitempty"`
-
-	/* the following fields are meant for Node Allocatable */
-
-	// systemReserved is a set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G)
-	// pairs that describe resources reserved for non-kubernetes components.
-	// Currently only cpu and memory are supported.
-	// See http://kubernetes.io/docs/user-guide/compute-resources for more detail.
-	// Default: nil
-	// +optional
-	SystemReserved map[string]string `json:"systemReserved,omitempty"`
-	// kubeReserved is a set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G) pairs
-	// that describe resources reserved for kubernetes system components.
-	// Currently cpu, memory and local storage for root file system are supported.
-	// See https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-	// for more details.
-	// Default: nil
-	// +optional
-	KubeReserved map[string]string `json:"kubeReserved,omitempty"`
+	SystemReserved                            map[string]string               `json:"systemReserved,omitempty"` // 预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil
+	KubeReserved                              map[string]string               `json:"kubeReserved,omitempty"`   // 预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil
 	// The reservedSystemCPUs option specifies the CPU list reserved for the host
 	// level system threads and kubernetes related threads. This provide a "static"
 	// CPU list rather than the "dynamic" list by systemReserved and kubeReserved.
@@ -631,27 +515,16 @@ type KubeletConfiguration struct {
 	// Default: ["pods"]
 	// +optional
 	EnforceNodeAllocatable []string `json:"enforceNodeAllocatable,omitempty"`
-	// A comma separated whitelist of unsafe sysctls or sysctl patterns (ending in `*`).
-	// Unsafe sysctl groups are `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`,
-	// and `net.*`. For example: "`kernel.msg*,net.ipv4.route.min_pmtu`"
-	// Default: []
-	// +optional
-	AllowedUnsafeSysctls []string `json:"allowedUnsafeSysctls,omitempty"`
-	// volumePluginDir 要搜索其他第三方卷插件的完整目录路径.
-	// Default: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
-	// +optional
-	VolumePluginDir string `json:"volumePluginDir,omitempty"`
+	AllowedUnsafeSysctls   []string `json:"allowedUnsafeSysctls,omitempty"` // 被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.Default: []
+
+	VolumePluginDir string `json:"volumePluginDir,omitempty"` // 搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.	// Default: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+
 	// providerID, if set, sets the unique ID of the instance that an external
 	// provider (i.e. cloudprovider) can use to identify a specific node.
 	// Default: ""
 	// +optional
-	ProviderID string `json:"providerID,omitempty"`
-	// kernelMemcgNotification, if set, instructs the kubelet to integrate with the
-	// kernel memcg notification for determining if memory eviction thresholds are
-	// exceeded rather than polling.
-	// Default: false
-	// +optional
-	KernelMemcgNotification bool `json:"kernelMemcgNotification,omitempty"`
+	ProviderID              string `json:"providerID,omitempty"`
+	KernelMemcgNotification bool   `json:"kernelMemcgNotification,omitempty"` // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.Default: false
 	// logging specifies the options of logging.
 	// Refer to [Logs Options](https://github.com/kubernetes/component-base/blob/master/logs/options.go)
 	// for more information.
@@ -663,22 +536,12 @@ type KubeletConfiguration struct {
 	// Default: true
 	// +optional
 	EnableSystemLogHandler *bool `json:"enableSystemLogHandler,omitempty"`
-	// shutdownGracePeriod specifies the total duration that the node should delay the
-	// shutdown and total grace period for pod termination during a node shutdown.
-	// Default: "0s"
 	// +featureGate=GracefulNodeShutdown
 	// +optional
-	ShutdownGracePeriod metav1.Duration `json:"shutdownGracePeriod,omitempty"`
-	// shutdownGracePeriodCriticalPods specifies the duration used to terminate critical
-	// pods during a node shutdown. This should be less than shutdownGracePeriod.
-	// For example, if shutdownGracePeriod=30s, and shutdownGracePeriodCriticalPods=10s,
-	// during a node shutdown the first 20 seconds would be reserved for gracefully
-	// terminating normal pods, and the last 10 seconds would be reserved for terminating
-	// critical pods.
-	// Default: "0s"
+	ShutdownGracePeriod metav1.Duration `json:"shutdownGracePeriod,omitempty"` // 节点关闭时，容器优雅关闭等待的时间Default: "0s"
 	// +featureGate=GracefulNodeShutdown
 	// +optional
-	ShutdownGracePeriodCriticalPods metav1.Duration `json:"shutdownGracePeriodCriticalPods,omitempty"`
+	ShutdownGracePeriodCriticalPods metav1.Duration `json:"shutdownGracePeriodCriticalPods,omitempty"` // 指定分配给节点优雅关闭等待的时间,默认0s.if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间,前20秒将保留用于优雅地终止正常pod,最后10秒将保留用于终止关键pod.
 	// shutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based
 	// on their associated priority class value.
 	// When a shutdown request is received, the Kubelet will initiate shutdown on all pods

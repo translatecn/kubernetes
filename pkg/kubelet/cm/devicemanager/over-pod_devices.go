@@ -100,23 +100,6 @@ func (pdev *podDevices) addContainerAllocatedResources(podUID, contName string, 
 	}
 }
 
-// Removes the device resources allocated to the specified <podUID, contName> from allocatedResources.
-func (pdev *podDevices) removeContainerAllocatedResources(podUID, contName string, allocatedResources map[string]sets.String) {
-	pdev.RLock()
-	defer pdev.RUnlock()
-	containers, exists := pdev.devs[podUID]
-	if !exists {
-		return
-	}
-	resources, exists := containers[contName]
-	if !exists {
-		return
-	}
-	for resource, devices := range resources {
-		allocatedResources[resource] = allocatedResources[resource].Difference(devices.deviceIds.Devices())
-	}
-}
-
 // Turns podDevices to checkpointData.
 func (pdev *podDevices) toCheckpointData() []checkpoint.PodDevicesEntry {
 	var data []checkpoint.PodDevicesEntry
@@ -147,23 +130,8 @@ func (pdev *podDevices) toCheckpointData() []checkpoint.PodDevicesEntry {
 	return data
 }
 
-// Populates podDevices from the passed in checkpointData.
-func (pdev *podDevices) fromCheckpointData(data []checkpoint.PodDevicesEntry) {
-	for _, entry := range data {
-		klog.V(2).InfoS("Get checkpoint entry",
-			"podUID", entry.PodUID, "containerName", entry.ContainerName,
-			"resourceName", entry.ResourceName, "deviceIDs", entry.DeviceIDs, "allocated", entry.AllocResp)
-		allocResp := &pluginapi.ContainerAllocateResponse{}
-		err := allocResp.Unmarshal(entry.AllocResp)
-		if err != nil {
-			klog.ErrorS(err, "Can't unmarshal allocResp", "podUID", entry.PodUID, "containerName", entry.ContainerName, "resourceName", entry.ResourceName)
-			continue
-		}
-		pdev.insert(entry.PodUID, entry.ContainerName, entry.ResourceName, entry.DeviceIDs, allocResp)
-	}
-}
-
 // Returns combined container runtime settings to consume the container's allocated devices.
+// 返回组合的容器运行时设置,以使用容器分配的设备.
 func (pdev *podDevices) deviceRunContainerOptions(podUID, contName string) *DeviceRunContainerOptions {
 	pdev.RLock()
 	defer pdev.RUnlock()
@@ -196,7 +164,7 @@ func (pdev *podDevices) deviceRunContainerOptions(podUID, contName string) *Devi
 			if e, ok := envsMap[k]; ok {
 				klog.V(4).InfoS("Skip existing env", "envKey", k, "envValue", v)
 				if e != v {
-					klog.ErrorS(nil, "Environment variable has conflicting setting", "envKey", k, "expected", v, "got", e)
+					klog.ErrorS(nil, "环境变量冲突", "envKey", k, "expected", v, "got", e)
 				}
 				continue
 			}
@@ -280,11 +248,11 @@ func (pdev *podDevices) getContainerDevices(podUID, contName string) ResourceDev
 			continue
 		}
 		devicePluginMap := make(map[string]pluginapi.Device)
-		for numaid, devlist := range allocateInfo.deviceIds {
+		for numaNodeID, devlist := range allocateInfo.deviceIds {
 			for _, devID := range devlist {
 				var topology *pluginapi.TopologyInfo
-				if numaid != nodeWithoutTopology {
-					NUMANodes := []*pluginapi.NUMANode{{ID: numaid}}
+				if numaNodeID != nodeWithoutTopology {
+					NUMANodes := []*pluginapi.NUMANode{{ID: numaNodeID}}
 					if pDev, ok := devicePluginMap[devID]; ok && pDev.Topology != nil {
 						if nodes := pDev.Topology.GetNodes(); nodes != nil {
 							NUMANodes = append(NUMANodes, nodes...)
@@ -326,26 +294,6 @@ func (rdev ResourceDeviceInstances) Clone() ResourceDeviceInstances {
 	}
 	return clone
 }
-
-// Filter takes a condition set expressed as map[string]sets.String and returns a new
-// ResourceDeviceInstances with only the devices matching the condition set.
-func (rdev ResourceDeviceInstances) Filter(cond map[string]sets.String) ResourceDeviceInstances {
-	filtered := NewResourceDeviceInstances()
-	for resourceName, filterIDs := range cond {
-		if _, exists := rdev[resourceName]; !exists {
-			continue
-		}
-		filtered[resourceName] = DeviceInstances{}
-		for instanceID, instance := range rdev[resourceName] {
-			if filterIDs.Has(instanceID) {
-				filtered[resourceName][instanceID] = instance
-			}
-		}
-	}
-	return filtered
-}
-
-// -------------------------------------------------------------------------------------------------------------------
 
 // NewPodDevices is a function that returns object of podDevices type with its own guard
 // RWMutex and a map where key is a pod UID and value contains
@@ -403,4 +351,57 @@ func (pdev *podDevices) devices() map[string]sets.String {
 		}
 	}
 	return ret
+}
+
+// Populates podDevices from the passed in checkpointData.
+// 从检查点恢复,加载数据
+func (pdev *podDevices) fromCheckpointData(data []checkpoint.PodDevicesEntry) {
+	for _, entry := range data {
+		klog.V(2).InfoS("Get checkpoint entry",
+			"podUID", entry.PodUID, "containerName", entry.ContainerName,
+			"resourceName", entry.ResourceName, "deviceIDs", entry.DeviceIDs, "allocated", entry.AllocResp)
+		allocResp := &pluginapi.ContainerAllocateResponse{}
+		err := allocResp.Unmarshal(entry.AllocResp)
+		if err != nil {
+			klog.ErrorS(err, "Can't unmarshal allocResp", "podUID", entry.PodUID, "containerName", entry.ContainerName, "resourceName", entry.ResourceName)
+			continue
+		}
+		pdev.insert(entry.PodUID, entry.ContainerName, entry.ResourceName, entry.DeviceIDs, allocResp)
+	}
+}
+
+// Filter takes a condition set expressed as map[string]sets.String and returns a new
+// ResourceDeviceInstances with only the devices matching the condition set.
+func (rdev ResourceDeviceInstances) Filter(cond map[string]sets.String) ResourceDeviceInstances {
+	filtered := NewResourceDeviceInstances()
+	for resourceName, filterIDs := range cond {
+		if _, exists := rdev[resourceName]; !exists {
+			continue
+		}
+		filtered[resourceName] = DeviceInstances{}
+		for instanceID, instance := range rdev[resourceName] {
+			if filterIDs.Has(instanceID) {
+				filtered[resourceName][instanceID] = instance
+			}
+		}
+	}
+	return filtered
+}
+
+// Removes the device resources allocated to the specified <podUID, contName> from allocatedResources.
+// 用于移除已分配给容器的资源
+func (pdev *podDevices) removeContainerAllocatedResources(podUID, contName string, allocatedResources map[string]sets.String) {
+	pdev.RLock()
+	defer pdev.RUnlock()
+	containers, exists := pdev.devs[podUID]
+	if !exists {
+		return
+	}
+	resources, exists := containers[contName]
+	if !exists {
+		return
+	}
+	for resource, devices := range resources {
+		allocatedResources[resource] = allocatedResources[resource].Difference(devices.deviceIds.Devices())
+	}
 }

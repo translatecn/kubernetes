@@ -62,18 +62,6 @@ func NewPluginClient(r string, socketPath string, h ClientHandler) Client {
 	}
 }
 
-// Connect is for establishing a gRPC connection between device manager and device plugin.
-func (c *client) Connect() error {
-	client, conn, err := dial(c.socket)
-	if err != nil {
-		klog.ErrorS(err, "Unable to connect to device plugin client with socket path", "path", c.socket)
-		return err
-	}
-	c.grpc = conn
-	c.client = client
-	return c.handler.PluginConnected(c.resource, c)
-}
-
 // Run is for running the device plugin gRPC client.
 func (c *client) Run() {
 	stream, err := c.client.ListAndWatch(context.Background(), &api.Empty{})
@@ -138,4 +126,16 @@ func dial(unixSocketPath string) (api.DevicePluginClient, *grpc.ClientConn, erro
 	}
 
 	return api.NewDevicePluginClient(c), c, nil
+}
+
+// Connect is for establishing a gRPC connection between device manager and device plugin.
+func (c *client) Connect() error {
+	client, conn, err := dial(c.socket)
+	if err != nil {
+		klog.ErrorS(err, "Unable to connect to device plugin client with socket path", "path", c.socket)
+		return err
+	}
+	c.grpc = conn
+	c.client = client
+	return c.handler.PluginConnected(c.resource, c)
 }

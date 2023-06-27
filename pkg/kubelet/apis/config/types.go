@@ -23,6 +23,11 @@ import (
 	tracingapi "k8s.io/component-base/tracing/api/v1"
 )
 
+//
+//
+//   看  staging/src/k8s.io/kubelet/config/v1beta1/types.go
+//
+
 // HairpinMode denotes how the kubelet should configure networking to handle
 // hairpin packets.
 type HairpinMode string
@@ -81,324 +86,115 @@ const (
 type KubeletConfiguration struct { // --config
 	metav1.TypeMeta
 
-	// enableServer enables Kubelet's secured server.
-	// Note: Kubelet's insecure port is controlled by the readOnlyPort option.
-	EnableServer bool
-	// staticPodPath is the path to the directory containing local (static) pods to
-	// run, or the path to a single static pod file.
-	StaticPodPath      string          // 静态pod的文件夹
-	SyncFrequency      metav1.Duration // 周期性全量同步容器、配置的间隔
-	FileCheckFrequency metav1.Duration // 静态pod文件检查周期
-	// httpCheckFrequency is the duration between checking http for new data
-	HTTPCheckFrequency metav1.Duration
-	StaticPodURL       string              // 获取静态文件列表的地址
-	StaticPodURLHeader map[string][]string `datapolicy:"token"` // 获取静态文件列表的地址,需要使用一些 HTTP 头部信息
-	Address            string              //
-	Port               int32               //
-	ReadOnlyPort       int32               // 0 禁用
-	// 搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.
-	VolumePluginDir string
-	// providerID, if set, sets the unique id of the instance that an external provider (i.e. cloudprovider)
-	// can use to identify a specific node
-	ProviderID string
-	// tlsCertFile is the file containing x509 Certificate for HTTPS.  (CA cert,
-	// if any, concatenated after server cert). If tlsCertFile and
-	// tlsPrivateKeyFile are not provided, a self-signed certificate
-	// and key are generated for the public address and saved to the directory
-	// passed to the Kubelet's --cert-dir flag.
-	TLSCertFile string
-	// tlsPrivateKeyFile is the file containing x509 private key matching tlsCertFile
-	TLSPrivateKeyFile string
-	// TLSCipherSuites is the list of allowed cipher suites for the server.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	TLSCipherSuites []string
-	// TLSMinVersion is the minimum TLS version supported.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	TLSMinVersion string
-	// rotateCertificates enables client certificate rotation. The Kubelet will request a
-	// new certificate from the certificates.k8s.io API. This requires an approver to approve the
-	// certificate signing requests.
-	RotateCertificates bool
-	// serverTLSBootstrap enables server certificate bootstrap. Instead of self
-	// signing a serving certificate, the Kubelet will request a certificate from
-	// the certificates.k8s.io API. This requires an approver to approve the
-	// certificate signing requests. The RotateKubeletServerCertificate feature
-	// must be enabled.
-	ServerTLSBootstrap bool
-	// authentication specifies how requests to the Kubelet's server are authenticated
-	Authentication KubeletAuthentication
-	// authorization specifies how requests to the Kubelet's server are authorized
-	Authorization KubeletAuthorization
-	// registryPullQPS is the limit of registry pulls per second.
-	// Set to 0 for no limit.
-	RegistryPullQPS int32
-	// registryBurst is the maximum size of bursty pulls, temporarily allows
-	// pulls to burst to this number, while still not exceeding registryPullQPS.
-	// Only used if registryPullQPS > 0.
-	RegistryBurst int32
-	// eventRecordQPS is the maximum event creations per second. If 0, there
-	// is no limit enforced.
-	EventRecordQPS int32
-	// eventBurst is the maximum size of a burst of event creations, temporarily
-	// allows event creations to burst to this number, while still not exceeding
-	// eventRecordQPS. Only used if eventRecordQPS > 0.
-	EventBurst int32
-	// enableDebuggingHandlers enables server endpoints for log collection
-	// and local running of containers and commands
-	EnableDebuggingHandlers bool
-	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
-	EnableContentionProfiling bool
-	HealthzPort               int32
-	HealthzBindAddress        string
-	// oomScoreAdj is The oom-score-adj value for kubelet process. Values
-	// must be within the range [-1000, 1000].
-	OOMScoreAdj int32
-	// clusterDomain is the DNS domain for this cluster. If set, kubelet will
-	// configure all containers to search this domain in addition to the
-	// host's search domains.
-	ClusterDomain string
-	// 逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用
-	ClusterDNS []string
-	// streamingConnectionIdleTimeout is the maximum time a streaming connection
-	// can be idle before the connection is automatically closed.
-	StreamingConnectionIdleTimeout metav1.Duration
-	// nodeStatusUpdateFrequency is the frequency that kubelet computes node
-	// status. If node lease feature is not enabled, it is also the frequency that
-	// kubelet posts node status to master. In that case, be cautious when
-	// changing the constant, it must work with nodeMonitorGracePeriod in nodecontroller.
-	NodeStatusUpdateFrequency metav1.Duration
-	// nodeStatusReportFrequency is the frequency that kubelet posts node
-	// status to master if node status does not change. Kubelet will ignore this
-	// frequency and post node status immediately if any change is detected. It is
-	// only used when node lease feature is enabled.
-	NodeStatusReportFrequency metav1.Duration
-	NodeLeaseDurationSeconds  int32 // Kubelet将在其相应的Lease上设置的持续时间.
-	// imageMinimumGCAge is the minimum age for an unused image before it is
-	// garbage collected.
-	ImageMinimumGCAge           metav1.Duration
-	ImageGCHighThresholdPercent int32           // 运行image GC的磁盘使用百分比.取值范围为[0,100],不启用image gcc回收,设置为100.
-	ImageGCLowThresholdPercent  int32           // 在此之前从未运行image GC的磁盘使用百分比.要进行垃圾收集的磁盘使用率最低.取值必须在[0,100]范围内,且不能大于--image-gc-high-threshold
-	VolumeStatsAggPeriod        metav1.Duration // 计算和缓存所有pod卷磁盘使用量的频率  10s
-	// KubeletCgroups is the absolute name of cgroups to isolate the kubelet in
-	KubeletCgroups string
-	// SystemCgroups is absolute name of cgroups in which to place
-	// all non-kernel processes that are not already in a container. Empty
-	// for no container. Rolling back the flag requires a reboot.
-	SystemCgroups string
-	CgroupRoot    string // CgroupRoot是用于pod的根cgroup如果启用了CgroupsPerQOS,则这是QoS cgroup层次结构的根.
-	CgroupsPerQOS bool   // 启用基于QoS的Cgroup层次结构:QoS类的顶级Cgroup,所有Burstable和bestefort pod都在其特定的顶级QoS Cgroup下.   默认true
-	CgroupDriver  string // kubelet用来在主机上操作cgroups的驱动程序(cgroupfs或systemd)
-	// CPUManagerPolicy is the name of the policy to use.
-	// Requires the CPUManager feature gate to be enabled.
-	CPUManagerPolicy string
-	// CPUManagerPolicyOptions is a set of key=value which 	allows to set extra options
-	// to fine tune the behaviour of the cpu manager policies.
-	// Requires  both the "CPUManager" and "CPUManagerPolicyOptions" feature gates to be enabled.
-	CPUManagerPolicyOptions map[string]string
-	// CPU Manager reconciliation period.
-	// Requires the CPUManager feature gate to be enabled.
-	CPUManagerReconcilePeriod metav1.Duration
-	// MemoryManagerPolicy is the name of the policy to use.
-	// Requires the MemoryManager feature gate to be enabled.
-	MemoryManagerPolicy   string
-	TopologyManagerPolicy string // 策略名称,除了 "none" 之外的策略需要启用 TopologyManager 功能门控.一般都开启
-	// +optional
-	TopologyManagerScope         string            // 拓扑管理器请求和提示提供程序生成的拓扑提示的范围. Default: "container"
-	TopologyManagerPolicyOptions map[string]string // 一组key=value,它允许设置额外的选项来微调拓扑管理器策略的行为.
-	// Map of QoS resource reservation percentages (memory only for now).
-	// Requires the QOSReserved feature gate to be enabled.
-	QOSReserved map[string]string
-	// runtimeRequestTimeout is the timeout for all runtime requests except long running
-	// requests - pull, logs, exec and attach.
-	RuntimeRequestTimeout metav1.Duration
-	// hairpinMode specifies how the Kubelet should configure the container
-	// bridge for hairpin packets.
-	// Setting this flag allows endpoints in a Service to loadbalance back to
-	// themselves if they should try to access their own Service. Values:
-	//   "promiscuous-bridge": make the container bridge promiscuous.
-	//   "hairpin-veth":       set the hairpin flag on container veth interfaces.
-	//   "none":               do nothing.
-	// Generally, one must set --hairpin-mode=hairpin-veth to achieve hairpin NAT,
-	// because promiscuous-bridge assumes the existence of a container bridge named cbr0.
-	HairpinMode string
-	MaxPods     int32 // 可以在Kubelet上运行的pod的数量
-	// The CIDR to use for pod IP addresses, only used in standalone mode.
-	// In cluster mode, this is obtained from the master.
-	PodCIDR      string
-	PodPidsLimit int64 // 每个pod的最大进程数,   -1代表 不限制
-	// ResolverConfig is the resolver configuration file used as the basis
-	// for the container DNS resolution configuration.
-	ResolverConfig string
-	RunOnce        bool // Kubelet 仅检查一次 API 服务器以获取 Pod,运行这些 Pod 并在完成后退出,除了静态 Pod 文件中指定的 Pod 之外
-	// cpuCFSQuota enables CPU CFS quota enforcement for containers that
-	// specify CPU limits
-	CPUCFSQuota bool
-	// CPUCFSQuotaPeriod sets the CPU CFS quota period value, cpu.cfs_period_us, defaults to 100ms
-	CPUCFSQuotaPeriod metav1.Duration
-	// maxOpenFiles is Number of files that can be opened by Kubelet process.
-	MaxOpenFiles int64
-	// nodeStatusMaxImages caps the number of images reported in Node.Status.Images.
-	NodeStatusMaxImages int32
-	// contentType is contentType of requests sent to apiserver.
-	ContentType string
-	// kubeAPIQPS is the QPS to use while talking with kubernetes apiserver
-	KubeAPIQPS int32
-	// kubeAPIBurst is the burst to allow while talking with kubernetes
-	// apiserver
-	KubeAPIBurst int32
-	// serializeImagePulls when enabled, tells the Kubelet to pull images one at a time.
-	SerializeImagePulls bool
-	// Map of signal names to quantities that defines hard eviction thresholds. For example: {"memory.available": "300Mi"}.
-	// Some default signals are Linux only: nodefs.inodesFree
-	EvictionHard map[string]string
-	// Map of signal names to quantities that defines soft eviction thresholds.  For example: {"memory.available": "300Mi"}.
-	EvictionSoft map[string]string
-	// Map of signal names to quantities that defines grace periods for each soft eviction signal. For example: {"memory.available": "30s"}.
-	EvictionSoftGracePeriod map[string]string
-	// Duration for which the kubelet has to wait before transitioning out of an eviction pressure condition.
-	EvictionPressureTransitionPeriod metav1.Duration
-	// Maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
-	EvictionMaxPodGracePeriod int32
-	// Map of signal names to quantities that defines minimum reclaims, which describe the minimum
-	// amount of a given resource the kubelet will reclaim when performing a pod eviction while
-	// that resource is under pressure. For example: {"imagefs.available": "2Gi"}
-	EvictionMinimumReclaim map[string]string
-	// podsPerCore is the maximum number of pods per core. Cannot exceed MaxPods.
-	// If 0, this field is ignored.
-	PodsPerCore int32
-	// enableControllerAttachDetach enables the Attach/Detach controller to
-	// manage attachment/detachment of volumes scheduled to this node, and
-	// disables kubelet from executing any attach/detach operations
-	EnableControllerAttachDetach bool
-	ProtectKernelDefaults        bool // 如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期.
-	// 如果为true, kubelet将确保主机上存在iptables实用程序规则.
-	// 这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建.
-	MakeIPTablesUtilChains bool
-	// iptablesMasqueradeBit is the bit of the iptables fwmark space to mark for SNAT
-	// Values must be within the range [0, 31]. Must be different from other mark bits.
-	// Warning: Please match the value of the corresponding parameter in kube-proxy.
-	// TODO: clean up IPTablesMasqueradeBit in kube-proxy
-	IPTablesMasqueradeBit int32
-	// iptablesDropBit is the bit of the iptables fwmark space to mark for dropping packets.
-	// Values must be within the range [0, 31]. Must be different from other mark bits.
-	IPTablesDropBit int32
-	// featureGates is a map of feature names to bools that enable or disable alpha/experimental
-	// features. This field modifies piecemeal the built-in default values from
-	// "k8s.io/kubernetes/pkg/features/kube_features.go".
-	FeatureGates map[string]bool
-	FailSwapOn   bool // 告诉Kubelet,如果在节点上启用了swap,则启动失败.默认为true
-	// memorySwap configures swap memory available to container workloads.
-	// +featureGate=NodeSwap
-	// +optional
-	MemorySwap MemorySwapConfiguration
-	// A quantity defines the maximum size of the container log file before it is rotated. For example: "5Mi" or "256Ki".
-	ContainerLogMaxSize string
-	// Maximum number of container log files that can be present for a container.
-	ContainerLogMaxFiles int32
-	// ConfigMapAndSecretChangeDetectionStrategy is a mode in which config map and secret managers are running.
+	EnableServer                              bool
+	StaticPodPath                             string
+	SyncFrequency                             metav1.Duration
+	FileCheckFrequency                        metav1.Duration
+	HTTPCheckFrequency                        metav1.Duration
+	StaticPodURL                              string
+	StaticPodURLHeader                        map[string][]string `datapolicy:"token"`
+	Address                                   string
+	Port                                      int32
+	ReadOnlyPort                              int32
+	VolumePluginDir                           string
+	ProviderID                                string
+	TLSCertFile                               string
+	TLSPrivateKeyFile                         string
+	TLSCipherSuites                           []string
+	TLSMinVersion                             string
+	RotateCertificates                        bool
+	ServerTLSBootstrap                        bool
+	Authentication                            KubeletAuthentication
+	Authorization                             KubeletAuthorization
+	RegistryPullQPS                           int32
+	RegistryBurst                             int32
+	EventRecordQPS                            int32
+	EventBurst                                int32
+	EnableDebuggingHandlers                   bool
+	EnableContentionProfiling                 bool
+	HealthzPort                               int32
+	HealthzBindAddress                        string
+	OOMScoreAdj                               int32
+	ClusterDomain                             string
+	ClusterDNS                                []string
+	StreamingConnectionIdleTimeout            metav1.Duration
+	NodeStatusUpdateFrequency                 metav1.Duration
+	NodeStatusReportFrequency                 metav1.Duration
+	NodeLeaseDurationSeconds                  int32
+	ImageMinimumGCAge                         metav1.Duration
+	ImageGCHighThresholdPercent               int32
+	ImageGCLowThresholdPercent                int32
+	VolumeStatsAggPeriod                      metav1.Duration
+	KubeletCgroups                            string
+	SystemCgroups                             string
+	CgroupRoot                                string
+	CgroupsPerQOS                             bool
+	CgroupDriver                              string
+	CPUManagerPolicy                          string
+	CPUManagerPolicyOptions                   map[string]string
+	CPUManagerReconcilePeriod                 metav1.Duration
+	MemoryManagerPolicy                       string
+	TopologyManagerPolicy                     string
+	TopologyManagerScope                      string
+	TopologyManagerPolicyOptions              map[string]string
+	QOSReserved                               map[string]string
+	RuntimeRequestTimeout                     metav1.Duration
+	HairpinMode                               string
+	MaxPods                                   int32
+	PodCIDR                                   string
+	PodPidsLimit                              int64
+	ResolverConfig                            string
+	RunOnce                                   bool
+	CPUCFSQuota                               bool
+	CPUCFSQuotaPeriod                         metav1.Duration
+	MaxOpenFiles                              int64
+	NodeStatusMaxImages                       int32
+	ContentType                               string
+	KubeAPIQPS                                int32
+	KubeAPIBurst                              int32
+	SerializeImagePulls                       bool
+	EvictionHard                              map[string]string
+	EvictionSoft                              map[string]string
+	EvictionSoftGracePeriod                   map[string]string
+	EvictionPressureTransitionPeriod          metav1.Duration
+	EvictionMaxPodGracePeriod                 int32
+	EvictionMinimumReclaim                    map[string]string
+	PodsPerCore                               int32
+	EnableControllerAttachDetach              bool
+	ProtectKernelDefaults                     bool
+	MakeIPTablesUtilChains                    bool
+	IPTablesMasqueradeBit                     int32
+	IPTablesDropBit                           int32
+	FeatureGates                              map[string]bool
+	FailSwapOn                                bool
+	MemorySwap                                MemorySwapConfiguration
+	ContainerLogMaxSize                       string
+	ContainerLogMaxFiles                      int32
 	ConfigMapAndSecretChangeDetectionStrategy ResourceChangeDetectionStrategy
-	// +optional
-	AllowedUnsafeSysctls    []string // 被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.
-	KernelMemcgNotification bool     // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.
-
-	/* the following fields are meant for Node Allocatable */
-
-	// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G,ephemeral-storage=1G,pid=100) pairs
-	// that describe resources reserved for non-kubernetes components.
-	// Currently only cpu, memory and local ephemeral storage for root file system are supported.
-	// See http://kubernetes.io/docs/user-guide/compute-resources for more detail.
-	SystemReserved map[string]string
-	// A set of ResourceName=ResourceQuantity (e.g. cpu=200m,memory=150G,ephemeral-storage=1G,pid=100) pairs
-	// that describe resources reserved for kubernetes system components.
-	// Currently only cpu, memory and local ephemeral storage for root file system are supported.
-	// See http://kubernetes.io/docs/user-guide/compute-resources for more detail.
-	KubeReserved map[string]string
-	// This flag helps kubelet identify absolute name of top level cgroup used to enforce `SystemReserved` compute resource reservation for OS system daemons.
-	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md) doc for more information.
-	SystemReservedCgroup string
-	// This flag helps kubelet identify absolute name of top level cgroup used to enforce `KubeReserved` compute resource reservation for Kubernetes node system daemons.
-	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md) doc for more information.
-	KubeReservedCgroup string
-	// This flag specifies the various Node Allocatable enforcements that Kubelet needs to perform.
-	// This flag accepts a list of options. Acceptable options are `pods`, `system-reserved` & `kube-reserved`.
-	// Refer to [Node Allocatable](https://github.com/kubernetes/design-proposals-archive/blob/main/node/node-allocatable.md) doc for more information.
-	EnforceNodeAllocatable []string
-	// This option specifies the cpu list reserved for the host level system threads and kubernetes related threads.
-	// This provide a "static" CPU list rather than the "dynamic" list by system-reserved and kube-reserved.
-	// This option overwrites CPUs provided by system-reserved and kube-reserved.
-	ReservedSystemCPUs string
-	// The previous version for which you want to show hidden metrics.
-	// Only the previous minor version is meaningful, other values will not be allowed.
-	// The format is <major>.<minor>, e.g.: '1.16'.
-	// The purpose of this format is make sure you have the opportunity to notice if the next release hides additional metrics,
-	// rather than being surprised when they are permanently removed in the release after that.
-	ShowHiddenMetricsForVersion string
-	// Logging specifies the options of logging.
-	// Refer [Logs Options](https://github.com/kubernetes/component-base/blob/master/logs/options.go) for more information.
-	Logging logsapi.LoggingConfiguration
-	// EnableSystemLogHandler enables /logs handler.
-	EnableSystemLogHandler bool
-
-	// 指定容器优雅关闭等待的时间
+	AllowedUnsafeSysctls                      []string
+	KernelMemcgNotification                   bool
+	SystemReserved                            map[string]string
+	KubeReserved                              map[string]string
+	SystemReservedCgroup                      string
+	KubeReservedCgroup                        string
+	EnforceNodeAllocatable                    []string
+	ReservedSystemCPUs                        string
+	ShowHiddenMetricsForVersion               string
+	Logging                                   logsapi.LoggingConfiguration
+	EnableSystemLogHandler                    bool
+	ShutdownGracePeriod                       metav1.Duration
 	// +featureGate=GracefulNodeShutdown
 	// +optional
-	ShutdownGracePeriod metav1.Duration
-	// 指定分配给节点优雅关闭等待的时间,默认0s.if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间,前20秒将保留用于优雅地终止正常pod,最后10秒将保留用于终止关键pod.
-	// +featureGate=GracefulNodeShutdown
-	// +optional
-	ShutdownGracePeriodCriticalPods metav1.Duration
-
-	// ShutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based
-	// on their associated priority class value.
-	// When a shutdown request is received, the Kubelet will initiate shutdown on all pods
-	// running on the node with a grace period that depends on the priority of the pod,
-	// and then wait for all pods to exit.
-	// Each entry in the array represents the graceful shutdown time a pod with a priority
-	// class value that lies in the range of that value and the next higher entry in the
-	// list when the node is shutting down.
+	ShutdownGracePeriodCriticalPods  metav1.Duration
 	ShutdownGracePeriodByPodPriority []ShutdownGracePeriodByPodPriority
-	// ReservedMemory specifies a comma-separated list of memory reservations for NUMA nodes.
-	// The parameter makes sense only in the context of the memory manager feature. The memory manager will not allocate reserved memory for container workloads.
-	// For example, if you have a NUMA0 with 10Gi of memory and the ReservedMemory was specified to reserve 1Gi of memory at NUMA0,
-	// the memory manager will assume that only 9Gi is available for allocation.
-	// You can specify a different amount of NUMA node and memory types.
-	// You can omit this parameter at all, but you should be aware that the amount of reserved memory from all NUMA nodes
-	// should be equal to the amount of memory specified by the node allocatable features(https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/#node-allocatable).
-	// If at least one node allocatable parameter has a non-zero value, you will need to specify at least one NUMA node.
-	// Also, avoid specifying:
-	// 1. Duplicates, the same NUMA node, and memory type, but with a different value.
-	// 2. zero limits for any memory type.
-	// 3. NUMAs nodes IDs that do not exist under the machine.
-	// 4. memory types except for memory and hugepages-<size>
-	ReservedMemory []MemoryReservation
-	// EnableProfiling enables /debug/pprof handler.
-	EnableProfilingHandler bool
-	// EnableDebugFlagsHandler enables/debug/flags/v handler.
-	EnableDebugFlagsHandler bool
-	// SeccompDefault enables the use of `RuntimeDefault` as the default seccomp profile for all workloads.
-	SeccompDefault bool
-	// MemoryThrottlingFactor specifies the factor multiplied by the memory limit or node allocatable memory
-	// when setting the cgroupv2 memory.high value to enforce MemoryQoS.
-	// Decreasing this factor will set lower high limit for container cgroups and put heavier reclaim pressure
-	// while increasing will put less reclaim pressure.
-	// See https://kep.k8s.io/2570 for more details.
-	// Default: 0.8
-	// +featureGate=MemoryQoS
-	// +optional
-	MemoryThrottlingFactor *float64
-	// registerWithTaints are an array of taints to add to a node object when
-	// the kubelet registers itself. This only takes effect when registerNode
-	// is true and upon the initial registration of the node.
-	// +optional
-	RegisterWithTaints []v1.Taint
-	// registerNode enables automatic registration with the apiserver.
-	// +optional
-	RegisterNode bool
-	// Tracing specifies the versioned configuration for OpenTelemetry tracing clients.
-	// See https://kep.k8s.io/2832 for more details.
-	// +featureGate=KubeletTracing
-	// +optional
-	Tracing *tracingapi.TracingConfiguration
+	ReservedMemory                   []MemoryReservation
+	EnableProfilingHandler           bool
+	EnableDebugFlagsHandler          bool
+	SeccompDefault                   bool
+	MemoryThrottlingFactor           *float64
+	RegisterWithTaints               []v1.Taint
+	RegisterNode                     bool
+	Tracing                          *tracingapi.TracingConfiguration
 
 	// LocalStorageCapacityIsolation 启用本地临时存储隔离功能.默认设置为true.此功能允许用户为容器的临时存储设置request/limit,并以类似于CPU和内存的方式进行管理.它还允许为emptyDir卷设置sizeLimit,如果来自卷的磁盘使用超过限制,则会触发Pod驱逐.
 	//

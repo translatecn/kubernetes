@@ -30,7 +30,7 @@ type DeviceManagerCheckpoint interface {
 	GetDataInLatestFormat() ([]PodDevicesEntry, map[string][]string)
 }
 
-type DevicesPerNUMA map[int64][]string // 表示从设备插件获取的每个NUMA节点ID的设备ID.
+type DevicesPerNUMA map[int64][]string // 表示从设备插件获取的每个NUMA节点ID的设备ID.   {node1:[1,2,3]}
 
 // PodDevicesEntry connects pod information to devices
 type PodDevicesEntry struct {
@@ -92,8 +92,6 @@ func (dev DevicesPerNUMA) Devices() sets.String {
 	}
 	return result
 }
-
-// --------------------------------------------------------------------------------------------------------------------
 
 // New returns an instance of Checkpoint - must be an alias for the most recent version
 func New(devEntries []PodDevicesEntry, devices map[string][]string) DeviceManagerCheckpoint {
