@@ -197,7 +197,7 @@ func (m *CpuManager) Start(activePods ActivePodsFunc, sourcesReady config.Source
 	m.podStatusProvider = podStatusProvider
 	m.containerRuntime = containerRuntime
 	m.containerMap = initialContainers
-
+	//  /var/lib/kubelet
 	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap) // 保留 cpuset 默认值
 	if err != nil {
 		klog.ErrorS(err, "Could not initialize checkpoint CpuManager, please drain node and remove policy state file")

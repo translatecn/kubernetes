@@ -32,7 +32,7 @@ const (
 )
 
 type LoggingConfiguration struct {
-	Format         string               `json:"format,omitempty"`  // 日志格式,默认t
+	Format         string               `json:"format,omitempty"`  // 日志格式,默认text
 	FlushFrequency time.Duration        `json:"flushFrequency"`    // 两次日志刷新之间的最大纳秒数(即1s = 1000000000).如果所选日志后端写入日志消息而没有缓冲,则忽略.
 	Verbosity      VerbosityLevel       `json:"verbosity"`         // 是决定记录哪些日志消息的阈值.默认为0,只记录最重要的消息.更高的值可以启用其他消息.错误消息总是被记录下来.
 	VModule        VModuleConfiguration `json:"vmodule,omitempty"` // VModule会覆盖单个文件的日志可见性k阈值.仅支持“文本”日志格式.

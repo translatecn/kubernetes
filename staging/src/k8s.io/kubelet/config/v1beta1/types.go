@@ -64,57 +64,23 @@ const (
 
 // KubeletConfiguration contains the configuration for the Kubelet
 type KubeletConfiguration struct {
-	metav1.TypeMeta `json:",inline"`
-
-	// enableServer enables Kubelet's secured server.2
-	// Note: Kubelet's insecure port is controlled by the readOnlyPort option.
-	// Default: true
-	EnableServer       *bool               `json:"enableServer,omitempty"`
+	metav1.TypeMeta    `json:",inline"`
+	EnableServer       *bool               `json:"enableServer,omitempty"`       // 启用Kubelet的安全服务器Default: true
 	StaticPodPath      string              `json:"staticPodPath,omitempty"`      // 静态pod的文件夹 Default: ""
 	SyncFrequency      metav1.Duration     `json:"syncFrequency,omitempty"`      // 周期性全量同步容器、配置的间隔 Default: "1m"
 	FileCheckFrequency metav1.Duration     `json:"fileCheckFrequency,omitempty"` // 静态pod文件检查周期 Default: "20s"
 	HTTPCheckFrequency metav1.Duration     `json:"httpCheckFrequency,omitempty"` // 静态pod http 检查周期 Default: "20s"
 	StaticPodURL       string              `json:"staticPodURL,omitempty"`       // 获取静态文件列表的地址 Default: ""
 	StaticPodURLHeader map[string][]string `json:"staticPodURLHeader,omitempty"` // 获取静态文件列表的地址,需要使用一些 HTTP 头部信息 Default: nil
-	// address is the IP address for the Kubelet to serve on (set to 0.0.0.0
-	// for all interfaces).
-	// Default: "0.0.0.0"
-	// +optional
-	Address string `json:"address,omitempty"`
-	// port is the port for the Kubelet to serve on.
-	// The port number must be between 1 and 65535, inclusive.
-	// Default: 10250
-	// +optional
-	Port         int32 `json:"port,omitempty"`
-	ReadOnlyPort int32 `json:"readOnlyPort,omitempty"` // 0 禁用
-	// tlsCertFile is the file containing x509 Certificate for HTTPS. (CA cert,
-	// if any, concatenated after server cert). If tlsCertFile and
-	// tlsPrivateKeyFile are not provided, a self-signed certificate
-	// and key are generated for the public address and saved to the directory
-	// passed to the Kubelet's --cert-dir flag.
-	// Default: ""
-	// +optional
-	TLSCertFile string `json:"tlsCertFile,omitempty"`
-	// tlsPrivateKeyFile is the file containing x509 private key matching tlsCertFile.
-	// Default: ""
-	// +optional
-	TLSPrivateKeyFile string `json:"tlsPrivateKeyFile,omitempty"`
-	// tlsCipherSuites is the list of allowed cipher suites for the server.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	// Default: nil
-	// +optional
-	TLSCipherSuites []string `json:"tlsCipherSuites,omitempty"`
-	// tlsMinVersion is the minimum TLS version supported.
-	// Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).
-	// Default: ""
-	// +optional
-	TLSMinVersion string `json:"tlsMinVersion,omitempty"`
-	// rotateCertificates enables client certificate rotation. The Kubelet will request a
-	// new certificate from the certificates.k8s.io API. This requires an approver to approve the
-	// certificate signing requests.
-	// Default: false
-	// +optional
-	RotateCertificates bool `json:"rotateCertificates,omitempty"`
+	Address            string              `json:"address,omitempty"`            // kubelet https端口地址  默认 0.0.0.0
+	Port               int32               `json:"port,omitempty"`               // kubelet https端口,默认10250
+	ReadOnlyPort       int32               `json:"readOnlyPort,omitempty"`       // 0 禁用
+	TLSCertFile        string              `json:"tlsCertFile,omitempty"`        // ca 证书,默认 空,没指定,会生成自谦的,保存在--cert-dir
+	TLSPrivateKeyFile  string              `json:"tlsPrivateKeyFile,omitempty"`  // 私钥文件,默认 空
+	TLSCipherSuites    []string            `json:"tlsCipherSuites,omitempty"`    // 服务器允许的密码套件列表.Default: nil
+	TLSMinVersion      string              `json:"tlsMinVersion,omitempty"`      // tls 支持的最小版本  Default: ""
+	RotateCertificates bool                `json:"rotateCertificates,omitempty"` // 启用客户端证书轮换.Kubelet将从certificates.k8s请求一个新证书.这需要审批者批准证书签名请求.Default: false
+
 	// serverTLSBootstrap enables server certificate bootstrap. Instead of self
 	// signing a serving certificate, the Kubelet will request a certificate from
 	// the 'certificates.k8s.io' API. This requires an approver to approve the
@@ -164,43 +130,20 @@ type KubeletConfiguration struct {
 	// when eventRecordQPS > 0.
 	// Default: 10
 	// +optional
-	EventBurst int32 `json:"eventBurst,omitempty"`
-	// enableDebuggingHandlers enables server endpoints for log access
-	// and local running of containers and commands, including the exec,
-	// attach, logs, and portforward features.
-	// Default: true
-	// +optional
-	EnableDebuggingHandlers *bool `json:"enableDebuggingHandlers,omitempty"`
-	// enableContentionProfiling enables lock contention profiling, if enableDebuggingHandlers is true.
-	// Default: false
-	// +optional
-	EnableContentionProfiling bool `json:"enableContentionProfiling,omitempty"`
-	// healthzPort is the port of the localhost healthz endpoint (set to 0 to disable).
-	// A valid number is between 1 and 65535.
-	// Default: 10248
-	// +optional
-	HealthzPort *int32 `json:"healthzPort,omitempty"`
-	// healthzBindAddress is the IP address for the healthz server to serve on.
-	// Default: "127.0.0.1"
-	// +optional
-	HealthzBindAddress string `json:"healthzBindAddress,omitempty"`
-	// oomScoreAdj is The oom-score-adj value for kubelet process. Values
-	// must be within the range [-1000, 1000].
-	// Default: -999
-	// +optional
-	OOMScoreAdj *int32 `json:"oomScoreAdj,omitempty"`
+	EventBurst                int32  `json:"eventBurst,omitempty"`
+	EnableDebuggingHandlers   *bool  `json:"enableDebuggingHandlers,omitempty"`   // 为日志访问、容器命令的本地运行 启用服务器端点,包括执行、附加、日志和端口转发特性.Default: true
+	EnableContentionProfiling bool   `json:"enableContentionProfiling,omitempty"` // 如果enableDebuggingHandlers为true,则启用锁争用分析.Default: false
+	HealthzPort               *int32 `json:"healthzPort,omitempty"`               // healthz 服务暴露端口 10248
+	HealthzBindAddress        string `json:"healthzBindAddress,omitempty"`        // healthz 服务暴露地址 127.0.0.1
+	OOMScoreAdj               *int32 `json:"oomScoreAdj,omitempty"`               // kubelet oom 分数,Default: -999  [-1000, 1000]
 	// clusterDomain is the DNS domain for this cluster. If set, kubelet will
 	// configure all containers to search this domain in addition to the
 	// host's search domains.
 	// Default: ""
 	// +optional
-	ClusterDomain string   `json:"clusterDomain,omitempty"`
-	ClusterDNS    []string `json:"clusterDNS,omitempty"` // 逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用	// Default: nil
-	// streamingConnectionIdleTimeout is the maximum time a streaming connection
-	// can be idle before the connection is automatically closed.
-	// Default: "4h"
-	// +optional
-	StreamingConnectionIdleTimeout metav1.Duration `json:"streamingConnectionIdleTimeout,omitempty"`
+	ClusterDomain                  string          `json:"clusterDomain,omitempty"`
+	ClusterDNS                     []string        `json:"clusterDNS,omitempty"`                     // 逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用	// Default: nil
+	StreamingConnectionIdleTimeout metav1.Duration `json:"streamingConnectionIdleTimeout,omitempty"` // stream 在关闭前的最大空闲时间 Default: "4h"
 	// nodeStatusUpdateFrequency is the frequency that kubelet computes node
 	// status. If node lease feature is not enabled, it is also the frequency that
 	// kubelet posts node status to master.
@@ -334,302 +277,56 @@ type KubeletConfiguration struct {
 	// specify CPU limits.
 	// Default: true
 	// +optional
-	CPUCFSQuota *bool `json:"cpuCFSQuota,omitempty"`
-	// cpuCFSQuotaPeriod is the CPU CFS quota period value, `cpu.cfs_period_us`.
-	// The value must be between 1 ms and 1 second, inclusive.
-	// Requires the CustomCPUCFSQuotaPeriod feature gate to be enabled.
-	// Default: "100ms"
-	// +optional
-	CPUCFSQuotaPeriod *metav1.Duration `json:"cpuCFSQuotaPeriod,omitempty"`
-	// nodeStatusMaxImages caps the number of images reported in Node.status.images.
-	// The value must be greater than -2.
-	// Note: If -1 is specified, no cap will be applied. If 0 is specified, no image is returned.
-	// Default: 50
-	// +optional
-	NodeStatusMaxImages *int32 `json:"nodeStatusMaxImages,omitempty"`
-	// maxOpenFiles is Number of files that can be opened by Kubelet process.
-	// The value must be a non-negative number.
-	// Default: 1000000
-	// +optional
-	MaxOpenFiles int64 `json:"maxOpenFiles,omitempty"`
-	// contentType is contentType of requests sent to apiserver.
-	// Default: "application/vnd.kubernetes.protobuf"
-	// +optional
-	ContentType string `json:"contentType,omitempty"`
-	// kubeAPIQPS is the QPS to use while talking with kubernetes apiserver.
-	// Default: 5
-	// +optional
-	KubeAPIQPS *int32 `json:"kubeAPIQPS,omitempty"`
-	// kubeAPIBurst is the burst to allow while talking with kubernetes API server.
-	// This field cannot be a negative number.
-	// Default: 10
-	// +optional
-	KubeAPIBurst int32 `json:"kubeAPIBurst,omitempty"`
-	// serializeImagePulls when enabled, tells the Kubelet to pull images one
-	// at a time. We recommend *not* changing the default value on nodes that
-	// run docker daemon with version  < 1.9 or an Aufs storage backend.
-	// Issue #10959 has more details.
-	// Default: true
-	// +optional
-	SerializeImagePulls *bool `json:"serializeImagePulls,omitempty"`
-	// evictionHard is a map of signal names to quantities that defines hard eviction
-	// thresholds. For example: `{"memory.available": "300Mi"}`.
-	// To explicitly disable, pass a 0% or 100% threshold on an arbitrary resource.
-	// Default:
-	//   memory.available:  "100Mi"
-	//   nodefs.available:  "10%"
-	//   nodefs.inodesFree: "5%"
-	//   imagefs.available: "15%"
-	// +optional
-	EvictionHard map[string]string `json:"evictionHard,omitempty"`
-	// evictionSoft is a map of signal names to quantities that defines soft eviction thresholds.
-	// For example: `{"memory.available": "300Mi"}`.
-	// Default: nil
-	// +optional
-	EvictionSoft map[string]string `json:"evictionSoft,omitempty"`
-	// evictionSoftGracePeriod is a map of signal names to quantities that defines grace
-	// periods for each soft eviction signal. For example: `{"memory.available": "30s"}`.
-	// Default: nil
-	// +optional
-	EvictionSoftGracePeriod map[string]string `json:"evictionSoftGracePeriod,omitempty"`
-	// evictionPressureTransitionPeriod is the duration for which the kubelet has to wait
-	// before transitioning out of an eviction pressure condition.
-	// Default: "5m"
-	// +optional
-	EvictionPressureTransitionPeriod metav1.Duration `json:"evictionPressureTransitionPeriod,omitempty"`
-	// evictionMaxPodGracePeriod is the maximum allowed grace period (in seconds) to use
-	// when terminating pods in response to a soft eviction threshold being met. This value
-	// effectively caps the Pod's terminationGracePeriodSeconds value during soft evictions.
-	// Note: Due to issue #64530, the behavior has a bug where this value currently just
-	// overrides the grace period during soft eviction, which can increase the grace
-	// period from what is set on the Pod. This bug will be fixed in a future release.
-	// Default: 0
-	// +optional
-	EvictionMaxPodGracePeriod int32 `json:"evictionMaxPodGracePeriod,omitempty"`
-	// evictionMinimumReclaim is a map of signal names to quantities that defines minimum reclaims,
-	// which describe the minimum amount of a given resource the kubelet will reclaim when
-	// performing a pod eviction while that resource is under pressure.
-	// For example: `{"imagefs.available": "2Gi"}`.
-	// Default: nil
-	// +optional
-	EvictionMinimumReclaim map[string]string `json:"evictionMinimumReclaim,omitempty"`
-	// podsPerCore is the maximum number of pods per core. Cannot exceed maxPods.
-	// The value must be a non-negative integer.
-	// If 0, there is no limit on the number of Pods.
-	// Default: 0
-	// +optional
-	PodsPerCore int32 `json:"podsPerCore,omitempty"`
-	// enableControllerAttachDetach enables the Attach/Detach controller to
-	// manage attachment/detachment of volumes scheduled to this node, and
-	// disables kubelet from executing any attach/detach operations.
-	// Note: attaching/detaching CSI volumes is not supported by the kubelet,
-	// so this option needs to be true for that use case.
-	// Default: true
-	// +optional
-	EnableControllerAttachDetach *bool `json:"enableControllerAttachDetach,omitempty"`
-	ProtectKernelDefaults        bool  `json:"protectKernelDefaults,omitempty"`  // 如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期.	// Default: false
-	MakeIPTablesUtilChains       *bool `json:"makeIPTablesUtilChains,omitempty"` // 如果为true, kubelet将确保主机上存在iptables实用程序规则.这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建.// Default: true
-	// iptablesMasqueradeBit is the bit of the iptables fwmark space to mark for SNAT.
-	// Values must be within the range [0, 31]. Must be different from other mark bits.
-	// Warning: Please match the value of the corresponding parameter in kube-proxy.
-	// TODO: clean up IPTablesMasqueradeBit in kube-proxy.
-	// Default: 14
-	// +optional
-	IPTablesMasqueradeBit *int32 `json:"iptablesMasqueradeBit,omitempty"`
-	// iptablesDropBit is the bit of the iptables fwmark space to mark for dropping packets.
-	// Values must be within the range [0, 31]. Must be different from other mark bits.
-	// Default: 15
-	// +optional
-	IPTablesDropBit *int32 `json:"iptablesDropBit,omitempty"`
-	// featureGates is a map of feature names to bools that enable or disable experimental
-	// features. This field modifies piecemeal the built-in default values from
-	// "k8s.io/kubernetes/pkg/features/kube_features.go".
-	// Default: nil
-	// +optional
-	FeatureGates map[string]bool `json:"featureGates,omitempty"`
-	FailSwapOn   *bool           `json:"failSwapOn,omitempty"` // 告诉Kubelet,如果在节点上启用了swap,则启动失败.默认为true
-	// memorySwap configures swap memory available to container workloads.
-	// +featureGate=NodeSwap
-	// +optional
-	MemorySwap MemorySwapConfiguration `json:"memorySwap,omitempty"`
-	// containerLogMaxSize is a quantity defining the maximum size of the container log
-	// file before it is rotated. For example: "5Mi" or "256Ki".
-	// Default: "10Mi"
-	// +optional
-	ContainerLogMaxSize string `json:"containerLogMaxSize,omitempty"`
-	// containerLogMaxFiles specifies the maximum number of container log files that can
-	// be present for a container.
-	// Default: 5
-	// +optional
-	ContainerLogMaxFiles *int32 `json:"containerLogMaxFiles,omitempty"`
-	// configMapAndSecretChangeDetectionStrategy is a mode in which ConfigMap and Secret
-	// managers are running. Valid values include:
-	//
-	// - `Get`: kubelet fetches necessary objects directly from the API server;
-	// - `Cache`: kubelet uses TTL cache for object fetched from the API server;
-	// - `Watch`: kubelet uses watches to observe changes to objects that are in its interest.
-	//
-	// Default: "Watch"
-	// +optional
-	ConfigMapAndSecretChangeDetectionStrategy ResourceChangeDetectionStrategy `json:"configMapAndSecretChangeDetectionStrategy,omitempty"`
-	SystemReserved                            map[string]string               `json:"systemReserved,omitempty"` // 预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil
-	KubeReserved                              map[string]string               `json:"kubeReserved,omitempty"`   // 预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil
-	// The reservedSystemCPUs option specifies the CPU list reserved for the host
-	// level system threads and kubernetes related threads. This provide a "static"
-	// CPU list rather than the "dynamic" list by systemReserved and kubeReserved.
-	// This option does not support systemReservedCgroup or kubeReservedCgroup.
-	ReservedSystemCPUs string `json:"reservedSystemCPUs,omitempty"`
-	// showHiddenMetricsForVersion is the previous version for which you want to show
-	// hidden metrics.
-	// Only the previous minor version is meaningful, other values will not be allowed.
-	// The format is `<major>.<minor>`, e.g.: `1.16`.
-	// The purpose of this format is make sure you have the opportunity to notice
-	// if the next release hides additional metrics, rather than being surprised
-	// when they are permanently removed in the release after that.
-	// Default: ""
-	// +optional
-	ShowHiddenMetricsForVersion string `json:"showHiddenMetricsForVersion,omitempty"`
-	// systemReservedCgroup helps the kubelet identify absolute name of top level CGroup used
-	// to enforce `systemReserved` compute resource reservation for OS system daemons.
-	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md)
-	// doc for more information.
-	// Default: ""
-	// +optional
-	SystemReservedCgroup string `json:"systemReservedCgroup,omitempty"`
-	// kubeReservedCgroup helps the kubelet identify absolute name of top level CGroup used
-	// to enforce `KubeReserved` compute resource reservation for Kubernetes node system daemons.
-	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md)
-	// doc for more information.
-	// Default: ""
-	// +optional
-	KubeReservedCgroup string `json:"kubeReservedCgroup,omitempty"`
-	// This flag specifies the various Node Allocatable enforcements that Kubelet needs to perform.
-	// This flag accepts a list of options. Acceptable options are `none`, `pods`,
-	// `system-reserved` and `kube-reserved`.
-	// If `none` is specified, no other options may be specified.
-	// When `system-reserved` is in the list, systemReservedCgroup must be specified.
-	// When `kube-reserved` is in the list, kubeReservedCgroup must be specified.
-	// This field is supported only when `cgroupsPerQOS` is set to true.
-	// Refer to [Node Allocatable](https://git.k8s.io/community/contributors/design-proposals/node/node-allocatable.md)
-	// for more information.
-	// Default: ["pods"]
-	// +optional
-	EnforceNodeAllocatable []string `json:"enforceNodeAllocatable,omitempty"`
-	AllowedUnsafeSysctls   []string `json:"allowedUnsafeSysctls,omitempty"` // 被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.Default: []
-
-	VolumePluginDir string `json:"volumePluginDir,omitempty"` // 搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.	// Default: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
-
-	// providerID, if set, sets the unique ID of the instance that an external
-	// provider (i.e. cloudprovider) can use to identify a specific node.
-	// Default: ""
-	// +optional
-	ProviderID              string `json:"providerID,omitempty"`
-	KernelMemcgNotification bool   `json:"kernelMemcgNotification,omitempty"` // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.Default: false
-	// logging specifies the options of logging.
-	// Refer to [Logs Options](https://github.com/kubernetes/component-base/blob/master/logs/options.go)
-	// for more information.
-	// Default:
-	//   Format: text
-	// + optional
-	Logging logsapi.LoggingConfiguration `json:"logging,omitempty"`
-	// enableSystemLogHandler enables system logs via web interface host:port/logs/
-	// Default: true
-	// +optional
-	EnableSystemLogHandler *bool `json:"enableSystemLogHandler,omitempty"`
-	// +featureGate=GracefulNodeShutdown
-	// +optional
-	ShutdownGracePeriod metav1.Duration `json:"shutdownGracePeriod,omitempty"` // 节点关闭时，容器优雅关闭等待的时间Default: "0s"
-	// +featureGate=GracefulNodeShutdown
-	// +optional
-	ShutdownGracePeriodCriticalPods metav1.Duration `json:"shutdownGracePeriodCriticalPods,omitempty"` // 指定分配给节点优雅关闭等待的时间,默认0s.if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间,前20秒将保留用于优雅地终止正常pod,最后10秒将保留用于终止关键pod.
-	// shutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based
-	// on their associated priority class value.
-	// When a shutdown request is received, the Kubelet will initiate shutdown on all pods
-	// running on the node with a grace period that depends on the priority of the pod,
-	// and then wait for all pods to exit.
-	// Each entry in the array represents the graceful shutdown time a pod with a priority
-	// class value that lies in the range of that value and the next higher entry in the
-	// list when the node is shutting down.
-	// For example, to allow critical pods 10s to shutdown, priority>=10000 pods 20s to
-	// shutdown, and all remaining pods 30s to shutdown.
-	//
-	// shutdownGracePeriodByPodPriority:
-	//   - priority: 2000000000
-	//     shutdownGracePeriodSeconds: 10
-	//   - priority: 10000
-	//     shutdownGracePeriodSeconds: 20
-	//   - priority: 0
-	//     shutdownGracePeriodSeconds: 30
-	//
-	// The time the Kubelet will wait before exiting will at most be the maximum of all
-	// shutdownGracePeriodSeconds for each priority class range represented on the node.
-	// When all pods have exited or reached their grace periods, the Kubelet will release
-	// the shutdown inhibit lock.
-	// Requires the GracefulNodeShutdown feature gate to be enabled.
-	// This configuration must be empty if either ShutdownGracePeriod or ShutdownGracePeriodCriticalPods is set.
-	// Default: nil
-	// +featureGate=GracefulNodeShutdownBasedOnPodPriority
-	// +optional
-	ShutdownGracePeriodByPodPriority []ShutdownGracePeriodByPodPriority `json:"shutdownGracePeriodByPodPriority,omitempty"`
-	// reservedMemory specifies a comma-separated list of memory reservations for NUMA nodes.
-	// The parameter makes sense only in the context of the memory manager feature.
-	// The memory manager will not allocate reserved memory for container workloads.
-	// For example, if you have a NUMA0 with 10Gi of memory and the reservedMemory was
-	// specified to reserve 1Gi of memory at NUMA0, the memory manager will assume that
-	// only 9Gi is available for allocation.
-	// You can specify a different amount of NUMA node and memory types.
-	// You can omit this parameter at all, but you should be aware that the amount of
-	// reserved memory from all NUMA nodes should be equal to the amount of memory specified
-	// by the [node allocatable](https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/#node-allocatable).
-	// If at least one node allocatable parameter has a non-zero value, you will need
-	// to specify at least one NUMA node.
-	// Also, avoid specifying:
-	//
-	// 1. Duplicates, the same NUMA node, and memory type, but with a different value.
-	// 2. zero limits for any memory type.
-	// 3. NUMAs nodes IDs that do not exist under the machine.
-	// 4. memory types except for memory and hugepages-<size>
-	//
-	// Default: nil
-	// +optional
-	ReservedMemory []MemoryReservation `json:"reservedMemory,omitempty"`
-	// enableProfilingHandler enables profiling via web interface host:port/debug/pprof/
-	// Default: true
-	// +optional
-	EnableProfilingHandler *bool `json:"enableProfilingHandler,omitempty"`
-	// enableDebugFlagsHandler enables flags endpoint via web interface host:port/debug/flags/v
-	// Default: true
-	// +optional
-	EnableDebugFlagsHandler *bool `json:"enableDebugFlagsHandler,omitempty"`
-	// SeccompDefault enables the use of `RuntimeDefault` as the default seccomp profile for all workloads.
-	// This requires the corresponding SeccompDefault feature gate to be enabled as well.
-	// Default: false
-	// +optional
-	SeccompDefault *bool `json:"seccompDefault,omitempty"`
-	// MemoryThrottlingFactor specifies the factor multiplied by the memory limit or node allocatable memory
-	// when setting the cgroupv2 memory.high value to enforce MemoryQoS.
-	// Decreasing this factor will set lower high limit for container cgroups and put heavier reclaim pressure
-	// while increasing will put less reclaim pressure.
-	// See https://kep.k8s.io/2570 for more details.
-	// Default: 0.8
-	// +featureGate=MemoryQoS
-	// +optional
-	MemoryThrottlingFactor *float64 `json:"memoryThrottlingFactor,omitempty"`
-	// registerWithTaints are an array of taints to add to a node object when
-	// the kubelet registers itself. This only takes effect when registerNode
-	// is true and upon the initial registration of the node.
-	// Default: nil
-	// +optional
-	RegisterWithTaints []v1.Taint `json:"registerWithTaints,omitempty"`
-	// registerNode enables automatic registration with the apiserver.
-	// Default: true
-	// +optional
-	RegisterNode *bool `json:"registerNode,omitempty"`
-	// Tracing specifies the versioned configuration for OpenTelemetry tracing clients.
-	// See https://kep.k8s.io/2832 for more details.
-	// +featureGate=KubeletTracing
-	// +optional
-	Tracing *tracingapi.TracingConfiguration `json:"tracing,omitempty"`
+	CPUCFSQuota                               *bool                              `json:"cpuCFSQuota,omitempty"`
+	CPUCFSQuotaPeriod                         *metav1.Duration                   `json:"cpuCFSQuotaPeriod,omitempty"`                         // CPU CFS配额周期的值,即cpu.cfs_period_us.该值必须在1毫秒和1秒之间（包括1毫秒和1秒）.要求启用CustomCPUCFSQuotaPeriod功能门控. Default: "100ms"
+	NodeStatusMaxImages                       *int32                             `json:"nodeStatusMaxImages,omitempty"`                       // 节点status 存储的最大image 数量 Default: 50
+	MaxOpenFiles                              int64                              `json:"maxOpenFiles,omitempty"`                              // Kubelet进程可以打开的文件数量.1000000
+	ContentType                               string                             `json:"contentType,omitempty"`                               // 发送到 apiserver 的消息格式.Default: "application/vnd.kubernetes.protobuf"
+	KubeAPIQPS                                *int32                             `json:"kubeAPIQPS,omitempty"`                                // 与Kubernetes API服务器通信时使用的每秒请求数.Default: 5
+	KubeAPIBurst                              int32                              `json:"kubeAPIBurst,omitempty"`                              // Kubernetes API服务器通信时允许的突发请求数.	Default: 10
+	SerializeImagePulls                       *bool                              `json:"serializeImagePulls,omitempty"`                       // 串行化拉取镜像.我们建议在运行Docker版本小于1.9或使用Aufs存储后端的节点上不要更改默认值.Default: true
+	EvictionHard                              map[string]string                  `json:"evictionHard,omitempty"`                              // 硬驱逐阈值		    {"memory.available":  "100Mi","nodefs.available":  "10%","nodefs.inodesFree": "5%","imagefs.available": "15%"}
+	EvictionSoft                              map[string]string                  `json:"evictionSoft,omitempty"`                              // 软驱逐阈值		    {"memory.available": "300Mi"}
+	EvictionSoftGracePeriod                   map[string]string                  `json:"evictionSoftGracePeriod,omitempty"`                   // 每个软驱逐信号的宽限期 {"memory.available": "30s"}
+	EvictionPressureTransitionPeriod          metav1.Duration                    `json:"evictionPressureTransitionPeriod,omitempty"`          // 退出驱逐压力状态之前必须等待的持续时间.Default: "5m"
+	EvictionMaxPodGracePeriod                 int32                              `json:"evictionMaxPodGracePeriod,omitempty"`                 // 在满足软驱逐阈值时终止Pod时使用的最大允许宽限期（以秒为单位）,默认0s
+	EvictionMinimumReclaim                    map[string]string                  `json:"evictionMinimumReclaim,omitempty"`                    // 进行资源回收的资源的最小回收量, {"imagefs.available": "2Gi"}	Default: nil
+	PodsPerCore                               int32                              `json:"podsPerCore,omitempty"`                               // 每个pod使用的最大core,默认0,不限制
+	EnableControllerAttachDetach              *bool                              `json:"enableControllerAttachDetach,omitempty"`              // 使Attach/Detach控制器能够管理计划到该节点的卷的附加/分离,并禁用kubelet执行任何附加/分离操作. 注意:kubelet不支持附加/分离CSI卷,所以这个选项需要为true. Default: true
+	ProtectKernelDefaults                     bool                               `json:"protectKernelDefaults,omitempty"`                     // 如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期. Default: false
+	MakeIPTablesUtilChains                    *bool                              `json:"makeIPTablesUtilChains,omitempty"`                    // 如果为true, kubelet将确保主机上存在iptables实用程序规则.这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建. Default: true
+	IPTablesMasqueradeBit                     *int32                             `json:"iptablesMasqueradeBit,omitempty"`                     // SNAT标记的iptables fwmark空间的位.Default: 14
+	IPTablesDropBit                           *int32                             `json:"iptablesDropBit,omitempty"`                           // iptablesDropBit是iptables的fwmark空间的位,用于标记丢弃报文. 取值范围为[0,31].必须与其他标记位不同. Default: 15
+	FeatureGates                              map[string]bool                    `json:"featureGates,omitempty"`                              // 功能名称到启用或禁用实验性功能的工具的映射.
+	FailSwapOn                                *bool                              `json:"failSwapOn,omitempty"`                                // 告诉Kubelet,如果在节点上启用了swap,则启动失败.默认为true
+	MemorySwap                                MemorySwapConfiguration            `json:"memorySwap,omitempty"`                                // 配置容器工作负载可用的交换内存.	+featureGate=NodeSwap
+	ContainerLogMaxSize                       string                             `json:"containerLogMaxSize,omitempty"`                       // 容器日志最大大小,Default: "10Mi"
+	ContainerLogMaxFiles                      *int32                             `json:"containerLogMaxFiles,omitempty"`                      // 容器日志最多个数,默认5
+	ConfigMapAndSecretChangeDetectionStrategy ResourceChangeDetectionStrategy    `json:"configMapAndSecretChangeDetectionStrategy,omitempty"` // ConfigMap和Secret获取方式,默认watch
+	SystemReserved                            map[string]string                  `json:"systemReserved,omitempty"`                            // 预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil
+	KubeReserved                              map[string]string                  `json:"kubeReserved,omitempty"`                              // 预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil
+	ReservedSystemCPUs                        string                             `json:"reservedSystemCPUs,omitempty"`                        // 为主机级系统线程和与Kubernetes相关的线程保留的CPU列表
+	ShowHiddenMetricsForVersion               string                             `json:"showHiddenMetricsForVersion,omitempty"`               // 需要显示?版本已经隐藏的指标
+	SystemReservedCgroup                      string                             `json:"systemReservedCgroup,omitempty"`                      // 强制执行Kubernetes节点系统守护程序的systemReserved计算资源预留的顶级CGroup的绝对名称.
+	KubeReservedCgroup                        string                             `json:"kubeReservedCgroup,omitempty"`                        // 强制执行Kubernetes节点系统守护程序的KubeReserved计算资源预留的顶级CGroup的绝对名称.
+	EnforceNodeAllocatable                    []string                           `json:"enforceNodeAllocatable,omitempty"`                    // Kubelet需要执行的各种节点可分配强制措施`none`, `pods`,`system-reserved` and `kube-reserved`..cgroupsPerQPS设置前提下, system-reserved:systemReservedCgroup   , kube-reserved:kubeReservedCgroup Default: ["pods"]
+	AllowedUnsafeSysctls                      []string                           `json:"allowedUnsafeSysctls,omitempty"`                      // 被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.Default: []
+	VolumePluginDir                           string                             `json:"volumePluginDir,omitempty"`                           // 搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.	// Default: "/usr/libexec/kubernetes/kubelet-plugins/volume/exec/"
+	ProviderID                                string                             `json:"providerID,omitempty"`                                // 外部提供商(即云提供商)可以用来识别特定节点的实例的唯一ID. Default: ""
+	KernelMemcgNotification                   bool                               `json:"kernelMemcgNotification,omitempty"`                   // 如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.Default: false
+	Logging                                   logsapi.LoggingConfiguration       `json:"logging,omitempty"`                                   // 日志格式,
+	EnableSystemLogHandler                    *bool                              `json:"enableSystemLogHandler,omitempty"`                    // 是否允许系统日志通过host:port/logs/ 访问,Default: true
+	ShutdownGracePeriod                       metav1.Duration                    `json:"shutdownGracePeriod,omitempty"`                       // 节点关闭时,容器优雅关闭等待的时间Default: "0s"	+featureGate=GracefulNodeShutdown
+	ShutdownGracePeriodCriticalPods           metav1.Duration                    `json:"shutdownGracePeriodCriticalPods,omitempty"`           // 指定分配给节点优雅关闭等待的时间,默认0s.if ShutdownGracePeriod=30s, and ShutdownGracePeriodCriticalPods=10s, 在 node 关闭期间,前20秒将保留用于优雅地终止正常pod,最后10秒将保留用于终止关键pod.+featureGate=GracefulNodeShutdown
+	ShutdownGracePeriodByPodPriority          []ShutdownGracePeriodByPodPriority `json:"shutdownGracePeriodByPodPriority,omitempty"`          // 基于优先级类别值的Pod的关机宽限期.		+featureGate=GracefulNodeShutdownBasedOnPodPriority
+	ReservedMemory                            []MemoryReservation                `json:"reservedMemory,omitempty"`                            // 每个numa 节点, 限制的资源  Default: nil
+	EnableProfilingHandler                    *bool                              `json:"enableProfilingHandler,omitempty"`                    // 是否启用prof handler   host:port/debug/pprof/  Default: true
+	EnableDebugFlagsHandler                   *bool                              `json:"enableDebugFlagsHandler,omitempty"`                   // 是否启用flags handler  host:port/debug/flags/v Default: true
+	SeccompDefault                            *bool                              `json:"seccompDefault,omitempty"`                            // 为所有工作负载设置Seccomp 配置文件.Default: false
+	MemoryThrottlingFactor                    *float64                           `json:"memoryThrottlingFactor,omitempty"`                    // 设置cgroupv2内存时,该因子乘以内存限制或节点可分配内存.Default: 0.8	+featureGate=MemoryQoS
+	RegisterWithTaints                        []v1.Taint                         `json:"registerWithTaints,omitempty"`                        // 自动注册时,附加的污点Default: nil
+	RegisterNode                              *bool                              `json:"registerNode,omitempty"`                              // 是否允许自动注册到apiserver  Default: true
+	Tracing                                   *tracingapi.TracingConfiguration   `json:"tracing,omitempty"`                                   // 指定OpenTelemetry跟踪客户端的版本化配置.+featureGate=KubeletTracing
 
 	// LocalStorageCapacityIsolation enables local ephemeral storage isolation feature. The default setting is true.
 	// This feature allows users to set request/limit for container's ephemeral storage and manage it in a similar way
@@ -728,7 +425,7 @@ type SerializedNodeConfigSource struct {
 	Source v1.NodeConfigSource `json:"source,omitempty" protobuf:"bytes,1,opt,name=source"`
 }
 
-// MemoryReservation specifies the memory reservation of different types for each NUMA node
+// MemoryReservation 指定每个numa 节点, 限制的资源
 type MemoryReservation struct {
 	NumaNode int32          `json:"numaNode"`
 	Limits   v1.ResourceMap `json:"limits"`
@@ -820,8 +517,6 @@ type CredentialProvider struct {
 	Env []ExecEnvVar `json:"env,omitempty"`
 }
 
-// ExecEnvVar is used for setting environment variables when executing an exec-based
-// credential plugin.
 type ExecEnvVar struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
