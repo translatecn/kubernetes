@@ -1,0 +1,19 @@
+{
+    "conditions": [
+        {
+            "message": "containers with unready status: [calico-node]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        },
+        {
+            "message": "containers with unready status: [calico-node]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "ready": false => true
+        }
+    ]
+}

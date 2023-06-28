@@ -1,0 +1,21 @@
+{
+    "conditions": [
+        {
+            "lastTransitionTime": "2023-06-28T09:50:16Z" => "2023-06-28T09:55:15Z",
+            "message": "containers with unready status: [coredns]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:50:16Z" => "2023-06-28T09:55:15Z",
+            "message": "containers with unready status: [coredns]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "ready": false => true
+        }
+    ]
+}

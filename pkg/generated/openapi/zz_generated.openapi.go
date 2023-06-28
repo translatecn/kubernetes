@@ -57463,7 +57463,7 @@ func schema_k8sio_kubelet_config_v1beta1_CredentialProvider(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "name is the required name of the credential provider. It must match the name of the provider executable as seen by the kubelet. The executable must be in the kubelet's bin directory (set by the --image-credential-provider-bin-dir flag).",
+							Description: "name 是凭据提供程序的必需名称. 它必须与 kubelet 可见的提供程序可执行文件的名称匹配 该可执行文件必须位于 kubelet 的 bin 目录中（通过 --image-credential-provider-bin-dir 标志设置）.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -57471,8 +57471,7 @@ func schema_k8sio_kubelet_config_v1beta1_CredentialProvider(ref common.Reference
 					},
 					"matchImages": {
 						SchemaProps: spec.SchemaProps{
-							Description: "matchImages is a required list of strings used to match against images in order to determine if this provider should be invoked. If one of the strings matches the requested image from the kubelet, the plugin will be invoked and given a chance to provide credentials. Images are expected to contain the registry domain and URL path.\n\nEach entry in matchImages is a pattern which can optionally contain a port and a path. Globs can be used in the domain, but not in the port or the path. Globs are supported as subdomains like '*.k8s.io' or 'k8s.*.io', and top-level-domains such as 'k8s.*'. Matching partial subdomains like 'app*.k8s.io' is also supported. Each glob can only match a single subdomain segment, so *.io does not match *.k8s.io.\n\nA match exists between an image and a matchImage when all of the below are true: - Both contain the same number of domain parts and each part matches. - The URL path of an imageMatch must be a prefix of the target image URL path. - If the imageMatch contains a port, then the port must match in the image as well.\n\nExample values of matchImages:\n  - 123456789.dkr.ecr.us-east-1.amazonaws.com\n  - *.azurecr.io\n  - gcr.io\n  - *.*.registry.io\n  - registry.io:8080/path",
-							Type:        []string{"array"},
+							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -57486,7 +57485,7 @@ func schema_k8sio_kubelet_config_v1beta1_CredentialProvider(ref common.Reference
 					},
 					"defaultCacheDuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "defaultCacheDuration is the default duration the plugin will cache credentials in-memory if a cache duration is not provided in the plugin response. This field is required.",
+							Description: "DefaultCacheDuration is the 默认 duration the plugin will cache credentials in-memory if a cache duration is not provided in the plugin response. This field is required.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -57540,8 +57539,7 @@ func schema_k8sio_kubelet_config_v1beta1_CredentialProviderConfig(ref common.Ref
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "CredentialProviderConfig is the configuration containing information about each exec credential provider. Kubelet reads this configuration from disk and enables each provider as specified by the CredentialProvider type.",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -57559,7 +57557,7 @@ func schema_k8sio_kubelet_config_v1beta1_CredentialProviderConfig(ref common.Ref
 					},
 					"providers": {
 						SchemaProps: spec.SchemaProps{
-							Description: "providers is a list of credential provider plugins that will be enabled by the kubelet. Multiple providers may match against a single image, in which case credentials from all providers will be returned to the kubelet. If multiple providers are called for a single image, the results are combined. If providers return overlapping auth keys, the value from the provider earlier in this list is used.",
+							Description: "providers 是 kubelet 将启用的凭据提供程序插件列表. 多个提供程序可以匹配单个镜像,此时所有提供程序的凭据将返回给 kubelet. 如果为单个镜像调用多个提供程序,则将合并结果.如果提供程序返回重叠的认证密钥,则使用此列表中较早的提供程序的值.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -57615,9 +57613,8 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletAnonymousAuthentication(ref comm
 				Properties: map[string]spec.Schema{
 					"enabled": {
 						SchemaProps: spec.SchemaProps{
-							Description: "enabled allows anonymous requests to the kubelet server. Requests that are not rejected by another authentication method are treated as anonymous requests. Anonymous requests have a username of `system:anonymous`, and a group name of `system:unauthenticated`.",
-							Type:        []string{"boolean"},
-							Format:      "",
+							Type:   []string{"boolean"},
+							Format: "",
 						},
 					},
 				},
@@ -57634,26 +57631,26 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletAuthentication(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"x509": {
 						SchemaProps: spec.SchemaProps{
-							Description: "x509 contains settings related to x509 client certificate authentication.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kubelet/config/v1beta1.KubeletX509Authentication"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/kubelet/config/v1beta1.KubeletX509Authentication"),
 						},
 					},
 					"webhook": {
 						SchemaProps: spec.SchemaProps{
-							Description: "webhook contains settings related to webhook bearer token authentication.",
+							Description: "kubelet 与客户端 通信的证书配置",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/kubelet/config/v1beta1.KubeletWebhookAuthentication"),
 						},
 					},
 					"anonymous": {
 						SchemaProps: spec.SchemaProps{
-							Description: "anonymous contains settings related to anonymous authentication.",
+							Description: "bearer token 配置",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/kubelet/config/v1beta1.KubeletAnonymousAuthentication"),
 						},
 					},
 				},
+				Required: []string{"x509", "webhook", "anonymous"},
 			},
 		},
 		Dependencies: []string{
@@ -57669,19 +57666,18 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletAuthorization(ref common.Referen
 				Properties: map[string]spec.Schema{
 					"mode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "mode is the authorization mode to apply to requests to the kubelet server. Valid values are `AlwaysAllow` and `Webhook`. Webhook mode uses the SubjectAccessReview API to determine authorization.",
-							Type:        []string{"string"},
-							Format:      "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"webhook": {
 						SchemaProps: spec.SchemaProps{
-							Description: "webhook contains settings related to Webhook authorization.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kubelet/config/v1beta1.KubeletWebhookAuthorization"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/kubelet/config/v1beta1.KubeletWebhookAuthorization"),
 						},
 					},
 				},
+				Required: []string{"webhook"},
 			},
 		},
 		Dependencies: []string{
@@ -57718,39 +57714,39 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"staticPodPath": {
 						SchemaProps: spec.SchemaProps{
-							Description: "启用Kubelet的安全服务器Default: true",
+							Description: "启用Kubelet的安全服务器默认: true",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"syncFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "静态pod的文件夹 Default: \"\"",
+							Description: "静态pod的文件夹 默认: \"\"",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"fileCheckFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "周期性全量同步容器、配置的间隔 Default: \"1m\"",
+							Description: "周期性全量同步容器、配置的间隔 默认: \"1m\"",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"httpCheckFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "静态pod文件检查周期 Default: \"20s\"",
+							Description: "静态pod文件检查周期 默认: \"20s\"",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"staticPodURL": {
 						SchemaProps: spec.SchemaProps{
-							Description: "静态pod http 检查周期 Default: \"20s\"",
+							Description: "静态pod http 检查周期 默认: \"20s\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"staticPodURLHeader": {
 						SchemaProps: spec.SchemaProps{
-							Description: "获取静态文件列表的地址 Default: \"\"",
+							Description: "获取静态文件列表的地址 默认: \"\"",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -57773,7 +57769,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"address": {
 						SchemaProps: spec.SchemaProps{
-							Description: "获取静态文件列表的地址,需要使用一些 HTTP 头部信息 Default: nil",
+							Description: "获取静态文件列表的地址,需要使用一些 HTTP 头部信息 默认: nil",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -57823,83 +57819,84 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"tlsMinVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "服务器允许的密码套件列表.Default: nil",
+							Description: "服务器允许的密码套件列表.默认: nil",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"rotateCertificates": {
 						SchemaProps: spec.SchemaProps{
-							Description: "tls 支持的最小版本  Default: \"\"",
+							Description: "tls 支持的最小版本  默认: \"\"",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"serverTLSBootstrap": {
 						SchemaProps: spec.SchemaProps{
-							Description: "serverTLSBootstrap enables server certificate bootstrap. Instead of self signing a serving certificate, the Kubelet will request a certificate from the 'certificates.k8s.io' API. This requires an approver to approve the certificate signing requests (CSR). The RotateKubeletServerCertificate feature must be enabled when setting this field. Default: false",
+							Description: "❓启用客户端证书轮换.Kubelet将从certificates.k8s请求一个新证书.这需要审批者批准证书签名请求.默认: false",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"authentication": {
 						SchemaProps: spec.SchemaProps{
-							Description: "authentication specifies how requests to the Kubelet's server are authenticated. Defaults:\n  anonymous:\n    enabled: false\n  webhook:\n    enabled: true\n    cacheTTL: \"2m\"",
+							Description: "❓启用了服务器证书引导.在自签名服务器证书的情况下,Kubelet将从'certificates.k8s.io' API请求证书 默认: false",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/kubelet/config/v1beta1.KubeletAuthentication"),
 						},
 					},
 					"authorization": {
 						SchemaProps: spec.SchemaProps{
-							Description: "authorization specifies how requests to the Kubelet's server are authorized. Defaults:\n  mode: Webhook\n  webhook:\n    cacheAuthorizedTTL: \"5m\"\n    cacheUnauthorizedTTL: \"30s\"",
+							Description: "对Kubelet服务器请求的认证 配置",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/kubelet/config/v1beta1.KubeletAuthorization"),
 						},
 					},
 					"registryPullQPS": {
 						SchemaProps: spec.SchemaProps{
-							Description: "registryPullQPS is the limit of registry pulls per second. The value must not be a negative number. Setting it to 0 means no limit. Default: 5",
+							Description: "对Kubelet服务器请求的授权 配置",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"registryBurst": {
 						SchemaProps: spec.SchemaProps{
-							Description: "registryBurst is the maximum size of bursty pulls, temporarily allows pulls to burst to this number, while still not exceeding registryPullQPS. The value must not be a negative number. Only used if registryPullQPS is greater than 0. Default: 10",
+							Description: "每秒image最大拉取数量 默认: 5",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"eventRecordQPS": {
 						SchemaProps: spec.SchemaProps{
-							Description: "eventRecordQPS is the maximum event creations per second. If 0, there is no limit enforced. The value cannot be a negative number. Default: 5",
+							Description: "镜像拉取突发大小（一段时间内允许创建的最大数）",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"eventBurst": {
 						SchemaProps: spec.SchemaProps{
-							Description: "eventBurst is the maximum size of a burst of event creations, temporarily allows event creations to burst to this number, while still not exceeding eventRecordQPS. This field canot be a negative number and it is only used when eventRecordQPS > 0. Default: 10",
+							Description: "每秒最大事件创建数量 默认: 5",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"enableDebuggingHandlers": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "事件创建突发大小(一段时间内允许创建的最大数) 默认10",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"enableContentionProfiling": {
 						SchemaProps: spec.SchemaProps{
-							Description: "为日志访问、容器命令的本地运行 启用服务器端点,包括执行、附加、日志和端口转发特性.Default: true",
+							Description: "为日志访问、容器命令的本地运行 启用服务器端点,包括执行、附加、日志和端口转发特性.默认: true",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"healthzPort": {
 						SchemaProps: spec.SchemaProps{
-							Description: "如果enableDebuggingHandlers为true,则启用锁争用分析.Default: false",
+							Description: "如果enableDebuggingHandlers为true,则启用锁争用分析.默认: false",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -57920,14 +57917,15 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"clusterDomain": {
 						SchemaProps: spec.SchemaProps{
-							Description: "clusterDomain is the DNS domain for this cluster. If set, kubelet will configure all containers to search this domain in addition to the host's search domains. Default: \"\"",
+							Description: "kubelet oom 分数,默认: -999  [-1000, 1000]",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"clusterDNS": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "集群域名,默认 \"\"",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -57941,38 +57939,40 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"streamingConnectionIdleTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用\t// Default: nil",
+							Description: "逗号分隔的 DNS 服务器 IP 地址列表,kubelet 会使用\t// 默认: nil",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeStatusUpdateFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "nodeStatusUpdateFrequency is the frequency that kubelet computes node status. If node lease feature is not enabled, it is also the frequency that kubelet posts node status to master. Note: When node lease feature is not enabled, be cautious when changing the constant, it must work with nodeMonitorGracePeriod in nodecontroller. Default: \"10s\"",
+							Description: "stream 在关闭前的最大空闲时间 默认: \"4h\"",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeStatusReportFrequency": {
 						SchemaProps: spec.SchemaProps{
-							Description: "nodeStatusReportFrequency is the frequency that kubelet posts node status to master if node status does not change. Kubelet will ignore this frequency and post node status immediately if any change is detected. It is only used when node lease feature is enabled. nodeStatusReportFrequency's default value is 5m. But if nodeStatusUpdateFrequency is set explicitly, nodeStatusReportFrequency's default value will be set to nodeStatusUpdateFrequency for backward compatibility. Default: \"5m\"",
+							Description: "kubelet计算节点状态是否变化的频率 \"10s\"",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeLeaseDurationSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "节点没有变化时,状态报告频率.当启用租约时,检测到变化,立即上报,忽略这个参数 \"5m\"",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 					"imageMinimumGCAge": {
 						SchemaProps: spec.SchemaProps{
-							Description: "imageMinimumGCAge is the minimum age for an unused image before it is garbage collected. Default: \"2m\"",
+							Description: "nodeLeaseDurationSeconds  Kubelet将在其相应的Lease上设置的持续时间. \t// 默认: 40",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"imageGCHighThresholdPercent": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "每个回收镜像必须存活的时间 2m",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 					"imageGCLowThresholdPercent": {
@@ -57984,28 +57984,29 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"volumeStatsAggPeriod": {
 						SchemaProps: spec.SchemaProps{
-							Description: "在此之前从未运行image GC的磁盘使用百分比.要进行垃圾收集的磁盘使用率最低.取值必须在[0,100]范围内,且不能大于--image-gc-high-threshold   default 80",
+							Description: "在此之前从未运行image GC的磁盘使用百分比.要进行垃圾收集的磁盘使用率最低.取值必须在[0,100]范围内,且不能大于--image-gc-high-threshold   默认 80",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"kubeletCgroups": {
 						SchemaProps: spec.SchemaProps{
-							Description: "kubeletCgroups is the absolute name of cgroups to isolate the kubelet in Default: \"\"",
+							Description: "计算和缓存所有pod卷磁盘使用量的频率  默认 1m",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"systemCgroups": {
 						SchemaProps: spec.SchemaProps{
-							Description: "systemCgroups is absolute name of cgroups in which to place all non-kernel processes that are not already in a container. Empty for no container. Rolling back the flag requires a reboot. The cgroupRoot must be specified if this field is not empty. Default: \"\"",
+							Description: "kubelet 使用的cgroup路径,默认 \"\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"cgroupRoot": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "系统cgroups 是一个绝对名称,用于存放所有非内核进程,这些进程尚未在容器中运行.如果为空,则表示没有容器.回滚此标志需要重新启动系统.如果systemCgroups字段不为空,则必须指定cgroupRoot.默认值为\"\".",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"cgroupsPerQOS": {
@@ -58024,14 +58025,14 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"cpuManagerPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cpuManagerPolicy is the name of the policy to use. Requires the CPUManager feature gate to be enabled. Default: \"None\"",
+							Description: "kubelet用来在主机上操作cgroups的驱动程序(cgroupfs或systemd)默认: \"cgroupfs\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"cpuManagerPolicyOptions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cpuManagerPolicyOptions is a set of key=value which \tallows to set extra options to fine tune the behaviour of the cpu manager policies. Requires  both the \"CPUManager\" and \"CPUManagerPolicyOptions\" feature gates to be enabled. Default: nil",
+							Description: "内存管理器 策略      k=v 默认: nil",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -58047,34 +58048,34 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"cpuManagerReconcilePeriod": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cpuManagerReconcilePeriod is the reconciliation period for the CPU Manager. Requires the CPUManager feature gate to be enabled. Default: \"10s\"",
+							Description: "内存管理器 策略配置项 k=v 默认: nil",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"memoryManagerPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "memoryManagerPolicy is the name of the policy to use by memory manager. Requires the MemoryManager feature gate to be enabled. Default: \"none\"",
+							Description: "内存管理器调谐周期 10s",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"topologyManagerPolicy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "topologyManagerPolicy is the name of the topology manager policy to use. Valid values include:\n\n- `restricted`: kubelet only allows pods with optimal NUMA node alignment for\n  requested resources;\n- `best-effort`: kubelet will favor pods with NUMA alignment of CPU and device\n  resources;\n- `none`: kubelet has no knowledge of NUMA alignment of a pod's CPU and device resources. - `single-numa-node`: kubelet only allows pods with a single NUMA alignment\n  of CPU and device resources.\n\nPolicies other than \"none\" require the TopologyManager feature gate to be enabled. Default: \"none\"",
+							Description: "\"restricted\"策略会只允许容器在请求资源的最佳NUMA节点上运行. \"best-effort\"策略会优先选择具有CPU和设备资源在NUMA节点上对齐的容器. \"none\"策略表示拓扑管理器不会考虑容器在NUMA节点上的分配情况. \"single-numa-node\"策略会只允许容器在单个NUMA节点上运行.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"topologyManagerScope": {
 						SchemaProps: spec.SchemaProps{
-							Description: "topologyManagerScope represents the scope of topology hint generation that topology manager requests and hint providers generate. Valid values include:\n\n- `container`: topology policy is applied on a per-container basis. - `pod`: topology policy is applied on a per-pod basis.\n\n\"pod\" scope requires the TopologyManager feature gate to be enabled. Default: \"container\"",
+							Description: "策略名称,除了 \"none\" 之外的策略需要启用 TopologyManager 功能门控.一般都开启",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"topologyManagerPolicyOptions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "拓扑管理器请求和提示提供程序生成的拓扑提示的范围. Default: \"container\"",
+							Description: "拓扑管理器请求和提示提供程序生成的拓扑提示的范围[pod、container]. 默认: \"container\"",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -58090,7 +58091,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"qosReserved": {
 						SchemaProps: spec.SchemaProps{
-							Description: "qosReserved is a set of resource name to percentage pairs that specify the minimum percentage of a resource reserved for exclusive use by the guaranteed QoS tier. Currently supported resources: \"memory\" Requires the QOSReserved feature gate to be enabled. Default: nil",
+							Description: "一组key=value,它允许设置额外的选项来微调拓扑管理器策略的行为.\t// 默认: nil",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -58106,71 +58107,75 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"runtimeRequestTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "runtimeRequestTimeout is the timeout for all runtime requests except long running requests - pull, logs, exec and attach. Default: \"2m\"",
+							Description: "资源百分比预留,当前只支持memory,默认: nil",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"hairpinMode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "hairpinMode specifies how the Kubelet should configure the container bridge for hairpin packets. Setting this flag allows endpoints in a Service to loadbalance back to themselves if they should try to access their own Service. Values:\n\n- \"promiscuous-bridge\": make the container bridge promiscuous. - \"hairpin-veth\":       set the hairpin flag on container veth interfaces. - \"none\":               do nothing.\n\nGenerally, one must set `--hairpin-mode=hairpin-veth to` achieve hairpin NAT, because promiscuous-bridge assumes the existence of a container bridge named cbr0. Default: \"promiscuous-bridge\"",
+							Description: "\"promiscuous-bridge\"：使容器桥接器处于混杂模式. \"hairpin-veth\"：在容器的veth接口上设置hairpin标志. \"none\"：不进行任何操作. 默认: \"promiscuous-bridge\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"maxPods": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "Kubelet如何配置容器桥接以支持hairpin数据包",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 					"podCIDR": {
 						SchemaProps: spec.SchemaProps{
-							Description: "podCIDR is the CIDR to use for pod IP addresses, only used in standalone mode. In cluster mode, this is obtained from the control plane. Default: \"\"",
+							Description: "maxPods is the maximum 可以在Kubelet上运行的pod的数量. 默认: 110",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"podPidsLimit": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int64",
+							Description: "standalone 模式下podip的分配范围,集群模式下由控制器分配",
+							Type:        []string{"integer"},
+							Format:      "int64",
 						},
 					},
 					"resolvConf": {
 						SchemaProps: spec.SchemaProps{
-							Description: "resolvConf is the resolver configuration file used as the basis for the container DNS resolution configuration. If set to the empty string, will override the default and effectively disable DNS lookups. Default: \"/etc/resolv.conf\"",
+							Description: "pod中pid的最大数目.默认: -1",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"runOnce": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "容器dns解析配置/etc/resolv.conf",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"cpuCFSQuota": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cpuCFSQuota enables CPU CFS quota enforcement for containers that specify CPU limits. Default: true",
+							Description: "Kubelet 仅检查一次 API 服务器以获取 Pod,运行这些 Pod 并在完成后退出,除了静态 Pod 文件中指定的 Pod 之外默认: false",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"cpuCFSQuotaPeriod": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+							Description: "指定了CPU限制的容器,启用CPU CFS配额 默认: true",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeStatusMaxImages": {
 						SchemaProps: spec.SchemaProps{
-							Description: "CPU CFS配额周期的值,即cpu.cfs_period_us.该值必须在1毫秒和1秒之间（包括1毫秒和1秒）.要求启用CustomCPUCFSQuotaPeriod功能门控. Default: \"100ms\"",
+							Description: "CPU CFS配额周期的值,即cpu.cfs_period_us.该值必须在1毫秒和1秒之间（包括1毫秒和1秒）.要求启用CustomCPUCFSQuotaPeriod功能门控. 默认: \"100ms\"",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"maxOpenFiles": {
 						SchemaProps: spec.SchemaProps{
-							Description: "节点status 存储的最大image 数量 Default: 50",
+							Description: "节点status 存储的最大image 数量 默认: 50",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
@@ -58184,28 +58189,28 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"kubeAPIQPS": {
 						SchemaProps: spec.SchemaProps{
-							Description: "发送到 apiserver 的消息格式.Default: \"application/vnd.kubernetes.protobuf\"",
+							Description: "发送到 apiserver 的消息格式.默认: \"application/vnd.kubernetes.protobuf\"",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"kubeAPIBurst": {
 						SchemaProps: spec.SchemaProps{
-							Description: "与Kubernetes API服务器通信时使用的每秒请求数.Default: 5",
+							Description: "与Kubernetes API服务器通信时使用的每秒请求数.默认: 5",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"serializeImagePulls": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kubernetes API服务器通信时允许的突发请求数.\tDefault: 10",
+							Description: "Kubernetes API服务器通信时允许的突发请求数.\t默认: 10",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"evictionHard": {
 						SchemaProps: spec.SchemaProps{
-							Description: "串行化拉取镜像.我们建议在运行Docker版本小于1.9或使用Aufs存储后端的节点上不要更改默认值.Default: true",
+							Description: "串行化拉取镜像.我们建议在运行Docker版本小于1.9或使用Aufs存储后端的节点上不要更改默认值.默认: true",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -58259,7 +58264,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"evictionMaxPodGracePeriod": {
 						SchemaProps: spec.SchemaProps{
-							Description: "退出驱逐压力状态之前必须等待的持续时间.Default: \"5m\"",
+							Description: "退出驱逐压力状态之前必须等待的持续时间.默认: \"5m\"",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -58282,7 +58287,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"podsPerCore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "进行资源回收的资源的最小回收量, {\"imagefs.available\": \"2Gi\"}\tDefault: nil",
+							Description: "进行资源回收的资源的最小回收量, {\"imagefs.available\": \"2Gi\"}\t默认: nil",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -58296,35 +58301,35 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"protectKernelDefaults": {
 						SchemaProps: spec.SchemaProps{
-							Description: "使Attach/Detach控制器能够管理计划到该节点的卷的附加/分离,并禁用kubelet执行任何附加/分离操作. 注意:kubelet不支持附加/分离CSI卷,所以这个选项需要为true. Default: true",
+							Description: "使Attach/Detach控制器能够管理计划到该节点的卷的附加/分离,并禁用kubelet执行任何附加/分离操作. 注意:kubelet不支持附加/分离CSI卷,所以这个选项需要为true. 默认: true",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"makeIPTablesUtilChains": {
 						SchemaProps: spec.SchemaProps{
-							Description: "如果 protectKernelDefaults 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期. Default: false",
+							Description: "如果 protectKernel默认s 为 true,则会导致 Kubelet 在内核标志不符合其预期时出错.否则,Kubelet 将尝试修改内核标志以匹配其预期. 默认: false",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"iptablesMasqueradeBit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "如果为true, kubelet将确保主机上存在iptables实用程序规则.这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建. Default: true",
+							Description: "如果为true, kubelet将确保主机上存在iptables实用程序规则.这些规则将作为各种组件的实用工具,例如kube-proxy.规则将基于IPTablesMasqueradeBit和IPTablesDropBit创建. 默认: true",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"iptablesDropBit": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SNAT标记的iptables fwmark空间的位.Default: 14",
+							Description: "SNAT标记的iptables fwmark空间的位.默认: 14",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
 					},
 					"featureGates": {
 						SchemaProps: spec.SchemaProps{
-							Description: "iptablesDropBit是iptables的fwmark空间的位,用于标记丢弃报文. 取值范围为[0,31].必须与其他标记位不同. Default: 15",
+							Description: "iptablesDropBit是iptables的fwmark空间的位,用于标记丢弃报文. 取值范围为[0,31].必须与其他标记位不同. 默认: 15",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -58361,7 +58366,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"containerLogMaxFiles": {
 						SchemaProps: spec.SchemaProps{
-							Description: "容器日志最大大小,Default: \"10Mi\"",
+							Description: "容器日志最大大小,默认: \"10Mi\"",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -58391,7 +58396,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"kubeReserved": {
 						SchemaProps: spec.SchemaProps{
-							Description: "预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil",
+							Description: "预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 默认: nil",
 							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
@@ -58407,7 +58412,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"reservedSystemCPUs": {
 						SchemaProps: spec.SchemaProps{
-							Description: "预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 Default: nil",
+							Description: "预留资源,只支持  cpu=200m,memory=150G,ephemeral-storage=1G,pid=100 默认: nil",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -58450,7 +58455,7 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"allowedUnsafeSysctls": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kubelet需要执行的各种节点可分配强制措施`none`, `pods`,`system-reserved` and `kube-reserved`..cgroupsPerQPS设置前提下, system-reserved:systemReservedCgroup   , kube-reserved:kubeReservedCgroup Default: [\"pods\"]",
+							Description: "Kubelet需要执行的各种节点可分配强制措施`none`, `pods`,`system-reserved` and `kube-reserved`..cgroupsPerQPS设置前提下, system-reserved:systemReservedCgroup   , kube-reserved:kubeReservedCgroup 默认: [\"pods\"]",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -58465,28 +58470,28 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"volumePluginDir": {
 						SchemaProps: spec.SchemaProps{
-							Description: "被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.Default: []",
+							Description: "被允许的 sysctl 不安全指令;这些系统设置了名称空间,但默认情况下不允许. `kernel.shm*`, `kernel.msg*`, `kernel.sem`, `fs.mqueue.*`, and `net.*`.默认: []",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"providerID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.\t// Default: \"/usr/libexec/kubernetes/kubelet-plugins/volume/exec/\"",
+							Description: "搜索其他第三方卷插件的完整目录路径.该目录下可能包含用于kubernetes的自定义卷插件,这些插件可以通过该目录进行加载和使用.\t// 默认: \"/usr/libexec/kubernetes/kubelet-plugins/volume/exec/\"",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"kernelMemcgNotification": {
 						SchemaProps: spec.SchemaProps{
-							Description: "外部提供商(即云提供商)可以用来识别特定节点的实例的唯一ID. Default: \"\"",
+							Description: "外部提供商(即云提供商)可以用来识别特定节点的实例的唯一ID. 默认: \"\"",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"logging": {
 						SchemaProps: spec.SchemaProps{
-							Description: "如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.Default: false",
+							Description: "如果为true,将与内核memcg通知集成,以确定是否超过内存阈值.默认: false",
 							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/component-base/logs/api/v1.LoggingConfiguration"),
 						},
@@ -58500,13 +58505,13 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"shutdownGracePeriod": {
 						SchemaProps: spec.SchemaProps{
-							Description: "是否允许系统日志通过host:port/logs/ 访问,Default: true",
+							Description: "是否允许系统日志通过host:port/logs/ 访问,默认: true",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"shutdownGracePeriodCriticalPods": {
 						SchemaProps: spec.SchemaProps{
-							Description: "节点关闭时,容器优雅关闭等待的时间Default: \"0s\"\t+featureGate=GracefulNodeShutdown",
+							Description: "节点关闭时,容器优雅关闭等待的时间默认: \"0s\"\t+featureGate=GracefulNodeShutdown",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -58540,35 +58545,35 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"enableProfilingHandler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "每个numa 节点, 限制的资源  Default: nil",
+							Description: "每个numa 节点, 限制的资源  默认: nil",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"enableDebugFlagsHandler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "是否启用prof handler   host:port/debug/pprof/  Default: true",
+							Description: "是否启用prof handler   host:port/debug/pprof/  默认: true",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"seccompDefault": {
 						SchemaProps: spec.SchemaProps{
-							Description: "是否启用flags handler  host:port/debug/flags/v Default: true",
+							Description: "是否启用flags handler  host:port/debug/flags/v 默认: true",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"memoryThrottlingFactor": {
 						SchemaProps: spec.SchemaProps{
-							Description: "为所有工作负载设置Seccomp 配置文件.Default: false",
+							Description: "为所有工作负载设置Seccomp 配置文件.默认: false",
 							Type:        []string{"number"},
 							Format:      "double",
 						},
 					},
 					"registerWithTaints": {
 						SchemaProps: spec.SchemaProps{
-							Description: "设置cgroupv2内存时,该因子乘以内存限制或节点可分配内存.Default: 0.8\t+featureGate=MemoryQoS",
+							Description: "设置cgroupv2内存时,该因子乘以内存限制或节点可分配内存.默认: 0.8\t+featureGate=MemoryQoS",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -58582,25 +58587,26 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletConfiguration(ref common.Referen
 					},
 					"registerNode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "自动注册时,附加的污点Default: nil",
+							Description: "自动注册时,附加的污点默认: nil",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"tracing": {
 						SchemaProps: spec.SchemaProps{
-							Description: "是否允许自动注册到apiserver  Default: true",
+							Description: "是否允许自动注册到apiserver  默认: true",
 							Ref:         ref("k8s.io/component-base/tracing/api/v1.TracingConfiguration"),
 						},
 					},
 					"localStorageCapacityIsolation": {
 						SchemaProps: spec.SchemaProps{
-							Description: "LocalStorageCapacityIsolation enables local ephemeral storage isolation feature. The default setting is true. This feature allows users to set request/limit for container's ephemeral storage and manage it in a similar way as cpu and memory. It also allows setting sizeLimit for emptyDir volume, which will trigger pod eviction if disk usage from the volume exceeds the limit. This feature depends on the capability of detecting correct root file system disk usage. For certain systems, such as kind rootless, if this capability cannot be supported, the feature LocalStorageCapacityIsolation should be disabled. Once disabled, user should not set request/limit for container's ephemeral storage, or sizeLimit for emptyDir. Default: true",
+							Description: "指定OpenTelemetry跟踪客户端的版本化配置.+featureGate=KubeletTracing",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 				},
+				Required: []string{"authentication", "authorization"},
 			},
 		},
 		Dependencies: []string{
@@ -58616,14 +58622,13 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletWebhookAuthentication(ref common
 				Properties: map[string]spec.Schema{
 					"enabled": {
 						SchemaProps: spec.SchemaProps{
-							Description: "enabled allows bearer token authentication backed by the tokenreviews.authentication.k8s.io API.",
-							Type:        []string{"boolean"},
-							Format:      "",
+							Type:   []string{"boolean"},
+							Format: "",
 						},
 					},
 					"cacheTTL": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cacheTTL enables caching of authentication results",
+							Description: "是否允许使用基于Bearer Token的身份验证",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -58643,13 +58648,12 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletWebhookAuthorization(ref common.
 				Properties: map[string]spec.Schema{
 					"cacheAuthorizedTTL": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cacheAuthorizedTTL is the duration to cache 'authorized' responses from the webhook authorizer.",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"cacheUnauthorizedTTL": {
 						SchemaProps: spec.SchemaProps{
-							Description: "cacheUnauthorizedTTL is the duration to cache 'unauthorized' responses from the webhook authorizer.",
+							Description: "授权成功结果缓存时间",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
@@ -58669,9 +58673,8 @@ func schema_k8sio_kubelet_config_v1beta1_KubeletX509Authentication(ref common.Re
 				Properties: map[string]spec.Schema{
 					"clientCAFile": {
 						SchemaProps: spec.SchemaProps{
-							Description: "clientCAFile is the path to a PEM-encoded certificate bundle. If set, any request presenting a client certificate signed by one of the authorities in the bundle is authenticated with a username corresponding to the CommonName, and groups corresponding to the Organization in the client certificate.",
-							Type:        []string{"string"},
-							Format:      "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},
@@ -58725,7 +58728,7 @@ func schema_k8sio_kubelet_config_v1beta1_MemorySwapConfiguration(ref common.Refe
 				Properties: map[string]spec.Schema{
 					"swapBehavior": {
 						SchemaProps: spec.SchemaProps{
-							Description: "swapBehavior configures swap memory available to container workloads. May be one of \"\", \"LimitedSwap\": workload combined memory and swap usage cannot exceed pod memory limit \"UnlimitedSwap\": workloads can use unlimited swap, up to the allocatable limit.",
+							Description: "swapBehavior 配置了容器工作负载可用的交换内存.它可以是以下之一： - \"\"：工作负载的内存和交换内存使用总和不能超过 Pod 的内存限制. - \"LimitedSwap\"：工作负载的内存和交换内存使用总和不能超过 Pod 的内存限制. - \"UnlimitedSwap\"：工作负载可以使用无限制的交换内存,但不能超过可分配的限制.\n\n此功能需要使用 NodeSwap 的 feature gate.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -58740,8 +58743,7 @@ func schema_k8sio_kubelet_config_v1beta1_SerializedNodeConfigSource(ref common.R
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "SerializedNodeConfigSource allows us to serialize v1.NodeConfigSource. This type is used internally by the Kubelet for tracking checkpointed dynamic configs. It exists in the kubeletconfig API group because it is classified as a versioned input to the Kubelet.",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -58759,9 +58761,8 @@ func schema_k8sio_kubelet_config_v1beta1_SerializedNodeConfigSource(ref common.R
 					},
 					"source": {
 						SchemaProps: spec.SchemaProps{
-							Description: "source is the source that we are serializing.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/api/core/v1.NodeConfigSource"),
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/api/core/v1.NodeConfigSource"),
 						},
 					},
 				},
@@ -58776,23 +58777,20 @@ func schema_k8sio_kubelet_config_v1beta1_ShutdownGracePeriodByPodPriority(ref co
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ShutdownGracePeriodByPodPriority specifies the shutdown grace period for Pods based on their associated priority class value",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"priority": {
 						SchemaProps: spec.SchemaProps{
-							Description: "priority is the priority value associated with the shutdown grace period",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"shutdownGracePeriodSeconds": {
 						SchemaProps: spec.SchemaProps{
-							Description: "shutdownGracePeriodSeconds is the shutdown grace period in seconds",
-							Default:     0,
-							Type:        []string{"integer"},
-							Format:      "int64",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int64",
 						},
 					},
 				},

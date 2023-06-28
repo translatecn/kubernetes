@@ -1,0 +1,18 @@
+{
+    "conditions": [
+        {
+            "lastTransitionTime": "2023-06-28T09:49:52Z" => "2023-06-28T10:27:24Z"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T10:26:30Z" => "2023-06-28T10:27:24Z",
+            "status": "False" => "True"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:55:30Z" => "2023-06-28T10:27:24Z"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:49:52Z" => "2023-06-28T10:27:24Z"
+        }
+    ],
+    "startTime": "2023-06-28T09:49:52Z" => "2023-06-28T10:27:24Z"
+}

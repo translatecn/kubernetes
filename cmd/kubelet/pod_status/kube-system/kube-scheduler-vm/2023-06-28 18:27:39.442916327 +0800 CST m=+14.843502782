@@ -1,0 +1,22 @@
+{
+    "conditions": [
+        {
+            "lastTransitionTime": "2023-06-28T10:27:25Z" => "2023-06-28T10:27:32Z",
+            "message": "containers with unready status: [kube-scheduler]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T10:27:25Z" => "2023-06-28T10:27:32Z",
+            "message": "containers with unready status: [kube-scheduler]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "ready": false => true,
+            "started": false => true
+        }
+    ]
+}

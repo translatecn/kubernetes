@@ -1,0 +1,55 @@
+{
+    "conditions": [
+        {
+            "lastTransitionTime": "2023-06-28T09:50:16Z" => "2023-06-28T09:55:19Z",
+            "message": "containers with unready status: [calico-csi csi-node-driver-registrar]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:50:16Z" => "2023-06-28T09:55:19Z",
+            "message": "containers with unready status: [calico-csi csi-node-driver-registrar]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "containerID": "containerd://46934e624958a57546820692ceeb797294191a0a2e7ef76312fbaa2d9ff0db7b",
+            "image": "docker.io/calico/csi:v3.24.1" => "sealos.hub:5000/calico/csi:v3.24.1",
+            "imageID": "" => "sealos.hub:5000/calico/csi@sha256:56a9a9c3ca65223bcd59fe86d41af0ac46b5a797c5b6903ff008fc738d031f22",
+            "ready": false => true,
+            "started": false => true,
+            "state": {
+                "running": {
+                    "startedAt": "2023-06-28T09:55:17Z"
+                },
+                "waiting": {
+                    "reason": "ContainerCreating"
+                }
+            }
+        },
+        {
+            "containerID": "containerd://15fc38f0f7422c3a7a6e35a728fb00be5e41502755e595e86a9e585d2603b77a",
+            "image": "docker.io/calico/node-driver-registrar:v3.24.1" => "sealos.hub:5000/calico/node-driver-registrar:v3.24.1",
+            "imageID": "" => "sealos.hub:5000/calico/node-driver-registrar@sha256:e38ad16ec9413cdcdd1c7d475f2ae39f0640d5880d29120d3526320a4d09f84f",
+            "ready": false => true,
+            "started": false => true,
+            "state": {
+                "running": {
+                    "startedAt": "2023-06-28T09:55:18Z"
+                },
+                "waiting": {
+                    "reason": "ContainerCreating"
+                }
+            }
+        }
+    ],
+    "phase": "Pending" => "Running",
+    "podIP": "100.122.141.67",
+    "podIPs": [
+        {
+            "ip": "100.122.141.67"
+        }
+    ]
+}

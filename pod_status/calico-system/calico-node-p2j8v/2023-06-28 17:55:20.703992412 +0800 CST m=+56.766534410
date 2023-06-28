@@ -1,0 +1,21 @@
+{
+    "conditions": [
+        {
+            "lastTransitionTime": "2023-06-28T09:50:11Z" => "2023-06-28T09:54:34Z",
+            "message": "containers with unready status: [calico-node]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:50:11Z" => "2023-06-28T09:54:34Z",
+            "message": "containers with unready status: [calico-node]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "ready": false => true
+        }
+    ]
+}

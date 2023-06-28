@@ -1,0 +1,40 @@
+{
+    "conditions": [
+        {
+            "lastTransitionTime": "2023-06-28T09:50:16Z" => "2023-06-28T09:55:21Z",
+            "message": "containers with unready status: [calico-kube-controllers]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:50:16Z" => "2023-06-28T09:55:21Z",
+            "message": "containers with unready status: [calico-kube-controllers]",
+            "reason": "ContainersNotReady",
+            "status": "False" => "True"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "containerID": "containerd://c0cbed3e9407279d963868298fd250360d8ac320e164c52613f26c038e00c27a",
+            "image": "docker.io/calico/kube-controllers:v3.24.1" => "sealos.hub:5000/calico/kube-controllers:v3.24.1",
+            "imageID": "" => "sealos.hub:5000/calico/kube-controllers@sha256:4010b2739792ae5e77a750be909939c0a0a372e378f3c81020754efcf4a91efa",
+            "ready": false => true,
+            "started": false => true,
+            "state": {
+                "running": {
+                    "startedAt": "2023-06-28T09:55:20Z"
+                },
+                "waiting": {
+                    "reason": "ContainerCreating"
+                }
+            }
+        }
+    ],
+    "phase": "Pending" => "Running",
+    "podIP": "100.122.141.68",
+    "podIPs": [
+        {
+            "ip": "100.122.141.68"
+        }
+    ]
+}

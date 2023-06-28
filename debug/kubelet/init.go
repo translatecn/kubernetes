@@ -3,6 +3,7 @@ package kubelet
 import "os"
 
 func Init(args []string) []string {
+	os.Remove("/var/lib/kubelet/cpu_manager_state")
 	_ = os.RemoveAll("./pod_status")
 	name, _ := os.Hostname()
 	if os.Getenv("DEBUG") != "" || name == "vm" {
@@ -23,8 +24,9 @@ func Init(args []string) []string {
 	args = append(args, "--container-runtime-endpoint=unix:///run/containerd/containerd.sock")
 	args = append(args, "--image-service-endpoint=unix:///var/run/image-cri-shim.sock")
 
-	//args = append(args, "--cpu-manager-policy=static")
-	//args = append(args, "--system-reserved=cpu=200m,memory=1G,ephemeral-storage=1G,pid=100")
-	//args = append(args, "--kube-reserved=cpu=200m,memory=1G,ephemeral-storage=1G,pid=100")
+	args = append(args, "--cpu-manager-policy=static") // kubectl drain node
+	args = append(args, "--topology-manager-policy=single-numa-node")
+	args = append(args, "--system-reserved=cpu=200m,memory=1G,ephemeral-storage=1G,pid=100")
+	args = append(args, "--kube-reserved=cpu=200m,memory=1G,ephemeral-storage=1G,pid=100")
 	return args
 }

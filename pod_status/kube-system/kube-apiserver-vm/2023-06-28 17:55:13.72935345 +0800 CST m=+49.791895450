@@ -1,0 +1,27 @@
+{
+    "conditions": [
+        {
+            "message": "containers with unready status: [kube-apiserver]",
+            "reason": "ContainersNotReady"
+        },
+        {
+            "lastTransitionTime": "2023-06-28T09:50:03Z" => "2023-06-28T09:55:10Z",
+            "message": "containers with unready status: [kube-apiserver]",
+            "reason": "ContainersNotReady",
+            "status": "True" => "False"
+        }
+    ],
+    "containerStatuses": [
+        {
+            "containerID": "containerd://2173ccf3634918a83b5b1b1186e324035fda423733372b814745a7490e4de82f" => "containerd://ce61a22cf79e96b7260cc9da5a8b17dcbaf833c6fbea28c2f852963bc53788aa",
+            "ready": true => false,
+            "restartCount": 22 => 0,
+            "started": true => false,
+            "state": {
+                "running": {
+                    "startedAt": "2023-06-28T09:49:48Z" => "2023-06-28T09:55:11Z"
+                }
+            }
+        }
+    ]
+}

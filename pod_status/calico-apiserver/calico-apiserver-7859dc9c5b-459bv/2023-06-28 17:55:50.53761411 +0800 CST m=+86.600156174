@@ -1,0 +1,25 @@
+{
+    "containerStatuses": [
+        {
+            "containerID": "containerd://71ede21347373719c40002eff5596f02476d55dc0e4c104d458fdf9b12b7d7fd",
+            "image": "docker.io/calico/apiserver:v3.24.1" => "sealos.hub:5000/calico/apiserver:v3.24.1",
+            "imageID": "" => "sealos.hub:5000/calico/apiserver@sha256:1eac67b67652da38060ed0f5ece2f4fabf2e911b2df7d2c84c278f96b5e4b324",
+            "started": false => true,
+            "state": {
+                "running": {
+                    "startedAt": "2023-06-28T09:55:50Z"
+                },
+                "waiting": {
+                    "reason": "ContainerCreating"
+                }
+            }
+        }
+    ],
+    "phase": "Pending" => "Running",
+    "podIP": "100.122.141.70",
+    "podIPs": [
+        {
+            "ip": "100.122.141.70"
+        }
+    ]
+}
