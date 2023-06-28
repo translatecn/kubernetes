@@ -29,9 +29,9 @@ type HairpinMode string
 
 // 不同处理回环数据包的方式的枚举设置
 const (
-	HairpinVeth       = "hairpin-veth"       // 在相应的容器运行时中，在容器的 veth 接口上设置回环标志。
-	PromiscuousBridge = "promiscuous-bridge" // 使容器的网桥处于混杂模式。这将强制容器接受回环数据包，即使网桥的端口上没有设置回环标志。
-	HairpinNone       = "none"               // 以上两种方式都不使用。如果 kubelet 在此回环模式下启动，并且 kube-proxy 在 iptables 模式下运行，则容器网桥将丢弃回环数据包。
+	HairpinVeth       = "hairpin-veth"       // 在相应的容器运行时中,在容器的 veth 接口上设置回环标志.
+	PromiscuousBridge = "promiscuous-bridge" // 使容器的网桥处于混杂模式.这将强制容器接受回环数据包,即使网桥的端口上没有设置回环标志.
+	HairpinNone       = "none"               // 以上两种方式都不使用.如果 kubelet 在此回环模式下启动,并且 kube-proxy 在 iptables 模式下运行,则容器网桥将丢弃回环数据包.
 )
 
 type ResourceChangeDetectionStrategy string
@@ -261,10 +261,10 @@ type CredentialProvider struct {
 	//   - gcr.io
 	//   - *.*.registry.io
 	//   - registry.io:8080/path
-	MatchImages          []string         `json:"matchImages"`          // 用于与镜像进行匹配，以确定是否应调用此提供程序。
+	MatchImages          []string         `json:"matchImages"`          // 用于与镜像进行匹配,以确定是否应调用此提供程序.
 	DefaultCacheDuration *metav1.Duration `json:"defaultCacheDuration"` // 凭证缓存时间
 
-	// exec CredentialProviderRequest 的所需输入版本。返回的 CredentialProviderResponse 必须使用与输入相同的编码版本。当前支持的值有：
+	// exec CredentialProviderRequest 的所需输入版本.返回的 CredentialProviderResponse 必须使用与输入相同的编码版本.当前支持的值有：
 	// - credentialprovider.kubelet.k8s.io/v1beta1
 	APIVersion string       `json:"apiVersion"`
 	Args       []string     `json:"args,omitempty"`

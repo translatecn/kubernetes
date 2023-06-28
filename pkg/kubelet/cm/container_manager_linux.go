@@ -915,7 +915,7 @@ func NewContainerManager(
 	}
 
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.TopologyManager) {
-		cm.TopologyManager, err = topologymanager.NewManager(
+		cm.TopologyManager, err = topologymanager.NewManager( // ✅
 			machineInfo.Topology,                                // 机器拓扑信息
 			nodeConfig.ExperimentalTopologyManagerPolicy,        // 实验性拓扑管理器策略
 			nodeConfig.ExperimentalTopologyManagerScope,         // 实验性拓扑管理器范围

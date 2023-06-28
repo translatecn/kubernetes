@@ -84,7 +84,6 @@ type PodReusableDevices map[string]map[string]sets.String
 // UpdatePluginResources 基于已经分配给pod的设备信息 更新节点资源.
 func (m *ManagerImpl) UpdatePluginResources(node *schedulerframework.NodeInfo, attrs *lifecycle.PodAdmitAttributes) error {
 	pod := attrs.Pod
-
 	if !m.podDevices.hasPod(string(pod.UID)) {
 		return nil
 	}
@@ -399,14 +398,14 @@ func (m *ManagerImpl) UpdateAllocatedDevices() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	activeAndAdmittedPods := m.activePods()
+	activeAndAdmittedPods := m.activePods() // 当前的
 	if m.pendingAdmissionPod != nil {
 		activeAndAdmittedPods = append(activeAndAdmittedPods, m.pendingAdmissionPod)
 	}
 
-	podsToBeRemoved := m.podDevices.pods()
+	podsToBeRemoved := m.podDevices.pods() // 设备里的
 	for _, pod := range activeAndAdmittedPods {
-		podsToBeRemoved.Delete(string(pod.UID))
+		podsToBeRemoved.Delete(string(pod.UID)) // 移除应然存活的pod
 	}
 	if len(podsToBeRemoved) <= 0 {
 		return

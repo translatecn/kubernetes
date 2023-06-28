@@ -716,7 +716,8 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			if utilfeature.DefaultFeatureGate.Enabled(features.TopologyManagerPolicyOptions) {
 				topologyManagerPolicyOptions = s.TopologyManagerPolicyOptions // ✅
 			} else if s.TopologyManagerPolicyOptions != nil {
-				return fmt.Errorf("topology manager policy options %v require feature gates %q, %q enabled",
+				return fmt.Errorf(
+					"拓扑管理器策略选项 %v 需要特性门%q,%q enabled",
 					s.TopologyManagerPolicyOptions, features.TopologyManager, features.TopologyManagerPolicyOptions)
 			}
 		}

@@ -841,11 +841,11 @@ const (
 	// -永远不会升级到测试版或稳定版
 	TopologyManagerPolicyBetaOptions featuregate.Feature = "TopologyManagerPolicyBetaOptions"
 
-	// owner: @PiotrProkop
+	// TopologyManagerPolicyOptions owner: @PiotrProkop
 	// kep: https://kep.k8s.io/3545
 	// alpha: v1.26
 	//
-	// Allow the usage of options to fine-tune the topology manager policies.
+	// 允许使用选项来微调拓扑管理器策略.
 	TopologyManagerPolicyOptions featuregate.Feature = "TopologyManagerPolicyOptions"
 
 	// UserNamespacesStatelessPodsSupport owner: @rata, @giuseppe

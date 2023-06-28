@@ -67,11 +67,12 @@ func (s *ContainerScope) Admit(pod *v1.Pod) lifecycle.PodAdmitResult {
 	return admission.GetPodAdmitResult(nil)
 }
 
+// 累计资源提供者的 hints .    hints 可以是一些附加的信息、指导或建议,用于帮助系统或程序进行决策或优化.
 func (s *ContainerScope) accumulateProvidersHints(pod *v1.Pod, container *v1.Container) []map[string][]TopologyHint {
 	var providersHints []map[string][]TopologyHint
 
 	for _, provider := range s.hintProviders {
-		// Get the TopologyHints for a Container from a provider.
+		//从提供程序获取容器的拓扑提示.
 		hints := provider.GetTopologyHints(pod, container)
 		providersHints = append(providersHints, hints)
 		klog.InfoS("TopologyHints", "hints", hints, "pod", klog.KObj(pod), "containerName", container.Name)
@@ -79,6 +80,7 @@ func (s *ContainerScope) accumulateProvidersHints(pod *v1.Pod, container *v1.Con
 	return providersHints
 }
 
+// 计算亲和性
 func (s *ContainerScope) calculateAffinity(pod *v1.Pod, container *v1.Container) (TopologyHint, bool) {
 	providersHints := s.accumulateProvidersHints(pod, container)
 	bestHint, admit := s.policy.Merge(providersHints)

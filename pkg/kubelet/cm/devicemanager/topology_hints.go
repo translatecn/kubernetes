@@ -25,65 +25,6 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/cm/topologymanager/bitmask"
 )
 
-// GetTopologyHints implements the TopologyManager HintProvider Interface which
-// ensures the Device Manager is consulted when Topology Aware Hints for each
-// container are created.
-func (m *ManagerImpl) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint {
-	// The pod is during the admission phase. We need to save the pod to avoid it
-	// being cleaned before the admission ended
-	m.setPodPendingAdmission(pod)
-
-	// Garbage collect any stranded device resources before providing TopologyHints
-	m.UpdateAllocatedDevices()
-
-	// Loop through all device resources and generate TopologyHints for them..
-	deviceHints := make(map[string][]topologymanager.TopologyHint)
-	for resourceObj, requestedObj := range container.Resources.Limits {
-		resource := string(resourceObj)
-		requested := int(requestedObj.Value())
-
-		// Only consider resources associated with a device plugin.
-		if m.isDevicePluginResource(resource) {
-			// Only consider devices that actually container topology information.
-			if aligned := m.deviceHasTopologyAlignment(resource); !aligned {
-				klog.InfoS("Resource does not have a topology preference", "resource", resource)
-				deviceHints[resource] = nil
-				continue
-			}
-
-			// Short circuit to regenerate the same hints if there are already
-			// devices allocated to the Container. This might happen after a
-			// kubelet restart, for example.
-			allocated := m.podDevices.containerDevices(string(pod.UID), container.Name, resource)
-			if allocated.Len() > 0 {
-				if allocated.Len() != requested {
-					klog.ErrorS(nil, "Resource already allocated to pod with different number than request", "resource", resource, "pod", klog.KObj(pod), "containerName", container.Name, "request", requested, "allocated", allocated.Len())
-					deviceHints[resource] = []topologymanager.TopologyHint{}
-					continue
-				}
-				klog.InfoS("Regenerating TopologyHints for resource already allocated to pod", "resource", resource, "pod", klog.KObj(pod), "containerName", container.Name)
-				deviceHints[resource] = m.generateDeviceTopologyHints(resource, allocated, sets.String{}, requested)
-				continue
-			}
-
-			// Get the list of available devices, for which TopologyHints should be generated.
-			available := m.getAvailableDevices(resource)
-			reusable := m.devicesToReuse[string(pod.UID)][resource]
-			if available.Union(reusable).Len() < requested {
-				klog.ErrorS(nil, "Unable to generate topology hints: requested number of devices unavailable", "resource", resource, "request", requested, "available", available.Union(reusable).Len())
-				deviceHints[resource] = []topologymanager.TopologyHint{}
-				continue
-			}
-
-			// Generate TopologyHints for this resource given the current
-			// request size and the list of available devices.
-			deviceHints[resource] = m.generateDeviceTopologyHints(resource, available, reusable, requested)
-		}
-	}
-
-	return deviceHints
-}
-
 // GetPodTopologyHints implements the topologymanager.HintProvider Interface which
 // ensures the Device Manager is consulted when Topology Aware Hints for Pod are created.
 func (m *ManagerImpl) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint {
@@ -137,16 +78,16 @@ func (m *ManagerImpl) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymana
 }
 
 func (m *ManagerImpl) getAvailableDevices(resource string) sets.String {
-	// Strip all devices in use from the list of healthy ones.
+	// 从健康设备列表中移除所有正在使用的设备.
 	return m.healthyDevices[resource].Difference(m.allocatedDevices[resource])
 }
 
 func (m *ManagerImpl) generateDeviceTopologyHints(resource string, available sets.String, reusable sets.String, request int) []topologymanager.TopologyHint {
-	// Initialize minAffinitySize to include all NUMA Nodes
+	// 初始化minAffinitySize以包含所有NUMA节点
 	minAffinitySize := len(m.numaNodes)
 
-	// Iterate through all combinations of NUMA Nodes and build hints from them.
-	hints := []topologymanager.TopologyHint{}
+	// 遍历所有 NUMA 节点的组合,并从中构建拓扑提示.
+	var hints []topologymanager.TopologyHint
 	bitmask.IterateBitMasks(m.numaNodes, func(mask bitmask.BitMask) {
 		// First, update minAffinitySize for the current request size.
 		devicesInMask := 0
@@ -194,11 +135,7 @@ func (m *ManagerImpl) generateDeviceTopologyHints(resource string, available set
 			Preferred:        false,
 		})
 	})
-
-	// Loop back through all hints and update the 'Preferred' field based on
-	// counting the number of bits sets in the affinity mask and comparing it
-	// to the minAffinity. Only those with an equal number of bits set will be
-	// considered preferred.
+	//遍历所有 NUMA 节点的组合,并从中构建拓扑提示.
 	for i := range hints {
 		if hints[i].NUMANodeAffinity.Count() == minAffinitySize {
 			hints[i].Preferred = true
@@ -296,4 +233,52 @@ func (m *ManagerImpl) deviceHasTopologyAlignment(resource string) bool {
 		}
 	}
 	return false
+}
+
+func (m *ManagerImpl) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]topologymanager.TopologyHint { // ✅   Device
+	m.setPodPendingAdmission(pod)
+	m.UpdateAllocatedDevices() // 提供拓扑提示之前清理任何孤立的设备资源
+
+	// Loop through all device resources and generate TopologyHints for them..
+	deviceHints := make(map[string][]topologymanager.TopologyHint)
+	for resourceObj, requestedObj := range container.Resources.Limits {
+		resource := string(resourceObj)
+		requested := int(requestedObj.Value())
+
+		// 只考虑与设备插件相关的资源.
+		if m.isDevicePluginResource(resource) {
+			// 只考虑实际包含拓扑信息的设备.
+			if aligned := m.deviceHasTopologyAlignment(resource); !aligned {
+				klog.InfoS("资源没有拓扑首选项", "resource", resource)
+				deviceHints[resource] = nil
+				continue
+			}
+
+			// 如果容器已经有设备资源分配了,那么就可以跳过重新生成提示的过程,直接使用之前生成的提示.
+			allocated := m.podDevices.containerDevices(string(pod.UID), container.Name, resource)
+			if allocated.Len() > 0 {
+				if allocated.Len() != requested {
+					klog.ErrorS(nil, "资源已经被分配给一个 Pod,但该 Pod 的编号与请求的编号不同.", "resource", resource, "pod", klog.KObj(pod), "containerName", container.Name, "request", requested, "allocated", allocated.Len())
+					deviceHints[resource] = []topologymanager.TopologyHint{}
+					continue
+				}
+				klog.InfoS("为已经分配给 Pod 的资源重新生成拓扑提示", "resource", resource, "pod", klog.KObj(pod), "containerName", container.Name)
+				deviceHints[resource] = m.generateDeviceTopologyHints(resource, allocated, sets.String{}, requested)
+				continue
+			}
+
+			available := m.getAvailableDevices(resource)
+			reusable := m.devicesToReuse[string(pod.UID)][resource]
+			if available.Union(reusable).Len() < requested {
+				klog.ErrorS(nil, "无法生成拓扑提示（TopologyHints）,因为所请求的设备数量不可用.", "resource", resource, "request", requested, "available", available.Union(reusable).Len())
+				deviceHints[resource] = []topologymanager.TopologyHint{}
+				continue
+			}
+
+			// 根据当前的请求大小和可用设备列表,为该资源生成拓扑提示（TopologyHints）.
+			deviceHints[resource] = m.generateDeviceTopologyHints(resource, available, reusable, requested)
+		}
+	}
+
+	return deviceHints
 }

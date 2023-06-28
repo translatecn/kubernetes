@@ -200,7 +200,7 @@ func NewPrometheusCollector(i infoProvider, f ContainerLabelsFunc, includedMetri
 				},
 			}, {
 				name:      "container_cpu_cfs_throttled_periods_total",
-				help:      "Number of throttled period intervals.",
+				help:      "系统或进程经历限制的时间间隔的数量或计数",
 				valueType: prometheus.CounterValue,
 				condition: func(s info.ContainerSpec) bool { return s.Cpu.Quota != 0 },
 				getValues: func(s *info.ContainerStats) metricValues {

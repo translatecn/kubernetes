@@ -864,7 +864,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	{
 		//- evictionAdmitHandler用来kubelet创建Pod前进行准入检查,满足条件后才会继续创建Pod,通过Admit方法来检查
 		var _ = new(eviction.ManagerImpl).Admit
-		klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler) // ✅
+		klet.admitHandlers.AddPodAdmitHandler(evictionAdmitHandler) // ✅ node的资源压力进行检查
 		// Safe, allowed sysctls can always be used as unsafe sysctls in the spec.
 		// Hence, we concatenate those two lists.
 		//安全的、被允许的系统tls总是可以在规范中用作不安全的系统tls.
@@ -874,7 +874,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		if err != nil {
 			return nil, err
 		}
-		klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist)                                            // ✅ 安全的sysctl指令、被允许的不安全指令   主要是判断 sysctl 与pod Sc 是否冲突✅
+		klet.admitHandlers.AddPodAdmitHandler(sysctlsAllowlist)                                            // ✅ 安全的sysctl指令、被允许的不安全指令   主要是判断 sysctl 与pod Sc 是否冲突
 		klet.admitHandlers.AddPodAdmitHandler(klet.containerManager.GetAllocateResourcesPodAdmitHandler()) // TODO
 
 		criticalPodAdmissionHandler := preemption.NewCriticalPodAdmissionHandler( // ✅ 当资源不足时,尝试驱逐优先级低的pod
@@ -883,7 +883,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 			kubeDeps.Recorder,
 		)
 		var _ = criticalPodAdmissionHandler.HandleAdmissionFailure
-		klet.admitHandlers.AddPodAdmitHandler(lifecycle.NewPredicateAdmitHandler( // ✅
+		klet.admitHandlers.AddPodAdmitHandler(lifecycle.NewPredicateAdmitHandler( // ✅ 更新设备信息、对port、节点亲和性、资源、系统(label、指定)做校验,驱逐优先级低的pod
 			klet.getNodeAnyWay,
 			criticalPodAdmissionHandler,
 			klet.containerManager.UpdatePluginResources,
@@ -1461,24 +1461,7 @@ func (kl *Kubelet) cleanUpContainersInPod(podID types.UID, exitedContainerID str
 	}
 }
 
-// 在 Kubernetes 中,当一个 Pod 被创建时,它需要经过准入控制器（admission controller）的审批才能被准许运行.
-// 准入控制器是 Kubernetes 中的一个重要组件,用于对新创建的资源进行审批和验证,以确保它们符合集群的策略和要求.
-// 如果符合,则准许该 Pod 运行;否则,拒绝该 Pod.
-func (kl *Kubelet) canAdmitPod(activePods []*v1.Pod, pod *v1.Pod) (bool, string, string) {
-	// TODO: move out of disk check into a pod admitter
-	// TODO: out of resource eviction should have a pod admitter call-out
-	attrs := &lifecycle.PodAdmitAttributes{Pod: pod, OtherPods: activePods}
-	for _, podAdmitHandler := range kl.admitHandlers {
-		if result := podAdmitHandler.Admit(attrs); !result.Admit {
-			return false, result.Reason, result.Message
-		}
-	}
-
-	return true, "", ""
-}
-
-// 启动kubelet响应配置更新
-
+// Run 启动kubelet响应配置更新
 func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) { // ✅
 	// go k.Run(podCfg.Updates())
 	ctx := context.Background()
@@ -2377,4 +2360,22 @@ func (kl *Kubelet) syncTerminatingPod(
 	klog.V(4).InfoS("Pod termination stopped all running containers", "pod", klog.KObj(pod), "podUID", pod.UID)
 
 	return nil
+}
+
+// -----------------------------------------------------------------------------------------------------------------------
+
+// 在 Kubernetes 中,当一个 Pod 被创建时,它需要经过准入控制器（admission controller）的审批才能被准许运行.
+// 准入控制器是 Kubernetes 中的一个重要组件,用于对新创建的资源进行审批和验证,以确保它们符合集群的策略和要求.
+// 如果符合,则准许该 Pod 运行;否则,拒绝该 Pod.
+func (kl *Kubelet) canAdmitPod(activePods []*v1.Pod, pod *v1.Pod) (bool, string, string) {
+	// TODO: move out of disk check into a pod admitter
+	// TODO: out of resource eviction should have a pod admitter call-out
+	attrs := &lifecycle.PodAdmitAttributes{Pod: pod, OtherPods: activePods}
+	for _, podAdmitHandler := range kl.admitHandlers {
+		if result := podAdmitHandler.Admit(attrs); !result.Admit {
+			return false, result.Reason, result.Message
+		}
+	}
+
+	return true, "", ""
 }

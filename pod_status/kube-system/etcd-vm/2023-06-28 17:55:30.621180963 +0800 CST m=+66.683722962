@@ -1,7 +1,0 @@
-{
-    "containerStatuses": [
-        {
-            "started": false => true
-        }
-    ]
-}

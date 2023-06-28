@@ -59,18 +59,9 @@ type ScopeManager struct {
 	Scope Scope // 拓扑管理器范围
 }
 
-// HintProvider is an interface for components that want to collaborate to
-// achieve globally optimal concrete resource alignment with respect to
-// NUMA locality.
+// HintProvider 是一个接口,用于希望协作以实现全局最优具体资源对齐的组件.
 type HintProvider interface {
-	// GetTopologyHints returns a map of resource names to a list of possible
-	// concrete resource allocations in terms of NUMA locality hints. Each hint
-	// is optionally marked "preferred" and indicates the set of NUMA nodes
-	// involved in the hypothetical allocation. The topology ScopeManager calls
-	// this function for each hint provider, and merges the hints to produce
-	// a consensus "best" hint. The hint providers may subsequently query the
-	// topology ScopeManager to influence actual resource assignment.
-	GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]TopologyHint
+	GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]TopologyHint // 根据NUMA位置提示将资源名映射返回到可能的具体资源分配列表.
 	// GetPodTopologyHints returns a map of resource names to a list of possible
 	// concrete resource allocations per Pod in terms of NUMA locality hints.
 	GetPodTopologyHints(pod *v1.Pod) map[string][]TopologyHint
@@ -160,8 +151,10 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 	switch topologyScopeName {
 	case containerTopologyScope:
 		scope = NewContainerScope(policy)
+		var _ = new(ContainerScope).Admit
 	case podTopologyScope:
 		scope = NewPodScope(policy)
+		var _ = new(PodScope).Admit
 	default:
 		return nil, fmt.Errorf("unknown Scope: \"%s\"", topologyScopeName)
 	}
