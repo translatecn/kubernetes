@@ -17,17 +17,19 @@ limitations under the License.
 package topologymanager
 
 type bestEffortPolicy struct {
-	// numaInfo represents list of NUMA Nodes available on the underlying machine and distances between them
 	numaInfo *NUMAInfo
 	opts     PolicyOptions
 }
 
 var _ Policy = &bestEffortPolicy{}
 
-// PolicyBestEffort policy name.
+//"restricted"策略会只允许容器在请求资源的最佳NUMA节点上运行.
+//"best-effort"策略会优先选择具有CPU和设备资源在NUMA节点上对齐的容器.
+//"none"策略表示拓扑管理器不会考虑容器在NUMA节点上的分配情况.
+//"single-numa-node"策略会只允许容器在单个NUMA节点上运行.
+
 const PolicyBestEffort string = "best-effort"
 
-// NewBestEffortPolicy returns best-effort policy.
 func NewBestEffortPolicy(numaInfo *NUMAInfo, opts PolicyOptions) Policy {
 	return &bestEffortPolicy{numaInfo: numaInfo, opts: opts}
 }
@@ -41,6 +43,15 @@ func (p *bestEffortPolicy) canAdmitPodResult(hint *TopologyHint) bool {
 }
 
 func (p *bestEffortPolicy) Merge(providersHints []map[string][]TopologyHint) (TopologyHint, bool) {
+	_ = `[
+{
+	"gpu":[{uint64,bool}],
+	"vgpu":[{uint64,bool}]
+},
+{
+	"cpu":[{uint64,bool}]
+}
+]`
 	filteredHints := filterProvidersHints(providersHints)
 	merger := NewHintMerger(p.numaInfo, filteredHints, p.Name(), p.opts)
 	bestHint := merger.Merge()

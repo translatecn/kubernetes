@@ -389,8 +389,7 @@ func (m *ManagerImpl) isDevicePluginResource(resource string) bool {
 	return false
 }
 
-// UpdateAllocatedDevices 删除所有处于终结状态的pod,并回收其占用的资源,所以有时会在kubelet的日志中看到pods to be removed:xxxx字样
-func (m *ManagerImpl) UpdateAllocatedDevices() {
+func (m *ManagerImpl) UpdateAllocatedDevices() { // 删除所有处于终结状态的pod,并回收其占用的资源,所以有时会在kubelet的日志中看到pods to be removed:xxxx字样
 	if !m.sourcesReady.AllReady() { // kubelet配置源的就绪状态
 		return
 	}

@@ -62,10 +62,8 @@ type ScopeManager struct {
 // HintProvider 是一个接口,用于希望协作以实现全局最优具体资源对齐的组件.
 type HintProvider interface {
 	GetTopologyHints(pod *v1.Pod, container *v1.Container) map[string][]TopologyHint // 根据NUMA位置提示将资源名映射返回到可能的具体资源分配列表.
-	// GetPodTopologyHints returns a map of resource names to a list of possible
-	// concrete resource allocations per Pod in terms of NUMA locality hints.
-	GetPodTopologyHints(pod *v1.Pod) map[string][]TopologyHint
-	Allocate(pod *v1.Pod, container *v1.Container) error // 资源分配
+	GetPodTopologyHints(pod *v1.Pod) map[string][]TopologyHint                       // 根据NUMA位置提示将资源名映射返回到可能的具体资源分配列表.  (所有container 资源加起来)
+	Allocate(pod *v1.Pod, container *v1.Container) error                             // 资源分配
 }
 
 // Store interface is to allow Hint Providers to retrieve pod affinity
@@ -74,12 +72,9 @@ type Store interface {
 	GetPolicy() Policy
 }
 
-// TopologyHint is a struct containing the NUMANodeAffinity for a Container
 type TopologyHint struct {
 	NUMANodeAffinity bitmask.BitMask
-	// Preferred is set to true when the NUMANodeAffinity encodes a preferred
-	// allocation for the Container. It is set to false otherwise.
-	Preferred bool
+	Preferred        bool // 当NUMANodeAffinity编码了对容器的首选分配时,Preferred被设置为true.否则,设置为false.
 }
 
 // IsEqual checks if TopologyHint are equal
@@ -102,8 +97,6 @@ func (th *TopologyHint) LessThan(other TopologyHint) bool {
 	}
 	return th.NUMANodeAffinity.IsNarrowerThan(other.NUMANodeAffinity)
 }
-
-// ------------------------------------------------------------------------------------------------------------------------
 
 func (m *ScopeManager) Admit(attrs *lifecycle.PodAdmitAttributes) lifecycle.PodAdmitResult {
 	klog.InfoS("Topology Admit Handler")
@@ -133,16 +126,16 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 
 	case PolicyNone:
 		policy = NewNonePolicy()
-
+		var _ = new(nonePolicy).Merge // ✅
 	case PolicyBestEffort:
 		policy = NewBestEffortPolicy(numaInfo, opts)
-
+		var _ = new(bestEffortPolicy).Merge
 	case PolicyRestricted:
 		policy = NewRestrictedPolicy(numaInfo, opts)
-
+		var _ = new(restrictedPolicy).Merge
 	case PolicySingleNumaNode:
 		policy = NewSingleNumaNodePolicy(numaInfo, opts)
-
+		var _ = new(singleNumaNodePolicy).Merge
 	default:
 		return nil, fmt.Errorf("unknown policy: \"%s\"", topologyPolicyName)
 	}
@@ -151,10 +144,10 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 	switch topologyScopeName {
 	case containerTopologyScope:
 		scope = NewContainerScope(policy)
-		var _ = new(ContainerScope).Admit
+		var _ = new(ContainerScope).Admit // ✅
 	case podTopologyScope:
 		scope = NewPodScope(policy)
-		var _ = new(PodScope).Admit
+		var _ = new(PodScope).Admit // ✅
 	default:
 		return nil, fmt.Errorf("unknown Scope: \"%s\"", topologyScopeName)
 	}

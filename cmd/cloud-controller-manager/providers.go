@@ -21,4 +21,3 @@ limitations under the License.
 // are cloud provider dependent. It uses the API to listen to new events on resources.
 
 package main
-

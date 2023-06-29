@@ -23,6 +23,8 @@ var _ Policy = &nonePolicy{}
 // PolicyNone policy name.
 const PolicyNone string = "none"
 
+//"none"策略表示拓扑管理器不会考虑容器在NUMA节点上的分配情况.
+
 // NewNonePolicy returns none policy.
 func NewNonePolicy() Policy {
 	return &nonePolicy{}

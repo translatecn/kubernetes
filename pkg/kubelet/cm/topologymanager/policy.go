@@ -58,14 +58,24 @@ func mergePermutation(defaultAffinity bitmask.BitMask, permutation []TopologyHin
 }
 
 func filterProvidersHints(providersHints []map[string][]TopologyHint) [][]TopologyHint {
-	// Loop through all hint providers and save an accumulated list of the
-	// hints returned by each hint provider. If no hints are provided, assume
-	// that provider has no preference for topology-aware allocation.
+	//这段代码的目的是遍历所有的提示提供者（hintProviders）,并保存每个提示提供者返回的提示（hints）到一个累积的列表（accumulatedHints）中.
+	//如果某个提示提供者没有提供任何提示,则假设该提供者对于基于拓扑的分配没有偏好.
+
+	_ = `[
+{
+	"gpu":[{uint64,bool}],
+	"vgpu":[{uint64,bool}]
+},
+{
+	"cpu":[{uint64,bool}]
+}
+]`
+
 	var allProviderHints [][]TopologyHint
 	for _, hints := range providersHints {
 		// If hints is nil, insert a single, preferred any-numa hint into allProviderHints.
 		if len(hints) == 0 {
-			klog.InfoS("Hint Provider has no preference for NUMA affinity with any resource")
+			klog.InfoS("提供者对于NUMA亲和性（NUMA affinity）没有任何资源的偏好,那么可以将这种情况视为没有提供任何提示.")
 			allProviderHints = append(allProviderHints, []TopologyHint{{nil, true}})
 			continue
 		}

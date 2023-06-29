@@ -22,6 +22,11 @@ type restrictedPolicy struct {
 
 var _ Policy = &restrictedPolicy{}
 
+//"restricted"策略会只允许容器在请求资源的最佳NUMA节点上运行.
+//"best-effort"策略会优先选择具有CPU和设备资源在NUMA节点上对齐的容器.
+//"none"策略表示拓扑管理器不会考虑容器在NUMA节点上的分配情况.
+//"single-numa-node"策略会只允许容器在单个NUMA节点上运行.
+
 // PolicyRestricted policy name.
 const PolicyRestricted string = "restricted"
 

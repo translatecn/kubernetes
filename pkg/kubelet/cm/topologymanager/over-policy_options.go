@@ -31,7 +31,7 @@ const (
 
 var (
 	alphaOptions = sets.NewString(
-		PreferClosestNUMANodes, // 最接近numa节点
+		PreferClosestNUMANodes, // 更接近NUMA
 	)
 	betaOptions   = sets.NewString()
 	stableOptions = sets.NewString()
@@ -54,7 +54,7 @@ func CheckPolicyOptionAvailable(option string) error { // 起码得在一个,且
 }
 
 type PolicyOptions struct {
-	PreferClosestNUMA bool
+	PreferClosestNUMA bool // 更接近NUMA
 }
 
 func NewPolicyOptions(policyOptions map[string]string) (PolicyOptions, error) {

@@ -43,6 +43,8 @@ func NewContainerScope(policy Policy) Scope {
 	}
 }
 
+// -------------------------------------------------------------------------------------------------------------------
+
 func (s *ContainerScope) Admit(pod *v1.Pod) lifecycle.PodAdmitResult {
 	// Exception - Policy : none
 	if s.policy.Name() == PolicyNone {
@@ -74,6 +76,10 @@ func (s *ContainerScope) accumulateProvidersHints(pod *v1.Pod, container *v1.Con
 	for _, provider := range s.hintProviders {
 		//从提供程序获取容器的拓扑提示.
 		hints := provider.GetTopologyHints(pod, container)
+		_ = `{
+			"gpu":[{uint64,bool}],
+			"vgpu":[{uint64,bool}]
+		}`
 		providersHints = append(providersHints, hints)
 		klog.InfoS("TopologyHints", "hints", hints, "pod", klog.KObj(pod), "containerName", container.Name)
 	}
