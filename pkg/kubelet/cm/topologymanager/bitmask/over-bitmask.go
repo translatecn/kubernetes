@@ -138,11 +138,13 @@ func (s *bitMask) IsEqual(mask BitMask) bool {
 	return *s == *mask.(*bitMask)
 }
 
-// IsNarrowerThan checks if one mask is narrower than another.
-//
-// A mask is said to be "narrower" than another if it has lets bits set. If the
-// same number of bits are set in both masks, then the mask with more
-// lower-numbered bits set wins out.
+// IsNarrowerThan 函数用于检查一个掩码是否比另一个掩码更窄.
+// 如果一个掩码中设置了更少的位,我们称之为该掩码比另一个掩码更窄.如果两个掩码中设置的位数相同,则较多低位设置的掩码胜出.
+// 这段注释解释了IsNarrowerThan函数的功能.
+// IsNarrowerThan函数用于比较两个掩码的窄度.掩码是一个二进制值,用于表示资源分配的偏好或限制.
+// 如果一个掩码中设置的位数更少,那么我们称之为该掩码比另一个掩码更窄.简单来说,窄度表示了掩码中设置位的数量.
+// 如果两个掩码中设置的位数相同,那么我们会比较哪个掩码中设置的低位更多.低位是指二进制数中的较小位数.
+// 因此,IsNarrowerThan函数的作用是根据设置位的数量和设置的低位数量,判断一个掩码是否比另一个掩码更窄.这可以用于比较掩码的窄度,以便在资源分配时做出更合适的选择.
 func (s *bitMask) IsNarrowerThan(mask BitMask) bool {
 	if s.Count() == mask.Count() {
 		return s.IsLessThan(mask)

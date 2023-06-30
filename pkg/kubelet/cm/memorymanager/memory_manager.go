@@ -224,7 +224,7 @@ func (m *MemoryManager) GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container)
 }
 
 // Allocate is called to pre-allocate memory resources during Pod admission.
-func (m *MemoryManager) Allocate(pod *v1.Pod, container *v1.Container) error {
+func (m *MemoryManager) Allocate(pod *v1.Pod, container *v1.Container) error { // ✈️
 	// The pod is during the admission phase. We need to save the pod to avoid it
 	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)

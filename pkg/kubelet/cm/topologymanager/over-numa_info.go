@@ -38,7 +38,7 @@ func (n *NUMAInfo) Narrowest(m1 bitmask.BitMask, m2 bitmask.BitMask) bitmask.Bit
 }
 
 func (n *NUMAInfo) Closest(m1 bitmask.BitMask, m2 bitmask.BitMask) bitmask.BitMask {
-	// If the length of both bitmasks aren't the same, choose the one that is narrowest.
+	// 如果两个位掩码的长度不相同,选择最窄的那个.
 	if m1.Count() != m2.Count() {
 		return n.Narrowest(m1, m2)
 	}

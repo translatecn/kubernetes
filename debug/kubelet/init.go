@@ -25,7 +25,8 @@ func Init(args []string) []string {
 	args = append(args, "--image-service-endpoint=unix:///var/run/image-cri-shim.sock")
 
 	args = append(args, "--cpu-manager-policy=static") // kubectl drain node
-	args = append(args, "--topology-manager-policy=single-numa-node")
+	args = append(args, "--topology-manager-policy=best-effect")
+	args = append(args, "--prefer-closest-numa-nodes=true")
 	args = append(args, "--system-reserved=cpu=200m,memory=1G,ephemeral-storage=1G,pid=100")
 	args = append(args, "--kube-reserved=cpu=200m,memory=1G,ephemeral-storage=1G,pid=100")
 	return args

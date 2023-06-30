@@ -342,7 +342,7 @@ func newManagerImpl(socketPath string, topology []cadvisorapi.Node, topologyAffi
 }
 
 // Allocate 分配已注册插件的资源
-func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error {
+func (m *ManagerImpl) Allocate(pod *v1.Pod, container *v1.Container) error { // ✈️
 	// Allocate->allocateContainerResources->eI.e.allocate(devs)
 
 	// pod 在准入阶段,应该先保存它,避免在结束前 丢失数据

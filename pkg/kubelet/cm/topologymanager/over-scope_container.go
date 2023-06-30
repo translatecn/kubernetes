@@ -43,8 +43,6 @@ func NewContainerScope(policy Policy) Scope {
 	}
 }
 
-// -------------------------------------------------------------------------------------------------------------------
-
 func (s *ContainerScope) Admit(pod *v1.Pod) lifecycle.PodAdmitResult {
 	// Exception - Policy : none
 	if s.policy.Name() == PolicyNone {

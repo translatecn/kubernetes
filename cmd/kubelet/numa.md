@@ -1,16 +1,13 @@
-https://cloud.tencent.com/developer/article/2096152
-https://izsk.me/2022/06/02/System-Understanding-NUMA-Architecture/
 https://blog.csdn.net/qq_43684922/article/details/128721400
 https://zhuanlan.zhihu.com/p/387617363
 https://zhuanlan.zhihu.com/p/128677316
 https://blog.csdn.net/qq_23662505/article/details/123689861
 https://www.cnblogs.com/zphj1987/p/13575353.html
+https://blog.csdn.net/ver_mouth__/article/details/125265751
+https://mp.weixin.qq.com/s/CdqJ0X9IqiFnZMETNOWZqw
+ 
 
-
-
-
-apt install numactl -y
-numactl --hardware
+apt install numactl -y && numactl --hardware
 
 ```
 [root@node01 ~]# numactl --hardware
@@ -27,7 +24,7 @@ node   0   1
   1:  21  10 
   
   
-  ```
+```
   
   
   
@@ -248,4 +245,104 @@ Node 1 AnonHugePages:   1241088 kB
 Node 1 HugePages_Total:     0
 Node 1 HugePages_Free:      0
 Node 1 HugePages_Surp:      0
+```
+
+
+
+
+
+
+
+
+
+
+## 大体流程
+- 针对是pod、还是container 进行资源的admit
+    - pod 是获取所有资源,进行一次
+    - container 是每一个都进行一次
+  - 针对每种资源,获取到符合对应的需求的numa组合   ①
+  - 从每种资源 对应的numa 组合中, 各选一个（m*n*i*j种组合）, 执行相应的比较程序
+    - 如果选取的这个种资源的组合,numa组合一致,视为 Preferred  .并将这些组合numa mask 按位与 , 过去共有的核
+    - 再从众多的结果中选取 Preferred、numa数量最低、numa节点平均距离对低 的作为 bestHint
+- 将获取的最佳numa配置保存在mem、dist
+- 实际分配时, 从其中读取已分配的 numa 配置
+
+
+- numa 组合默认为全部numa node
+- single_numa_node 是在①生效,选取只有一个numa节点的
+  - 准入取决 于是否有numa 组合 Preferred 为true
+- restricted
+  - 准入取决 于是否有numa 组合 Preferred 为true
+- best-effort
+  - 总是允许准入
+- none 
+  - 总是允许准入
+  
+- -prefer-closest-numa-nodes 只能在 best-effort、restricted 时设置. 在numa 数量一致时,比较各自numa节点间的距离平均值 `numactl --hardware`
+
+```
+[{cpu 0} {mem 0} {gpu 0}]
+[{cpu 0} {mem 0} {gpu 1}]
+[{cpu 0} {mem 0} {gpu 2}]
+[{cpu 0} {mem 0} {gpu 3}]
+[{cpu 0} {mem 1} {gpu 0}]
+[{cpu 0} {mem 1} {gpu 1}]
+[{cpu 0} {mem 1} {gpu 2}]
+[{cpu 0} {mem 1} {gpu 3}]
+[{cpu 0} {mem 2} {gpu 0}]
+[{cpu 0} {mem 2} {gpu 1}]
+[{cpu 0} {mem 2} {gpu 2}]
+[{cpu 0} {mem 2} {gpu 3}]
+[{cpu 0} {mem 3} {gpu 0}]
+[{cpu 0} {mem 3} {gpu 1}]
+[{cpu 0} {mem 3} {gpu 2}]
+[{cpu 0} {mem 3} {gpu 3}]
+[{cpu 1} {mem 0} {gpu 0}]
+[{cpu 1} {mem 0} {gpu 1}]
+[{cpu 1} {mem 0} {gpu 2}]
+[{cpu 1} {mem 0} {gpu 3}]
+[{cpu 1} {mem 1} {gpu 0}]
+[{cpu 1} {mem 1} {gpu 1}]
+[{cpu 1} {mem 1} {gpu 2}]
+[{cpu 1} {mem 1} {gpu 3}]
+[{cpu 1} {mem 2} {gpu 0}]
+[{cpu 1} {mem 2} {gpu 1}]
+[{cpu 1} {mem 2} {gpu 2}]
+[{cpu 1} {mem 2} {gpu 3}]
+[{cpu 1} {mem 3} {gpu 0}]
+[{cpu 1} {mem 3} {gpu 1}]
+[{cpu 1} {mem 3} {gpu 2}]
+[{cpu 1} {mem 3} {gpu 3}]
+[{cpu 2} {mem 0} {gpu 0}]
+[{cpu 2} {mem 0} {gpu 1}]
+[{cpu 2} {mem 0} {gpu 2}]
+[{cpu 2} {mem 0} {gpu 3}]
+[{cpu 2} {mem 1} {gpu 0}]
+[{cpu 2} {mem 1} {gpu 1}]
+[{cpu 2} {mem 1} {gpu 2}]
+[{cpu 2} {mem 1} {gpu 3}]
+[{cpu 2} {mem 2} {gpu 0}]
+[{cpu 2} {mem 2} {gpu 1}]
+[{cpu 2} {mem 2} {gpu 2}]
+[{cpu 2} {mem 2} {gpu 3}]
+[{cpu 2} {mem 3} {gpu 0}]
+[{cpu 2} {mem 3} {gpu 1}]
+[{cpu 2} {mem 3} {gpu 2}]
+[{cpu 2} {mem 3} {gpu 3}]
+[{cpu 3} {mem 0} {gpu 0}]                                                                                         
+[{cpu 3} {mem 0} {gpu 1}]                                                                                         
+[{cpu 3} {mem 0} {gpu 2}]                                                                                         
+[{cpu 3} {mem 0} {gpu 3}]                                                                                         
+[{cpu 3} {mem 1} {gpu 0}]                                                                                         
+[{cpu 3} {mem 1} {gpu 1}]                                                                                         
+[{cpu 3} {mem 1} {gpu 2}]                                                                                         
+[{cpu 3} {mem 1} {gpu 3}]                                                                                         
+[{cpu 3} {mem 2} {gpu 0}]                                                                                         
+[{cpu 3} {mem 2} {gpu 1}]                                                                                         
+[{cpu 3} {mem 2} {gpu 2}]                                                                                         
+[{cpu 3} {mem 2} {gpu 3}]                                                                                         
+[{cpu 3} {mem 3} {gpu 0}]                                                                                         
+[{cpu 3} {mem 3} {gpu 1}]                                                                                         
+[{cpu 3} {mem 3} {gpu 2}]                                                                                         
+[{cpu 3} {mem 3} {gpu 3}]                                                                                         
 ```

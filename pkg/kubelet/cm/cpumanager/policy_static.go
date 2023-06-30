@@ -585,11 +585,11 @@ func (p *StaticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reu
 	// with a minimal set of numa nodes) will be considered preferred.
 	for i := range hints {
 		if p.options.AlignBySocket && p.isHintSocketAligned(hints[i], minAffinitySize) {
-			hints[i].Preferred = true
+			hints[i].Preferred = true // cpu
 			continue
 		}
 		if hints[i].NUMANodeAffinity.Count() == minAffinitySize {
-			hints[i].Preferred = true
+			hints[i].Preferred = true // cpu
 		}
 	}
 
