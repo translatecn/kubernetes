@@ -129,13 +129,13 @@ func NewManager(topology []cadvisorapi.Node, topologyPolicyName string, topology
 		var _ = new(nonePolicy).Merge // ✅
 	case PolicyBestEffort:
 		policy = NewBestEffortPolicy(numaInfo, opts)
-		var _ = new(bestEffortPolicy).Merge
+		var _ = new(bestEffortPolicy).Merge // ✅
 	case PolicyRestricted:
 		policy = NewRestrictedPolicy(numaInfo, opts)
-		var _ = new(restrictedPolicy).Merge
+		var _ = new(restrictedPolicy).Merge // ✅
 	case PolicySingleNumaNode:
 		policy = NewSingleNumaNodePolicy(numaInfo, opts)
-		var _ = new(singleNumaNodePolicy).Merge
+		var _ = new(singleNumaNodePolicy).Merge // ✅
 	default:
 		return nil, fmt.Errorf("unknown policy: \"%s\"", topologyPolicyName)
 	}

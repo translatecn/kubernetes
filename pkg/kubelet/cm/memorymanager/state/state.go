@@ -79,8 +79,7 @@ func (nm NUMANodeMap) Clone() NUMANodeMap {
 
 // Block is a data structure used to represent a certain amount of memory
 type Block struct {
-	// NUMAAffinity contains the string that represents NUMA affinity bitmask
-	NUMAAffinity []int           `json:"numaAffinity"`
+	NUMAAffinity []int           `json:"numaAffinity"` // 包含表示NUMA关联位掩码的字符串
 	Type         v1.ResourceName `json:"type"`
 	Size         uint64          `json:"size"`
 }
@@ -106,8 +105,7 @@ type Reader interface {
 	GetMachineState() NUMANodeMap
 	// GetMemoryBlocks returns memory assignments of a container
 	GetMemoryBlocks(podUID string, containerName string) []Block
-	// GetMemoryAssignments returns ContainerMemoryAssignments
-	GetMemoryAssignments() ContainerMemoryAssignments
+	GetMemoryAssignments() ContainerMemoryAssignments // 当前的内存分配情况
 }
 
 type writer interface {

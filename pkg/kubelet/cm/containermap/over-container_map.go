@@ -72,6 +72,7 @@ func (cm ContainerMap) GetContainerRef(containerID string) (string, string, erro
 
 // Visit invoke visitor function to walks all of the entries in the container map
 func (cm ContainerMap) Visit(visitor func(podUID, containerName, containerID string)) {
+
 	for k, v := range cm {
 		visitor(v.podUID, v.containerName, k)
 	}

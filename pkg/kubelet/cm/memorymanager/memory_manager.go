@@ -54,26 +54,16 @@ func (s *sourcesReadyStub) AllReady() bool          { return true }
 
 // Manager interface provides methods for Kubelet to manage pod memory.
 type Manager interface {
-	// Start 在 Kubelet 初始化期间调用,用于启动内存管理器.
-	Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error
-	// AddContainer 添加容器 ID 到 pod UID 的映射以及容器名称,以便在容器删除时删除内存分配.
-	AddContainer(p *v1.Pod, c *v1.Container, containerID string)
-	// Allocate 在 Pod 准入期间调用,用于预分配内存资源.
-	Allocate(pod *v1.Pod, container *v1.Container) error
-	// RemoveContainer 在 Kubelet 决定杀死或删除容器后调用,用于释放分配给容器的内存.
-	RemoveContainer(containerID string) error
-	// State 返回一个只读接口,用于访问内部内存管理器状态.
-	State() state.Reader
-	// GetTopologyHints 实现 topologymanager.HintProvider 接口,用于实现 NUMA 感知的资源对齐.
-	GetTopologyHints(*v1.Pod, *v1.Container) map[string][]topologymanager.TopologyHint
-	// GetPodTopologyHints 实现 topologymanager.HintProvider 接口,用于实现 NUMA 感知的资源对齐.
-	GetPodTopologyHints(*v1.Pod) map[string][]topologymanager.TopologyHint
-	// GetMemoryNUMANodes 提供用于分配容器内存的 NUMA 节点.
-	GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container) sets.Int
-	// GetAllocatableMemory 返回每个 NUMA 节点可分配的内存量.
-	GetAllocatableMemory() []state.Block
-	// GetMemory 返回容器从 NUMA 节点分配的内存.
-	GetMemory(podUID, containerName string) []state.Block
+	Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error //  在 Kubelet 初始化期间调用,用于启动内存管理器.
+	AddContainer(p *v1.Pod, c *v1.Container, containerID string)                                                                                                                                       // 添加容器 ID 到 pod UID 的映射以及容器名称,以便在容器删除时删除内存分配.
+	Allocate(pod *v1.Pod, container *v1.Container) error                                                                                                                                               // 在 Pod 准入期间调用,用于预分配内存资源.
+	RemoveContainer(containerID string) error                                                                                                                                                          // 在 Kubelet 决定杀死或删除容器后调用,用于释放分配给容器的内存.
+	State() state.Reader                                                                                                                                                                               // 返回一个只读接口,用于访问内部内存管理器状态.
+	GetTopologyHints(*v1.Pod, *v1.Container) map[string][]topologymanager.TopologyHint                                                                                                                 // 实现 topologymanager.HintProvider 接口,用于实现 NUMA 感知的资源对齐.
+	GetPodTopologyHints(*v1.Pod) map[string][]topologymanager.TopologyHint                                                                                                                             // 实现 topologymanager.HintProvider 接口,用于实现 NUMA 感知的资源对齐.
+	GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container) sets.Int                                                                                                                                  // 提供用于分配容器内存的 NUMA 节点.
+	GetAllocatableMemory() []state.Block                                                                                                                                                               // 返回每个 NUMA 节点可分配的内存量.
+	GetMemory(podUID, containerName string) []state.Block                                                                                                                                              // 返回容器从 NUMA 节点分配的内存.
 }
 
 type MemoryManager struct {
@@ -86,31 +76,14 @@ type MemoryManager struct {
 
 	// containerRuntime is the container runtime service interface needed
 	// to make UpdateContainerResources() calls against the containers.
-	containerRuntime runtimeService
-
-	// activePods is a method for listing active pods on the node
-	// so all the containers can be updated during call to the removeStaleState.
-	activePods ActivePodsFunc
-
-	// podStatusProvider provides a method for obtaining pod statuses
-	// and the containerID of their containers
+	containerRuntime  runtimeService
+	activePods        ActivePodsFunc
 	podStatusProvider status.PodStatusProvider
-
-	// containerMap provides a mapping from (pod, container) -> containerID
-	// for all containers a pod
-	containerMap containermap.ContainerMap
-
-	// sourcesReady provides the readiness of kubelet configuration sources such as apiserver update readiness.
-	// We use it to determine when we can purge inactive pods from checkpointed state.
-	sourcesReady config.SourcesReady
-
+	containerMap      containermap.ContainerMap //  (containerID)->(*v1.Pod, *v1.Container)
+	sourcesReady      config.SourcesReady
 	// stateFileDirectory holds the directory where the state file for checkpoints is held.
-	stateFileDirectory string
-
-	// allocatableMemory holds the allocatable memory for each NUMA node
-	allocatableMemory []state.Block
-
-	// pendingAdmissionPod contain the pod during the admission phase
+	stateFileDirectory  string
+	allocatableMemory   []state.Block // 每个numa 节点的可分配的内存
 	pendingAdmissionPod *v1.Pod
 }
 
@@ -225,11 +198,7 @@ func (m *MemoryManager) GetMemoryNUMANodes(pod *v1.Pod, container *v1.Container)
 
 // Allocate is called to pre-allocate memory resources during Pod admission.
 func (m *MemoryManager) Allocate(pod *v1.Pod, container *v1.Container) error { // ✈️
-	// The pod is during the admission phase. We need to save the pod to avoid it
-	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
-
-	// Garbage collect any stranded resources before allocation
 	m.removeStaleState()
 
 	m.Lock()
@@ -287,57 +256,6 @@ func (m *MemoryManager) GetTopologyHints(pod *v1.Pod, container *v1.Container) m
 	m.removeStaleState()
 	// Delegate to active policy
 	return m.policy.GetTopologyHints(m.state, pod, container)
-}
-
-// TODO: move the method to the upper level, to re-use it under the CPU and memory managers
-func (m *MemoryManager) removeStaleState() {
-	// Only once all sources are ready do we attempt to remove any stale state.
-	// This ensures that the call to `m.activePods()` below will succeed with
-	// the actual active pods list.
-	if !m.sourcesReady.AllReady() {
-		return
-	}
-
-	// We grab the lock to ensure that no new containers will grab memory block while
-	// executing the code below. Without this lock, its possible that we end up
-	// removing state that is newly added by an asynchronous call to
-	// AddContainer() during the execution of this code.
-	m.Lock()
-	defer m.Unlock()
-
-	// Get the list of admitted and active pods.
-	activeAndAdmittedPods := m.activePods()
-	if m.pendingAdmissionPod != nil {
-		activeAndAdmittedPods = append(activeAndAdmittedPods, m.pendingAdmissionPod)
-	}
-
-	// Build a list of (podUID, containerName) pairs for all containers in all active Pods.
-	activeContainers := make(map[string]map[string]struct{})
-	for _, pod := range activeAndAdmittedPods {
-		activeContainers[string(pod.UID)] = make(map[string]struct{})
-		for _, container := range append(pod.Spec.InitContainers, pod.Spec.Containers...) {
-			activeContainers[string(pod.UID)][container.Name] = struct{}{}
-		}
-	}
-
-	// Loop through the MemoryManager state. Remove any state for containers not
-	// in the `activeContainers` list built above.
-	assignments := m.state.GetMemoryAssignments()
-	for podUID := range assignments {
-		for containerName := range assignments[podUID] {
-			if _, ok := activeContainers[podUID][containerName]; !ok {
-				klog.InfoS("RemoveStaleState removing state", "podUID", podUID, "containerName", containerName)
-				m.policyRemoveContainerByRef(podUID, containerName)
-			}
-		}
-	}
-
-	m.containerMap.Visit(func(podUID, containerName, containerID string) {
-		if _, ok := activeContainers[podUID][containerName]; !ok {
-			klog.InfoS("RemoveStaleState removing state", "podUID", podUID, "containerName", containerName)
-			m.policyRemoveContainerByRef(podUID, containerName)
-		}
-	})
 }
 
 func (m *MemoryManager) policyRemoveContainerByRef(podUID string, containerName string) {
@@ -443,6 +361,8 @@ func (m *MemoryManager) GetAllocatableMemory() []state.Block {
 	return m.allocatableMemory
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+
 // GetMemory returns the memory allocated by a container from NUMA nodes
 func (m *MemoryManager) GetMemory(podUID, containerName string) []state.Block {
 	return m.state.GetMemoryBlocks(podUID, containerName)
@@ -453,4 +373,55 @@ func (m *MemoryManager) setPodPendingAdmission(pod *v1.Pod) {
 	defer m.Unlock()
 
 	m.pendingAdmissionPod = pod
+}
+
+// TODO: move the method to the upper level, to re-use it under the CPU and memory managers
+func (m *MemoryManager) removeStaleState() {
+	// Only once all sources are ready do we attempt to remove any stale state.
+	// This ensures that the call to `m.activePods()` below will succeed with
+	// the actual active pods list.
+	if !m.sourcesReady.AllReady() {
+		return
+	}
+
+	// We grab the lock to ensure that no new containers will grab memory block while
+	// executing the code below. Without this lock, its possible that we end up
+	// removing state that is newly added by an asynchronous call to
+	// AddContainer() during the execution of this code.
+	m.Lock()
+	defer m.Unlock()
+
+	// Get the list of admitted and active pods.
+	activeAndAdmittedPods := m.activePods()
+	if m.pendingAdmissionPod != nil {
+		activeAndAdmittedPods = append(activeAndAdmittedPods, m.pendingAdmissionPod)
+	}
+
+	// Build a list of (podUID, containerName) pairs for all containers in all active Pods.
+	activeContainers := make(map[string]map[string]struct{})
+	for _, pod := range activeAndAdmittedPods {
+		activeContainers[string(pod.UID)] = make(map[string]struct{})
+		for _, container := range append(pod.Spec.InitContainers, pod.Spec.Containers...) {
+			activeContainers[string(pod.UID)][container.Name] = struct{}{}
+		}
+	}
+
+	// Loop through the MemoryManager state. Remove any state for containers not
+	// in the `activeContainers` list built above.
+	assignments := m.state.GetMemoryAssignments()
+	for podUID := range assignments {
+		for containerName := range assignments[podUID] {
+			if _, ok := activeContainers[podUID][containerName]; !ok {
+				klog.InfoS("RemoveStaleState removing state", "podUID", podUID, "containerName", containerName)
+				m.policyRemoveContainerByRef(podUID, containerName)
+			}
+		}
+	}
+	//  (containerID)->(*v1.Pod, *v1.Container)
+	m.containerMap.Visit(func(podUID, containerName, containerID string) {
+		if _, ok := activeContainers[podUID][containerName]; !ok {
+			klog.InfoS("RemoveStaleState removing state", "podUID", podUID, "containerName", containerName)
+			m.policyRemoveContainerByRef(podUID, containerName)
+		}
+	})
 }

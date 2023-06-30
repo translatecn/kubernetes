@@ -76,7 +76,7 @@ type ContainerManager interface {
 	GetPluginRegistrationHandler() cache.PluginHandler                                             // 插件注册
 
 	ShouldResetExtendedResourceCapacity() bool                      // 决定扩展资源是否清理
-	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // pod资源准入控制器
+	GetAllocateResourcesPodAdmitHandler() lifecycle.PodAdmitHandler // ✅ pod资源准入控制器
 	// GetNodeAllocatableAbsolute returns the absolute value of Node Allocatable which is primarily useful for enforcement.
 	GetNodeAllocatableAbsolute() v1.ResourceMap
 
