@@ -73,17 +73,12 @@ const (
 	// CPU 亲和性策略
 	CPUManager featuregate.Feature = "CPUManager"
 
-	// owner: @fromanirh
+	// CPUManagerPolicyAlphaOptions owner: @fromanirh
 	// alpha: v1.23
 	// beta: see below.
 	//
-	// Allow fine-tuning of cpumanager policies, experimental, alpha-quality options
-	// Per https://groups.google.com/g/kubernetes-sig-architecture/c/Nxsc7pfe5rw/m/vF2djJh0BAAJ
-	// We want to avoid a proliferation of feature gates. This feature gate:
-	// - will guard *a group* of cpumanager options whose quality level is alpha.
-	// - will never graduate to beta or stable.
-	// See https://groups.google.com/g/kubernetes-sig-architecture/c/Nxsc7pfe5rw/m/vF2djJh0BAAJ
-	// for details about the removal of this feature gate.
+	// 允许对 CPU 管理器策略进行精细调整，这些选项是实验性的，质量水平为 alpha
+	// 为了避免功能开关的过多，这个功能开关将保护一组 CPU 管理器选项，其质量水平为 alpha。该功能开关将永远不会升级到 beta 或稳定版本。
 	CPUManagerPolicyAlphaOptions featuregate.Feature = "CPUManagerPolicyAlphaOptions"
 
 	// owner: @fromanirh
@@ -100,11 +95,11 @@ const (
 	// for details about the removal of this feature gate.
 	CPUManagerPolicyBetaOptions featuregate.Feature = "CPUManagerPolicyBetaOptions"
 
-	// owner: @fromanirh
+	// CPUManagerPolicyOptions owner: @fromanirh
 	// alpha: v1.22
 	// beta: v1.23
 	//
-	// Allow the usage of options to fine-tune the cpumanager policies.
+	// 允许使用选项来微调cpumanager策略.
 	CPUManagerPolicyOptions featuregate.Feature = "CPUManagerPolicyOptions"
 
 	// owner: @pohly

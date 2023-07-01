@@ -19,11 +19,11 @@ package cpumanager
 import (
 	"context"
 	"fmt"
+	cadvisorapi "github.com/google/cadvisor/info/v1"
 	"math"
 	"sync"
 	"time"
 
-	cadvisorapi "github.com/google/cadvisor/info/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
@@ -119,75 +119,6 @@ type sourcesReadyStub struct{}
 
 func (s *sourcesReadyStub) AddSource(source string) {}
 func (s *sourcesReadyStub) AllReady() bool          { return true }
-
-// NewManager creates new cpu CpuManager based on provided policy
-func NewManager(
-	cpuPolicyName string,
-	cpuPolicyOptions map[string]string,
-	reconcilePeriod time.Duration,
-	machineInfo *cadvisorapi.MachineInfo,
-	specificCPUs cpuset.CPUSet,
-	nodeAllocatableReservation v1.ResourceMap,
-	stateFileDirectory string,
-	affinity topologymanager.Store,
-) (Manager, error) {
-	var topo *topology.CPUTopology
-	var policy Policy
-	var err error
-
-	switch policyName(cpuPolicyName) {
-
-	case PolicyNone:
-		policy, err = NewNonePolicy(cpuPolicyOptions)
-		if err != nil {
-			return nil, fmt.Errorf("new none policy error: %w", err)
-		}
-
-	case PolicyStatic:
-		topo, err = topology.Discover(machineInfo)
-		if err != nil {
-			return nil, err
-		}
-		klog.InfoS("Detected CPU topology", "topology", topo)
-
-		reservedCPUs, ok := nodeAllocatableReservation[v1.ResourceCPU]
-		if !ok {
-			// The static policy cannot initialize without this information.
-			return nil, fmt.Errorf("[cpumanager] 无法确定静态策略的保留CPU资源.")
-		}
-		if reservedCPUs.IsZero() {
-			// The static policy requires this to be nonzero. Zero CPU reservation
-			// would allow the shared pool to be completely exhausted. At that point
-			// either we would violate our guarantee of exclusivity or need to evict
-			// any pod that has at least one container that requires zero CPUs.
-			// See the comments in policy_static.go for more details.
-			return nil, fmt.Errorf("[cpumanager] 静态策略要求systemreserved.cpu + kubereserved.cpu必须大于零.")
-		}
-
-		// Take the ceiling of the reservation, since fractional CPUs cannot be
-		// exclusively allocated.
-		reservedCPUsFloat := float64(reservedCPUs.MilliValue()) / 1000
-		numReservedCPUs := int(math.Ceil(reservedCPUsFloat))
-		policy, err = NewStaticPolicy(topo, numReservedCPUs, specificCPUs, affinity, cpuPolicyOptions)
-		if err != nil {
-			return nil, fmt.Errorf("new static policy error: %w", err)
-		}
-
-	default:
-		return nil, fmt.Errorf("unknown policy: \"%s\"", cpuPolicyName)
-	}
-
-	manager := &CpuManager{
-		policy:                     policy,
-		reconcilePeriod:            reconcilePeriod,
-		lastUpdateState:            state.NewMemoryState(),
-		topology:                   topo,
-		nodeAllocatableReservation: nodeAllocatableReservation,
-		stateFileDirectory:         stateFileDirectory,
-	}
-	manager.sourcesReady = &sourcesReadyStub{}
-	return manager, nil
-}
 
 func (m *CpuManager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error {
 	klog.InfoS("Starting CPU CpuManager", "policy", m.policy.Name())
@@ -523,4 +454,75 @@ func (m *CpuManager) setPodPendingAdmission(pod *v1.Pod) {
 	defer m.Unlock()
 
 	m.pendingAdmissionPod = pod
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+
+// NewManager creates new cpu CpuManager based on provided policy
+func NewManager(
+	cpuPolicyName string, // static
+	cpuPolicyOptions map[string]string,
+	reconcilePeriod time.Duration, // 10s
+	machineInfo *cadvisorapi.MachineInfo,
+	specificCPUs cpuset.CPUSet,
+	nodeAllocatableReservation v1.ResourceMap, // 节点可分配保留量
+	stateFileDirectory string, // /var/lib/kubelet
+	affinity topologymanager.Store,
+) (Manager, error) {
+	var topo *topology.CPUTopology
+	var policy Policy
+	var err error
+
+	switch policyName(cpuPolicyName) {
+
+	case PolicyNone:
+		policy, err = NewNonePolicy(cpuPolicyOptions)
+		if err != nil {
+			return nil, fmt.Errorf("new none policy error: %w", err)
+		}
+
+	case PolicyStatic:
+		topo, err = topology.Discover(machineInfo)
+		if err != nil {
+			return nil, err
+		}
+		klog.InfoS("检测到的CPU拓扑", "topology", topo)
+
+		reservedCPUs, ok := nodeAllocatableReservation[v1.ResourceCPU]
+		if !ok {
+			// The static policy cannot initialize without this information.
+			return nil, fmt.Errorf("[cpumanager] 无法确定静态策略的保留CPU资源")
+		}
+		if reservedCPUs.IsZero() {
+			// The static policy requires this to be nonzero. Zero CPU reservation
+			// would allow the shared pool to be completely exhausted. At that point
+			// either we would violate our guarantee of exclusivity or need to evict
+			// any pod that has at least one container that requires zero CPUs.
+			// See the comments in policy_static.go for more details.
+			return nil, fmt.Errorf("[cpumanager] 静态策略要求 systemreserved.cpu + kubereserved.cpu 必须大于零")
+		}
+
+		// Take the ceiling of the reservation, since fractional CPUs cannot be
+		// exclusively allocated.
+		reservedCPUsFloat := float64(reservedCPUs.MilliValue()) / 1000
+		numReservedCPUs := int(math.Ceil(reservedCPUsFloat))
+		policy, err = NewStaticPolicy(topo, numReservedCPUs, specificCPUs, affinity, cpuPolicyOptions)
+		if err != nil {
+			return nil, fmt.Errorf("new static policy error: %w", err)
+		}
+
+	default:
+		return nil, fmt.Errorf("unknown policy: \"%s\"", cpuPolicyName)
+	}
+
+	manager := &CpuManager{
+		policy:                     policy,
+		reconcilePeriod:            reconcilePeriod,
+		lastUpdateState:            state.NewMemoryState(),
+		topology:                   topo,
+		nodeAllocatableReservation: nodeAllocatableReservation,
+		stateFileDirectory:         stateFileDirectory,
+	}
+	manager.sourcesReady = &sourcesReadyStub{}
+	return manager, nil
 }

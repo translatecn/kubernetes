@@ -105,52 +105,6 @@ type StaticPolicy struct {
 // Ensure StaticPolicy implements Policy interface
 var _ Policy = &StaticPolicy{}
 
-// NewStaticPolicy returns a CPU CpuManager policy that does not change CPU
-// assignments for exclusively pinned guaranteed containers after the main
-// container process starts.
-func NewStaticPolicy(topology *topology.CPUTopology, numReservedCPUs int, reservedCPUs cpuset.CPUSet, affinity topologymanager.Store, cpuPolicyOptions map[string]string) (Policy, error) {
-	opts, err := NewStaticPolicyOptions(cpuPolicyOptions)
-	if err != nil {
-		return nil, err
-	}
-	err = ValidateStaticPolicyOptions(opts, topology, affinity)
-	if err != nil {
-		return nil, err
-	}
-
-	klog.InfoS("Static policy created with configuration", "options", opts)
-
-	policy := &StaticPolicy{
-		topology:    topology,
-		affinity:    affinity,
-		cpusToReuse: make(map[string]cpuset.CPUSet),
-		options:     opts,
-	}
-
-	allCPUs := topology.CPUDetails.CPUs()
-	var reserved cpuset.CPUSet
-	if reservedCPUs.Size() > 0 {
-		reserved = reservedCPUs
-	} else {
-		// takeByTopology allocates CPUs associated with low-numbered cores from
-		// allCPUs.
-		//
-		// For example: Given a system with 8 CPUs available and HT enabled,
-		// if numReservedCPUs=2, then reserved={0,4}
-		reserved, _ = policy.takeByTopology(allCPUs, numReservedCPUs)
-	}
-
-	if reserved.Size() != numReservedCPUs {
-		err := fmt.Errorf("[cpumanager] unable to reserve the required amount of CPUs (size of %s did not equal %d)", reserved, numReservedCPUs)
-		return nil, err
-	}
-
-	klog.InfoS("Reserved CPUs not available for exclusive assignment", "reservedSize", reserved.Size(), "reserved", reserved)
-	policy.reserved = reserved
-
-	return policy, nil
-}
-
 func (p *StaticPolicy) Name() string {
 	return string(PolicyStatic)
 }
@@ -630,4 +584,55 @@ func (p *StaticPolicy) getAlignedCPUs(numaAffinity bitmask.BitMask, allocatableC
 	}
 
 	return alignedCPUs
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+
+func NewStaticPolicy(
+	topology *topology.CPUTopology,
+	numReservedCPUs int,
+	reservedCPUs cpuset.CPUSet,
+	affinity topologymanager.Store,
+	cpuPolicyOptions map[string]string,
+) (Policy, error) {
+	opts, err := NewStaticPolicyOptions(cpuPolicyOptions) // align-by-socket=true
+	if err != nil {
+		return nil, err
+	}
+	err = ValidateStaticPolicyOptions(opts, topology, affinity)
+	if err != nil {
+		return nil, err
+	}
+
+	klog.InfoS("Static policy created with configuration", "options", opts)
+
+	policy := &StaticPolicy{
+		topology:    topology,
+		affinity:    affinity,
+		cpusToReuse: make(map[string]cpuset.CPUSet),
+		options:     opts,
+	}
+
+	allCPUs := topology.CPUDetails.CPUs()
+	var reserved cpuset.CPUSet
+	if reservedCPUs.Size() > 0 {
+		reserved = reservedCPUs
+	} else {
+		// takeByTopology allocates CPUs associated with low-numbered cores from
+		// allCPUs.
+		//
+		// For example: Given a system with 8 CPUs available and HT enabled,
+		// if numReservedCPUs=2, then reserved={0,4}
+		reserved, _ = policy.takeByTopology(allCPUs, numReservedCPUs)
+	}
+
+	if reserved.Size() != numReservedCPUs {
+		err := fmt.Errorf("[cpumanager] unable to reserve the required amount of CPUs (size of %s did not equal %d)", reserved, numReservedCPUs)
+		return nil, err
+	}
+
+	klog.InfoS("Reserved CPUs not available for exclusive assignment", "reservedSize", reserved.Size(), "reserved", reserved)
+	policy.reserved = reserved
+
+	return policy, nil
 }

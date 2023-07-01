@@ -707,8 +707,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 		if utilfeature.DefaultFeatureGate.Enabled(features.CPUManagerPolicyOptions) {
 			cpuManagerPolicyOptions = s.CPUManagerPolicyOptions
 		} else if s.CPUManagerPolicyOptions != nil {
-			return fmt.Errorf("CPU Manager policy options %v require feature gates %q, %q enabled",
-				s.CPUManagerPolicyOptions, features.CPUManager, features.CPUManagerPolicyOptions)
+			return fmt.Errorf("CPU Manager policy options %v require feature gates %q, %q enabled", s.CPUManagerPolicyOptions, features.CPUManager, features.CPUManagerPolicyOptions)
 		}
 
 		var topologyManagerPolicyOptions map[string]string
@@ -746,8 +745,8 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 				},
 				QOSReserved:                              *experimentalQOSReserved,
 				CPUManagerPolicy:                         s.CPUManagerPolicy,
-				CPUManagerPolicyOptions:                  cpuManagerPolicyOptions,
-				CPUManagerReconcilePeriod:                s.CPUManagerReconcilePeriod.Duration,
+				CPUManagerPolicyOptions:                  cpuManagerPolicyOptions,              // ✅
+				CPUManagerReconcilePeriod:                s.CPUManagerReconcilePeriod.Duration, // ✅
 				ExperimentalMemoryManagerPolicy:          s.MemoryManagerPolicy,
 				ExperimentalMemoryManagerReservedMemory:  s.ReservedMemory,
 				ExperimentalPodPidsLimit:                 s.PodPidsLimit,

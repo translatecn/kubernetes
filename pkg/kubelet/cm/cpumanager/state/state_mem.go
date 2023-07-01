@@ -77,7 +77,7 @@ func (s *stateMemory) SetCPUSet(podUID string, containerName string, cset cpuset
 	}
 
 	s.assignments[podUID][containerName] = cset
-	klog.InfoS("Updated desired CPUSet", "podUID", podUID, "containerName", containerName, "cpuSet", cset)
+	klog.InfoS("更新所需的CPUSet", "podUID", podUID, "containerName", containerName, "cpuSet", cset)
 }
 
 func (s *stateMemory) SetDefaultCPUSet(cset cpuset.CPUSet) {
@@ -85,7 +85,7 @@ func (s *stateMemory) SetDefaultCPUSet(cset cpuset.CPUSet) {
 	defer s.Unlock()
 
 	s.defaultCPUSet = cset
-	klog.InfoS("Updated default CPUSet", "cpuSet", cset)
+	klog.InfoS("更新默认的CPUSet", "cpuSet", cset)
 }
 
 func (s *stateMemory) SetCPUAssignments(a ContainerCPUAssignments) {

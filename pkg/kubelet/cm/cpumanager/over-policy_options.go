@@ -18,20 +18,18 @@ package cpumanager
 
 import (
 	"fmt"
-	"strconv"
-
 	"k8s.io/apimachinery/pkg/util/sets"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	kubefeatures "k8s.io/kubernetes/pkg/features"
 	"k8s.io/kubernetes/pkg/kubelet/cm/cpumanager/topology"
 	"k8s.io/kubernetes/pkg/kubelet/cm/topologymanager"
+	"strconv"
 )
 
-// Names of the options, as part of the user interface.
 const (
-	FullPCPUsOnlyOption            string = "full-pcpus-only"
-	DistributeCPUsAcrossNUMAOption string = "distribute-cpus-across-numa"
-	AlignBySocketOption            string = "align-by-socket"
+	FullPCPUsOnlyOption            string = "full-pcpus-only"             // 将 CPU 管理器核心分配算法限制为仅支持完整的物理核心,从而减少允许共享核心的硬件技术带来的嘈杂邻居问题.
+	DistributeCPUsAcrossNUMAOption string = "distribute-cpus-across-numa" // 驱动 CPU 管理器跨 NUMA 节点均匀分配 CPU,以应对需要多个 NUMA 节点来满足分配的情况.
+	AlignBySocketOption            string = "align-by-socket"             // 更改 CPU 管理器将 CPU 分配给容器的方式：考虑 CPU 按插槽而不是 NUMA 节点边界对齐.
 )
 
 var (
@@ -63,26 +61,24 @@ func CheckPolicyOptionAvailable(option string) error {
 	return nil
 }
 
-// StaticPolicyOptions holds the parsed value of the policy options, ready to be consumed internally.
 type StaticPolicyOptions struct {
-	// flag to enable extra allocation restrictions to avoid
-	// different containers to possibly end up on the same core.
-	// we consider "core" and "physical CPU" synonim here, leaning
-	// towards the terminoloy k8s hints. We acknowledge this is confusing.
-	//
-	// looking at https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/,
-	// any possible naming scheme will lead to ambiguity to some extent.
-	// We picked "pcpu" because it the established docs hints at vCPU already.
-	FullPhysicalCPUsOnly bool
-	// Flag to evenly distribute CPUs across NUMA nodes in cases where more
-	// than one NUMA node is required to satisfy the allocation.
+	FullPhysicalCPUsOnly     bool
 	DistributeCPUsAcrossNUMA bool
-	// Flag to ensure CPUs are considered aligned at socket boundary rather than
-	// NUMA boundary
-	AlignBySocket bool
+	AlignBySocket            bool
 }
 
-// NewStaticPolicyOptions creates a StaticPolicyOptions struct from the user configuration.
+func ValidateStaticPolicyOptions(opts StaticPolicyOptions, topology *topology.CPUTopology, topologyManager topologymanager.Store) error {
+	if opts.AlignBySocket {
+		if topologyManager.GetPolicy().Name() == topologymanager.PolicySingleNumaNode {
+			return fmt.Errorf("拓扑 CPU 管理器的策略:%s 与 CPU 管理器策略:%s 选项不兼容", topologymanager.PolicySingleNumaNode, AlignBySocketOption)
+		}
+		if topology.NumSockets > topology.NumNUMANodes {
+			return fmt.Errorf("如果硬件的插槽数量超过了NUMA（非一致性存储访问）的数量,那么按插槽对齐是不兼容的, 有的位置m")
+		}
+	}
+	return nil
+}
+
 func NewStaticPolicyOptions(policyOptions map[string]string) (StaticPolicyOptions, error) {
 	opts := StaticPolicyOptions{}
 	for name, value := range policyOptions {
@@ -116,19 +112,4 @@ func NewStaticPolicyOptions(policyOptions map[string]string) (StaticPolicyOption
 		}
 	}
 	return opts, nil
-}
-
-// ValidateStaticPolicyOptions ensures that the requested policy options are compatible with the machine on which the CPUManager is running.
-func ValidateStaticPolicyOptions(opts StaticPolicyOptions, topology *topology.CPUTopology, topologyManager topologymanager.Store) error {
-	if opts.AlignBySocket {
-		// Not compatible with topology CpuManager single-numa-node policy option.
-		if topologyManager.GetPolicy().Name() == topologymanager.PolicySingleNumaNode {
-			return fmt.Errorf("Topolgy CpuManager %s policy is incompatible with CPUManager %s policy option", topologymanager.PolicySingleNumaNode, AlignBySocketOption)
-		}
-		// Not compatible with topology when number of sockets are more than number of NUMA nodes.
-		if topology.NumSockets > topology.NumNUMANodes {
-			return fmt.Errorf("Align by socket is not compatible with hardware where number of sockets are more than number of NUMA")
-		}
-	}
-	return nil
 }

@@ -131,8 +131,8 @@ type KubeletConfiguration struct { // --config
 	CgroupsPerQOS                             bool
 	CgroupDriver                              string
 	CPUManagerPolicy                          string
-	CPUManagerPolicyOptions                   map[string]string
-	CPUManagerReconcilePeriod                 metav1.Duration
+	CPUManagerPolicyOptions                   map[string]string // ✅
+	CPUManagerReconcilePeriod                 metav1.Duration   // ✅
 	MemoryManagerPolicy                       string
 	TopologyManagerPolicy                     string
 	TopologyManagerScope                      string

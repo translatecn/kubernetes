@@ -107,8 +107,8 @@ type NodeConfig struct {
 	NodeAllocatableConfig
 	QOSReserved                              map[v1.ResourceName]int64
 	CPUManagerPolicy                         string
-	CPUManagerPolicyOptions                  map[string]string
-	CPUManagerReconcilePeriod                time.Duration
+	CPUManagerPolicyOptions                  map[string]string // ✅
+	CPUManagerReconcilePeriod                time.Duration     // ✅
 	ExperimentalMemoryManagerPolicy          string
 	ExperimentalMemoryManagerReservedMemory  []kubeletconfig.MemoryReservation
 	ExperimentalPodPidsLimit                 int64 // 进程数限制

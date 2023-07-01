@@ -49,7 +49,7 @@ type Node struct {
 
 type Core struct {
 	Id           int     `json:"core_id"`       // 物理核序号
-	Threads      []int   `json:"thread_ids"`    // 逻辑核序号
+	Threads      []int   `json:"thread_ids"`    // 每个物理核的逻辑核序号
 	Caches       []Cache `json:"caches"`        // 1-2 级缓存
 	UncoreCaches []Cache `json:"uncore_caches"` // >2 的非核心共享缓存
 	SocketID     int     `json:"socket_id"`     // 物理cpu序号
@@ -181,10 +181,7 @@ type MachineInfo struct {
 
 	// Vendor id of CPU.
 	CPUVendorID string `json:"vendor_id"`
-
-	// The number of cores in this machine.
-	NumCores int `json:"num_cores"`
-
+	NumCores    int    `json:"num_cores"` // 逻辑核数
 	// The number of physical cores in this machine.
 	NumPhysicalCores int `json:"num_physical_cores"`
 
