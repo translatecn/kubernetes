@@ -3842,10 +3842,7 @@ type PodStatus struct {
 	// This is before the Kubelet pulled the container image(s) for the pod.
 	// +optional
 	StartTime *metav1.Time `json:"startTime,omitempty" protobuf:"bytes,7,opt,name=startTime"`
-
-	// The list has one entry per init container in the manifest. The most recent successful
-	// init container will have ready = true, the most recently started container will have
-	// startTime set.
+	// 该列表中的每个条目对应于清单中的一个init容器。最近成功的init容器将具有ready=true，最近启动的容器将具有设置的startTime。
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
 	InitContainerStatuses []ContainerStatus `json:"initContainerStatuses,omitempty" protobuf:"bytes,10,rep,name=initContainerStatuses"`
 	// 每个容器的当前状态

@@ -100,11 +100,11 @@ func min(x, y int) int {
 }
 
 type numaOrSocketsFirstFuncs interface {
-	takeFullFirstLevel()
-	takeFullSecondLevel()
-	sortAvailableNUMANodes() []int
-	sortAvailableSockets() []int
-	sortAvailableCores() []int
+	takeFullFirstLevel()           // 从第一级（NUMA节点或插槽）中获取所有可用的资源。
+	takeFullSecondLevel()          // 从第二级（NUMA节点或插槽）中获取所有可用的资源。
+	sortAvailableNUMANodes() []int // 对可用的NUMA节点进行排序，并返回排序后的NUMA节点列表。
+	sortAvailableSockets() []int   // 对可用的插槽进行排序，并返回排序后的插槽列表。
+	sortAvailableCores() []int     // 对可用的核心进行排序，并返回排序后的核心列表。
 }
 
 type numaFirst struct{ acc *cpuAccumulator }
@@ -113,8 +113,7 @@ type socketsFirst struct{ acc *cpuAccumulator }
 var _ numaOrSocketsFirstFuncs = (*numaFirst)(nil)
 var _ numaOrSocketsFirstFuncs = (*socketsFirst)(nil)
 
-// If NUMA nodes are higher in the memory hierarchy than sockets, then we take
-// from the set of NUMA Nodes as the first level.
+// 如果NUMA节点在内存层次结构中高于插槽，则我们首先从NUMA节点集合中获取。
 func (n *numaFirst) takeFullFirstLevel() {
 	n.acc.takeFullNUMANodes()
 }
@@ -127,11 +126,6 @@ func (n *numaFirst) takeFullSecondLevel() {
 
 // If NUMA nodes are higher in the memory hierarchy than sockets, then just
 // sort the NUMA nodes directly, and return them.
-func (n *numaFirst) sortAvailableNUMANodes() []int {
-	numas := n.acc.details.NUMANodes().ToSliceNoSort()
-	n.acc.sort(numas, n.acc.details.CPUsInNUMANodes)
-	return numas
-}
 
 // If NUMA nodes are higher in the memory hierarchy than sockets, then we need
 // to pull the set of sockets out of each sorted NUMA node, and accumulate the
@@ -204,33 +198,11 @@ func (s *socketsFirst) sortAvailableCores() []int {
 }
 
 type cpuAccumulator struct {
-	topo               *topology.CPUTopology
-	details            topology.CPUDetails
-	numCPUsNeeded      int
-	result             cpuset.CPUSet
-	numaOrSocketsFirst numaOrSocketsFirstFuncs
-}
-
-func newCPUAccumulator(topo *topology.CPUTopology, availableCPUs cpuset.CPUSet, numCPUs int) *cpuAccumulator {
-	acc := &cpuAccumulator{
-		topo:          topo,
-		details:       topo.CPUDetails.KeepOnly(availableCPUs),
-		numCPUsNeeded: numCPUs,
-		result:        cpuset.NewCPUSet(),
-	}
-
-	if topo.NumSockets >= topo.NumNUMANodes {
-		acc.numaOrSocketsFirst = &numaFirst{acc}
-	} else {
-		acc.numaOrSocketsFirst = &socketsFirst{acc}
-	}
-
-	return acc
-}
-
-// Returns true if the supplied NUMANode is fully available in `topoDetails`.
-func (a *cpuAccumulator) isNUMANodeFree(numaID int) bool {
-	return a.details.CPUsInNUMANodes(numaID).Size() == a.topo.CPUDetails.CPUsInNUMANodes(numaID).Size()
+	topo               *topology.CPUTopology   // CPU的拓扑结构
+	details            topology.CPUDetails     // 计算后的 CPU的详细信息
+	numCPUsNeeded      int                     // 所需的CPU数量
+	result             cpuset.CPUSet           // 已经分配的CPU集合
+	numaOrSocketsFirst numaOrSocketsFirstFuncs // 用于确定从NUMA节点还是插槽中获取CPU
 }
 
 // Returns true if the supplied socket is fully available in `topoDetails`.
@@ -241,17 +213,6 @@ func (a *cpuAccumulator) isSocketFree(socketID int) bool {
 // Returns true if the supplied core is fully available in `topoDetails`.
 func (a *cpuAccumulator) isCoreFree(coreID int) bool {
 	return a.details.CPUsInCores(coreID).Size() == a.topo.CPUsPerCore()
-}
-
-// Returns free NUMA Node IDs as a slice sorted by sortAvailableNUMANodes().
-func (a *cpuAccumulator) freeNUMANodes() []int {
-	free := []int{}
-	for _, numa := range a.sortAvailableNUMANodes() {
-		if a.isNUMANodeFree(numa) {
-			free = append(free, numa)
-		}
-	}
-	return free
 }
 
 // Returns free socket IDs as a slice sorted by sortAvailableSockets().
@@ -302,11 +263,6 @@ func (a *cpuAccumulator) sort(ids []int, getCPUs func(ids ...int) cpuset.CPUSet)
 		})
 }
 
-// Sort all NUMA nodes with free CPUs.
-func (a *cpuAccumulator) sortAvailableNUMANodes() []int {
-	return a.numaOrSocketsFirst.sortAvailableNUMANodes()
-}
-
 // Sort all sockets with free CPUs.
 func (a *cpuAccumulator) sortAvailableSockets() []int {
 	return a.numaOrSocketsFirst.sortAvailableSockets()
@@ -315,25 +271,6 @@ func (a *cpuAccumulator) sortAvailableSockets() []int {
 // Sort all cores with free CPUs:
 func (a *cpuAccumulator) sortAvailableCores() []int {
 	return a.numaOrSocketsFirst.sortAvailableCores()
-}
-
-// Sort all available CPUs:
-// - First by core using sortAvailableCores().
-// - Then within each core, using the sort() algorithm defined above.
-func (a *cpuAccumulator) sortAvailableCPUs() []int {
-	var result []int
-	for _, core := range a.sortAvailableCores() {
-		cpus := a.details.CPUsInCores(core).ToSliceNoSort()
-		sort.Ints(cpus)
-		result = append(result, cpus...)
-	}
-	return result
-}
-
-func (a *cpuAccumulator) take(cpus cpuset.CPUSet) {
-	a.result = a.result.Union(cpus)
-	a.details = a.details.KeepOnly(a.details.CPUs().Difference(a.result))
-	a.numCPUsNeeded -= cpus.Size()
 }
 
 func (a *cpuAccumulator) takeFullNUMANodes() {
@@ -350,63 +287,12 @@ func (a *cpuAccumulator) takeFullNUMANodes() {
 func (a *cpuAccumulator) takeFullSockets() {
 	for _, socket := range a.freeSockets() {
 		cpusInSocket := a.topo.CPUDetails.CPUsInSockets(socket)
-		if !a.needs(cpusInSocket.Size()) {
+		if !a.needs(cpusInSocket.Size()) { //
 			continue
 		}
 		klog.V(4).InfoS("takeFullSockets: claiming socket", "socket", socket)
 		a.take(cpusInSocket)
 	}
-}
-
-func (a *cpuAccumulator) takeFullCores() {
-	for _, core := range a.freeCores() {
-		cpusInCore := a.topo.CPUDetails.CPUsInCores(core)
-		if !a.needs(cpusInCore.Size()) {
-			continue
-		}
-		klog.V(4).InfoS("takeFullCores: claiming core", "core", core)
-		a.take(cpusInCore)
-	}
-}
-
-func (a *cpuAccumulator) takeRemainingCPUs() {
-	for _, cpu := range a.sortAvailableCPUs() {
-		klog.V(4).InfoS("takeRemainingCPUs: claiming CPU", "cpu", cpu)
-		a.take(cpuset.NewCPUSet(cpu))
-		if a.isSatisfied() {
-			return
-		}
-	}
-}
-
-func (a *cpuAccumulator) rangeNUMANodesNeededToSatisfy(cpuGroupSize int) (int, int) {
-	// Get the total number of NUMA nodes in the system.
-	numNUMANodes := a.topo.CPUDetails.NUMANodes().Size()
-
-	// Get the total number of NUMA nodes that have CPUs available on them.
-	numNUMANodesAvailable := a.details.NUMANodes().Size()
-
-	// Get the total number of CPUs in the system.
-	numCPUs := a.topo.CPUDetails.CPUs().Size()
-
-	// Get the total number of 'cpuGroups' in the system.
-	numCPUGroups := (numCPUs-1)/cpuGroupSize + 1
-
-	// Calculate the number of 'cpuGroups' per NUMA Node in the system (rounding up).
-	numCPUGroupsPerNUMANode := (numCPUGroups-1)/numNUMANodes + 1
-
-	// Calculate the number of available 'cpuGroups' across all NUMA nodes as
-	// well as the number of 'cpuGroups' that need to be allocated (rounding up).
-	numCPUGroupsNeeded := (a.numCPUsNeeded-1)/cpuGroupSize + 1
-
-	// Calculate the minimum number of numa nodes required to satisfy the
-	// allocation (rounding up).
-	minNUMAs := (numCPUGroupsNeeded-1)/numCPUGroupsPerNUMANode + 1
-
-	// Calculate the maximum number of numa nodes required to satisfy the allocation.
-	maxNUMAs := min(numCPUGroupsNeeded, numNUMANodesAvailable)
-
-	return minNUMAs, maxNUMAs
 }
 
 func (a *cpuAccumulator) needs(n int) bool {
@@ -419,6 +305,153 @@ func (a *cpuAccumulator) isSatisfied() bool {
 
 func (a *cpuAccumulator) isFailed() bool {
 	return a.numCPUsNeeded > a.details.CPUs().Size()
+}
+
+// ------------------------------------------------------------------------------------------------------------
+
+func newCPUAccumulator(topo *topology.CPUTopology, availableCPUs cpuset.CPUSet, numCPUs int) *cpuAccumulator {
+	acc := &cpuAccumulator{
+		topo:          topo,
+		details:       topo.CPUDetails.KeepOnly(availableCPUs),
+		numCPUsNeeded: numCPUs,
+		result:        cpuset.NewCPUSet(),
+	}
+
+	if topo.NumSockets >= topo.NumNUMANodes {
+		acc.numaOrSocketsFirst = &numaFirst{acc}
+	} else {
+		acc.numaOrSocketsFirst = &socketsFirst{acc}
+	}
+
+	return acc
+}
+
+func (a *cpuAccumulator) sortAvailableNUMANodes() []int {
+	return a.numaOrSocketsFirst.sortAvailableNUMANodes()
+}
+func (n *numaFirst) sortAvailableNUMANodes() []int {
+	numas := n.acc.details.NUMANodes().ToSliceNoSort()
+	n.acc.sort(numas, n.acc.details.CPUsInNUMANodes)
+	return numas
+}
+
+// Returns true if the supplied NUMANode is fully available in `topoDetails`.
+func (a *cpuAccumulator) isNUMANodeFree(numaID int) bool {
+	return a.details.CPUsInNUMANodes(numaID).Size() == a.topo.CPUDetails.CPUsInNUMANodes(numaID).Size()
+}
+
+func (a *cpuAccumulator) freeNUMANodes() []int {
+	free := []int{}
+	for _, numa := range a.sortAvailableNUMANodes() {
+		if a.isNUMANodeFree(numa) {
+			free = append(free, numa)
+		}
+	}
+	return free
+}
+
+// 占用一个物理核
+func (a *cpuAccumulator) takeFullCores() {
+	for _, core := range a.freeCores() {
+		cpusInCore := a.topo.CPUDetails.CPUsInCores(core)
+		if !a.needs(cpusInCore.Size()) {
+			continue // need < cpusInCore
+		}
+		klog.V(4).InfoS("takeFullCores: claiming core", "core", core)
+		a.take(cpusInCore)
+	}
+}
+
+func (a *cpuAccumulator) take(cpus cpuset.CPUSet) {
+	a.result = a.result.Union(cpus) // 已经分配的CPU集合
+	a.details = a.details.KeepOnly(a.details.CPUs().Difference(a.result))
+	a.numCPUsNeeded -= cpus.Size()
+}
+
+func (a *cpuAccumulator) takeRemainingCPUs() {
+	for _, cpu := range a.sortAvailableCPUs() {
+		klog.V(4).InfoS("takeRemainingCPUs: claiming CPU", "cpu", cpu)
+		a.take(cpuset.NewCPUSet(cpu))
+		if a.isSatisfied() {
+			return
+		}
+	}
+}
+
+// Sort all available CPUs:
+// - First by core using sortAvailableCores().
+// - Then within each core, using the sort() algorithm defined above.
+func (a *cpuAccumulator) sortAvailableCPUs() []int {
+	var result []int
+	for _, core := range a.sortAvailableCores() {
+		cpus := a.details.CPUsInCores(core).ToSliceNoSort()
+		sort.Ints(cpus)
+		result = append(result, cpus...)
+	}
+	return result
+}
+
+// 打包分配
+func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.CPUSet, numCPUs int) (cpuset.CPUSet, error) {
+	acc := newCPUAccumulator(topo, availableCPUs, numCPUs)
+	if acc.isSatisfied() {
+		return acc.result, nil
+	}
+	if acc.isFailed() {
+		return cpuset.NewCPUSet(), fmt.Errorf("没有足够的cpu来满足请求")
+	}
+
+	// 基于拓扑的最佳适配
+	// 1. 如果可用并且容器需要至少一个NUMA节点或一个插槽的CPU，则获取整个NUMA节点和插槽。如果NUMA节点映射到一个或多个插槽，则首先从NUMA节点中获取。否则，首先从插槽中获取。
+	acc.numaOrSocketsFirst.takeFullFirstLevel()
+	var _ = new(numaFirst).takeFullFirstLevel
+	if acc.isSatisfied() {
+		return acc.result, nil
+	}
+	acc.numaOrSocketsFirst.takeFullSecondLevel()
+	if acc.isSatisfied() {
+		return acc.result, nil
+	}
+	// 2. 如果可用并且容器需要至少一个核心的CPU，则获取整个核心。
+	acc.takeFullCores() // need < cpusInCore
+	if acc.isSatisfied() {
+		return acc.result, nil
+	}
+	// 3. 获取单个线程，优先填充与已经在此分配中获取的整个核心位于同一插槽上的部分分配核心。
+	acc.takeRemainingCPUs()
+	if acc.isSatisfied() {
+		return acc.result, nil
+	}
+
+	return cpuset.NewCPUSet(), fmt.Errorf("failed to allocate cpus")
+}
+
+func (a *cpuAccumulator) rangeNUMANodesNeededToSatisfy(cpuGroupSize int) (int, int) {
+	// 获取系统中的NUMA节点总数。
+	numNUMANodes := a.topo.CPUDetails.NUMANodes().Size()
+
+	// 获取具有可用CPU的NUMA节点的总数。
+	numNUMANodesAvailable := a.details.NUMANodes().Size()
+
+	// 获取系统中的CPU总数。
+	numCPUs := a.topo.CPUDetails.CPUs().Size()
+
+	// 获取系统中的'cpuGroups'总数。 物理核
+	numCPUGroups := (numCPUs-1)/cpuGroupSize + 1
+
+	// 计算系统中每个NUMA节点的'cpuGroups'数量（向上取整）。
+	numCPUGroupsPerNUMANode := (numCPUGroups-1)/numNUMANodes + 1
+
+	// 计算所有NUMA节点上可用的'cpuGroups'数量以及需要分配的'cpuGroups'数量（向上取整）。
+	numCPUGroupsNeeded := (a.numCPUsNeeded-1)/cpuGroupSize + 1
+
+	// 计算满足分配所需的最小NUMA节点数量（向上取整）。
+	minNUMAs := (numCPUGroupsNeeded-1)/numCPUGroupsPerNUMANode + 1
+
+	// 计算满足分配所需的最大NUMA节点数量。
+	maxNUMAs := min(numCPUGroupsNeeded, numNUMANodesAvailable)
+
+	return minNUMAs, maxNUMAs
 }
 
 // iterateCombinations walks through all n-choose-k subsets of size k in n and
@@ -447,48 +480,7 @@ func (a *cpuAccumulator) iterateCombinations(n []int, k int, f func([]int) LoopC
 	helper(n, k, 0, []int{}, f)
 }
 
-func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.CPUSet, numCPUs int) (cpuset.CPUSet, error) {
-	acc := newCPUAccumulator(topo, availableCPUs, numCPUs)
-	if acc.isSatisfied() {
-		return acc.result, nil
-	}
-	if acc.isFailed() {
-		return cpuset.NewCPUSet(), fmt.Errorf("not enough cpus available to satisfy request")
-	}
-
-	// Algorithm: topology-aware best-fit
-	// 1. Acquire whole NUMA nodes and sockets, if available and the container
-	//    requires at least a NUMA node or socket's-worth of CPUs. If NUMA
-	//    Nodes map to 1 or more sockets, pull from NUMA nodes first.
-	//    Otherwise pull from sockets first.
-	acc.numaOrSocketsFirst.takeFullFirstLevel()
-	if acc.isSatisfied() {
-		return acc.result, nil
-	}
-	acc.numaOrSocketsFirst.takeFullSecondLevel()
-	if acc.isSatisfied() {
-		return acc.result, nil
-	}
-
-	// 2. Acquire whole cores, if available and the container requires at least
-	//    a core's-worth of CPUs.
-	acc.takeFullCores()
-	if acc.isSatisfied() {
-		return acc.result, nil
-	}
-
-	// 3. Acquire single threads, preferring to fill partially-allocated cores
-	//    on the same sockets as the whole cores we have already taken in this
-	//    allocation.
-	acc.takeRemainingCPUs()
-	if acc.isSatisfied() {
-		return acc.result, nil
-	}
-
-	return cpuset.NewCPUSet(), fmt.Errorf("failed to allocate cpus")
-}
-
-// takeByTopologyNUMADistributed returns a CPUSet of size 'numCPUs'.
+// returns a CPUSet of size 'numCPUs'.
 //
 // It generates this CPUset by allocating CPUs from 'availableCPUs' according
 // to the algorithm outlined in KEP-2902:
@@ -551,15 +543,15 @@ func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.C
 // of size 'cpuGroupSize' according to the algorithm described above. This is
 // important, for example, to ensure that all CPUs (i.e. all hyperthreads) from
 // a single core are allocated together.
+// 从给定的所有CPU中分配低编号的核心  在NUMA节点之间均匀分配CPU
 func takeByTopologyNUMADistributed(topo *topology.CPUTopology, availableCPUs cpuset.CPUSet, numCPUs int, cpuGroupSize int) (cpuset.CPUSet, error) {
 	// If the number of CPUs requested cannot be handed out in chunks of
 	// 'cpuGroupSize', then we just call out the packing algorithm since we
 	// can't distribute CPUs in this chunk size.
-	if (numCPUs % cpuGroupSize) != 0 {
+	if (numCPUs % cpuGroupSize) != 0 { // 使用超线程了
 		return takeByTopologyNUMAPacked(topo, availableCPUs, numCPUs)
 	}
-
-	// Otherwise build an accumulator to start allocating CPUs from.
+	// 否则，构建一个累加器以开始分配CPU。
 	acc := newCPUAccumulator(topo, availableCPUs, numCPUs)
 	if acc.isSatisfied() {
 		return acc.result, nil
@@ -570,26 +562,18 @@ func takeByTopologyNUMADistributed(topo *topology.CPUTopology, availableCPUs cpu
 
 	// Get the list of NUMA nodes represented by the set of CPUs in 'availableCPUs'.
 	numas := acc.sortAvailableNUMANodes()
-
-	// Calculate the minimum and maximum possible number of NUMA nodes that
-	// could satisfy this request. This is used to optimize how many iterations
-	// of the loop we need to go through below.
+	//计算能够满足此请求的NUMA节点的最小和最大可能数量。这用于优化下面循环中需要进行的迭代次数。
 	minNUMAs, maxNUMAs := acc.rangeNUMANodesNeededToSatisfy(cpuGroupSize)
 
-	// Try combinations of 1,2,3,... NUMA nodes until we find a combination
-	// where we can evenly distribute CPUs across them. To optimize things, we
-	// don't always start at 1 and end at len(numas). Instead, we use the
-	// values of 'minNUMAs' and 'maxNUMAs' calculated above.
+	//尝试使用1、2、3... NUMA节点的组合，直到找到一个可以均匀分配CPU的组合。为了优化计算，我们不总是从1开始，结束于len(numas)。
+	//相反，我们使用上面计算得到的'minNUMAs'和'maxNUMAs'的值。
 	for k := minNUMAs; k <= maxNUMAs; k++ {
-		// Iterate through the various n-choose-k NUMA node combinations,
-		// looking for the combination of NUMA nodes that can best have CPUs
-		// distributed across them.
+		// 通过迭代不同的n-choose-k（从n个元素中选择k个元素）的NUMA节点组合，寻找最佳的NUMA节点组合，以便在它们之间均匀分配CPU。
 		var bestBalance float64 = math.MaxFloat64
 		var bestRemainder []int = nil
 		var bestCombo []int = nil
 		acc.iterateCombinations(numas, k, func(combo []int) LoopControl {
-			// If we've already found a combo with a balance of 0 in a
-			// different iteration, then don't bother checking any others.
+
 			if bestBalance == 0 {
 				return Break
 			}

@@ -715,9 +715,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			if utilfeature.DefaultFeatureGate.Enabled(features.TopologyManagerPolicyOptions) {
 				topologyManagerPolicyOptions = s.TopologyManagerPolicyOptions // ✅
 			} else if s.TopologyManagerPolicyOptions != nil {
-				return fmt.Errorf(
-					"拓扑管理器策略选项 %v 需要特性门%q,%q enabled",
-					s.TopologyManagerPolicyOptions, features.TopologyManager, features.TopologyManagerPolicyOptions)
+				return fmt.Errorf("拓扑管理器策略选项 %v 需要特性门%q,%q enabled", s.TopologyManagerPolicyOptions, features.TopologyManager, features.TopologyManagerPolicyOptions)
 			}
 		}
 
@@ -740,7 +738,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 					EnforceNodeAllocatable:   sets.NewString(s.EnforceNodeAllocatable...),
 					KubeReserved:             kubeReserved,
 					SystemReserved:           systemReserved,
-					ReservedSystemCPUs:       reservedSystemCPUs,
+					ReservedSystemCPUs:       reservedSystemCPUs, // ✅
 					HardEvictionThresholds:   hardEvictionThresholds,
 				},
 				QOSReserved:                              *experimentalQOSReserved,

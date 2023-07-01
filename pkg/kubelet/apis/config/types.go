@@ -178,7 +178,7 @@ type KubeletConfiguration struct { // --config
 	SystemReservedCgroup                      string
 	KubeReservedCgroup                        string
 	EnforceNodeAllocatable                    []string
-	ReservedSystemCPUs                        string
+	ReservedSystemCPUs                        string // ✅
 	ShowHiddenMetricsForVersion               string
 	Logging                                   logsapi.LoggingConfiguration
 	EnableSystemLogHandler                    bool

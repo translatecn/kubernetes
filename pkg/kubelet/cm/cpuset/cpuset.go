@@ -199,16 +199,6 @@ func (s CPUSet) ToSlice() []int {
 	return result
 }
 
-// ToSliceNoSort returns a slice of integers that contains all elements from
-// this set.
-func (s CPUSet) ToSliceNoSort() []int {
-	result := make([]int, 0, len(s.elems))
-	for cpu := range s.elems {
-		result = append(result, cpu)
-	}
-	return result
-}
-
 // ToSliceInt64 returns an ordered slice of int64 that contains all elements from
 // this set
 func (s CPUSet) ToSliceInt64() []int64 {
@@ -341,4 +331,14 @@ func (s CPUSet) Clone() CPUSet {
 		b.Add(elem)
 	}
 	return b.Result()
+}
+
+// ToSliceNoSort returns a slice of integers that contains all elements from
+// this set.
+func (s CPUSet) ToSliceNoSort() []int {
+	result := make([]int, 0, len(s.elems))
+	for cpu := range s.elems {
+		result = append(result, cpu)
+	}
+	return result
 }

@@ -39,29 +39,6 @@ type stateCheckpoint struct {
 	initialContainers containermap.ContainerMap
 }
 
-// NewCheckpointState ✅ creates new State for keeping track of cpu/pod assignment with checkpoint backend
-func NewCheckpointState(stateDir, checkpointName, policyName string, initialContainers containermap.ContainerMap) (State, error) { // ✅
-	checkpointManager, err := checkpointmanager.NewCheckpointManager(stateDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize checkpoint manager: %v", err)
-	}
-	stateCheckpoint := &stateCheckpoint{
-		cache:             NewMemoryState(),
-		policyName:        policyName,
-		checkpointManager: checkpointManager,
-		checkpointName:    checkpointName,
-		initialContainers: initialContainers,
-	}
-
-	if err := stateCheckpoint.restoreState(); err != nil {
-		//nolint:staticcheck // ST1005 user-facing error message
-		return nil, fmt.Errorf("could not restore state from checkpoint: %v, please drain this node and delete the CPU manager checkpoint file %q before restarting Kubelet",
-			err, path.Join(stateDir, checkpointName))
-	}
-
-	return stateCheckpoint, nil
-}
-
 // migrateV1CheckpointToV2Checkpoint() converts checkpoints from the v1 format to the v2 format
 func (sc *stateCheckpoint) migrateV1CheckpointToV2Checkpoint(src *CPUManagerCheckpointV1, dst *CPUManagerCheckpointV2) error {
 	if src.PolicyName != "" {
@@ -247,4 +224,27 @@ func (sc *stateCheckpoint) ClearState() {
 	if err != nil {
 		klog.InfoS("Store state to checkpoint error", "err", err)
 	}
+}
+
+// NewCheckpointState ✅ creates new State for keeping track of cpu/pod assignment with checkpoint backend
+func NewCheckpointState(stateDir, checkpointName, policyName string, initialContainers containermap.ContainerMap) (State, error) { // ✅
+	checkpointManager, err := checkpointmanager.NewCheckpointManager(stateDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize checkpoint manager: %v", err)
+	}
+	stateCheckpoint := &stateCheckpoint{
+		cache:             NewMemoryState(),
+		policyName:        policyName,
+		checkpointManager: checkpointManager,
+		checkpointName:    checkpointName,
+		initialContainers: initialContainers,
+	}
+
+	if err := stateCheckpoint.restoreState(); err != nil {
+		//nolint:staticcheck // ST1005 user-facing error message
+		return nil, fmt.Errorf("could not restore state from checkpoint: %v, please drain this node and delete the CPU manager checkpoint file %q before restarting Kubelet",
+			err, path.Join(stateDir, checkpointName))
+	}
+
+	return stateCheckpoint, nil
 }

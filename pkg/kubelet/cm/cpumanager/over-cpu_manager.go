@@ -53,45 +53,15 @@ const cpuManagerStateFileName = "cpu_manager_state"
 
 // Manager interface provides methods for Kubelet to manage pod cpus.
 type Manager interface {
-	// Start is called during Kubelet initialization.
 	Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error
-
-	// Called to trigger the allocation of CPUs to a container. This must be
-	// called at some point prior to the AddContainer() call for a container,
-	// e.g. at pod admission time.
 	Allocate(pod *v1.Pod, container *v1.Container) error
-
-	// AddContainer adds the mapping between container ID to pod UID and the container name
-	// The mapping used to remove the CPU allocation during the container removal
 	AddContainer(p *v1.Pod, c *v1.Container, containerID string)
-
-	// RemoveContainer is called after Kubelet decides to kill or delete a
-	// container. After this call, the CPU CpuManager stops trying to reconcile
-	// that container and any CPUs dedicated to the container are freed.
 	RemoveContainer(containerID string) error
-
-	// State returns a read-only interface to the internal CPU CpuManager state.
 	State() state.Reader
-
-	// GetTopologyHints implements the topologymanager.HintProvider Interface
-	// and is consulted to achieve NUMA aware resource alignment among this
-	// and other resource controllers.
 	GetTopologyHints(*v1.Pod, *v1.Container) map[string][]topologymanager.TopologyHint
-
-	// GetExclusiveCPUs implements the podresources.CPUsProvider interface to provide
-	// exclusively allocated cpus for the container
 	GetExclusiveCPUs(podUID, containerName string) cpuset.CPUSet
-
-	// GetPodTopologyHints implements the topologymanager.HintProvider Interface
-	// and is consulted to achieve NUMA aware resource alignment per Pod
-	// among this and other resource controllers.
 	GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint
-
-	// GetAllocatableCPUs returns the total set of CPUs available for allocation.
 	GetAllocatableCPUs() cpuset.CPUSet
-
-	// GetCPUAffinity returns cpuset which includes cpus from shared pools
-	// as well as exclusively allocated cpus
 	GetCPUAffinity(podUID, containerName string) cpuset.CPUSet
 }
 
@@ -118,7 +88,8 @@ var _ Manager = &CpuManager{}
 type sourcesReadyStub struct{}
 
 func (s *sourcesReadyStub) AddSource(source string) {}
-func (s *sourcesReadyStub) AllReady() bool          { return true }
+
+func (s *sourcesReadyStub) AllReady() bool { return true }
 
 func (m *CpuManager) Start(activePods ActivePodsFunc, sourcesReady config.SourcesReady, podStatusProvider status.PodStatusProvider, containerRuntime runtimeService, initialContainers containermap.ContainerMap) error {
 	klog.InfoS("Starting CPU CpuManager", "policy", m.policy.Name())
@@ -131,7 +102,7 @@ func (m *CpuManager) Start(activePods ActivePodsFunc, sourcesReady config.Source
 	//  /var/lib/kubelet
 	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap) // 保留 cpuset 默认值
 	if err != nil {
-		klog.ErrorS(err, "Could not initialize checkpoint CpuManager, please drain node and remove policy state file")
+		klog.ErrorS(err, "无法初始化检查点CpuManager，请排出节点并删除策略状态文件")
 		return err
 	}
 	m.state = stateImpl
@@ -237,11 +208,8 @@ func (m *CpuManager) GetTopologyHints(pod *v1.Pod, container *v1.Container) map[
 
 func (m *CpuManager) GetPodTopologyHints(pod *v1.Pod) map[string][]topologymanager.TopologyHint {
 	// The pod is during the admission phase. We need to save the pod to avoid it
-	// being cleaned before the admission ended
 	m.setPodPendingAdmission(pod)
-	// Garbage collect any stranded resources before providing TopologyHints
 	m.removeStaleState()
-	// Delegate to active policy
 	return m.policy.GetPodTopologyHints(m.state, pod)
 }
 
@@ -397,67 +365,6 @@ func (m *CpuManager) reconcileState() (success []reconciledContainer, failure []
 	return success, failure
 }
 
-func findContainerIDByName(status *v1.PodStatus, name string) (string, error) {
-	allStatuses := status.InitContainerStatuses
-	allStatuses = append(allStatuses, status.ContainerStatuses...)
-	for _, container := range allStatuses {
-		if container.Name == name && container.ContainerID != "" {
-			cid := &kubecontainer.ContainerID{}
-			err := cid.ParseString(container.ContainerID)
-			if err != nil {
-				return "", err
-			}
-			return cid.ID, nil
-		}
-	}
-	return "", fmt.Errorf("unable to find ID for container with name %v in pod status (it may not be running)", name)
-}
-
-func findContainerStatusByName(status *v1.PodStatus, name string) (*v1.ContainerStatus, error) {
-	for _, containerStatus := range append(status.InitContainerStatuses, status.ContainerStatuses...) {
-		if containerStatus.Name == name {
-			return &containerStatus, nil
-		}
-	}
-	return nil, fmt.Errorf("unable to find status for container with name %v in pod status (it may not be running)", name)
-}
-
-func (m *CpuManager) updateContainerCPUSet(ctx context.Context, containerID string, cpus cpuset.CPUSet) error {
-	// TODO: Consider adding a `ResourceConfigForContainer` helper in
-	// helpers_linux.go similar to what exists for pods.
-	// It would be better to pass the full container resources here instead of
-	// this patch-like partial resources.
-	return m.containerRuntime.UpdateContainerResources(
-		ctx,
-		containerID,
-		&runtimeapi.ContainerResources{
-			Linux: &runtimeapi.LinuxContainerResources{
-				CpusetCpus: cpus.String(),
-			},
-		})
-}
-
-func (m *CpuManager) GetExclusiveCPUs(podUID, containerName string) cpuset.CPUSet {
-	if result, ok := m.state.GetCPUSet(podUID, containerName); ok {
-		return result
-	}
-
-	return cpuset.CPUSet{}
-}
-
-func (m *CpuManager) GetCPUAffinity(podUID, containerName string) cpuset.CPUSet {
-	return m.state.GetCPUSetOrDefault(podUID, containerName)
-}
-
-func (m *CpuManager) setPodPendingAdmission(pod *v1.Pod) {
-	m.Lock()
-	defer m.Unlock()
-
-	m.pendingAdmissionPod = pod
-}
-
-// -------------------------------------------------------------------------------------------------------------------
-
 // NewManager creates new cpu CpuManager based on provided policy
 func NewManager(
 	cpuPolicyName string, // static
@@ -525,4 +432,63 @@ func NewManager(
 	}
 	manager.sourcesReady = &sourcesReadyStub{}
 	return manager, nil
+}
+
+func (m *CpuManager) GetCPUAffinity(podUID, containerName string) cpuset.CPUSet {
+	return m.state.GetCPUSetOrDefault(podUID, containerName)
+}
+
+func (m *CpuManager) setPodPendingAdmission(pod *v1.Pod) {
+	m.Lock()
+	defer m.Unlock()
+
+	m.pendingAdmissionPod = pod
+}
+
+// GetExclusiveCPUs 获取容器独占的CPU
+func (m *CpuManager) GetExclusiveCPUs(podUID, containerName string) cpuset.CPUSet {
+	if result, ok := m.state.GetCPUSet(podUID, containerName); ok {
+		return result
+	}
+	return cpuset.CPUSet{}
+}
+
+func (m *CpuManager) updateContainerCPUSet(ctx context.Context, containerID string, cpus cpuset.CPUSet) error {
+	// TODO: Consider adding a `ResourceConfigForContainer` helper in
+	// helpers_linux.go similar to what exists for pods.
+	// It would be better to pass the full container resources here instead of
+	// this patch-like partial resources.
+	return m.containerRuntime.UpdateContainerResources(
+		ctx,
+		containerID,
+		&runtimeapi.ContainerResources{
+			Linux: &runtimeapi.LinuxContainerResources{
+				CpusetCpus: cpus.String(),
+			},
+		})
+}
+
+func findContainerIDByName(status *v1.PodStatus, name string) (string, error) {
+	allStatuses := status.InitContainerStatuses
+	allStatuses = append(allStatuses, status.ContainerStatuses...)
+	for _, container := range allStatuses {
+		if container.Name == name && container.ContainerID != "" {
+			cid := &kubecontainer.ContainerID{}
+			err := cid.ParseString(container.ContainerID)
+			if err != nil {
+				return "", err
+			}
+			return cid.ID, nil
+		}
+	}
+	return "", fmt.Errorf("无法在Pod状态中找到名称为%v的容器的ID（可能尚未运行）。", name)
+}
+
+func findContainerStatusByName(status *v1.PodStatus, name string) (*v1.ContainerStatus, error) {
+	for _, containerStatus := range append(status.InitContainerStatuses, status.ContainerStatuses...) {
+		if containerStatus.Name == name {
+			return &containerStatus, nil
+		}
+	}
+	return nil, fmt.Errorf("unable to find status for container with name %v in pod status (it may not be running)", name)
 }

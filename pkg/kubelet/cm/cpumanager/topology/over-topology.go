@@ -69,7 +69,7 @@ type CPUInfo struct {
 	CoreID     int
 }
 
-// KeepOnly returns a new CPUDetails object with only the supplied cpus.
+// KeepOnly 在给定的CPU集合中进行操作
 func (d CPUDetails) KeepOnly(cpus cpuset.CPUSet) CPUDetails {
 	result := CPUDetails{}
 	for cpu, info := range d {
@@ -189,20 +189,6 @@ func (d CPUDetails) CPUs() cpuset.CPUSet {
 	return b.Result()
 }
 
-// CPUsInNUMANodes returns all of the logical CPU IDs associated with the given
-// NUMANode IDs in this CPUDetails.
-func (d CPUDetails) CPUsInNUMANodes(ids ...int) cpuset.CPUSet {
-	b := cpuset.NewBuilder()
-	for _, id := range ids {
-		for cpu, info := range d {
-			if info.NUMANodeID == id {
-				b.Add(cpu)
-			}
-		}
-	}
-	return b.Result()
-}
-
 // CPUsInCores returns all of the logical CPU IDs associated with the given
 // core IDs in this CPUDetails.
 func (d CPUDetails) CPUsInCores(ids ...int) cpuset.CPUSet {
@@ -239,8 +225,6 @@ func getUniqueCoreID(threads []int) (coreID int, err error) {
 	return min, nil
 }
 
-// ------------------------------------------------------------------------------------------------------------------
-
 func Discover(machineInfo *cadvisorapi.MachineInfo) (*CPUTopology, error) {
 	if machineInfo.NumCores == 0 {
 		return nil, fmt.Errorf("could not detect number of cpus")
@@ -274,4 +258,18 @@ func Discover(machineInfo *cadvisorapi.MachineInfo) (*CPUTopology, error) {
 		NumNUMANodes: CPUDetails.NUMANodes().Size(),
 		CPUDetails:   CPUDetails,
 	}, nil
+}
+
+// CPUsInNUMANodes returns all of the logical CPU IDs associated with the given
+// NUMANode IDs in this CPUDetails.
+func (d CPUDetails) CPUsInNUMANodes(ids ...int) cpuset.CPUSet {
+	b := cpuset.NewBuilder()
+	for _, id := range ids {
+		for cpu, info := range d {
+			if info.NUMANodeID == id {
+				b.Add(cpu)
+			}
+		}
+	}
+	return b.Result()
 }

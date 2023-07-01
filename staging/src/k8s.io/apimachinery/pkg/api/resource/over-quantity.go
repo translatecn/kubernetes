@@ -744,8 +744,8 @@ func (q *Quantity) Value() int64 {
 	return q.ScaledValue(0)
 }
 
-// MilliValue returns the value of ceil(q * 1000); this could overflow an int64;
-// if that's a concern, call Value() first to verify the number is small enough.
+// MilliValue 返回ceil(q * 1000)的值;这可能会溢出int64;
+// 如果有问题，请先调用Value()来验证数字是否足够小。
 func (q *Quantity) MilliValue() int64 {
 	return q.ScaledValue(Milli)
 }

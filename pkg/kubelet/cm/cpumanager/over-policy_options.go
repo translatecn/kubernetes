@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	FullPCPUsOnlyOption            string = "full-pcpus-only"             // 将 CPU 管理器核心分配算法限制为仅支持完整的物理核心,从而减少允许共享核心的硬件技术带来的嘈杂邻居问题.
+	FullPCPUsOnlyOption            string = "full-pcpus-only"             // 将 CPU 独占物理核心(如何一个物理核=2逻辑核,申请了一个逻辑核，也会使用一个物理核),从而减少允许共享核心的硬件技术带来的嘈杂邻居问题.
 	DistributeCPUsAcrossNUMAOption string = "distribute-cpus-across-numa" // 驱动 CPU 管理器跨 NUMA 节点均匀分配 CPU,以应对需要多个 NUMA 节点来满足分配的情况.
 	AlignBySocketOption            string = "align-by-socket"             // 更改 CPU 管理器将 CPU 分配给容器的方式：考虑 CPU 按插槽而不是 NUMA 节点边界对齐.
 )

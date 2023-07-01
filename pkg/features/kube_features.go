@@ -77,8 +77,8 @@ const (
 	// alpha: v1.23
 	// beta: see below.
 	//
-	// 允许对 CPU 管理器策略进行精细调整，这些选项是实验性的，质量水平为 alpha
-	// 为了避免功能开关的过多，这个功能开关将保护一组 CPU 管理器选项，其质量水平为 alpha。该功能开关将永远不会升级到 beta 或稳定版本。
+	// 允许对 CPU 管理器策略进行精细调整,这些选项是实验性的,质量水平为 alpha
+	// 为了避免功能开关的过多,这个功能开关将保护一组 CPU 管理器选项,其质量水平为 alpha.该功能开关将永远不会升级到 beta 或稳定版本.
 	CPUManagerPolicyAlphaOptions featuregate.Feature = "CPUManagerPolicyAlphaOptions"
 
 	// owner: @fromanirh
