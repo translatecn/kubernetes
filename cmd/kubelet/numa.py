@@ -1,34 +1,73 @@
-import copy
-import re
-import subprocess
+#!/usr/bin/env python
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright(c) 2010-2014 Intel Corporation
+# Copyright(c) 2017 Cavium, Inc. All rights reserved.
 
-core_ids = {}
-res = subprocess.getoutput(
-    r"""find /sys/devices/system -type f -name core_id  -exec sh -c 'echo -n {} && echo -n "     " && cat {}' \;""")
-for item in res.strip().split('\n'):
-    _ids = re.findall(r'(\d+)', item)
-    core_ids[int(_ids[0])] = int(_ids[1])
+from __future__ import print_function
 
-physical_package_ids = {}
-res = subprocess.getoutput(
-    r"""find /sys/devices/system -type f -name physical_package_id  -exec sh -c 'echo -n {} && echo -n "     " && cat 
-    {}' \;""")
-for item in res.strip().split('\n'):
-    _ids = re.findall(r'(\d+)', item)
-    physical_package_ids[int(_ids[0])] = int(_ids[1])
+try:
+    xrange  # Python 2
+except NameError:
+    xrange = range  # Python 3
 
-res = [[[]] * (max(core_ids.values()) + 1)] * (max(physical_package_ids.values()) + 1)
+sockets = []
+cores = []
+core_map = {}
+base_path = "/sys/devices/system/cpu"
+fd = open("{}/kernel_max".format(base_path))
+max_cpus = int(fd.read())
+fd.close()
+for cpu in xrange(max_cpus + 1):
+    try:
+        fd = open("{}/cpu{}/topology/core_id".format(base_path, cpu))
+    except IOError:
+        continue
+    except:
+        break
+    core = int(fd.read())
+    fd.close()
+    fd = open("{}/cpu{}/topology/physical_package_id".format(base_path, cpu))
+    socket = int(fd.read())
+    fd.close()
+    if core not in cores:
+        cores.append(core)
+    if socket not in sockets:
+        sockets.append(socket)
+    key = (socket, core)
+    if key not in core_map:
+        core_map[key] = []
+    core_map[key].append(cpu)
 
-for k, v in core_ids.items():
-    res[physical_package_ids[k]] = copy.deepcopy(res[physical_package_ids[k]])
-    res[physical_package_ids[k]][core_ids[k]] = copy.deepcopy(res[physical_package_ids[k]][core_ids[k]])
-    res[physical_package_ids[k]][core_ids[k]].append(k)
-    res[physical_package_ids[k]][core_ids[k]].sort()
+print(format("=" * (47 + len(base_path))))
+print("Core and Socket Information (as reported by '{}')".format(base_path))
+print("{}\n".format("=" * (47 + len(base_path))))
+print("cores = ", cores)
+print("sockets = ", sockets)
+print("")
 
-for _w, items in enumerate(res):
-    print("物理CPU%s: " % _w, end='   ')
+max_processor_len = len(str(len(cores) * len(sockets) * 2 - 1))
+max_thread_count = len(list(core_map.values())[0])
+max_core_map_len = (max_processor_len * max_thread_count) \
+                   + len(", ") * (max_thread_count - 1) \
+                   + len('[]') + len('Socket ')
+max_core_id_len = len(str(max(cores)))
 
-    for i, item in enumerate(items):
-        if len(item) > 0:
-            print("逻辑核:", item, end='   ')
-    print()
+output = " ".ljust(max_core_id_len + len('Core '))
+for s in sockets:
+    output += " Socket %s" % str(s).ljust(max_core_map_len - len('Socket '))
+print(output)
+
+output = " ".ljust(max_core_id_len + len('Core '))
+for s in sockets:
+    output += " --------".ljust(max_core_map_len)
+    output += " "
+print(output)
+
+for c in cores:
+    output = "Core %s" % str(c).ljust(max_core_id_len)
+    for s in sockets:
+        if (s, c) in core_map:
+            output += " " + str(core_map[(s, c)]).ljust(max_core_map_len)
+        else:
+            output += " " * (max_core_map_len + 1)
+    print(output)
