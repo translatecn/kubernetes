@@ -465,7 +465,7 @@ func (kl *Kubelet) fastNodeStatusUpdate(ctx context.Context, timeout bool) (comp
 
 	kl.updateRuntimeUp() //运行初调用一次  ✅
 
-	node, changed := kl.updateNode(ctx, originalNode)
+	node, changed := kl.updateNode(ctx, originalNode) // 更新 CIDR
 
 	if !changed {
 		// We don't do markVolumesFromNode(node) here and leave it to the regular syncNodeStatus().
