@@ -5329,7 +5329,7 @@
             "type": "string"
           },
           "initContainerStatuses": {
-            "description": "The list has one entry per init container in the manifest. The most recent successful init container will have ready = true, the most recently started container will have startTime set. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status",
+            "description": "该列表中的每个条目对应于清单中的一个init容器.最近成功的init容器将具有ready=true,最近启动的容器将具有设置的startTime. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status",
             "items": {
               "allOf": [
                 {

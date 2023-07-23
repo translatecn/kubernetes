@@ -433,7 +433,7 @@ func AddKubeletConfigFlags(mainfs *pflag.FlagSet, c *kubeletconfig.KubeletConfig
 	fs.Var(cliflag.NewMapStringString(&c.EvictionMinimumReclaim), "eviction-minimum-reclaim", "A set of minimum reclaims (e.g. imagefs.available=2Gi) that describes the minimum amount of resource the kubelet will reclaim when performing a pod eviction if that resource is under pressure.")
 	fs.Int32Var(&c.PodsPerCore, "pods-per-core", c.PodsPerCore, "Number of Pods per core that can run on this Kubelet. The total number of Pods on this Kubelet cannot exceed max-pods, so max-pods will be used if this calculation results in a larger number of Pods allowed on the Kubelet. A value of 0 disables this limit.")
 	fs.BoolVar(&c.ProtectKernelDefaults, "protect-kernel-defaults", c.ProtectKernelDefaults, "Default kubelet behaviour for kernel tuning. If set, kubelet errors if any of kernel tunables is different than kubelet defaults.")
-	fs.StringVar(&c.ReservedSystemCPUs, "reserved-cpus", c.ReservedSystemCPUs, "为系统和kubernetes保留的CPU或CPU范围列表，以逗号分隔.这些指定的列表将取代中的cpu计数 --system-reserved and --kube-reserved.")
+	fs.StringVar(&c.ReservedSystemCPUs, "reserved-cpus", c.ReservedSystemCPUs, "为系统和kubernetes保留的CPU或CPU范围列表,以逗号分隔.这些指定的列表将取代中的cpu计数 --system-reserved and --kube-reserved.")
 	fs.StringVar(&c.TopologyManagerScope, "topology-manager-scope", c.TopologyManagerScope, "拓扑提示应用的范围. Possible values: 'container', 'pod'.default container")
 	fs.Var(cliflag.NewMapStringStringNoSplit(&c.TopologyManagerPolicyOptions), "topology-manager-policy-options", "关于拓扑管理器策略选项的键值对集合,用于调整其行为")
 	// Node Allocatable Flags

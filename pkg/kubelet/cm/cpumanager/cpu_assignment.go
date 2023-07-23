@@ -100,11 +100,11 @@ func min(x, y int) int {
 }
 
 type numaOrSocketsFirstFuncs interface {
-	takeFullFirstLevel()           // 从第一级（NUMA节点或插槽）中获取所有可用的资源。
-	takeFullSecondLevel()          // 从第二级（NUMA节点或插槽）中获取所有可用的资源。
-	sortAvailableNUMANodes() []int // 对可用的NUMA节点进行排序，并返回排序后的NUMA节点列表。
-	sortAvailableSockets() []int   // 对可用的插槽进行排序，并返回排序后的插槽列表。
-	sortAvailableCores() []int     // 对可用的核心进行排序，并返回排序后的核心列表。
+	takeFullFirstLevel()           // 从第一级（NUMA节点或插槽）中获取所有可用的资源.
+	takeFullSecondLevel()          // 从第二级（NUMA节点或插槽）中获取所有可用的资源.
+	sortAvailableNUMANodes() []int // 对可用的NUMA节点进行排序,并返回排序后的NUMA节点列表.
+	sortAvailableSockets() []int   // 对可用的插槽进行排序,并返回排序后的插槽列表.
+	sortAvailableCores() []int     // 对可用的核心进行排序,并返回排序后的核心列表.
 }
 
 type numaFirst struct{ acc *cpuAccumulator }
@@ -113,7 +113,7 @@ type socketsFirst struct{ acc *cpuAccumulator }
 var _ numaOrSocketsFirstFuncs = (*numaFirst)(nil)
 var _ numaOrSocketsFirstFuncs = (*socketsFirst)(nil)
 
-// 如果NUMA节点在内存层次结构中高于插槽，则我们首先从NUMA节点集合中获取。
+// 如果NUMA节点在内存层次结构中高于插槽,则我们首先从NUMA节点集合中获取.
 func (n *numaFirst) takeFullFirstLevel() {
 	n.acc.takeFullNUMANodes()
 }
@@ -402,7 +402,7 @@ func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.C
 	}
 
 	// 基于拓扑的最佳适配
-	// 1. 如果可用并且容器需要至少一个NUMA节点或一个插槽的CPU，则获取整个NUMA节点和插槽。如果NUMA节点映射到一个或多个插槽，则首先从NUMA节点中获取。否则，首先从插槽中获取。
+	// 1. 如果可用并且容器需要至少一个NUMA节点或一个插槽的CPU,则获取整个NUMA节点和插槽.如果NUMA节点映射到一个或多个插槽,则首先从NUMA节点中获取.否则,首先从插槽中获取.
 	acc.numaOrSocketsFirst.takeFullFirstLevel()
 	var _ = new(numaFirst).takeFullFirstLevel
 	if acc.isSatisfied() {
@@ -412,12 +412,12 @@ func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.C
 	if acc.isSatisfied() {
 		return acc.result, nil
 	}
-	// 2. 如果可用并且容器需要至少一个核心的CPU，则获取整个核心。
+	// 2. 如果可用并且容器需要至少一个核心的CPU,则获取整个核心.
 	acc.takeFullCores() // need < cpusInCore
 	if acc.isSatisfied() {
 		return acc.result, nil
 	}
-	// 3. 获取单个线程，优先填充与已经在此分配中获取的整个核心位于同一插槽上的部分分配核心。
+	// 3. 获取单个线程,优先填充与已经在此分配中获取的整个核心位于同一插槽上的部分分配核心.
 	acc.takeRemainingCPUs()
 	if acc.isSatisfied() {
 		return acc.result, nil
@@ -427,28 +427,28 @@ func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.C
 }
 
 func (a *cpuAccumulator) rangeNUMANodesNeededToSatisfy(cpuGroupSize int) (int, int) {
-	// 获取系统中的NUMA节点总数。
+	// 获取系统中的NUMA节点总数.
 	numNUMANodes := a.topo.CPUDetails.NUMANodes().Size()
 
-	// 获取具有可用CPU的NUMA节点的总数。
+	// 获取具有可用CPU的NUMA节点的总数.
 	numNUMANodesAvailable := a.details.NUMANodes().Size()
 
-	// 获取系统中的CPU总数。
+	// 获取系统中的CPU总数.
 	numCPUs := a.topo.CPUDetails.CPUs().Size()
 
-	// 获取系统中的'cpuGroups'总数。 物理核
+	// 获取系统中的'cpuGroups'总数. 物理核
 	numCPUGroups := (numCPUs-1)/cpuGroupSize + 1
 
-	// 计算系统中每个NUMA节点的'cpuGroups'数量（向上取整）。
+	// 计算系统中每个NUMA节点的'cpuGroups'数量（向上取整）.
 	numCPUGroupsPerNUMANode := (numCPUGroups-1)/numNUMANodes + 1
 
-	// 计算所有NUMA节点上可用的'cpuGroups'数量以及需要分配的'cpuGroups'数量（向上取整）。
+	// 计算所有NUMA节点上可用的'cpuGroups'数量以及需要分配的'cpuGroups'数量（向上取整）.
 	numCPUGroupsNeeded := (a.numCPUsNeeded-1)/cpuGroupSize + 1
 
-	// 计算满足分配所需的最小NUMA节点数量（向上取整）。
+	// 计算满足分配所需的最小NUMA节点数量（向上取整）.
 	minNUMAs := (numCPUGroupsNeeded-1)/numCPUGroupsPerNUMANode + 1
 
-	// 计算满足分配所需的最大NUMA节点数量。
+	// 计算满足分配所需的最大NUMA节点数量.
 	maxNUMAs := min(numCPUGroupsNeeded, numNUMANodesAvailable)
 
 	return minNUMAs, maxNUMAs
@@ -551,7 +551,7 @@ func takeByTopologyNUMADistributed(topo *topology.CPUTopology, availableCPUs cpu
 	if (numCPUs % cpuGroupSize) != 0 { // 使用超线程了
 		return takeByTopologyNUMAPacked(topo, availableCPUs, numCPUs)
 	}
-	// 否则，构建一个累加器以开始分配CPU。
+	// 否则,构建一个累加器以开始分配CPU.
 	acc := newCPUAccumulator(topo, availableCPUs, numCPUs)
 	if acc.isSatisfied() {
 		return acc.result, nil
@@ -562,13 +562,13 @@ func takeByTopologyNUMADistributed(topo *topology.CPUTopology, availableCPUs cpu
 
 	// Get the list of NUMA nodes represented by the set of CPUs in 'availableCPUs'.
 	numas := acc.sortAvailableNUMANodes()
-	//计算能够满足此请求的NUMA节点的最小和最大可能数量。这用于优化下面循环中需要进行的迭代次数。
+	//计算能够满足此请求的NUMA节点的最小和最大可能数量.这用于优化下面循环中需要进行的迭代次数.
 	minNUMAs, maxNUMAs := acc.rangeNUMANodesNeededToSatisfy(cpuGroupSize)
 
-	//尝试使用1、2、3... NUMA节点的组合，直到找到一个可以均匀分配CPU的组合。为了优化计算，我们不总是从1开始，结束于len(numas)。
-	//相反，我们使用上面计算得到的'minNUMAs'和'maxNUMAs'的值。
+	//尝试使用1、2、3... NUMA节点的组合,直到找到一个可以均匀分配CPU的组合.为了优化计算,我们不总是从1开始,结束于len(numas).
+	//相反,我们使用上面计算得到的'minNUMAs'和'maxNUMAs'的值.
 	for k := minNUMAs; k <= maxNUMAs; k++ {
-		// 通过迭代不同的n-choose-k（从n个元素中选择k个元素）的NUMA节点组合，寻找最佳的NUMA节点组合，以便在它们之间均匀分配CPU。
+		// 通过迭代不同的n-choose-k（从n个元素中选择k个元素）的NUMA节点组合,寻找最佳的NUMA节点组合,以便在它们之间均匀分配CPU.
 		var bestBalance float64 = math.MaxFloat64
 		var bestRemainder []int = nil
 		var bestCombo []int = nil

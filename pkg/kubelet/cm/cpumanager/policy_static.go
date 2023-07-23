@@ -321,11 +321,11 @@ func (p *StaticPolicy) GetPodTopologyHints(s state.State, pod *v1.Pod) map[strin
 }
 
 func (p *StaticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reusableCPUs cpuset.CPUSet, request int) []topologymanager.TopologyHint {
-	// 从众多CPU numa 拓扑中，找到符合 request 需求的 numa 组合
+	// 从众多CPU numa 拓扑中,找到符合 request 需求的 numa 组合
 	minAffinitySize := p.topology.CPUDetails.NUMANodes().Size()
 	var hints []topologymanager.TopologyHint
 	bitmask.IterateBitMasks(p.topology.CPUDetails.NUMANodes().ToSlice(), func(mask bitmask.BitMask) {
-		// 首先，更新当前请求大小的minAffinitySize。
+		// 首先,更新当前请求大小的minAffinitySize.
 		cpusInMask := p.topology.CPUDetails.CPUsInNUMANodes(mask.GetBits()...).Size()
 		if cpusInMask >= request && mask.Count() < minAffinitySize {
 			minAffinitySize = mask.Count()
@@ -340,7 +340,7 @@ func (p *StaticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reu
 			}
 			numMatching++
 		}
-		//最后，检查当前NUMA节点组合上是否有足够的可用CPU来满足CPU请求。
+		//最后,检查当前NUMA节点组合上是否有足够的可用CPU来满足CPU请求.
 		for _, c := range availableCPUs.ToSlice() {
 			if mask.IsSet(p.topology.CPUDetails[c].NUMANodeID) {
 				numMatching++
@@ -358,8 +358,8 @@ func (p *StaticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reu
 			Preferred:        false,
 		})
 	})
-	// 循环遍历所有的hits，并根据亲和性掩码中设置的位数进行更新 'Preferred' 字段，
-	// 并将其与 minAffinitySize 进行比较。只有那些设置了相同位数的（和最小的NUMA节点集合）将被认为是首选。
+	// 循环遍历所有的hits,并根据亲和性掩码中设置的位数进行更新 'Preferred' 字段,
+	// 并将其与 minAffinitySize 进行比较.只有那些设置了相同位数的（和最小的NUMA节点集合）将被认为是首选.
 	for i := range hints {
 		if p.options.AlignBySocket && p.isHintSocketAligned(hints[i], minAffinitySize) {
 			hints[i].Preferred = true // cpu
@@ -375,7 +375,7 @@ func (p *StaticPolicy) generateCPUTopologyHints(availableCPUs cpuset.CPUSet, reu
 
 // -------------------------------------------------------------------------------------------------------------------
 
-// getAlignedCPUs 根据numa亲和掩码和配置的策略选项返回对齐的cpu集。
+// getAlignedCPUs 根据numa亲和掩码和配置的策略选项返回对齐的cpu集.
 func (p *StaticPolicy) getAlignedCPUs(numaAffinity bitmask.BitMask, allocatableCPUs cpuset.CPUSet) cpuset.CPUSet {
 	alignedCPUs := cpuset.NewCPUSet()
 	numaBits := numaAffinity.GetBits()
@@ -409,8 +409,8 @@ func (p *StaticPolicy) updateCPUsToReuse(pod *v1.Pod, container *v1.Container, c
 	if _, ok := p.cpusToReuse[string(pod.UID)]; !ok {
 		p.cpusToReuse[string(pod.UID)] = cpuset.NewCPUSet()
 	}
-	//检查容器是否为init容器。
-	//如果是，将其cpuset添加到任何新分配的可重用cpu的cpuset中。
+	//检查容器是否为init容器.
+	//如果是,将其cpuset添加到任何新分配的可重用cpu的cpuset中.
 	for _, initContainer := range pod.Spec.InitContainers {
 		if container.Name == initContainer.Name {
 			p.cpusToReuse[string(pod.UID)] = p.cpusToReuse[string(pod.UID)].Union(cset)
@@ -484,23 +484,23 @@ func (p *StaticPolicy) takeByTopology(availableCPUs cpuset.CPUSet, numCPUs int) 
 
 func (p *StaticPolicy) Start(s state.State) error {
 	if err := p.validateState(s); err != nil {
-		klog.ErrorS(err, "静态策略无效状态，请删除节点并删除策略状态文件")
+		klog.ErrorS(err, "静态策略无效状态,请删除节点并删除策略状态文件")
 		return err
 	}
 	return nil
 }
 
-// GetAllocatableCPUs 返回可供分配的cpu总数。
+// GetAllocatableCPUs 返回可供分配的cpu总数.
 func (p *StaticPolicy) GetAllocatableCPUs(s state.State) cpuset.CPUSet {
 	return p.topology.CPUDetails.CPUs().Difference(p.reserved)
 }
 
-// GetAvailableCPUs 返回未分配的cpu集减去保留的cpu集。
+// GetAvailableCPUs 返回未分配的cpu集减去保留的cpu集.
 func (p *StaticPolicy) GetAvailableCPUs(s state.State) cpuset.CPUSet {
 	return s.GetDefaultCPUSet().Difference(p.reserved)
 }
 
-// isHintSocketAligned 如果提示中的numa节点与套接字对齐，则返回true。
+// isHintSocketAligned 如果提示中的numa节点与套接字对齐,则返回true.
 func (p *StaticPolicy) isHintSocketAligned(hint topologymanager.TopologyHint, minAffinitySize int) bool {
 	numaNodesBitMask := hint.NUMANodeAffinity.GetBits()
 	numaNodesPerSocket := p.topology.NumNUMANodes / p.topology.NumSockets
@@ -554,7 +554,7 @@ func (p *StaticPolicy) podGuaranteedCPUs(pod *v1.Pod) int { // 保证
 	return requestedByAppContainers
 }
 
-// getAssignedCPUsOfSiblings 返回在给定的podUID中，除了给定的container之外的所有container的分配的CPU。
+// getAssignedCPUsOfSiblings 返回在给定的podUID中,除了给定的container之外的所有container的分配的CPU.
 func getAssignedCPUsOfSiblings(s state.State, podUID string, containerName string) cpuset.CPUSet {
 	assignments := s.GetCPUAssignments()
 	cset := cpuset.NewCPUSet()
@@ -572,7 +572,7 @@ func (p *StaticPolicy) RemoveContainer(s state.State, podUID string, containerNa
 	cpusInUse := getAssignedCPUsOfSiblings(s, podUID, containerName)
 	if toRelease, ok := s.GetCPUSet(podUID, containerName); ok {
 		s.Delete(podUID, containerName)
-		// 修改共享池，将释放的CPU添加进去。
+		// 修改共享池,将释放的CPU添加进去.
 		toRelease = toRelease.Difference(cpusInUse)
 		s.SetDefaultCPUSet(s.GetDefaultCPUSet().Union(toRelease))
 	}
@@ -584,7 +584,7 @@ func (p *StaticPolicy) allocateCPUs(s state.State, numCPUs int, numaAffinity bit
 
 	allocatableCPUs := p.GetAvailableCPUs(s).Union(reusableCPUs)
 
-	// 如果numaAffinity中存在对齐的CPU，首先尝试获取这些CPU。
+	// 如果numaAffinity中存在对齐的CPU,首先尝试获取这些CPU.
 	result := cpuset.NewCPUSet()
 	if numaAffinity != nil {
 		alignedCPUs := p.getAlignedCPUs(numaAffinity, allocatableCPUs)
@@ -602,7 +602,7 @@ func (p *StaticPolicy) allocateCPUs(s state.State, numCPUs int, numaAffinity bit
 		result = result.Union(alignedCPUs) // 先分配的
 	}
 
-	// 在尝试获取对齐的CPU后，从剩余的可用CPU中获取任何剩余的CPU。
+	// 在尝试获取对齐的CPU后,从剩余的可用CPU中获取任何剩余的CPU.
 	remainingCPUs, err := p.takeByTopology(allocatableCPUs.Difference(result), numCPUs-result.Size())
 	if err != nil {
 		return cpuset.NewCPUSet(), err

@@ -102,7 +102,7 @@ func (m *CpuManager) Start(activePods ActivePodsFunc, sourcesReady config.Source
 	//  /var/lib/kubelet
 	stateImpl, err := state.NewCheckpointState(m.stateFileDirectory, cpuManagerStateFileName, m.policy.Name(), m.containerMap) // 保留 cpuset 默认值
 	if err != nil {
-		klog.ErrorS(err, "无法初始化检查点CpuManager，请排出节点并删除策略状态文件")
+		klog.ErrorS(err, "无法初始化检查点CpuManager,请排出节点并删除策略状态文件")
 		return err
 	}
 	m.state = stateImpl
@@ -481,7 +481,7 @@ func findContainerIDByName(status *v1.PodStatus, name string) (string, error) {
 			return cid.ID, nil
 		}
 	}
-	return "", fmt.Errorf("无法在Pod状态中找到名称为%v的容器的ID（可能尚未运行）。", name)
+	return "", fmt.Errorf("无法在Pod状态中找到名称为%v的容器的ID（可能尚未运行）.", name)
 }
 
 func findContainerStatusByName(status *v1.PodStatus, name string) (*v1.ContainerStatus, error) {
