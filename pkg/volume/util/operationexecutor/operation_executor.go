@@ -795,6 +795,7 @@ func (oe *operationExecutor) MountVolume(waitForAttachTimeout time.Duration, vol
 	if fsVolume {
 		// Filesystem volume case
 		// Mount/remount a volume when a volume is attached
+		// 文件系统卷的情景,configmap等卷会进入这里
 		generatedOperations = oe.operationGenerator.GenerateMountVolumeFunc(waitForAttachTimeout, volumeToMount, actualStateOfWorld, isRemount)
 	} else {
 		// Block volume case

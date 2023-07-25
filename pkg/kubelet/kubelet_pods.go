@@ -772,6 +772,7 @@ func (kl *Kubelet) PodCouldHaveRunningContainers(pod *v1.Pod) bool { // ✅
 // 在删除 Pod 之前,必须确保 kubelet 已回收所有这些资源,否则可能会导致资源泄漏.
 // 如果 kubelet 已回收所有必需的节点级资源,则该方法返回 true;否则返回 false.
 func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bool { // ✅
+	// 1、检查 pod 中的所有 container 是否都处于非 running 状态
 	if kl.podWorkers.CouldHaveRunningContainers(pod.UID) { // ✅
 		// We shouldn't delete pods that still have running containers
 		klog.V(3).InfoS("Pod is terminated, but some containers are still running", "pod", klog.KObj(pod))
@@ -783,11 +784,13 @@ func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bo
 		klog.V(3).InfoS("Pod is terminated, but some container status has not yet been reported", "pod", klog.KObj(pod), "running", count)
 		return false
 	}
+	// 检查 pod 的 volume 是否被清理
 	if kl.podVolumesExist(pod.UID) && !kl.keepTerminatedPodVolumes { // 是否保留已终止 Pod 的卷挂载.
 		// We shouldn't delete pods whose volumes have not been cleaned up if we are not keeping terminated pod volumes
 		klog.V(3).InfoS("Pod is terminated, but some volumes have not been cleaned up", "pod", klog.KObj(pod))
 		return false
 	}
+	// 检查 pod 的 cgroup 是否被清理
 	if kl.kubeletConfiguration.CgroupsPerQOS { // ✅ 默认true
 		pcm := kl.containerManager.NewPodContainerManager()
 		if pcm.Exists(pod) {

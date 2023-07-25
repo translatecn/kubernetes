@@ -289,56 +289,27 @@ func (c *PluginConfig) encodeNestedObjects(e runtime.Encoder) error {
 // Extender holds the parameters used to communicate with the extender. If a verb is unspecified/empty,
 // it is assumed that the extender chose not to provide that extension.
 type Extender struct {
-	// URLPrefix at which the extender is available
-	URLPrefix string `json:"urlPrefix"`
-	// Verb for the filter call, empty if not supported. This verb is appended to the URLPrefix when issuing the filter call to extender.
-	FilterVerb string `json:"filterVerb,omitempty"`
-	// Verb for the preempt call, empty if not supported. This verb is appended to the URLPrefix when issuing the preempt call to extender.
-	PreemptVerb string `json:"preemptVerb,omitempty"`
-	// Verb for the prioritize call, empty if not supported. This verb is appended to the URLPrefix when issuing the prioritize call to extender.
-	PrioritizeVerb string `json:"prioritizeVerb,omitempty"`
-	// The numeric multiplier for the node scores that the prioritize call generates.
-	// The weight should be a positive integer
-	Weight int64 `json:"weight,omitempty"`
-	// Verb for the bind call, empty if not supported. This verb is appended to the URLPrefix when issuing the bind call to extender.
-	// If this method is implemented by the extender, it is the extender's responsibility to bind the pod to apiserver. Only one extender
-	// can implement this function.
-	BindVerb string `json:"bindVerb,omitempty"`
-	// EnableHTTPS specifies whether https should be used to communicate with the extender
-	EnableHTTPS bool `json:"enableHTTPS,omitempty"`
-	// TLSConfig specifies the transport layer security config
-	TLSConfig *ExtenderTLSConfig `json:"tlsConfig,omitempty"`
-	// HTTPTimeout specifies the timeout duration for a call to the extender. Filter timeout fails the scheduling of the pod. Prioritize
-	// timeout is ignored, k8s/other extenders priorities are used to select the node.
-	HTTPTimeout metav1.Duration `json:"httpTimeout,omitempty"`
-	// NodeCacheCapable specifies that the extender is capable of caching node information,
-	// so the scheduler should only send minimal information about the eligible nodes
-	// assuming that the extender already cached full details of all nodes in the cluster
-	NodeCacheCapable bool `json:"nodeCacheCapable,omitempty"`
-	// ManagedResources is a list of extended resources that are managed by
-	// this extender.
-	// - A pod will be sent to the extender on the Filter, Prioritize and Bind
-	//   (if the extender is the binder) phases iff the pod requests at least
-	//   one of the extended resources in this list. If empty or unspecified,
-	//   all pods will be sent to this extender.
-	// - If IgnoredByScheduler is set to true for a resource, kube-scheduler
-	//   will skip checking the resource in predicates.
+	URLPrefix        string             `json:"urlPrefix"`                  // 扩展程序可用的URL前缀.
+	FilterVerb       string             `json:"filterVerb,omitempty"`       // 用于过滤调用的动词,如果不支持则为空.在向扩展程序发出过滤调用时,此动词将附加到URL前缀.
+	PreemptVerb      string             `json:"preemptVerb,omitempty"`      // 用于抢占调用的动词,如果不支持则为空.在向扩展程序发出抢占调用时,此动词将附加到URL前缀.
+	PrioritizeVerb   string             `json:"prioritizeVerb,omitempty"`   // 用于优先级调用的动词,如果不支持则为空.在向扩展程序发出优先级调用时,此动词将附加到URL前缀.
+	Weight           int64              `json:"weight,omitempty"`           // 优先级调用生成的节点分数的数值乘数.权重应为正整数.
+	BindVerb         string             `json:"bindVerb,omitempty"`         // 用于绑定调用的动词,如果不支持则为空.在向扩展程序发出绑定调用时,此动词将附加到URL前缀.如果扩展程序实现了此方法,则扩展程序有责任将Pod绑定到API服务器.只能有一个扩展程序实现此函数.
+	EnableHTTPS      bool               `json:"enableHTTPS,omitempty"`      //
+	TLSConfig        *ExtenderTLSConfig `json:"tlsConfig,omitempty"`        //
+	HTTPTimeout      metav1.Duration    `json:"httpTimeout,omitempty"`      // 指定与扩展程序的调用的超时时间.过滤超时会导致Pod的调度失败.优先级超时会被忽略,使用k8s/其他扩展程序的优先级来选择节点.
+	NodeCacheCapable bool               `json:"nodeCacheCapable,omitempty"` // 指定扩展程序是否能够缓存节点信息,因此调度器只需向其发送有关符合条件的节点的最小信息,假设扩展程序已缓存了集群中所有节点的完整详细信息.
 	// +optional
 	// +listType=atomic
-	ManagedResources []ExtenderManagedResource `json:"managedResources,omitempty"`
-	// Ignorable specifies if the extender is ignorable, i.e. scheduling should not
-	// fail when the extender returns an error or is not reachable.
-	Ignorable bool `json:"ignorable,omitempty"`
+	ManagedResources []ExtenderManagedResource `json:"managedResources,omitempty"` // 扩展程序管理的扩展资源列表.如果Pod请求了此列表中的至少一个扩展资源,则在过滤、优先级和绑定（如果扩展程序是绑定器）阶段将发送Pod给扩展程序.如果为空或未指定,则将所有Pod发送给此扩展程序.如果资源的IgnoredByScheduler设置为true,则kube-scheduler将跳过谓词中对该资源的检查.
+	Ignorable        bool                      `json:"ignorable,omitempty"`        // 指定扩展程序是否可忽略,即当扩展程序返回错误或无法访问时,调度不应失败.
 }
 
 // ExtenderManagedResource describes the arguments of extended resources
 // managed by an extender.
 type ExtenderManagedResource struct {
-	// Name is the extended resource name.
-	Name string `json:"name"`
-	// IgnoredByScheduler indicates whether kube-scheduler should ignore this
-	// resource when applying predicates.
-	IgnoredByScheduler bool `json:"ignoredByScheduler,omitempty"`
+	Name               string `json:"name"`                         // 扩展资源的名称.
+	IgnoredByScheduler bool   `json:"ignoredByScheduler,omitempty"` // 如果设置为true,则kube-scheduler将忽略此资源,不会将其考虑在内进行调度.如果未设置或设置为false,则kube-scheduler将考虑此资源进行调度.
 }
 
 // ExtenderTLSConfig contains settings to enable TLS with extender

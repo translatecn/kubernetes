@@ -193,6 +193,8 @@ func (b *configMapVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterA
 	}
 
 	optional := b.source.Optional != nil && *b.source.Optional
+	// configmap对象可以来自kube-apiserver,也可以来自kubelet中的缓存,取决于configMapManager的实现
+
 	configMap, err := b.getConfigMap(b.pod.Namespace, b.source.Name) // 在SetUpAt中首先就是获取configMap
 	if err != nil {
 		if !(errors.IsNotFound(err) && optional) {
@@ -249,7 +251,7 @@ func (b *configMapVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterA
 		klog.Errorf("Error creating atomic writer: %v", err)
 		return err
 	}
-
+	// 把configmap的键值对写到入参dir下
 	err = writer.Write(payload)
 	if err != nil {
 		klog.Errorf("Error writing payload to dir: %v", err)

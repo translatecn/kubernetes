@@ -54988,69 +54988,66 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref common.ReferenceCal
 				Properties: map[string]spec.Schema{
 					"urlPrefix": {
 						SchemaProps: spec.SchemaProps{
-							Description: "URLPrefix at which the extender is available",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"filterVerb": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Verb for the filter call, empty if not supported. This verb is appended to the URLPrefix when issuing the filter call to extender.",
+							Description: "扩展程序可用的URL前缀.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"preemptVerb": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Verb for the preempt call, empty if not supported. This verb is appended to the URLPrefix when issuing the preempt call to extender.",
+							Description: "用于过滤调用的动词,如果不支持则为空.在向扩展程序发出过滤调用时,此动词将附加到URL前缀.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"prioritizeVerb": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Verb for the prioritize call, empty if not supported. This verb is appended to the URLPrefix when issuing the prioritize call to extender.",
+							Description: "用于抢占调用的动词,如果不支持则为空.在向扩展程序发出抢占调用时,此动词将附加到URL前缀.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"weight": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The numeric multiplier for the node scores that the prioritize call generates. The weight should be a positive integer",
+							Description: "用于优先级调用的动词,如果不支持则为空.在向扩展程序发出优先级调用时,此动词将附加到URL前缀.",
 							Type:        []string{"integer"},
 							Format:      "int64",
 						},
 					},
 					"bindVerb": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Verb for the bind call, empty if not supported. This verb is appended to the URLPrefix when issuing the bind call to extender. If this method is implemented by the extender, it is the extender's responsibility to bind the pod to apiserver. Only one extender can implement this function.",
+							Description: "优先级调用生成的节点分数的数值乘数.权重应为正整数.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"enableHTTPS": {
 						SchemaProps: spec.SchemaProps{
-							Description: "EnableHTTPS specifies whether https should be used to communicate with the extender",
+							Description: "用于绑定调用的动词,如果不支持则为空.在向扩展程序发出绑定调用时,此动词将附加到URL前缀.如果扩展程序实现了此方法,则扩展程序有责任将Pod绑定到API服务器.只能有一个扩展程序实现此函数.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"tlsConfig": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TLSConfig specifies the transport layer security config",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.ExtenderTLSConfig"),
+							Ref: ref("k8s.io/kube-scheduler/config/v1beta2.ExtenderTLSConfig"),
 						},
 					},
 					"httpTimeout": {
 						SchemaProps: spec.SchemaProps{
-							Description: "HTTPTimeout specifies the timeout duration for a call to the extender. Filter timeout fails the scheduling of the pod. Prioritize timeout is ignored, k8s/other extenders priorities are used to select the node.",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
 					"nodeCacheCapable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeCacheCapable specifies that the extender is capable of caching node information, so the scheduler should only send minimal information about the eligible nodes assuming that the extender already cached full details of all nodes in the cluster",
+							Description: "指定与扩展程序的调用的超时时间.过滤超时会导致Pod的调度失败.优先级超时会被忽略,使用k8s/其他扩展程序的优先级来选择节点.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -55062,8 +55059,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref common.ReferenceCal
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedResources is a list of extended resources that are managed by this extender. - A pod will be sent to the extender on the Filter, Prioritize and Bind\n  (if the extender is the binder) phases iff the pod requests at least\n  one of the extended resources in this list. If empty or unspecified,\n  all pods will be sent to this extender.\n- If IgnoredByScheduler is set to true for a resource, kube-scheduler\n  will skip checking the resource in predicates.",
-							Type:        []string{"array"},
+							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -55076,7 +55072,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref common.ReferenceCal
 					},
 					"ignorable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Ignorable specifies if the extender is ignorable, i.e. scheduling should not fail when the extender returns an error or is not reachable.",
+							Description: "扩展程序管理的扩展资源列表.如果Pod请求了此列表中的至少一个扩展资源,则在过滤、优先级和绑定（如果扩展程序是绑定器）阶段将发送Pod给扩展程序.如果为空或未指定,则将所有Pod发送给此扩展程序.如果资源的IgnoredByScheduler设置为true,则kube-scheduler将跳过谓词中对该资源的检查.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -55099,15 +55095,14 @@ func schema_k8sio_kube_scheduler_config_v1beta2_ExtenderManagedResource(ref comm
 				Properties: map[string]spec.Schema{
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the extended resource name.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
 						},
 					},
 					"ignoredByScheduler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IgnoredByScheduler indicates whether kube-scheduler should ignore this resource when applying predicates.",
+							Description: "扩展资源的名称.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

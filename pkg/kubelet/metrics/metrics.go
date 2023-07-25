@@ -208,7 +208,7 @@ var (
 		&metrics.CounterOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PLEGDiscardEventsKey,
-			Help:           "The number of discard events in PLEG.",
+			Help:           "PLEG中丢弃事件的数量。",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)
@@ -230,7 +230,7 @@ var (
 		&metrics.GaugeOpts{
 			Subsystem:      KubeletSubsystem,
 			Name:           PLEGLastSeenKey,
-			Help:           "Timestamp in seconds when PLEG was last seen active.",
+			Help:           "以秒为单位的时间戳是最后一次看到PLEG活动的时间。",
 			StabilityLevel: metrics.ALPHA,
 		},
 	)

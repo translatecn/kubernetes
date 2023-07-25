@@ -98,10 +98,10 @@ func NewGenericWebhook(scheme *runtime.Scheme, codecFactory serializer.CodecFact
 	return &GenericWebhook{restClient, retryBackoff, DefaultShouldRetry}, nil
 }
 
-// WithExponentialBackoff will retry webhookFn() as specified by the given backoff parameters with exponentially
-// increasing backoff when it returns an error for which this GenericWebhook's ShouldRetry function returns true,
-// confirming it to be retriable. If no ShouldRetry has been defined for the webhook,
-// then the default one is used (DefaultShouldRetry).
+// WithExponentialBackoff 这段注释解释了一个函数`WithExponentialBackoff`的功能.
+// 该函数会根据给定的退避参数,使用指数级递增的退避时间重试`webhookFn()`函数.
+// 当`webhookFn()`返回一个被该`GenericWebhook`的`ShouldRetry`函数确认为可重试的错误时,会进行重试.
+// 如果该`GenericWebhook`没有定义`ShouldRetry`函数,则会使用默认的`DefaultShouldRetry`函数.
 func (g *GenericWebhook) WithExponentialBackoff(ctx context.Context, webhookFn func() rest.Result) rest.Result {
 	var result rest.Result
 	shouldRetry := g.ShouldRetry

@@ -200,6 +200,7 @@ func (rc *reconciler) unmountVolumes() { // ✅
 func (rc *reconciler) mountOrAttachVolumes() {
 	// Ensure volumes that should be attached/mounted are attached/mounted.
 	for _, volumeToMount := range rc.desiredStateOfWorld.GetVolumesToMount() {
+		// PodExistsInVolume所返回的err决定了下面if的分支走向,configMap热更新走正是下面的其中一个分支,err如果为nil的话,下面分支其实都不执行
 		volMounted, devicePath, err := rc.actualStateOfWorld.PodExistsInVolume(
 			volumeToMount.PodName,
 			volumeToMount.VolumeName,
@@ -214,11 +215,14 @@ func (rc *reconciler) mountOrAttachVolumes() {
 			rc.desiredStateOfWorld.AddErrorToPod(volumeToMount.PodName, err.Error())
 			continue
 		} else if cache.IsVolumeNotAttachedError(err) { // 挂载失败
+			// kubelet等待其他程序（例如一些控制器）将卷attach到当前节点
 			rc.waitForVolumeAttach(volumeToMount) // ✅
 		} else if !volMounted || cache.IsRemountRequiredError(err) { // 没有挂载、需要重新挂载
+			// 执行挂载的操作(热更新也在此处)
 			rc.mountAttachedVolumes(volumeToMount, err) // ✅ 卷没有被挂载,或者已经被挂载,但需要重新挂载.
 		} else if cache.IsFSResizeRequiredError(err) { // 需要重新调整卷大小
 			fsResizeRequiredErr, _ := err.(cache.FsResizeRequiredError)
+			// kubelet对正在使用的卷的文件系统进行扩容
 			rc.expandVolume(volumeToMount, fsResizeRequiredErr.CurrentSize) // ✅
 		}
 	}

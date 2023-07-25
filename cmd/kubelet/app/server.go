@@ -235,7 +235,7 @@ func NewKubeletCommand() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to construct kubelet dependencies: %w", err)
 			}
-
+			// 检查是否以 root 权限启动
 			if err := checkPermissions(); err != nil {
 				klog.ErrorS(err, "kubelet running with insufficient permissions")
 			}
@@ -507,7 +507,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 			}
 		}
 	}
-
+	// 将当前的配置文件注册到 http server /configz URL 中；
 	// Register current configuration with /configz endpoint
 	err = initConfigz(&s.KubeletConfiguration)
 	if err != nil {
@@ -769,6 +769,7 @@ func run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	}
 
 	// TODO（vmarmol）：通过容器配置执行此操作.
+	// 为 kubelet 进程设置 oom 分数
 	oomAdjuster := kubeDeps.OOMAdjuster
 	if err := oomAdjuster.ApplyOOMScoreAdj(0, int(s.OOMScoreAdj)); err != nil {
 		klog.InfoS("Failed to ApplyOOMScoreAdj", "err", err)
@@ -1134,7 +1135,7 @@ func RunKubelet(kubeServer *options.KubeletServer, kubeDeps *kubelet.Dependencie
 	} else if len(nodeIPs) == 2 && (nodeIPs[0].IsUnspecified() || nodeIPs[1].IsUnspecified()) {
 		return fmt.Errorf("dual-stack --node-ip %q cannot include '0.0.0.0' or '::'", kubeServer.NodeIP)
 	}
-
+	// 默认启动特权模式
 	capabilities.Initialize(capabilities.Capabilities{
 		AllowPrivileged: true,
 	})

@@ -25,13 +25,16 @@ import (
 // Signal 定义一个信号,该信号可以触发节点上的pod的驱逐.
 type Signal string
 
+// nodefs：保存 kubelet 的卷[日志、]和守护进程日志等.
+// imagefs：在容器运行时,用于保存镜像以及可写入层.
+
 const (
-	SignalMemoryAvailable            Signal = "memory.available"            // 可用内存量,已经被使用的内存量与总内存量之差
+	SignalMemoryAvailable            Signal = "memory.available"            // 可用内存量,已经被使用的内存量与总内存量之差	node.status.capacity[memory] - node.stats.memory.workingSet
 	SignalAllocatableMemoryAvailable Signal = "allocatableMemory.available" // 可分配的内存量,节点上已经被预留或分配给Kubernetes集群中的其他对象（如Pod、容器等）的内存量之差.这个值是在节点加入集群时由Kubernetes控制平面计算得出的,并且在节点运行时不会改变.
-	SignalNodeFsAvailable            Signal = "nodefs.available"            // 节点文件系统上可用的存储量
-	SignalNodeFsInodesFree           Signal = "nodefs.inodesFree"           // 节点文件系统上可用的inode数量
-	SignalImageFsAvailable           Signal = "imagefs.available"           // 容器运行时使用的文件系统上可用的存储量
-	SignalImageFsInodesFree          Signal = "imagefs.inodesFree"          // 容器运行时使用的文件系统上可用的inode数量
+	SignalNodeFsAvailable            Signal = "nodefs.available"            // 节点文件系统上可用的存储量 nodefs.available := node.stats.fs.available
+	SignalNodeFsInodesFree           Signal = "nodefs.inodesFree"           // 节点文件系统上可用的inode数量 nodefs.inodesFree := node.stats.fs.inodesFree
+	SignalImageFsAvailable           Signal = "imagefs.available"           // 容器运行时使用的文件系统上可用的存储量 node.stats.runtime.imagefs.available
+	SignalImageFsInodesFree          Signal = "imagefs.inodesFree"          // 容器运行时使用的文件系统上可用的inode数量 node.stats.runtime.imagefs.inodesFree
 	SignalPIDAvailable               Signal = "pid.available"               // 可用的PID数量,用于分配给Pod
 )
 
