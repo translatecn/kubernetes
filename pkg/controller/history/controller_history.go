@@ -135,18 +135,6 @@ func EqualRevision(lhs *apps.ControllerRevision, rhs *apps.ControllerRevision) b
 	return bytes.Equal(lhs.Data.Raw, rhs.Data.Raw) && apiequality.Semantic.DeepEqual(lhs.Data.Object, rhs.Data.Object)
 }
 
-// FindEqualRevisions returns all ControllerRevisions in revisions that are equal to needle using EqualRevision as the
-// equality test. The returned slice preserves the order of revisions.
-func FindEqualRevisions(revisions []*apps.ControllerRevision, needle *apps.ControllerRevision) []*apps.ControllerRevision {
-	var eq []*apps.ControllerRevision
-	for i := range revisions {
-		if EqualRevision(revisions[i], needle) {
-			eq = append(eq, revisions[i])
-		}
-	}
-	return eq
-}
-
 // byRevision implements sort.Interface to allow ControllerRevisions to be sorted by Revision.
 type byRevision []*apps.ControllerRevision
 
@@ -479,4 +467,16 @@ func (fh *fakeHistory) ReleaseControllerRevision(parent metav1.Object, revision 
 		}
 	}
 	return clone, fh.indexer.Update(clone)
+}
+
+// FindEqualRevisions returns all ControllerRevisions in revisions that are equal to needle using EqualRevision as the
+// equality test. The returned slice preserves the order of revisions.
+func FindEqualRevisions(revisions []*apps.ControllerRevision, needle *apps.ControllerRevision) []*apps.ControllerRevision {
+	var eq []*apps.ControllerRevision
+	for i := range revisions {
+		if EqualRevision(revisions[i], needle) {
+			eq = append(eq, revisions[i])
+		}
+	}
+	return eq
 }

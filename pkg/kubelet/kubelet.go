@@ -1548,8 +1548,6 @@ func handleProbeSync(kl *Kubelet, update proberesults.Update, handler SyncHandle
 	handler.HandlePodSyncs([]*v1.Pod{pod})
 }
 
-// HandlePodSyncs is the callback in the syncHandler interface for pods
-// that should be dispatched to pod workers for sync.
 func (kl *Kubelet) HandlePodSyncs(pods []*v1.Pod) {
 	start := kl.clock.Now()
 	for _, pod := range pods {

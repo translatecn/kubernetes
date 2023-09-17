@@ -40,32 +40,6 @@ var BannedOwners = map[schema.GroupVersionKind]struct{}{
 	{Group: "", Version: "v1", Kind: "Event"}: {},
 }
 
-// ValidateAnnotations validates that a set of annotations are correctly defined.
-func ValidateAnnotations(annotations map[string]string, fldPath *field.Path) field.ErrorList {
-	allErrs := field.ErrorList{}
-	for k := range annotations {
-		// The rule is QualifiedName except that case doesn't matter, so convert to lowercase before checking.
-		for _, msg := range validation.IsQualifiedName(strings.ToLower(k)) {
-			allErrs = append(allErrs, field.Invalid(fldPath, k, msg))
-		}
-	}
-	if err := ValidateAnnotationsSize(annotations); err != nil {
-		allErrs = append(allErrs, field.TooLong(fldPath, "", TotalAnnotationSizeLimitB))
-	}
-	return allErrs
-}
-
-func ValidateAnnotationsSize(annotations map[string]string) error {
-	var totalSize int64
-	for k, v := range annotations {
-		totalSize += (int64)(len(k)) + (int64)(len(v))
-	}
-	if totalSize > (int64)(TotalAnnotationSizeLimitB) {
-		return fmt.Errorf("annotations size %d is larger than limit %d", totalSize, TotalAnnotationSizeLimitB)
-	}
-	return nil
-}
-
 func validateOwnerReference(ownerReference metav1.OwnerReference, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	gvk := schema.FromAPIVersionAndKind(ownerReference.APIVersion, ownerReference.Kind)
@@ -84,25 +58,6 @@ func validateOwnerReference(ownerReference metav1.OwnerReference, fldPath *field
 	}
 	if _, ok := BannedOwners[gvk]; ok {
 		allErrs = append(allErrs, field.Invalid(fldPath, ownerReference, fmt.Sprintf("%s is disallowed from being an owner", gvk)))
-	}
-	return allErrs
-}
-
-// ValidateOwnerReferences validates that a set of owner references are correctly defined.
-func ValidateOwnerReferences(ownerReferences []metav1.OwnerReference, fldPath *field.Path) field.ErrorList {
-	allErrs := field.ErrorList{}
-	firstControllerName := ""
-	for _, ref := range ownerReferences {
-		allErrs = append(allErrs, validateOwnerReference(ref, fldPath)...)
-		if ref.Controller != nil && *ref.Controller {
-			curControllerName := ref.Kind + "/" + ref.Name
-			if firstControllerName != "" {
-				allErrs = append(allErrs, field.Invalid(fldPath, ownerReferences,
-					fmt.Sprintf("Only one reference can have Controller set to true. Found \"true\" in references for %v and %v", firstControllerName, curControllerName)))
-			} else {
-				firstControllerName = curControllerName
-			}
-		}
 	}
 	return allErrs
 }
@@ -133,6 +88,57 @@ func ValidateImmutableField(newVal, oldVal interface{}, fldPath *field.Path) fie
 	if !apiequality.Semantic.DeepEqual(oldVal, newVal) {
 		allErrs = append(allErrs, field.Invalid(fldPath, newVal, FieldImmutableErrorMsg))
 	}
+	return allErrs
+}
+
+// ValidateObjectMetaUpdate validates an object's metadata when updated.
+func ValidateObjectMetaUpdate(newMeta, oldMeta *metav1.ObjectMeta, fldPath *field.Path) field.ErrorList {
+	newMetadata, err := meta.Accessor(newMeta)
+	if err != nil {
+		allErrs := field.ErrorList{}
+		allErrs = append(allErrs, field.Invalid(fldPath, newMeta, err.Error()))
+		return allErrs
+	}
+	oldMetadata, err := meta.Accessor(oldMeta)
+	if err != nil {
+		allErrs := field.ErrorList{}
+		allErrs = append(allErrs, field.Invalid(fldPath, oldMeta, err.Error()))
+		return allErrs
+	}
+	return ValidateObjectMetaAccessorUpdate(newMetadata, oldMetadata, fldPath)
+}
+
+// ValidateObjectMetaAccessorUpdate validates an object's metadata when updated.
+func ValidateObjectMetaAccessorUpdate(newMeta, oldMeta metav1.Object, fldPath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// Finalizers cannot be added if the object is already being deleted.
+	if oldMeta.GetDeletionTimestamp() != nil {
+		allErrs = append(allErrs, ValidateNoNewFinalizers(newMeta.GetFinalizers(), oldMeta.GetFinalizers(), fldPath.Child("finalizers"))...)
+	}
+
+	// Reject updates that don't specify a resource version
+	if len(newMeta.GetResourceVersion()) == 0 {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("resourceVersion"), newMeta.GetResourceVersion(), "must be specified for an update"))
+	}
+
+	// Generation shouldn't be decremented
+	if newMeta.GetGeneration() < oldMeta.GetGeneration() {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("generation"), newMeta.GetGeneration(), "must not be decremented"))
+	}
+
+	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetName(), oldMeta.GetName(), fldPath.Child("name"))...)
+	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetNamespace(), oldMeta.GetNamespace(), fldPath.Child("namespace"))...)
+	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetUID(), oldMeta.GetUID(), fldPath.Child("uid"))...)
+	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetCreationTimestamp(), oldMeta.GetCreationTimestamp(), fldPath.Child("creationTimestamp"))...)
+	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetDeletionTimestamp(), oldMeta.GetDeletionTimestamp(), fldPath.Child("deletionTimestamp"))...)
+	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetDeletionGracePeriodSeconds(), oldMeta.GetDeletionGracePeriodSeconds(), fldPath.Child("deletionGracePeriodSeconds"))...)
+
+	allErrs = append(allErrs, v1validation.ValidateLabels(newMeta.GetLabels(), fldPath.Child("labels"))...)
+	allErrs = append(allErrs, ValidateAnnotations(newMeta.GetAnnotations(), fldPath.Child("annotations"))...)
+	allErrs = append(allErrs, ValidateOwnerReferences(newMeta.GetOwnerReferences(), fldPath.Child("ownerReferences"))...)
+	allErrs = append(allErrs, v1validation.ValidateManagedFields(newMeta.GetManagedFields(), fldPath.Child("managedFields"))...)
+
 	return allErrs
 }
 
@@ -193,6 +199,40 @@ func ValidateObjectMetaAccessor(meta metav1.Object, requiresNamespace bool, name
 	return allErrs
 }
 
+// ValidateOwnerReferences validates that a set of owner references are correctly defined.
+func ValidateOwnerReferences(ownerReferences []metav1.OwnerReference, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	firstControllerName := ""
+	for _, ref := range ownerReferences {
+		allErrs = append(allErrs, validateOwnerReference(ref, fldPath)...)
+		if ref.Controller != nil && *ref.Controller {
+			curControllerName := ref.Kind + "/" + ref.Name
+			if firstControllerName != "" {
+				allErrs = append(allErrs, field.Invalid(fldPath, ownerReferences,
+					fmt.Sprintf("Only one reference can have Controller set to true. Found \"true\" in references for %v and %v", firstControllerName, curControllerName)))
+			} else {
+				firstControllerName = curControllerName
+			}
+		}
+	}
+	return allErrs
+}
+
+// ValidateAnnotations validates that a set of annotations are correctly defined.
+func ValidateAnnotations(annotations map[string]string, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	for k := range annotations {
+		// The rule is QualifiedName except that case doesn't matter, so convert to lowercase before checking.
+		for _, msg := range validation.IsQualifiedName(strings.ToLower(k)) {
+			allErrs = append(allErrs, field.Invalid(fldPath, k, msg))
+		}
+	}
+	if err := ValidateAnnotationsSize(annotations); err != nil {
+		allErrs = append(allErrs, field.TooLong(fldPath, "", TotalAnnotationSizeLimitB))
+	}
+	return allErrs
+}
+
 // ValidateFinalizers tests if the finalizers name are valid, and if there are conflicting finalizers.
 func ValidateFinalizers(finalizers []string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
@@ -212,54 +252,13 @@ func ValidateFinalizers(finalizers []string, fldPath *field.Path) field.ErrorLis
 	}
 	return allErrs
 }
-
-// ValidateObjectMetaUpdate validates an object's metadata when updated.
-func ValidateObjectMetaUpdate(newMeta, oldMeta *metav1.ObjectMeta, fldPath *field.Path) field.ErrorList {
-	newMetadata, err := meta.Accessor(newMeta)
-	if err != nil {
-		allErrs := field.ErrorList{}
-		allErrs = append(allErrs, field.Invalid(fldPath, newMeta, err.Error()))
-		return allErrs
+func ValidateAnnotationsSize(annotations map[string]string) error {
+	var totalSize int64
+	for k, v := range annotations {
+		totalSize += (int64)(len(k)) + (int64)(len(v))
 	}
-	oldMetadata, err := meta.Accessor(oldMeta)
-	if err != nil {
-		allErrs := field.ErrorList{}
-		allErrs = append(allErrs, field.Invalid(fldPath, oldMeta, err.Error()))
-		return allErrs
+	if totalSize > (int64)(TotalAnnotationSizeLimitB) {
+		return fmt.Errorf("annotations size %d is larger than limit %d", totalSize, TotalAnnotationSizeLimitB)
 	}
-	return ValidateObjectMetaAccessorUpdate(newMetadata, oldMetadata, fldPath)
-}
-
-// ValidateObjectMetaAccessorUpdate validates an object's metadata when updated.
-func ValidateObjectMetaAccessorUpdate(newMeta, oldMeta metav1.Object, fldPath *field.Path) field.ErrorList {
-	var allErrs field.ErrorList
-
-	// Finalizers cannot be added if the object is already being deleted.
-	if oldMeta.GetDeletionTimestamp() != nil {
-		allErrs = append(allErrs, ValidateNoNewFinalizers(newMeta.GetFinalizers(), oldMeta.GetFinalizers(), fldPath.Child("finalizers"))...)
-	}
-
-	// Reject updates that don't specify a resource version
-	if len(newMeta.GetResourceVersion()) == 0 {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("resourceVersion"), newMeta.GetResourceVersion(), "must be specified for an update"))
-	}
-
-	// Generation shouldn't be decremented
-	if newMeta.GetGeneration() < oldMeta.GetGeneration() {
-		allErrs = append(allErrs, field.Invalid(fldPath.Child("generation"), newMeta.GetGeneration(), "must not be decremented"))
-	}
-
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetName(), oldMeta.GetName(), fldPath.Child("name"))...)
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetNamespace(), oldMeta.GetNamespace(), fldPath.Child("namespace"))...)
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetUID(), oldMeta.GetUID(), fldPath.Child("uid"))...)
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetCreationTimestamp(), oldMeta.GetCreationTimestamp(), fldPath.Child("creationTimestamp"))...)
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetDeletionTimestamp(), oldMeta.GetDeletionTimestamp(), fldPath.Child("deletionTimestamp"))...)
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.GetDeletionGracePeriodSeconds(), oldMeta.GetDeletionGracePeriodSeconds(), fldPath.Child("deletionGracePeriodSeconds"))...)
-
-	allErrs = append(allErrs, v1validation.ValidateLabels(newMeta.GetLabels(), fldPath.Child("labels"))...)
-	allErrs = append(allErrs, ValidateAnnotations(newMeta.GetAnnotations(), fldPath.Child("annotations"))...)
-	allErrs = append(allErrs, ValidateOwnerReferences(newMeta.GetOwnerReferences(), fldPath.Child("ownerReferences"))...)
-	allErrs = append(allErrs, v1validation.ValidateManagedFields(newMeta.GetManagedFields(), fldPath.Child("managedFields"))...)
-
-	return allErrs
+	return nil
 }

@@ -89,24 +89,6 @@ func ListAccessor(obj interface{}) (List, error) {
 // interfaces.
 var errNotObject = fmt.Errorf("object does not implement the Object interfaces")
 
-// Accessor takes an arbitrary object pointer and returns meta.Interface.
-// obj must be a pointer to an API type. An error is returned if the minimum
-// required fields are missing. Fields that are not required return the default
-// value and are a no-op if set.
-func Accessor(obj interface{}) (metav1.Object, error) {
-	switch t := obj.(type) {
-	case metav1.Object:
-		return t, nil
-	case metav1.ObjectMetaAccessor:
-		if m := t.GetObjectMeta(); m != nil {
-			return m, nil
-		}
-		return nil, errNotObject
-	default:
-		return nil, errNotObject
-	}
-}
-
 // AsPartialObjectMetadata takes the metav1 interface and returns a partial object.
 // TODO: consider making this solely a conversion action.
 func AsPartialObjectMetadata(m metav1.Object) *metav1.PartialObjectMetadata {
@@ -640,4 +622,20 @@ func extractFromTypeMeta(v reflect.Value, a *genericAccessor) error {
 		return err
 	}
 	return nil
+}
+
+// ------------
+
+func Accessor(obj interface{}) (metav1.Object, error) {
+	switch t := obj.(type) {
+	case metav1.Object:
+		return t, nil
+	case metav1.ObjectMetaAccessor:
+		if m := t.GetObjectMeta(); m != nil {
+			return m, nil
+		}
+		return nil, errNotObject
+	default:
+		return nil, errNotObject
+	}
 }

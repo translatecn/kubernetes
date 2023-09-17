@@ -60,13 +60,7 @@ func SetDefaults_ReplicationController(obj *v1.ReplicationController) {
 		*obj.Spec.Replicas = 1
 	}
 }
-func SetDefaults_Volume(obj *v1.Volume) {
-	if pointer.AllPtrFieldsNil(&obj.VolumeSource) {
-		obj.VolumeSource = v1.VolumeSource{
-			EmptyDir: &v1.EmptyDirVolumeSource{},
-		}
-	}
-}
+
 func SetDefaults_Container(obj *v1.Container) {
 	if obj.ImagePullPolicy == "" {
 		// Ignore error and assume it has been validated elsewhere
@@ -175,32 +169,7 @@ func SetDefaults_Pod(obj *v1.Pod) {
 		obj.Spec.EnableServiceLinks = &enableServiceLinks
 	}
 }
-func SetDefaults_PodSpec(obj *v1.PodSpec) {
-	// New fields added here will break upgrade tests:
-	// https://github.com/kubernetes/kubernetes/issues/69445
-	// In most cases the new defaulted field can added to SetDefaults_Pod instead of here, so
-	// that it only materializes in the Pod object and not all objects with a PodSpec field.
-	if obj.DNSPolicy == "" {
-		obj.DNSPolicy = v1.DNSClusterFirst
-	}
-	if obj.RestartPolicy == "" {
-		obj.RestartPolicy = v1.RestartPolicyAlways
-	}
-	if obj.HostNetwork {
-		defaultHostNetworkPorts(&obj.Containers)
-		defaultHostNetworkPorts(&obj.InitContainers)
-	}
-	if obj.SecurityContext == nil {
-		obj.SecurityContext = &v1.PodSecurityContext{}
-	}
-	if obj.TerminationGracePeriodSeconds == nil {
-		period := int64(v1.DefaultTerminationGracePeriodSeconds)
-		obj.TerminationGracePeriodSeconds = &period
-	}
-	if obj.SchedulerName == "" {
-		obj.SchedulerName = v1.DefaultSchedulerName
-	}
-}
+
 func SetDefaults_Probe(obj *v1.Probe) {
 	if obj.TimeoutSeconds == 0 {
 		obj.TimeoutSeconds = 1
@@ -393,17 +362,6 @@ func SetDefaults_ConfigMap(obj *v1.ConfigMap) {
 	}
 }
 
-// With host networking default all container ports to host ports.
-func defaultHostNetworkPorts(containers *[]v1.Container) {
-	for i := range *containers {
-		for j := range (*containers)[i].Ports {
-			if (*containers)[i].Ports[j].HostPort == 0 {
-				(*containers)[i].Ports[j].HostPort = (*containers)[i].Ports[j].ContainerPort
-			}
-		}
-	}
-}
-
 func SetDefaults_RBDVolumeSource(obj *v1.RBDVolumeSource) {
 	if obj.RBDPool == "" {
 		obj.RBDPool = "rbd"
@@ -450,5 +408,52 @@ func SetDefaults_HostPathVolumeSource(obj *v1.HostPathVolumeSource) {
 	typeVol := v1.HostPathUnset
 	if obj.Type == nil {
 		obj.Type = &typeVol
+	}
+}
+
+// -------------------------------------------------------------------------------------------------------------------------------------
+
+func SetDefaults_Volume(obj *v1.Volume) {
+	if pointer.AllPtrFieldsNil(&obj.VolumeSource) {
+		obj.VolumeSource = v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		}
+	}
+}
+func SetDefaults_PodSpec(obj *v1.PodSpec) {
+	// New fields added here will break upgrade tests:
+	// https://github.com/kubernetes/kubernetes/issues/69445
+	// In most cases the new defaulted field can added to SetDefaults_Pod instead of here, so
+	// that it only materializes in the Pod object and not all objects with a PodSpec field.
+	if obj.DNSPolicy == "" {
+		obj.DNSPolicy = v1.DNSClusterFirst
+	}
+	if obj.RestartPolicy == "" {
+		obj.RestartPolicy = v1.RestartPolicyAlways
+	}
+	if obj.HostNetwork {
+		defaultHostNetworkPorts(&obj.Containers)
+		defaultHostNetworkPorts(&obj.InitContainers)
+	}
+	if obj.SecurityContext == nil {
+		obj.SecurityContext = &v1.PodSecurityContext{}
+	}
+	if obj.TerminationGracePeriodSeconds == nil {
+		period := int64(v1.DefaultTerminationGracePeriodSeconds)
+		obj.TerminationGracePeriodSeconds = &period
+	}
+	if obj.SchedulerName == "" {
+		obj.SchedulerName = v1.DefaultSchedulerName
+	}
+}
+
+// With host networking default all container ports to host ports.
+func defaultHostNetworkPorts(containers *[]v1.Container) {
+	for i := range *containers {
+		for j := range (*containers)[i].Ports {
+			if (*containers)[i].Ports[j].HostPort == 0 {
+				(*containers)[i].Ports[j].HostPort = (*containers)[i].Ports[j].ContainerPort
+			}
+		}
 	}
 }

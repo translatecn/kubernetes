@@ -29,7 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller/daemon"
 	"k8s.io/kubernetes/pkg/controller/deployment"
 	"k8s.io/kubernetes/pkg/controller/replicaset"
-	"k8s.io/kubernetes/pkg/controller/statefulset"
+	"k8s.io/kubernetes/pkg/controller/over_statefulset"
 )
 
 func startDaemonSetController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
@@ -49,7 +49,7 @@ func startDaemonSetController(ctx context.Context, controllerContext ControllerC
 }
 
 func startStatefulSetController(ctx context.Context, controllerContext ControllerContext) (controller.Interface, bool, error) {
-	go statefulset.NewStatefulSetController(
+	go over_statefulset.NewStatefulSetController(
 		controllerContext.InformerFactory.Core().V1().Pods(),
 		controllerContext.InformerFactory.Apps().V1().StatefulSets(),
 		controllerContext.InformerFactory.Core().V1().PersistentVolumeClaims(),

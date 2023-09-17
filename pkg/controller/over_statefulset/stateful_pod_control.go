@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package statefulset
+package over_statefulset
 
 import (
 	"context"
@@ -204,29 +204,6 @@ func (spc *StatefulPodControl) DeleteStatefulPod(set *apps.StatefulSet, pod *v1.
 	return err
 }
 
-// ClaimsMatchRetentionPolicy returns false if the PVCs for pod are not consistent with set's PVC deletion policy.
-// An error is returned if something is not consistent. This is expected if the pod is being otherwise updated,
-// but a problem otherwise (see usage of this method in UpdateStatefulPod).
-func (spc *StatefulPodControl) ClaimsMatchRetentionPolicy(set *apps.StatefulSet, pod *v1.Pod) (bool, error) {
-	ordinal := getOrdinal(pod)
-	templates := set.Spec.VolumeClaimTemplates
-	for i := range templates {
-		claimName := getPersistentVolumeClaimName(set, &templates[i], ordinal)
-		claim, err := spc.objectMgr.GetClaim(set.Namespace, claimName)
-		switch {
-		case apierrors.IsNotFound(err):
-			klog.V(4).Infof("Expected claim %s missing, continuing to pick up in next iteration", claimName)
-		case err != nil:
-			return false, fmt.Errorf("Could not retrieve claim %s for %s when checking PVC deletion policy", claimName, pod.Name)
-		default:
-			if !claimOwnerMatchesSetAndPod(claim, set, pod) {
-				return false, nil
-			}
-		}
-	}
-	return true, nil
-}
-
 // UpdatePodClaimForRetentionPolicy updates the PVCs used by pod to match the PVC deletion policy of set.
 func (spc *StatefulPodControl) UpdatePodClaimForRetentionPolicy(set *apps.StatefulSet, pod *v1.Pod) error {
 	ordinal := getOrdinal(pod)
@@ -342,4 +319,27 @@ func (spc *StatefulPodControl) createPersistentVolumeClaims(set *apps.StatefulSe
 		// TODO: Check resource requirements and accessmodes, update if necessary
 	}
 	return errorutils.NewAggregate(errs)
+}
+
+// ClaimsMatchRetentionPolicy returns false if the PVCs for pod are not consistent with set's PVC deletion policy.
+// An error is returned if something is not consistent. This is expected if the pod is being otherwise updated,
+// but a problem otherwise (see usage of this method in UpdateStatefulPod).
+func (spc *StatefulPodControl) ClaimsMatchRetentionPolicy(set *apps.StatefulSet, pod *v1.Pod) (bool, error) {
+	ordinal := getOrdinal(pod)
+	templates := set.Spec.VolumeClaimTemplates
+	for i := range templates {
+		claimName := getPersistentVolumeClaimName(set, &templates[i], ordinal)
+		claim, err := spc.objectMgr.GetClaim(set.Namespace, claimName)
+		switch {
+		case apierrors.IsNotFound(err):
+			klog.V(4).Infof("Expected claim %s missing, continuing to pick up in next iteration", claimName)
+		case err != nil:
+			return false, fmt.Errorf("Could not retrieve claim %s for %s when checking PVC deletion policy", claimName, pod.Name)
+		default:
+			if !claimOwnerMatchesSetAndPod(claim, set, pod) {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
 }

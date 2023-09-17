@@ -671,7 +671,7 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 		restart := shouldRestartOnFailure(pod)
 		if _, _, changed := containerChanged(&container, containerStatus); changed {
 			message = fmt.Sprintf("Container %s definition changed", container.Name)
-			// 不管重启策略如何重新启动,因为容器规范发生了变化.
+			// 不管重启策略如何,重新启动,因为容器规范发生了变化.
 			restart = true
 		} else if liveness, found := m.livenessManager.Get(containerStatus.ID); found && liveness == proberesults.Failure {
 			// If the container failed the liveness probe, we should kill it.

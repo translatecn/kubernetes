@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package statefulset
+package over_statefulset
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"k8s.io/kubernetes/pkg/controller/history"
 	"regexp"
 	"strconv"
 
@@ -34,7 +35,6 @@ import (
 	"k8s.io/klog/v2"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/controller"
-	"k8s.io/kubernetes/pkg/controller/history"
 	"k8s.io/kubernetes/pkg/features"
 )
 
@@ -476,70 +476,6 @@ func newVersionedStatefulSetPod(currentSet, updateSet *apps.StatefulSet, current
 	return pod
 }
 
-// Match check if the given StatefulSet's template matches the template stored in the given history.
-func Match(ss *apps.StatefulSet, history *apps.ControllerRevision) (bool, error) {
-	// Encoding the set for the patch may update its GVK metadata, which causes data races if this
-	// set is in an informer cache.
-	clone := ss.DeepCopy()
-	patch, err := getPatch(clone)
-	if err != nil {
-		return false, err
-	}
-	return bytes.Equal(patch, history.Data.Raw), nil
-}
-
-// getPatch returns a strategic merge patch that can be applied to restore a StatefulSet to a
-// previous version. If the returned error is nil the patch is valid. The current state that we save is just the
-// PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
-// recorded patches.
-func getPatch(set *apps.StatefulSet) ([]byte, error) {
-	data, err := runtime.Encode(patchCodec, set)
-	if err != nil {
-		return nil, err
-	}
-	var raw map[string]interface{}
-	err = json.Unmarshal(data, &raw)
-	if err != nil {
-		return nil, err
-	}
-	objCopy := make(map[string]interface{})
-	specCopy := make(map[string]interface{})
-	spec := raw["spec"].(map[string]interface{})
-	template := spec["template"].(map[string]interface{})
-	specCopy["template"] = template
-	template["$patch"] = "replace"
-	objCopy["spec"] = specCopy
-	patch, err := json.Marshal(objCopy)
-	return patch, err
-}
-
-// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of set.
-// The Revision of the returned ControllerRevision is set to revision. If the returned error is nil, the returned
-// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of set
-// to a new StatefulSet using a strategic merge patch to replace the saved state of the new StatefulSet.
-func newRevision(set *apps.StatefulSet, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
-	patch, err := getPatch(set)
-	if err != nil {
-		return nil, err
-	}
-	cr, err := history.NewControllerRevision(set,
-		controllerKind,
-		set.Spec.Template.Labels,
-		runtime.RawExtension{Raw: patch},
-		revision,
-		collisionCount)
-	if err != nil {
-		return nil, err
-	}
-	if cr.ObjectMeta.Annotations == nil {
-		cr.ObjectMeta.Annotations = make(map[string]string)
-	}
-	for key, value := range set.Annotations {
-		cr.ObjectMeta.Annotations[key] = value
-	}
-	return cr, nil
-}
-
 // ApplyRevision returns a new StatefulSet constructed by restoring the state in revision to set. If the returned error
 // is nil, the returned StatefulSet is valid.
 func ApplyRevision(set *apps.StatefulSet, revision *apps.ControllerRevision) (*apps.StatefulSet, error) {
@@ -626,4 +562,68 @@ func getStatefulSetMaxUnavailable(maxUnavailable *intstr.IntOrString, replicaCou
 		maxUnavailableNum = 1
 	}
 	return maxUnavailableNum, nil
+}
+
+// newRevision creates a new ControllerRevision containing a patch that reapplies the target state of set.
+// The Revision of the returned ControllerRevision is set to revision. If the returned error is nil, the returned
+// ControllerRevision is valid. StatefulSet revisions are stored as patches that re-apply the current state of set
+// to a new StatefulSet using a strategic merge patch to replace the saved state of the new StatefulSet.
+func newRevision(set *apps.StatefulSet, revision int64, collisionCount *int32) (*apps.ControllerRevision, error) {
+	patch, err := getPatch(set)
+	if err != nil {
+		return nil, err
+	}
+	cr, err := history.NewControllerRevision(set,
+		controllerKind,
+		set.Spec.Template.Labels,
+		runtime.RawExtension{Raw: patch},
+		revision,
+		collisionCount)
+	if err != nil {
+		return nil, err
+	}
+	if cr.ObjectMeta.Annotations == nil {
+		cr.ObjectMeta.Annotations = make(map[string]string)
+	}
+	for key, value := range set.Annotations {
+		cr.ObjectMeta.Annotations[key] = value
+	}
+	return cr, nil
+}
+
+// Match check if the given StatefulSet's template matches the template stored in the given history.
+func Match(ss *apps.StatefulSet, history *apps.ControllerRevision) (bool, error) {
+	// Encoding the set for the patch may update its GVK metadata, which causes data races if this
+	// set is in an informer cache.
+	clone := ss.DeepCopy()
+	patch, err := getPatch(clone)
+	if err != nil {
+		return false, err
+	}
+	return bytes.Equal(patch, history.Data.Raw), nil
+}
+
+// getPatch returns a strategic merge patch that can be applied to restore a StatefulSet to a
+// previous version. If the returned error is nil the patch is valid. The current state that we save is just the
+// PodSpecTemplate. We can modify this later to encompass more state (or less) and remain compatible with previously
+// recorded patches.
+func getPatch(set *apps.StatefulSet) ([]byte, error) {
+	data, err := runtime.Encode(patchCodec, set)
+	if err != nil {
+		return nil, err
+	}
+	var raw map[string]interface{}
+	err = json.Unmarshal(data, &raw)
+	if err != nil {
+		return nil, err
+	}
+	objCopy := make(map[string]interface{})
+	specCopy := make(map[string]interface{})
+	spec := raw["spec"].(map[string]interface{})
+	template := spec["template"].(map[string]interface{})
+	specCopy["template"] = template
+	template["$patch"] = "replace"
+	objCopy["spec"] = specCopy
+	patch, err := json.Marshal(objCopy)
+	return patch, err
 }

@@ -39,7 +39,7 @@ import (
 	replicationconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/replication/config/v1alpha1"
 	resourcequotaconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/resourcequota/config/v1alpha1"
 	serviceaccountconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/serviceaccount/config/v1alpha1"
-	statefulsetconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/statefulset/config/v1alpha1"
+	statefulsetconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/over_statefulset/config/v1alpha1"
 	ttlafterfinishedconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/ttlafterfinished/config/v1alpha1"
 	attachdetachconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/volume/attachdetach/config/v1alpha1"
 	ephemeralvolumeconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/volume/ephemeral/config/v1alpha1"

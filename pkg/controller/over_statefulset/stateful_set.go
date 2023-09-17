@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package statefulset
+package over_statefulset
 
 import (
 	"context"
@@ -286,29 +286,6 @@ func (ssc *StatefulSetController) deletePod(obj interface{}) {
 	ssc.enqueueStatefulSet(set)
 }
 
-// getPodsForStatefulSet returns the Pods that a given StatefulSet should manage.
-// It also reconciles ControllerRef by adopting/orphaning.
-//
-// NOTE: Returned Pods are pointers to objects from the cache.
-//
-//	If you need to modify one, you need to copy it first.
-func (ssc *StatefulSetController) getPodsForStatefulSet(ctx context.Context, set *apps.StatefulSet, selector labels.Selector) ([]*v1.Pod, error) {
-	// List all pods to include the pods that don't match the selector anymore but
-	// has a ControllerRef pointing to this StatefulSet.
-	pods, err := ssc.podLister.Pods(set.Namespace).List(labels.Everything())
-	if err != nil {
-		return nil, err
-	}
-
-	filter := func(pod *v1.Pod) bool {
-		// Only claim if it matches our StatefulSet name. Otherwise release/ignore.
-		return isMemberOf(set, pod)
-	}
-
-	cm := controller.NewPodControllerRefManager(ssc.podControl, set, selector, controllerKind, ssc.canAdoptFunc(ctx, set))
-	return cm.ClaimPods(ctx, pods, filter)
-}
-
 // If any adoptions are attempted, we should first recheck for deletion with
 // an uncached quorum read sometime after listing Pods/ControllerRevisions (see #42639).
 func (ssc *StatefulSetController) canAdoptFunc(ctx context.Context, set *apps.StatefulSet) func(ctx2 context.Context) error {
@@ -489,4 +466,27 @@ func (ssc *StatefulSetController) syncStatefulSet(ctx context.Context, set *apps
 	}
 
 	return nil
+}
+
+// getPodsForStatefulSet returns the Pods that a given StatefulSet should manage.
+// It also reconciles ControllerRef by adopting/orphaning.
+//
+// NOTE: Returned Pods are pointers to objects from the cache.
+//
+//	If you need to modify one, you need to copy it first.
+func (ssc *StatefulSetController) getPodsForStatefulSet(ctx context.Context, set *apps.StatefulSet, selector labels.Selector) ([]*v1.Pod, error) {
+	// List all pods to include the pods that don't match the selector anymore but
+	// has a ControllerRef pointing to this StatefulSet.
+	pods, err := ssc.podLister.Pods(set.Namespace).List(labels.Everything())
+	if err != nil {
+		return nil, err
+	}
+
+	filter := func(pod *v1.Pod) bool {
+		// Only claim if it matches our StatefulSet name. Otherwise release/ignore.
+		return isMemberOf(set, pod)
+	}
+
+	cm := controller.NewPodControllerRefManager(ssc.podControl, set, selector, controllerKind, ssc.canAdoptFunc(ctx, set))
+	return cm.ClaimPods(ctx, pods, filter)
 }
