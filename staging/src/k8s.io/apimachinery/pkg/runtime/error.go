@@ -122,6 +122,30 @@ func IsMissingVersion(err error) bool {
 	return ok
 }
 
+func (e *strictDecodingError) Errors() []error {
+	return e.errors
+}
+
+// IsStrictDecodingError returns true if the error indicates that the provided object
+// strictness violations.
+func IsStrictDecodingError(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := err.(*strictDecodingError)
+	return ok
+}
+
+// AsStrictDecodingError returns a strict decoding error
+// containing all the strictness violations.
+func AsStrictDecodingError(err error) (*strictDecodingError, bool) {
+	if err == nil {
+		return nil, false
+	}
+	strictErr, ok := err.(*strictDecodingError)
+	return strictErr, ok
+}
+
 // strictDecodingError is a base error type that is returned by a strict Decoder such
 // as UniversalStrictDecoder.
 type strictDecodingError struct {
@@ -145,28 +169,4 @@ func (e *strictDecodingError) Error() string {
 		s.WriteString(err.Error())
 	}
 	return s.String()
-}
-
-func (e *strictDecodingError) Errors() []error {
-	return e.errors
-}
-
-// IsStrictDecodingError returns true if the error indicates that the provided object
-// strictness violations.
-func IsStrictDecodingError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := err.(*strictDecodingError)
-	return ok
-}
-
-// AsStrictDecodingError returns a strict decoding error
-// containing all the strictness violations.
-func AsStrictDecodingError(err error) (*strictDecodingError, bool) {
-	if err == nil {
-		return nil, false
-	}
-	strictErr, ok := err.(*strictDecodingError)
-	return strictErr, ok
 }

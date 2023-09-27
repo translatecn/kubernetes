@@ -27,20 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/conversion"
 )
 
-// DefaultMetaV1FieldSelectorConversion auto-accepts metav1 values for name and namespace.
-// A cluster scoped resource specifying namespace empty works fine and specifying a particular
-// namespace will return no results, as expected.
-func DefaultMetaV1FieldSelectorConversion(label, value string) (string, string, error) {
-	switch label {
-	case "metadata.name":
-		return label, value, nil
-	case "metadata.namespace":
-		return label, value, nil
-	default:
-		return "", "", fmt.Errorf("%q is not a known field selector: only %q, %q", label, "metadata.name", "metadata.namespace")
-	}
-}
-
 // JSONKeyMapper uses the struct tags on a conversion to determine the key value for
 // the other side. Use when mapping from a map[string]* to a struct or vice versa.
 func JSONKeyMapper(key string, sourceTag, destTag reflect.StructTag) (string, string) {
@@ -193,4 +179,18 @@ func RegisterStringConversions(s *Scheme) error {
 		return err
 	}
 	return nil
+}
+
+// DefaultMetaV1FieldSelectorConversion auto-accepts metav1 values for name and namespace.
+// A cluster scoped resource specifying namespace empty works fine and specifying a particular
+// namespace will return no results, as expected.
+func DefaultMetaV1FieldSelectorConversion(label, value string) (string, string, error) {
+	switch label {
+	case "metadata.name":
+		return label, value, nil
+	case "metadata.namespace":
+		return label, value, nil
+	default:
+		return "", "", fmt.Errorf("%q is not a known field selector: only %q, %q", label, "metadata.name", "metadata.namespace")
+	}
 }

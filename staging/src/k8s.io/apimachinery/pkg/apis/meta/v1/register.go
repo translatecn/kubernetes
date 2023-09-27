@@ -62,6 +62,27 @@ var optionsTypes = []runtime.Object{
 	&PatchOptions{},
 }
 
+// AddMetaToScheme registers base meta types into schemas.
+func AddMetaToScheme(scheme *runtime.Scheme) error {
+	scheme.AddKnownTypes(SchemeGroupVersion,
+		&Table{},
+		&TableOptions{},
+		&PartialObjectMetadata{},
+		&PartialObjectMetadataList{},
+	)
+
+	return nil
+}
+
+func init() {
+	scheme.AddUnversionedTypes(SchemeGroupVersion, optionsTypes...)
+
+	utilruntime.Must(AddMetaToScheme(scheme))
+
+	// register manually. This usually goes through the SchemeBuilder, which we cannot use here.
+	utilruntime.Must(RegisterDefaults(scheme))
+}
+
 // AddToGroupVersion registers common meta types into schemas.
 func AddToGroupVersion(scheme *runtime.Scheme, groupVersion schema.GroupVersion) {
 	scheme.AddKnownTypeWithName(groupVersion.WithKind(WatchEventKind), &WatchEvent{})
@@ -82,26 +103,5 @@ func AddToGroupVersion(scheme *runtime.Scheme, groupVersion schema.GroupVersion)
 
 	// register manually. This usually goes through the SchemeBuilder, which we cannot use here.
 	utilruntime.Must(RegisterConversions(scheme))
-	utilruntime.Must(RegisterDefaults(scheme))
-}
-
-// AddMetaToScheme registers base meta types into schemas.
-func AddMetaToScheme(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Table{},
-		&TableOptions{},
-		&PartialObjectMetadata{},
-		&PartialObjectMetadataList{},
-	)
-
-	return nil
-}
-
-func init() {
-	scheme.AddUnversionedTypes(SchemeGroupVersion, optionsTypes...)
-
-	utilruntime.Must(AddMetaToScheme(scheme))
-
-	// register manually. This usually goes through the SchemeBuilder, which we cannot use here.
 	utilruntime.Must(RegisterDefaults(scheme))
 }

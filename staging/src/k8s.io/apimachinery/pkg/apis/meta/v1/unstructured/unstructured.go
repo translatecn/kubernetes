@@ -101,17 +101,6 @@ func (obj *Unstructured) EachListItem(fn func(runtime.Object) error) error {
 	return nil
 }
 
-func (obj *Unstructured) UnstructuredContent() map[string]interface{} {
-	if obj.Object == nil {
-		return make(map[string]interface{})
-	}
-	return obj.Object
-}
-
-func (obj *Unstructured) SetUnstructuredContent(content map[string]interface{}) {
-	obj.Object = content
-}
-
 // MarshalJSON ensures that the unstructured object produces proper
 // JSON when passed to Go's standard JSON library.
 func (u *Unstructured) MarshalJSON() ([]byte, error) {
@@ -481,4 +470,15 @@ func (u *Unstructured) SetManagedFields(managedFields []metav1.ManagedFieldsEntr
 		items = append(items, out)
 	}
 	u.setNestedSlice(items, "metadata", "managedFields")
+}
+
+func (obj *Unstructured) UnstructuredContent() map[string]interface{} {
+	if obj.Object == nil {
+		return make(map[string]interface{})
+	}
+	return obj.Object
+}
+
+func (obj *Unstructured) SetUnstructuredContent(content map[string]interface{}) {
+	obj.Object = content
 }

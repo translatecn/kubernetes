@@ -84,17 +84,6 @@ var (
 	}
 )
 
-func parseBool(key string) bool {
-	if len(key) == 0 {
-		return false
-	}
-	value, err := strconv.ParseBool(key)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("couldn't parse '%s' as bool for unstructured mismatch detection", key))
-	}
-	return value
-}
-
 // unstructuredConverter knows how to convert between interface{} and
 // Unstructured in both ways.
 type unstructuredConverter struct {
@@ -266,103 +255,6 @@ func (c *unstructuredConverter) FromUnstructuredWithValidation(u map[string]inte
 		return NewStrictDecodingError(fromUnstructuredContext.unknownFieldErrors)
 	}
 	return nil
-}
-
-// FromUnstructured converts an object from map[string]interface{} representation into a concrete type.
-// It uses encoding/json/Unmarshaler if object implements it or reflection if not.
-func (c *unstructuredConverter) FromUnstructured(u map[string]interface{}, obj interface{}) error {
-	return c.FromUnstructuredWithValidation(u, obj, false)
-}
-
-func fromUnstructuredViaJSON(u map[string]interface{}, obj interface{}) error {
-	data, err := json.Marshal(u)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, obj)
-}
-
-func fromUnstructured(sv, dv reflect.Value, ctx *fromUnstructuredContext) error {
-	sv = unwrapInterface(sv)
-	if !sv.IsValid() {
-		dv.Set(reflect.Zero(dv.Type()))
-		return nil
-	}
-	st, dt := sv.Type(), dv.Type()
-
-	switch dt.Kind() {
-	case reflect.Map, reflect.Slice, reflect.Pointer, reflect.Struct, reflect.Interface:
-		// Those require non-trivial conversion.
-	default:
-		// This should handle all simple types.
-		if st.AssignableTo(dt) {
-			dv.Set(sv)
-			return nil
-		}
-		// We cannot simply use "ConvertibleTo", as JSON doesn't support conversions
-		// between those four groups: bools, integers, floats and string. We need to
-		// do the same.
-		if st.ConvertibleTo(dt) {
-			switch st.Kind() {
-			case reflect.String:
-				switch dt.Kind() {
-				case reflect.String:
-					dv.Set(sv.Convert(dt))
-					return nil
-				}
-			case reflect.Bool:
-				switch dt.Kind() {
-				case reflect.Bool:
-					dv.Set(sv.Convert(dt))
-					return nil
-				}
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-				reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				switch dt.Kind() {
-				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-					reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					dv.Set(sv.Convert(dt))
-					return nil
-				case reflect.Float32, reflect.Float64:
-					dv.Set(sv.Convert(dt))
-					return nil
-				}
-			case reflect.Float32, reflect.Float64:
-				switch dt.Kind() {
-				case reflect.Float32, reflect.Float64:
-					dv.Set(sv.Convert(dt))
-					return nil
-				}
-				if sv.Float() == math.Trunc(sv.Float()) {
-					dv.Set(sv.Convert(dt))
-					return nil
-				}
-			}
-			return fmt.Errorf("cannot convert %s to %s", st.String(), dt.String())
-		}
-	}
-
-	// Check if the object has a custom JSON marshaller/unmarshaller.
-	entry := value.TypeReflectEntryOf(dv.Type())
-	if entry.CanConvertFromUnstructured() {
-		return entry.FromUnstructured(sv, dv)
-	}
-
-	switch dt.Kind() {
-	case reflect.Map:
-		return mapFromUnstructured(sv, dv, ctx)
-	case reflect.Slice:
-		return sliceFromUnstructured(sv, dv, ctx)
-	case reflect.Pointer:
-		return pointerFromUnstructured(sv, dv, ctx)
-	case reflect.Struct:
-		return structFromUnstructured(sv, dv, ctx)
-	case reflect.Interface:
-		return interfaceFromUnstructured(sv, dv)
-	default:
-		return fmt.Errorf("unrecognized type: %v", dt.Kind())
-	}
-
 }
 
 func fieldInfoFromField(structType reflect.Type, field int) *fieldInfo {
@@ -855,4 +747,112 @@ func interfaceToUnstructured(sv, dv reflect.Value) error {
 		return nil
 	}
 	return toUnstructured(sv.Elem(), dv)
+}
+
+func parseBool(key string) bool {
+	if len(key) == 0 {
+		return false
+	}
+	value, err := strconv.ParseBool(key)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("couldn't parse '%s' as bool for unstructured mismatch detection", key))
+	}
+	return value
+}
+
+func fromUnstructured(sv, dv reflect.Value, ctx *fromUnstructuredContext) error {
+	sv = unwrapInterface(sv)
+	if !sv.IsValid() {
+		dv.Set(reflect.Zero(dv.Type()))
+		return nil
+	}
+	st, dt := sv.Type(), dv.Type()
+
+	switch dt.Kind() {
+	case reflect.Map, reflect.Slice, reflect.Pointer, reflect.Struct, reflect.Interface:
+		// Those require non-trivial conversion.
+	default:
+		// This should handle all simple types.
+		if st.AssignableTo(dt) {
+			dv.Set(sv)
+			return nil
+		}
+		// We cannot simply use "ConvertibleTo", as JSON doesn't support conversions
+		// between those four groups: bools, integers, floats and string. We need to
+		// do the same.
+		if st.ConvertibleTo(dt) {
+			switch st.Kind() {
+			case reflect.String:
+				switch dt.Kind() {
+				case reflect.String:
+					dv.Set(sv.Convert(dt))
+					return nil
+				}
+			case reflect.Bool:
+				switch dt.Kind() {
+				case reflect.Bool:
+					dv.Set(sv.Convert(dt))
+					return nil
+				}
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+				reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				switch dt.Kind() {
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+					reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					dv.Set(sv.Convert(dt))
+					return nil
+				case reflect.Float32, reflect.Float64:
+					dv.Set(sv.Convert(dt))
+					return nil
+				}
+			case reflect.Float32, reflect.Float64:
+				switch dt.Kind() {
+				case reflect.Float32, reflect.Float64:
+					dv.Set(sv.Convert(dt))
+					return nil
+				}
+				if sv.Float() == math.Trunc(sv.Float()) {
+					dv.Set(sv.Convert(dt))
+					return nil
+				}
+			}
+			return fmt.Errorf("cannot convert %s to %s", st.String(), dt.String())
+		}
+	}
+
+	// Check if the object has a custom JSON marshaller/unmarshaller.
+	entry := value.TypeReflectEntryOf(dv.Type())
+	if entry.CanConvertFromUnstructured() {
+		return entry.FromUnstructured(sv, dv)
+	}
+
+	switch dt.Kind() {
+	case reflect.Map:
+		return mapFromUnstructured(sv, dv, ctx)
+	case reflect.Slice:
+		return sliceFromUnstructured(sv, dv, ctx)
+	case reflect.Pointer:
+		return pointerFromUnstructured(sv, dv, ctx)
+	case reflect.Struct:
+		return structFromUnstructured(sv, dv, ctx)
+	case reflect.Interface:
+		return interfaceFromUnstructured(sv, dv)
+	default:
+		return fmt.Errorf("unrecognized type: %v", dt.Kind())
+	}
+
+}
+
+// FromUnstructured converts an object from map[string]interface{} representation into a concrete type.
+// It uses encoding/json/Unmarshaler if object implements it or reflection if not.
+func (c *unstructuredConverter) FromUnstructured(u map[string]interface{}, obj interface{}) error {
+	return c.FromUnstructuredWithValidation(u, obj, false)
+}
+
+func fromUnstructuredViaJSON(u map[string]interface{}, obj interface{}) error {
+	data, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, obj)
 }

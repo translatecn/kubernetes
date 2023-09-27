@@ -43,7 +43,7 @@ type Converter struct {
 	conversionFuncs          ConversionFuncs
 	generatedConversionFuncs ConversionFuncs
 
-	// Set of conversions that should be treated as a no-op
+	// Set of conversions that should be treated as a no-op 应被视为无操作的一组转换
 	ignoredUntypedConversions map[typePair]struct{}
 }
 
@@ -100,31 +100,6 @@ type Scope interface {
 	Meta() *Meta
 }
 
-func NewConversionFuncs() ConversionFuncs {
-	return ConversionFuncs{
-		untyped: make(map[typePair]ConversionFunc),
-	}
-}
-
-type ConversionFuncs struct {
-	untyped map[typePair]ConversionFunc
-}
-
-// AddUntyped adds the provided conversion function to the lookup table for the types that are
-// supplied as a and b. a and b must be pointers or an error is returned. This method overwrites
-// previously defined functions.
-func (c ConversionFuncs) AddUntyped(a, b interface{}, fn ConversionFunc) error {
-	tA, tB := reflect.TypeOf(a), reflect.TypeOf(b)
-	if tA.Kind() != reflect.Pointer {
-		return fmt.Errorf("the type %T must be a pointer to register as an untyped conversion", a)
-	}
-	if tB.Kind() != reflect.Pointer {
-		return fmt.Errorf("the type %T must be a pointer to register as an untyped conversion", b)
-	}
-	c.untyped[typePair{tA, tB}] = fn
-	return nil
-}
-
 // Merge returns a new ConversionFuncs that contains all conversions from
 // both other and c, with other conversions taking precedence.
 func (c ConversionFuncs) Merge(other ConversionFuncs) ConversionFuncs {
@@ -160,35 +135,6 @@ func (s *scope) Meta() *Meta {
 	return s.meta
 }
 
-// RegisterUntypedConversionFunc registers a function that converts between a and b by passing objects of those
-// types to the provided function. The function *must* accept objects of a and b - this machinery will not enforce
-// any other guarantee.
-func (c *Converter) RegisterUntypedConversionFunc(a, b interface{}, fn ConversionFunc) error {
-	return c.conversionFuncs.AddUntyped(a, b, fn)
-}
-
-// RegisterGeneratedUntypedConversionFunc registers a function that converts between a and b by passing objects of those
-// types to the provided function. The function *must* accept objects of a and b - this machinery will not enforce
-// any other guarantee.
-func (c *Converter) RegisterGeneratedUntypedConversionFunc(a, b interface{}, fn ConversionFunc) error {
-	return c.generatedConversionFuncs.AddUntyped(a, b, fn)
-}
-
-// RegisterIgnoredConversion registers a "no-op" for conversion, where any requested
-// conversion between from and to is ignored.
-func (c *Converter) RegisterIgnoredConversion(from, to interface{}) error {
-	typeFrom := reflect.TypeOf(from)
-	typeTo := reflect.TypeOf(to)
-	if typeFrom.Kind() != reflect.Pointer {
-		return fmt.Errorf("expected pointer arg for 'from' param 0, got: %v", typeFrom)
-	}
-	if typeTo.Kind() != reflect.Pointer {
-		return fmt.Errorf("expected pointer arg for 'to' param 1, got: %v", typeTo)
-	}
-	c.ignoredUntypedConversions[typePair{typeFrom, typeTo}] = struct{}{}
-	return nil
-}
-
 // Convert will translate src to dest if it knows how. Both must be pointers.
 // If no conversion func is registered and the default copying mechanism
 // doesn't work on this type pair, an error will be returned.
@@ -222,4 +168,58 @@ func (c *Converter) Convert(src, dest interface{}, meta *Meta) error {
 		return err
 	}
 	return fmt.Errorf("converting (%s) to (%s): unknown conversion", sv.Type(), dv.Type())
+}
+
+func NewConversionFuncs() ConversionFuncs {
+	return ConversionFuncs{
+		untyped: make(map[typePair]ConversionFunc),
+	}
+}
+
+type ConversionFuncs struct {
+	untyped map[typePair]ConversionFunc
+}
+
+// AddUntyped adds the provided conversion function to the lookup table for the types that are
+// supplied as a and b. a and b must be pointers or an error is returned. This method overwrites
+// previously defined functions.
+func (c ConversionFuncs) AddUntyped(a, b interface{}, fn ConversionFunc) error {
+	tA, tB := reflect.TypeOf(a), reflect.TypeOf(b)
+	if tA.Kind() != reflect.Pointer {
+		return fmt.Errorf("the type %T must be a pointer to register as an untyped conversion", a)
+	}
+	if tB.Kind() != reflect.Pointer {
+		return fmt.Errorf("the type %T must be a pointer to register as an untyped conversion", b)
+	}
+	c.untyped[typePair{tA, tB}] = fn
+	return nil
+}
+
+// RegisterIgnoredConversion registers a "no-op" for conversion, where any requested
+// conversion between from and to is ignored.
+func (c *Converter) RegisterIgnoredConversion(from, to interface{}) error {
+	typeFrom := reflect.TypeOf(from)
+	typeTo := reflect.TypeOf(to)
+	if typeFrom.Kind() != reflect.Pointer {
+		return fmt.Errorf("expected pointer arg for 'from' param 0, got: %v", typeFrom)
+	}
+	if typeTo.Kind() != reflect.Pointer {
+		return fmt.Errorf("expected pointer arg for 'to' param 1, got: %v", typeTo)
+	}
+	c.ignoredUntypedConversions[typePair{typeFrom, typeTo}] = struct{}{}
+	return nil
+}
+
+// RegisterUntypedConversionFunc registers a function that converts between a and b by passing objects of those
+// types to the provided function. The function *must* accept objects of a and b - this machinery will not enforce
+// any other guarantee.
+func (c *Converter) RegisterUntypedConversionFunc(a, b interface{}, fn ConversionFunc) error {
+	return c.conversionFuncs.AddUntyped(a, b, fn)
+}
+
+// RegisterGeneratedUntypedConversionFunc registers a function that converts between a and b by passing objects of those
+// types to the provided function. The function *must* accept objects of a and b - this machinery will not enforce
+// any other guarantee.
+func (c *Converter) RegisterGeneratedUntypedConversionFunc(a, b interface{}, fn ConversionFunc) error {
+	return c.generatedConversionFuncs.AddUntyped(a, b, fn)
 }
