@@ -87,10 +87,10 @@ type KubeSchedulerConfiguration struct {
 	// the default value (10s) will be used.
 	PodMaxBackoffSeconds int64
 
-	// Profiles are scheduling profiles that kube-scheduler supports. Pods can
-	// choose to be scheduled under a particular profile by setting its associated
-	// scheduler name. Pods that don't specify any scheduler name are scheduled
-	// with the "default-scheduler" profile, if present here.
+	//配置文件是kube-scheduler支持的调度配置文件。pod可以通过设置其关联的配置文件来选择在特定配置文件下进行调度
+	//调度器名称。没有指定任何调度器名称的pod将被调度
+	//使用"default-scheduler"配置文件，如果这里有的话。
+
 	Profiles []KubeSchedulerProfile
 
 	// Extenders are the list of scheduler extenders, each holding the values of how to communicate

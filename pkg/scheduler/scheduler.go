@@ -139,95 +139,6 @@ type ScheduleResult struct {
 	nominatingInfo *framework.NominatingInfo
 }
 
-// WithComponentConfigVersion sets the component config version to the
-// KubeSchedulerConfiguration version used. The string should be the full
-// scheme group/version of the external type we converted from (for example
-// "kubescheduler.config.k8s.io/v1")
-func WithComponentConfigVersion(apiVersion string) Option {
-	return func(o *schedulerOptions) {
-		o.componentConfigVersion = apiVersion
-	}
-}
-
-// WithKubeConfig sets the kube config for Scheduler.
-func WithKubeConfig(cfg *restclient.Config) Option {
-	return func(o *schedulerOptions) {
-		o.kubeConfig = cfg
-	}
-}
-
-// WithProfiles sets profiles for Scheduler. By default, there is one profile
-// with the name "default-scheduler".
-func WithProfiles(p ...schedulerapi.KubeSchedulerProfile) Option {
-	return func(o *schedulerOptions) {
-		o.profiles = p
-		o.applyDefaultProfile = false
-	}
-}
-
-// WithParallelism sets the parallelism for all scheduler algorithms. Default is 16.
-func WithParallelism(threads int32) Option {
-	return func(o *schedulerOptions) {
-		o.parallelism = threads
-	}
-}
-
-// WithPercentageOfNodesToScore sets percentageOfNodesToScore for Scheduler.
-// The default value of 0 will use an adaptive percentage: 50 - (num of nodes)/125.
-func WithPercentageOfNodesToScore(percentageOfNodesToScore *int32) Option {
-	return func(o *schedulerOptions) {
-		if percentageOfNodesToScore != nil {
-			o.percentageOfNodesToScore = *percentageOfNodesToScore
-		}
-	}
-}
-
-// WithFrameworkOutOfTreeRegistry sets the registry for out-of-tree plugins. Those plugins
-// will be appended to the default registry.
-func WithFrameworkOutOfTreeRegistry(registry frameworkruntime.Registry) Option {
-	return func(o *schedulerOptions) {
-		o.frameworkOutOfTreeRegistry = registry
-	}
-}
-
-// WithPodInitialBackoffSeconds sets podInitialBackoffSeconds for Scheduler, the default value is 1
-func WithPodInitialBackoffSeconds(podInitialBackoffSeconds int64) Option {
-	return func(o *schedulerOptions) {
-		o.podInitialBackoffSeconds = podInitialBackoffSeconds
-	}
-}
-
-// WithPodMaxBackoffSeconds sets podMaxBackoffSeconds for Scheduler, the default value is 10
-func WithPodMaxBackoffSeconds(podMaxBackoffSeconds int64) Option {
-	return func(o *schedulerOptions) {
-		o.podMaxBackoffSeconds = podMaxBackoffSeconds
-	}
-}
-
-// WithPodMaxInUnschedulablePodsDuration sets podMaxInUnschedulablePodsDuration for PriorityQueue.
-func WithPodMaxInUnschedulablePodsDuration(duration time.Duration) Option {
-	return func(o *schedulerOptions) {
-		o.podMaxInUnschedulablePodsDuration = duration
-	}
-}
-
-// WithExtenders sets extenders for the Scheduler
-func WithExtenders(e ...schedulerapi.Extender) Option {
-	return func(o *schedulerOptions) {
-		o.extenders = e
-	}
-}
-
-// FrameworkCapturer is used for registering a notify function in building framework.
-type FrameworkCapturer func(schedulerapi.KubeSchedulerProfile)
-
-// WithBuildFrameworkCapturer sets a notify function for getting buildFramework details.
-func WithBuildFrameworkCapturer(fc FrameworkCapturer) Option {
-	return func(o *schedulerOptions) {
-		o.frameworkCapturer = fc
-	}
-}
-
 var defaultSchedulerOptions = schedulerOptions{
 	percentageOfNodesToScore:          schedulerapi.DefaultPercentageOfNodesToScore,
 	podInitialBackoffSeconds:          int64(internalqueue.DefaultPodInitialBackoffDuration.Seconds()),
@@ -452,4 +363,93 @@ func newPodInformer(cs clientset.Interface, resyncPeriod time.Duration) cache.Sh
 		options.FieldSelector = selector
 	}
 	return coreinformers.NewFilteredPodInformer(cs, metav1.NamespaceAll, resyncPeriod, cache.Indexers{}, tweakListOptions)
+}
+
+// WithComponentConfigVersion sets the component config version to the
+// KubeSchedulerConfiguration version used. The string should be the full
+// scheme group/version of the external type we converted from (for example
+// "kubescheduler.config.k8s.io/v1")
+func WithComponentConfigVersion(apiVersion string) Option {
+	return func(o *schedulerOptions) {
+		o.componentConfigVersion = apiVersion
+	}
+}
+
+// WithKubeConfig sets the kube config for Scheduler.
+func WithKubeConfig(cfg *restclient.Config) Option {
+	return func(o *schedulerOptions) {
+		o.kubeConfig = cfg
+	}
+}
+
+// WithProfiles sets profiles for Scheduler. By default, there is one profile
+// with the name "default-scheduler".
+func WithProfiles(p ...schedulerapi.KubeSchedulerProfile) Option {
+	return func(o *schedulerOptions) {
+		o.profiles = p
+		o.applyDefaultProfile = false
+	}
+}
+
+// WithParallelism sets the parallelism for all scheduler algorithms. Default is 16.
+func WithParallelism(threads int32) Option {
+	return func(o *schedulerOptions) {
+		o.parallelism = threads
+	}
+}
+
+// WithPercentageOfNodesToScore sets percentageOfNodesToScore for Scheduler.
+// The default value of 0 will use an adaptive percentage: 50 - (num of nodes)/125.
+func WithPercentageOfNodesToScore(percentageOfNodesToScore *int32) Option {
+	return func(o *schedulerOptions) {
+		if percentageOfNodesToScore != nil {
+			o.percentageOfNodesToScore = *percentageOfNodesToScore
+		}
+	}
+}
+
+// WithFrameworkOutOfTreeRegistry sets the registry for out-of-tree plugins. Those plugins
+// will be appended to the default registry.
+func WithFrameworkOutOfTreeRegistry(registry frameworkruntime.Registry) Option {
+	return func(o *schedulerOptions) {
+		o.frameworkOutOfTreeRegistry = registry
+	}
+}
+
+// WithPodInitialBackoffSeconds sets podInitialBackoffSeconds for Scheduler, the default value is 1
+func WithPodInitialBackoffSeconds(podInitialBackoffSeconds int64) Option {
+	return func(o *schedulerOptions) {
+		o.podInitialBackoffSeconds = podInitialBackoffSeconds
+	}
+}
+
+// WithPodMaxBackoffSeconds sets podMaxBackoffSeconds for Scheduler, the default value is 10
+func WithPodMaxBackoffSeconds(podMaxBackoffSeconds int64) Option {
+	return func(o *schedulerOptions) {
+		o.podMaxBackoffSeconds = podMaxBackoffSeconds
+	}
+}
+
+// WithPodMaxInUnschedulablePodsDuration sets podMaxInUnschedulablePodsDuration for PriorityQueue.
+func WithPodMaxInUnschedulablePodsDuration(duration time.Duration) Option {
+	return func(o *schedulerOptions) {
+		o.podMaxInUnschedulablePodsDuration = duration
+	}
+}
+
+// WithExtenders sets extenders for the Scheduler
+func WithExtenders(e ...schedulerapi.Extender) Option {
+	return func(o *schedulerOptions) {
+		o.extenders = e
+	}
+}
+
+// FrameworkCapturer is used for registering a notify function in building framework.
+type FrameworkCapturer func(schedulerapi.KubeSchedulerProfile)
+
+// WithBuildFrameworkCapturer sets a notify function for getting buildFramework details.
+func WithBuildFrameworkCapturer(fc FrameworkCapturer) Option {
+	return func(o *schedulerOptions) {
+		o.frameworkCapturer = fc
+	}
 }

@@ -30,8 +30,8 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/component-base/configz"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
-	kubeschedulerconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/config"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app/options"
+	kubeschedulerconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/over_config"
 
 	"k8s.io/klog/v2"
 )

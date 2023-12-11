@@ -42,7 +42,7 @@ import (
 	"k8s.io/component-base/logs"
 	logsapi "k8s.io/component-base/logs/api/v1"
 	"k8s.io/component-base/metrics"
-	schedulerappconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/config"
+	schedulerappconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/over_config"
 	"k8s.io/kubernetes/pkg/scheduler"
 	kubeschedulerconfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/validation"

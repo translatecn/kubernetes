@@ -18,7 +18,7 @@ package generic
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	quota "k8s.io/apiserver/pkg/quota/v1"
+	quota "k8s.io/apiserver/pkg/over_quota/v1"
 )
 
 // implements a basic configuration

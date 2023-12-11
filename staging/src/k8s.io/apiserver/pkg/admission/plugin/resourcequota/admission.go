@@ -28,8 +28,8 @@ import (
 	resourcequotaapi "k8s.io/apiserver/pkg/admission/plugin/resourcequota/apis/resourcequota"
 	v1 "k8s.io/apiserver/pkg/admission/plugin/resourcequota/apis/resourcequota/v1"
 	"k8s.io/apiserver/pkg/admission/plugin/resourcequota/apis/resourcequota/validation"
-	quota "k8s.io/apiserver/pkg/quota/v1"
-	"k8s.io/apiserver/pkg/quota/v1/generic"
+	quota "k8s.io/apiserver/pkg/over_quota/v1"
+	"k8s.io/apiserver/pkg/over_quota/v1/generic"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 )
