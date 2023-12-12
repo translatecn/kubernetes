@@ -121,27 +121,6 @@ func (sched *Scheduler) addPodToSchedulingQueue(obj interface{}) {
 	}
 }
 
-func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
-	oldPod, newPod := oldObj.(*v1.Pod), newObj.(*v1.Pod)
-	// Bypass update event that carries identical objects; otherwise, a duplicated
-	// Pod may go through scheduling and cause unexpected behavior (see #96071).
-	if oldPod.ResourceVersion == newPod.ResourceVersion {
-		return
-	}
-
-	isAssumed, err := sched.Cache.IsAssumedPod(newPod)
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("failed to check whether pod %s/%s is assumed: %v", newPod.Namespace, newPod.Name, err))
-	}
-	if isAssumed {
-		return
-	}
-
-	if err := sched.SchedulingQueue.Update(oldPod, newPod); err != nil {
-		utilruntime.HandleError(fmt.Errorf("unable to update %T: %v", newObj, err))
-	}
-}
-
 func (sched *Scheduler) deletePodFromSchedulingQueue(obj interface{}) {
 	var pod *v1.Pod
 	switch t := obj.(type) {
@@ -538,4 +517,25 @@ type AdmissionResult struct {
 	Name                 string
 	Reason               string
 	InsufficientResource *noderesources.InsufficientResource // 资源不足
+}
+
+func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
+	oldPod, newPod := oldObj.(*v1.Pod), newObj.(*v1.Pod)
+	// Bypass update event that carries identical objects; otherwise, a duplicated
+	// Pod may go through scheduling and cause unexpected behavior (see #96071).
+	if oldPod.ResourceVersion == newPod.ResourceVersion {
+		return
+	}
+
+	isAssumed, err := sched.Cache.IsAssumedPod(newPod) // 如果假定pod未过期，则返回true。
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("failed to check whether pod %s/%s is assumed: %v", newPod.Namespace, newPod.Name, err))
+	}
+	if isAssumed {
+		return
+	}
+
+	if err := sched.SchedulingQueue.Update(oldPod, newPod); err != nil {
+		utilruntime.HandleError(fmt.Errorf("unable to update %T: %v", newObj, err))
+	}
 }

@@ -646,10 +646,9 @@ func copyDeltas(d Deltas) Deltas {
 	return d2
 }
 
-// DeletedFinalStateUnknown is placed into a DeltaFIFO in the case where an object
-// was deleted but the watch deletion event was missed while disconnected from
-// apiserver. In this case we don't know the final "resting" state of the object, so
-// there's a chance the included `Obj` is stale.
+// DeletedFinalStateUnknown 被放置到DeltaFIFO中，如果对象被删除，
+// 但是在与服务器断开连接时错过了watch删除事件。在这种情况下，
+// 我们不知道对象的最终“休息”状态，因此包含的“Obj”有可能是过时的。
 type DeletedFinalStateUnknown struct {
 	Key string
 	Obj interface{}

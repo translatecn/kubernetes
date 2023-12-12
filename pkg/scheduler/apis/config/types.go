@@ -39,91 +39,46 @@ const (
 
 // KubeSchedulerConfiguration configures a scheduler
 type KubeSchedulerConfiguration struct {
-	// TypeMeta contains the API version and kind. In kube-scheduler, after
-	// conversion from the versioned KubeSchedulerConfiguration type to this
-	// internal type, we set the APIVersion field to the scheme group/version of
-	// the type we converted from. This is done in cmd/kube-scheduler in two
-	// places: (1) when loading config from a file, (2) generating the default
-	// config. Based on the versioned type set in this field, we make decisions;
-	// for example (1) during validation to check for usage of removed plugins,
-	// (2) writing config to a file, (3) initialising the scheduler.
 	metav1.TypeMeta
-
-	// Parallelism defines the amount of parallelism in algorithms for scheduling a Pods. Must be greater than 0. Defaults to 16
-	Parallelism int32
-
-	// LeaderElection defines the configuration of leader election client.
-	LeaderElection componentbaseconfig.LeaderElectionConfiguration
-
-	// ClientConnection specifies the kubeconfig file and client connection
-	// settings for the proxy server to use when communicating with the apiserver.
-	ClientConnection componentbaseconfig.ClientConnectionConfiguration
-	// HealthzBindAddress is the IP address and port for the health check server to serve on.
+	Parallelism        int32
+	LeaderElection     componentbaseconfig.LeaderElectionConfiguration
+	ClientConnection   componentbaseconfig.ClientConnectionConfiguration
 	HealthzBindAddress string
-	// MetricsBindAddress is the IP address and port for the metrics server to serve on.
 	MetricsBindAddress string
-
-	// DebuggingConfiguration holds configuration for Debugging related features
-	// TODO: We might wanna make this a substruct like Debugging componentbaseconfig.DebuggingConfiguration
 	componentbaseconfig.DebuggingConfiguration
 
-	// PercentageOfNodesToScore is the percentage of all nodes that once found feasible
-	// for running a pod, the scheduler stops its search for more feasible nodes in
-	// the cluster. This helps improve scheduler's performance. Scheduler always tries to find
-	// at least "minFeasibleNodesToFind" feasible nodes no matter what the value of this flag is.
-	// Example: if the cluster size is 500 nodes and the value of this flag is 30,
-	// then scheduler stops finding further feasible nodes once it finds 150 feasible ones.
-	// When the value is 0, default percentage (5%--50% based on the size of the cluster) of the
-	// nodes will be scored. It is overridden by profile level PercentageOfNodesToScore.
+	// PercentageOfNodesToScore是所有节点的百分比，一旦发现运行pod可行，调度器停止在集群中搜索更多可行的节点。这有助于提高调度器的性能。无论这个标志的值是多少，调度器总是试图找到至少“minFeasibleNodesToFind”可行节点。
+	// 示例:如果集群大小为500个节点，此标志的值为30，则调度程序一旦找到150个可行节点就停止寻找进一步的可行节点。当该值为0时，将对节点的默认百分比(基于集群大小的5%- 50%)进行评分。
 	PercentageOfNodesToScore *int32
 
-	// PodInitialBackoffSeconds is the initial backoff for unschedulable pods.
-	// If specified, it must be greater than 0. If this value is null, the default value (1s)
-	// will be used.
+	// PodInitialBackoffSeconds是不可调度pod的初始回退。
+	// 如果指定，必须大于0。如果该值为空，则使用默认值(1s)。
 	PodInitialBackoffSeconds int64
 
-	// PodMaxBackoffSeconds is the max backoff for unschedulable pods.
-	// If specified, it must be greater than or equal to podInitialBackoffSeconds. If this value is null,
-	// the default value (10s) will be used.
+	// PodMaxBackoffSeconds是不可调度pod的最大backoff。
+	//如果指定，它必须大于或等于podInitialBackoffSeconds。如果该值为空，
+	//使用默认值(10s)。
 	PodMaxBackoffSeconds int64
 
 	//配置文件是kube-scheduler支持的调度配置文件。pod可以通过设置其关联的配置文件来选择在特定配置文件下进行调度
 	//调度器名称。没有指定任何调度器名称的pod将被调度
 	//使用"default-scheduler"配置文件，如果这里有的话。
-
 	Profiles []KubeSchedulerProfile
 
-	// Extenders are the list of scheduler extenders, each holding the values of how to communicate
-	// with the extender. These extenders are shared by all scheduler profiles.
+	//扩展程序是调度程序扩展程序的列表，每个扩展程序都包含如何通信的值
+	//使用扩展器。这些扩展程序由所有调度器配置文件共享。
 	Extenders []Extender
 }
 
 // KubeSchedulerProfile is a scheduling profile.
 type KubeSchedulerProfile struct {
-	// SchedulerName is the name of the scheduler associated to this profile.
-	// If SchedulerName matches with the pod's "spec.schedulerName", then the pod
-	// is scheduled with this profile.
-	SchedulerName string
+	SchedulerName            string
+	PercentageOfNodesToScore *int32 // 与全局作用一样
 
-	// PercentageOfNodesToScore is the percentage of all nodes that once found feasible
-	// for running a pod, the scheduler stops its search for more feasible nodes in
-	// the cluster. This helps improve scheduler's performance. Scheduler always tries to find
-	// at least "minFeasibleNodesToFind" feasible nodes no matter what the value of this flag is.
-	// Example: if the cluster size is 500 nodes and the value of this flag is 30,
-	// then scheduler stops finding further feasible nodes once it finds 150 feasible ones.
-	// When the value is 0, default percentage (5%--50% based on the size of the cluster) of the
-	// nodes will be scored. It will override global PercentageOfNodesToScore. If it is empty,
-	// global PercentageOfNodesToScore will be used.
-	PercentageOfNodesToScore *int32
-
-	// Plugins specify the set of plugins that should be enabled or disabled.
-	// Enabled plugins are the ones that should be enabled in addition to the
-	// default plugins. Disabled plugins are any of the default plugins that
-	// should be disabled.
-	// When no enabled or disabled plugin is specified for an extension point,
-	// default plugins for that extension point will be used if there is any.
-	// If a QueueSort plugin is specified, the same QueueSort Plugin and
-	// PluginConfig must be specified for all profiles.
+	//指定应该启用或禁用的插件集。
+	//启用的插件是除了默认插件之外应该启用的插件。禁用的插件是任何应该被禁用的默认插件。
+	//当扩展点没有指定启用或禁用插件时，如果有，则使用该扩展点的默认插件。
+	//如果指定了一个QueueSort插件，必须为所有配置文件指定相同的QueueSort plugin和PluginConfig。
 	Plugins *Plugins
 
 	// PluginConfig is an optional set of custom plugin arguments for each plugin.

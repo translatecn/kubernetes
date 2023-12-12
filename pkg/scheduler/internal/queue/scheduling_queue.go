@@ -257,16 +257,6 @@ var defaultPriorityQueueOptions = priorityQueueOptions{
 // Making sure that PriorityQueue implements SchedulingQueue.
 var _ SchedulingQueue = &PriorityQueue{}
 
-// newQueuedPodInfoForLookup builds a QueuedPodInfo object for a lookup in the queue.
-func newQueuedPodInfoForLookup(pod *v1.Pod, plugins ...string) *framework.QueuedPodInfo {
-	// Since this is only used for a lookup in the queue, we only need to set the Pod,
-	// and so we avoid creating a full PodInfo, which is expensive to instantiate frequently.
-	return &framework.QueuedPodInfo{
-		PodInfo:              &framework.PodInfo{Pod: pod},
-		UnschedulablePlugins: sets.NewString(plugins...),
-	}
-}
-
 // NewPriorityQueue creates a PriorityQueue object.
 func NewPriorityQueue(
 	lessFn framework.LessFunc,
@@ -593,10 +583,9 @@ func isPodUpdated(oldPod, newPod *v1.Pod) bool {
 	return !reflect.DeepEqual(strip(oldPod), strip(newPod))
 }
 
-// Update updates a pod in the active or backoff queue if present. Otherwise, it removes
-// the item from the unschedulable queue if pod is updated in a way that it may
-// become schedulable and adds the updated one to the active queue.
-// If pod is not present in any of the queues, it is added to the active queue.
+// Update 更新active或backoff队列中的pod。否则，如果pod以一种可能变得可调度的方式更新，
+// 它将从不可调度队列中删除项目，并将更新后的项目添加到活动队列中。
+// 如果pod不在任何队列中，它将被添加到活动队列中。
 func (p *PriorityQueue) Update(oldPod, newPod *v1.Pod) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -1108,4 +1097,14 @@ func intersect(x, y sets.String) bool {
 		}
 	}
 	return false
+}
+
+// newQueuedPodInfoForLookup builds a QueuedPodInfo object for a lookup in the queue.
+func newQueuedPodInfoForLookup(pod *v1.Pod, plugins ...string) *framework.QueuedPodInfo {
+	// Since this is only used for a lookup in the queue, we only need to set the Pod,
+	// and so we avoid creating a full PodInfo, which is expensive to instantiate frequently.
+	return &framework.QueuedPodInfo{
+		PodInfo:              &framework.PodInfo{Pod: pod},
+		UnschedulablePlugins: sets.NewString(plugins...),
+	}
 }

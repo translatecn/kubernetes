@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"k8s.io/klog/v2"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -32,7 +33,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/klog/v2"
 	configv1 "k8s.io/kube-scheduler/config/v1"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/apis/config"
 	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
@@ -66,13 +66,11 @@ type Scheduler struct {
 
 	Extenders []framework.Extender
 
-	// NextPod should be a function that blocks until the next pod
-	// is available. We don't use a channel for this, because scheduling
-	// a pod may take some amount of time and we don't want pods to get
-	// stale while they sit in a channel.
+	//NextPod 应该是一个函数，直到下一个pod可用为止。我们不使用通道来执行此操作，因为调度pod可能需要一些时间，
+	//并且我们不希望pod在通道中运行时变得陈旧。
 	NextPod func() *framework.QueuedPodInfo
 
-	// FailureHandler is called upon a scheduling failure.
+	// FailureHandler 在调度失败时调用。
 	FailureHandler FailureHandlerFn
 
 	// SchedulePod tries to schedule the given pod to one of the nodes in the node list.
@@ -81,12 +79,10 @@ type Scheduler struct {
 	SchedulePod func(ctx context.Context, fwk framework.Framework, state *framework.CycleState, pod *v1.Pod) (ScheduleResult, error)
 
 	// Close this to shut down the scheduler.
-	StopEverything <-chan struct{}
+	StopEverything  <-chan struct{}
+	SchedulingQueue internalqueue.SchedulingQueue // 保存要调度的pod
 
-	// SchedulingQueue holds pods to be scheduled
-	SchedulingQueue internalqueue.SchedulingQueue
-
-	// Profiles are the scheduling profiles.
+	// Profiles 是调度配置文件。
 	Profiles profile.Map
 
 	client clientset.Interface
@@ -249,7 +245,7 @@ func New(client clientset.Interface,
 		Extenders:                extenders,
 		NextPod:                  internalqueue.MakeNextPodFunc(podQueue),
 		StopEverything:           stopEverything,
-		SchedulingQueue:          podQueue,
+		SchedulingQueue:          podQueue, // ✅
 		Profiles:                 profiles,
 	}
 	sched.applyDefaultHandlers()
