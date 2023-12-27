@@ -93,7 +93,7 @@ spec:
         terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      schedulerName: default-scheduler
+      schedulerName: default-over_scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
 status:

@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package app implements a Server object for running the scheduler.
+// Package app implements a Server object for running the over_scheduler.
 package app
 
 import (
 	"context"
 	"fmt"
+	"k8s.io/kubernetes/pkg/over_scheduler/profile"
 	"net/http"
 	"os"
 	goruntime "runtime"
@@ -44,24 +45,23 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	cliflag "k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/cli/globalflag"
-	"k8s.io/component-base/configz"
 	"k8s.io/component-base/logs"
 	logsapi "k8s.io/component-base/logs/api/v1"
 	"k8s.io/component-base/metrics/features"
 	"k8s.io/component-base/metrics/legacyregistry"
 	"k8s.io/component-base/metrics/prometheus/slis"
+	"k8s.io/component-base/over_configz"
 	"k8s.io/component-base/term"
 	"k8s.io/component-base/version"
 	"k8s.io/component-base/version/verflag"
 	"k8s.io/klog/v2"
-	"k8s.io/kubernetes/cmd/kube-scheduler/app/options"
 	schedulerserverconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/over_config"
-	"k8s.io/kubernetes/pkg/scheduler"
-	kubeschedulerconfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
-	"k8s.io/kubernetes/pkg/scheduler/apis/config/latest"
-	"k8s.io/kubernetes/pkg/scheduler/framework/runtime"
-	"k8s.io/kubernetes/pkg/scheduler/metrics/resources"
-	"k8s.io/kubernetes/pkg/scheduler/profile"
+	"k8s.io/kubernetes/cmd/kube-scheduler/app/over_options"
+	"k8s.io/kubernetes/pkg/over_scheduler"
+	kubeschedulerconfig "k8s.io/kubernetes/pkg/over_scheduler/apis/config"
+	"k8s.io/kubernetes/pkg/over_scheduler/apis/config/latest"
+	"k8s.io/kubernetes/pkg/over_scheduler/framework/runtime"
+	"k8s.io/kubernetes/pkg/over_scheduler/metrics/resources"
 )
 
 func init() {
@@ -70,22 +70,22 @@ func init() {
 }
 
 // Option configures a framework.Registry.
-type Option func(runtime.Registry) error
+type Option func(over_runtime.Registry) error
 
 // NewSchedulerCommand creates a *cobra.Command object with default parameters and registryOptions
 func NewSchedulerCommand(registryOptions ...Option) *cobra.Command {
-	opts := options.NewOptions()
+	opts := over_options.NewOptions()
 
 	cmd := &cobra.Command{
-		Use: "kube-scheduler",
-		Long: `The Kubernetes scheduler is a control plane process which assigns
-Pods to Nodes. The scheduler determines which Nodes are valid placements for
+		Use: "kube-over_scheduler",
+		Long: `The Kubernetes over_scheduler is a control plane process which assigns
+Pods to Nodes. The over_scheduler determines which Nodes are valid placements for
 each Pod in the scheduling queue according to constraints and available
-resources. The scheduler then ranks each valid Node and binds the Pod to a
+resources. The over_scheduler then ranks each valid Node and binds the Pod to a
 suitable Node. Multiple different schedulers may be used within a cluster;
-kube-scheduler is the reference implementation.
+kube-over_scheduler is the reference implementation.
 See [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/)
-for more information about scheduling and the kube-scheduler component.`,
+for more information about scheduling and the kube-over_scheduler component.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCommand(cmd, opts, registryOptions...)
 		},
@@ -117,8 +117,8 @@ for more information about scheduling and the kube-scheduler component.`,
 	return cmd
 }
 
-// runCommand runs the scheduler.
-func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Option) error {
+// runCommand runs the over_scheduler.
+func runCommand(cmd *cobra.Command, opts *over_options.Options, registryOptions ...Option) error {
 	verflag.PrintAndExitIfRequested() // 检查 --version
 
 	// Activate logging as soon as possible, after that
@@ -137,7 +137,7 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
 		cancel()
 	}()
 
-	cc, sched, err := Setup(ctx, opts, registryOptions...)
+	cc, sched, err := Setup(ctx, opts, registryOptions...) // ✅
 	if err != nil {
 		return err
 	}
@@ -146,15 +146,15 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
 	return Run(ctx, cc, sched)
 }
 
-// Run executes the scheduler based on the given configuration. It only returns on error or when context is done.
-func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *scheduler.Scheduler) error {
+// Run executes the over_scheduler based on the given configuration. It only returns on error or when context is done.
+func Run(ctx context.Context, cc *schedulerserverconfig.CompletedConfig, sched *over_scheduler.Scheduler) error {
 	// To help debugging, immediately log version
 	klog.InfoS("Starting Kubernetes Scheduler", "version", version.Get())
 
 	klog.InfoS("Golang settings", "GOGC", os.Getenv("GOGC"), "GOMAXPROCS", os.Getenv("GOMAXPROCS"), "GOTRACEBACK", os.Getenv("GOTRACEBACK"))
 
 	// Configz registration.
-	if cz, err := configz.New("componentconfig"); err == nil {
+	if cz, err := over_configz.New("componentconfig"); err == nil {
 		cz.Set(cc.ComponentConfig)
 	} else {
 		return fmt.Errorf("unable to register configz: %s", err)
@@ -258,7 +258,7 @@ func buildHandlerChain(handler http.Handler, authn authenticator.Request, authz 
 }
 
 func installMetricHandler(pathRecorderMux *mux.PathRecorderMux, informers informers.SharedInformerFactory, isLeader func() bool) {
-	configz.InstallHandler(pathRecorderMux)
+	over_configz.InstallHandler(pathRecorderMux)
 	pathRecorderMux.Handle("/metrics", legacyregistry.HandlerWithReset())
 
 	resourceMetricsHandler := resources.Handler(informers.Core().V1().Pods().Lister())
@@ -273,7 +273,7 @@ func installMetricHandler(pathRecorderMux *mux.PathRecorderMux, informers inform
 // newHealthzAndMetricsHandler creates a healthz server from the config, and will also
 // embed the metrics handler.
 func newHealthzAndMetricsHandler(config *kubeschedulerconfig.KubeSchedulerConfiguration, informers informers.SharedInformerFactory, isLeader func() bool, checks ...healthz.HealthChecker) http.Handler {
-	pathRecorderMux := mux.NewPathRecorderMux("kube-scheduler")
+	pathRecorderMux := mux.NewPathRecorderMux("kube-over_scheduler")
 	healthz.InstallHandler(pathRecorderMux, checks...)
 	installMetricHandler(pathRecorderMux, informers, isLeader)
 	if utilfeature.DefaultFeatureGate.Enabled(features.ComponentSLIs) {
@@ -289,22 +289,16 @@ func newHealthzAndMetricsHandler(config *kubeschedulerconfig.KubeSchedulerConfig
 	return pathRecorderMux
 }
 
-func getRecorderFactory(cc *schedulerserverconfig.CompletedConfig) profile.RecorderFactory {
-	return func(name string) events.EventRecorder {
-		return cc.EventBroadcaster.NewRecorder(name)
-	}
-}
-
 // WithPlugin creates an Option based on plugin name and factory. Please don't remove this function: it is used to register out-of-tree plugins,
-// hence there are no references to it from the kubernetes scheduler code base.
-func WithPlugin(name string, factory runtime.PluginFactory) Option {
-	return func(registry runtime.Registry) error {
+// hence there are no references to it from the kubernetes over_scheduler code base.
+func WithPlugin(name string, factory over_runtime.PluginFactory) Option {
+	return func(registry over_runtime.Registry) error {
 		return registry.Register(name, factory)
 	}
 }
 
-// Setup creates a completed config and a scheduler based on the command args and options
-func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions ...Option) (*schedulerserverconfig.CompletedConfig, *scheduler.Scheduler, error) {
+// Setup creates a completed config and a over_scheduler based on the command args and options
+func Setup(ctx context.Context, opts *over_options.Options, outOfTreeRegistryOptions ...Option) (*schedulerserverconfig.CompletedConfig, *over_scheduler.Scheduler, error) {
 	if cfg, err := latest.Default(); err != nil {
 		return nil, nil, err
 	} else {
@@ -323,7 +317,7 @@ func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions 
 	// Get the completed config
 	cc := c.Complete()
 
-	outOfTreeRegistry := make(runtime.Registry)
+	outOfTreeRegistry := make(over_runtime.Registry)
 	for _, option := range outOfTreeRegistryOptions {
 		if err := option(outOfTreeRegistry); err != nil {
 			return nil, nil, err
@@ -332,23 +326,23 @@ func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions 
 
 	recorderFactory := getRecorderFactory(&cc)
 	completedProfiles := make([]kubeschedulerconfig.KubeSchedulerProfile, 0)
-	// Create the scheduler.
-	sched, err := scheduler.New(cc.Client,
+	// Create the over_scheduler.
+	sched, err := over_scheduler.New(cc.Client,
 		cc.InformerFactory,
 		cc.DynInformerFactory,
 		recorderFactory,
 		ctx.Done(),
-		scheduler.WithComponentConfigVersion(cc.ComponentConfig.TypeMeta.APIVersion),
-		scheduler.WithKubeConfig(cc.KubeConfig),
-		scheduler.WithProfiles(cc.ComponentConfig.Profiles...),
-		scheduler.WithPercentageOfNodesToScore(cc.ComponentConfig.PercentageOfNodesToScore),
-		scheduler.WithFrameworkOutOfTreeRegistry(outOfTreeRegistry),
-		scheduler.WithPodMaxBackoffSeconds(cc.ComponentConfig.PodMaxBackoffSeconds),
-		scheduler.WithPodInitialBackoffSeconds(cc.ComponentConfig.PodInitialBackoffSeconds),
-		scheduler.WithPodMaxInUnschedulablePodsDuration(cc.PodMaxInUnschedulablePodsDuration),
-		scheduler.WithExtenders(cc.ComponentConfig.Extenders...),
-		scheduler.WithParallelism(cc.ComponentConfig.Parallelism),
-		scheduler.WithBuildFrameworkCapturer(func(profile kubeschedulerconfig.KubeSchedulerProfile) {
+		over_scheduler.WithComponentConfigVersion(cc.ComponentConfig.TypeMeta.APIVersion),
+		over_scheduler.WithKubeConfig(cc.KubeConfig),
+		over_scheduler.WithProfiles(cc.ComponentConfig.Profiles...),
+		over_scheduler.WithPercentageOfNodesToScore(cc.ComponentConfig.PercentageOfNodesToScore),
+		over_scheduler.WithFrameworkOutOfTreeRegistry(outOfTreeRegistry),
+		over_scheduler.WithPodMaxBackoffSeconds(cc.ComponentConfig.PodMaxBackoffSeconds),
+		over_scheduler.WithPodInitialBackoffSeconds(cc.ComponentConfig.PodInitialBackoffSeconds),
+		over_scheduler.WithPodMaxInUnschedulablePodsDuration(cc.PodMaxInUnschedulablePodsDuration),
+		over_scheduler.WithExtenders(cc.ComponentConfig.Extenders...),
+		over_scheduler.WithParallelism(cc.ComponentConfig.Parallelism),
+		over_scheduler.WithBuildFrameworkCapturer(func(profile kubeschedulerconfig.KubeSchedulerProfile) {
 			// Profiles are processed during Framework instantiation to set default plugins and configurations. Capturing them for logging
 			completedProfiles = append(completedProfiles, profile)
 		}),
@@ -356,9 +350,14 @@ func Setup(ctx context.Context, opts *options.Options, outOfTreeRegistryOptions 
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := options.LogOrWriteConfig(opts.WriteConfigTo, &cc.ComponentConfig, completedProfiles); err != nil {
+	if err := over_options.LogOrWriteConfig(opts.WriteConfigTo, &cc.ComponentConfig, completedProfiles); err != nil {
 		return nil, nil, err
 	}
 
 	return &cc, sched, nil
+}
+func getRecorderFactory(cc *schedulerserverconfig.CompletedConfig) profile.RecorderFactory {
+	return func(name string) events.EventRecorder {
+		return cc.EventBroadcaster.NewRecorder(name)
+	}
 }

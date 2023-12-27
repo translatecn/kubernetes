@@ -78,7 +78,7 @@ type AllocationMode string
 const (
 	// When a ResourceClaim has AllocationModeWaitForFirstConsumer, allocation is
 	// delayed until a Pod gets scheduled that needs the ResourceClaim. The
-	// scheduler will consider all resource requirements of that Pod and
+	// over_scheduler will consider all resource requirements of that Pod and
 	// trigger allocation for a node that fits the Pod.
 	AllocationModeWaitForFirstConsumer AllocationMode = "WaitForFirstConsumer"
 
@@ -141,7 +141,7 @@ type AllocationResult struct {
 	ResourceHandle string
 
 	// This field will get set by the resource driver after it has
-	// allocated the resource driver to inform the scheduler where it can
+	// allocated the resource driver to inform the over_scheduler where it can
 	// schedule Pods using the ResourceClaim.
 	//
 	// Setting this field is optional. If null, the resource is available
@@ -284,7 +284,7 @@ type ResourceClass struct {
 	// +optional
 	ParametersRef *ResourceClassParametersReference
 
-	// Only nodes matching the selector will be considered by the scheduler
+	// Only nodes matching the selector will be considered by the over_scheduler
 	// when trying to find a Node that fits a Pod when that Pod uses
 	// a ResourceClaim that has not been allocated yet.
 	//

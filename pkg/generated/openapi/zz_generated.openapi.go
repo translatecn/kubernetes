@@ -1079,66 +1079,66 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/kube-proxy/config/v1alpha1.KubeProxyIPTablesConfiguration":                                schema_k8sio_kube_proxy_config_v1alpha1_KubeProxyIPTablesConfiguration(ref),
 		"k8s.io/kube-proxy/config/v1alpha1.KubeProxyIPVSConfiguration":                                    schema_k8sio_kube_proxy_config_v1alpha1_KubeProxyIPVSConfiguration(ref),
 		"k8s.io/kube-proxy/config/v1alpha1.KubeProxyWinkernelConfiguration":                               schema_k8sio_kube_proxy_config_v1alpha1_KubeProxyWinkernelConfiguration(ref),
-		"k8s.io/kube-scheduler/config/v1.DefaultPreemptionArgs":                                           schema_k8sio_kube_scheduler_config_v1_DefaultPreemptionArgs(ref),
-		"k8s.io/kube-scheduler/config/v1.Extender":                                                        schema_k8sio_kube_scheduler_config_v1_Extender(ref),
-		"k8s.io/kube-scheduler/config/v1.ExtenderManagedResource":                                         schema_k8sio_kube_scheduler_config_v1_ExtenderManagedResource(ref),
-		"k8s.io/kube-scheduler/config/v1.ExtenderTLSConfig":                                               schema_k8sio_kube_scheduler_config_v1_ExtenderTLSConfig(ref),
-		"k8s.io/kube-scheduler/config/v1.InterPodAffinityArgs":                                            schema_k8sio_kube_scheduler_config_v1_InterPodAffinityArgs(ref),
-		"k8s.io/kube-scheduler/config/v1.KubeSchedulerConfiguration":                                      schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref),
-		"k8s.io/kube-scheduler/config/v1.KubeSchedulerProfile":                                            schema_k8sio_kube_scheduler_config_v1_KubeSchedulerProfile(ref),
-		"k8s.io/kube-scheduler/config/v1.NodeAffinityArgs":                                                schema_k8sio_kube_scheduler_config_v1_NodeAffinityArgs(ref),
-		"k8s.io/kube-scheduler/config/v1.NodeResourcesBalancedAllocationArgs":                             schema_k8sio_kube_scheduler_config_v1_NodeResourcesBalancedAllocationArgs(ref),
-		"k8s.io/kube-scheduler/config/v1.NodeResourcesFitArgs":                                            schema_k8sio_kube_scheduler_config_v1_NodeResourcesFitArgs(ref),
-		"k8s.io/kube-scheduler/config/v1.Plugin":                                                          schema_k8sio_kube_scheduler_config_v1_Plugin(ref),
-		"k8s.io/kube-scheduler/config/v1.PluginConfig":                                                    schema_k8sio_kube_scheduler_config_v1_PluginConfig(ref),
-		"k8s.io/kube-scheduler/config/v1.PluginSet":                                                       schema_k8sio_kube_scheduler_config_v1_PluginSet(ref),
-		"k8s.io/kube-scheduler/config/v1.Plugins":                                                         schema_k8sio_kube_scheduler_config_v1_Plugins(ref),
-		"k8s.io/kube-scheduler/config/v1.PodTopologySpreadArgs":                                           schema_k8sio_kube_scheduler_config_v1_PodTopologySpreadArgs(ref),
-		"k8s.io/kube-scheduler/config/v1.RequestedToCapacityRatioParam":                                   schema_k8sio_kube_scheduler_config_v1_RequestedToCapacityRatioParam(ref),
-		"k8s.io/kube-scheduler/config/v1.ResourceSpec":                                                    schema_k8sio_kube_scheduler_config_v1_ResourceSpec(ref),
-		"k8s.io/kube-scheduler/config/v1.ScoringStrategy":                                                 schema_k8sio_kube_scheduler_config_v1_ScoringStrategy(ref),
-		"k8s.io/kube-scheduler/config/v1.UtilizationShapePoint":                                           schema_k8sio_kube_scheduler_config_v1_UtilizationShapePoint(ref),
-		"k8s.io/kube-scheduler/config/v1.VolumeBindingArgs":                                               schema_k8sio_kube_scheduler_config_v1_VolumeBindingArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.DefaultPreemptionArgs":                                      schema_k8sio_kube_scheduler_config_v1beta2_DefaultPreemptionArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.Extender":                                                   schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.ExtenderManagedResource":                                    schema_k8sio_kube_scheduler_config_v1beta2_ExtenderManagedResource(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.ExtenderTLSConfig":                                          schema_k8sio_kube_scheduler_config_v1beta2_ExtenderTLSConfig(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.InterPodAffinityArgs":                                       schema_k8sio_kube_scheduler_config_v1beta2_InterPodAffinityArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.KubeSchedulerConfiguration":                                 schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.KubeSchedulerProfile":                                       schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerProfile(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.NodeAffinityArgs":                                           schema_k8sio_kube_scheduler_config_v1beta2_NodeAffinityArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.NodeResourcesBalancedAllocationArgs":                        schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesBalancedAllocationArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.NodeResourcesFitArgs":                                       schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesFitArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.Plugin":                                                     schema_k8sio_kube_scheduler_config_v1beta2_Plugin(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.PluginConfig":                                               schema_k8sio_kube_scheduler_config_v1beta2_PluginConfig(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.PluginSet":                                                  schema_k8sio_kube_scheduler_config_v1beta2_PluginSet(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.Plugins":                                                    schema_k8sio_kube_scheduler_config_v1beta2_Plugins(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.PodTopologySpreadArgs":                                      schema_k8sio_kube_scheduler_config_v1beta2_PodTopologySpreadArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.RequestedToCapacityRatioParam":                              schema_k8sio_kube_scheduler_config_v1beta2_RequestedToCapacityRatioParam(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.ResourceSpec":                                               schema_k8sio_kube_scheduler_config_v1beta2_ResourceSpec(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.ScoringStrategy":                                            schema_k8sio_kube_scheduler_config_v1beta2_ScoringStrategy(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.UtilizationShapePoint":                                      schema_k8sio_kube_scheduler_config_v1beta2_UtilizationShapePoint(ref),
-		"k8s.io/kube-scheduler/config/v1beta2.VolumeBindingArgs":                                          schema_k8sio_kube_scheduler_config_v1beta2_VolumeBindingArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.DefaultPreemptionArgs":                                      schema_k8sio_kube_scheduler_config_v1beta3_DefaultPreemptionArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.Extender":                                                   schema_k8sio_kube_scheduler_config_v1beta3_Extender(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.ExtenderManagedResource":                                    schema_k8sio_kube_scheduler_config_v1beta3_ExtenderManagedResource(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.ExtenderTLSConfig":                                          schema_k8sio_kube_scheduler_config_v1beta3_ExtenderTLSConfig(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.InterPodAffinityArgs":                                       schema_k8sio_kube_scheduler_config_v1beta3_InterPodAffinityArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.KubeSchedulerConfiguration":                                 schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.KubeSchedulerProfile":                                       schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerProfile(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.NodeAffinityArgs":                                           schema_k8sio_kube_scheduler_config_v1beta3_NodeAffinityArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.NodeResourcesBalancedAllocationArgs":                        schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesBalancedAllocationArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.NodeResourcesFitArgs":                                       schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesFitArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.Plugin":                                                     schema_k8sio_kube_scheduler_config_v1beta3_Plugin(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.PluginConfig":                                               schema_k8sio_kube_scheduler_config_v1beta3_PluginConfig(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.PluginSet":                                                  schema_k8sio_kube_scheduler_config_v1beta3_PluginSet(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.Plugins":                                                    schema_k8sio_kube_scheduler_config_v1beta3_Plugins(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.PodTopologySpreadArgs":                                      schema_k8sio_kube_scheduler_config_v1beta3_PodTopologySpreadArgs(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.RequestedToCapacityRatioParam":                              schema_k8sio_kube_scheduler_config_v1beta3_RequestedToCapacityRatioParam(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.ResourceSpec":                                               schema_k8sio_kube_scheduler_config_v1beta3_ResourceSpec(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.ScoringStrategy":                                            schema_k8sio_kube_scheduler_config_v1beta3_ScoringStrategy(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.UtilizationShapePoint":                                      schema_k8sio_kube_scheduler_config_v1beta3_UtilizationShapePoint(ref),
-		"k8s.io/kube-scheduler/config/v1beta3.VolumeBindingArgs":                                          schema_k8sio_kube_scheduler_config_v1beta3_VolumeBindingArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.DefaultPreemptionArgs":                                           schema_k8sio_kube_scheduler_config_v1_DefaultPreemptionArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.Extender":                                                        schema_k8sio_kube_scheduler_config_v1_Extender(ref),
+		"k8s.io/kube-over_scheduler/config/v1.ExtenderManagedResource":                                         schema_k8sio_kube_scheduler_config_v1_ExtenderManagedResource(ref),
+		"k8s.io/kube-over_scheduler/config/v1.ExtenderTLSConfig":                                               schema_k8sio_kube_scheduler_config_v1_ExtenderTLSConfig(ref),
+		"k8s.io/kube-over_scheduler/config/v1.InterPodAffinityArgs":                                            schema_k8sio_kube_scheduler_config_v1_InterPodAffinityArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.KubeSchedulerConfiguration":                                      schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref),
+		"k8s.io/kube-over_scheduler/config/v1.KubeSchedulerProfile":                                            schema_k8sio_kube_scheduler_config_v1_KubeSchedulerProfile(ref),
+		"k8s.io/kube-over_scheduler/config/v1.NodeAffinityArgs":                                                schema_k8sio_kube_scheduler_config_v1_NodeAffinityArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.NodeResourcesBalancedAllocationArgs":                             schema_k8sio_kube_scheduler_config_v1_NodeResourcesBalancedAllocationArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.NodeResourcesFitArgs":                                            schema_k8sio_kube_scheduler_config_v1_NodeResourcesFitArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.Plugin":                                                          schema_k8sio_kube_scheduler_config_v1_Plugin(ref),
+		"k8s.io/kube-over_scheduler/config/v1.PluginConfig":                                                    schema_k8sio_kube_scheduler_config_v1_PluginConfig(ref),
+		"k8s.io/kube-over_scheduler/config/v1.PluginSet":                                                       schema_k8sio_kube_scheduler_config_v1_PluginSet(ref),
+		"k8s.io/kube-over_scheduler/config/v1.Plugins":                                                         schema_k8sio_kube_scheduler_config_v1_Plugins(ref),
+		"k8s.io/kube-over_scheduler/config/v1.PodTopologySpreadArgs":                                           schema_k8sio_kube_scheduler_config_v1_PodTopologySpreadArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1.RequestedToCapacityRatioParam":                                   schema_k8sio_kube_scheduler_config_v1_RequestedToCapacityRatioParam(ref),
+		"k8s.io/kube-over_scheduler/config/v1.ResourceSpec":                                                    schema_k8sio_kube_scheduler_config_v1_ResourceSpec(ref),
+		"k8s.io/kube-over_scheduler/config/v1.ScoringStrategy":                                                 schema_k8sio_kube_scheduler_config_v1_ScoringStrategy(ref),
+		"k8s.io/kube-over_scheduler/config/v1.UtilizationShapePoint":                                           schema_k8sio_kube_scheduler_config_v1_UtilizationShapePoint(ref),
+		"k8s.io/kube-over_scheduler/config/v1.VolumeBindingArgs":                                               schema_k8sio_kube_scheduler_config_v1_VolumeBindingArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.DefaultPreemptionArgs":                                      schema_k8sio_kube_scheduler_config_v1beta2_DefaultPreemptionArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.Extender":                                                   schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.ExtenderManagedResource":                                    schema_k8sio_kube_scheduler_config_v1beta2_ExtenderManagedResource(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.ExtenderTLSConfig":                                          schema_k8sio_kube_scheduler_config_v1beta2_ExtenderTLSConfig(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.InterPodAffinityArgs":                                       schema_k8sio_kube_scheduler_config_v1beta2_InterPodAffinityArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.KubeSchedulerConfiguration":                                 schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.KubeSchedulerProfile":                                       schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerProfile(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.NodeAffinityArgs":                                           schema_k8sio_kube_scheduler_config_v1beta2_NodeAffinityArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.NodeResourcesBalancedAllocationArgs":                        schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesBalancedAllocationArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.NodeResourcesFitArgs":                                       schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesFitArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.Plugin":                                                     schema_k8sio_kube_scheduler_config_v1beta2_Plugin(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.PluginConfig":                                               schema_k8sio_kube_scheduler_config_v1beta2_PluginConfig(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.PluginSet":                                                  schema_k8sio_kube_scheduler_config_v1beta2_PluginSet(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.Plugins":                                                    schema_k8sio_kube_scheduler_config_v1beta2_Plugins(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.PodTopologySpreadArgs":                                      schema_k8sio_kube_scheduler_config_v1beta2_PodTopologySpreadArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.RequestedToCapacityRatioParam":                              schema_k8sio_kube_scheduler_config_v1beta2_RequestedToCapacityRatioParam(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.ResourceSpec":                                               schema_k8sio_kube_scheduler_config_v1beta2_ResourceSpec(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.ScoringStrategy":                                            schema_k8sio_kube_scheduler_config_v1beta2_ScoringStrategy(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.UtilizationShapePoint":                                      schema_k8sio_kube_scheduler_config_v1beta2_UtilizationShapePoint(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta2.VolumeBindingArgs":                                          schema_k8sio_kube_scheduler_config_v1beta2_VolumeBindingArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.DefaultPreemptionArgs":                                      schema_k8sio_kube_scheduler_config_v1beta3_DefaultPreemptionArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.Extender":                                                   schema_k8sio_kube_scheduler_config_v1beta3_Extender(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.ExtenderManagedResource":                                    schema_k8sio_kube_scheduler_config_v1beta3_ExtenderManagedResource(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.ExtenderTLSConfig":                                          schema_k8sio_kube_scheduler_config_v1beta3_ExtenderTLSConfig(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.InterPodAffinityArgs":                                       schema_k8sio_kube_scheduler_config_v1beta3_InterPodAffinityArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.KubeSchedulerConfiguration":                                 schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.KubeSchedulerProfile":                                       schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerProfile(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.NodeAffinityArgs":                                           schema_k8sio_kube_scheduler_config_v1beta3_NodeAffinityArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.NodeResourcesBalancedAllocationArgs":                        schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesBalancedAllocationArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.NodeResourcesFitArgs":                                       schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesFitArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.Plugin":                                                     schema_k8sio_kube_scheduler_config_v1beta3_Plugin(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.PluginConfig":                                               schema_k8sio_kube_scheduler_config_v1beta3_PluginConfig(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.PluginSet":                                                  schema_k8sio_kube_scheduler_config_v1beta3_PluginSet(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.Plugins":                                                    schema_k8sio_kube_scheduler_config_v1beta3_Plugins(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.PodTopologySpreadArgs":                                      schema_k8sio_kube_scheduler_config_v1beta3_PodTopologySpreadArgs(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.RequestedToCapacityRatioParam":                              schema_k8sio_kube_scheduler_config_v1beta3_RequestedToCapacityRatioParam(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.ResourceSpec":                                               schema_k8sio_kube_scheduler_config_v1beta3_ResourceSpec(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.ScoringStrategy":                                            schema_k8sio_kube_scheduler_config_v1beta3_ScoringStrategy(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.UtilizationShapePoint":                                      schema_k8sio_kube_scheduler_config_v1beta3_UtilizationShapePoint(ref),
+		"k8s.io/kube-over_scheduler/config/v1beta3.VolumeBindingArgs":                                          schema_k8sio_kube_scheduler_config_v1beta3_VolumeBindingArgs(ref),
 		"k8s.io/kubelet/config/v1.CredentialProvider":                                                     schema_k8sio_kubelet_config_v1_CredentialProvider(ref),
 		"k8s.io/kubelet/config/v1.CredentialProviderConfig":                                               schema_k8sio_kubelet_config_v1_CredentialProviderConfig(ref),
 		"k8s.io/kubelet/config/v1.ExecEnvVar":                                                             schema_k8sio_kubelet_config_v1_ExecEnvVar(ref),
@@ -15783,7 +15783,7 @@ func schema_k8sio_api_core_v1_AvoidPods(ref common.ReferenceCallback) common.Ope
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "AvoidPods describes pods that should avoid this node. This is the value for a Node annotation with key scheduler.alpha.kubernetes.io/preferAvoidPods and will eventually become a field of NodeStatus.",
+				Description: "AvoidPods describes pods that should avoid this node. This is the value for a Node annotation with key over_scheduler.alpha.kubernetes.io/preferAvoidPods and will eventually become a field of NodeStatus.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"preferAvoidPods": {
@@ -15951,7 +15951,7 @@ func schema_k8sio_api_core_v1_Binding(ref common.ReferenceCallback) common.OpenA
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Binding ties one object to another; for example, a pod is bound to a node by a scheduler. Deprecated in 1.7, please use the bindings subresource of pods instead.",
+				Description: "Binding ties one object to another; for example, a pod is bound to a node by a over_scheduler. Deprecated in 1.7, please use the bindings subresource of pods instead.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -22265,7 +22265,7 @@ func schema_k8sio_api_core_v1_PodAffinity(ref common.ReferenceCallback) common.O
 					},
 					"preferredDuringSchedulingIgnoredDuringExecution": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.",
+							Description: "The over_scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -22359,7 +22359,7 @@ func schema_k8sio_api_core_v1_PodAntiAffinity(ref common.ReferenceCallback) comm
 					},
 					"preferredDuringSchedulingIgnoredDuringExecution": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.",
+							Description: "The over_scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -23272,7 +23272,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"nodeName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeName is a request to schedule this pod onto a specific node. If it is non-empty, the scheduler simply schedules this pod onto that node, assuming that it fits resource requirements.",
+							Description: "NodeName is a request to schedule this pod onto a specific node. If it is non-empty, the over_scheduler simply schedules this pod onto that node, assuming that it fits resource requirements.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -23353,7 +23353,7 @@ func schema_k8sio_api_core_v1_PodSpec(ref common.ReferenceCallback) common.OpenA
 					},
 					"schedulerName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "If specified, the pod will be dispatched by specified scheduler. If not specified, the pod will be dispatched by default scheduler.",
+							Description: "If specified, the pod will be dispatched by specified over_scheduler. If not specified, the pod will be dispatched by default over_scheduler.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -26678,7 +26678,7 @@ func schema_k8sio_api_core_v1_Taint(ref common.ReferenceCallback) common.OpenAPI
 					},
 					"effect": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Required. The effect of the taint on pods that do not tolerate the taint. Valid effects are NoSchedule, PreferNoSchedule and NoExecute.\n\nPossible enum values:\n - `\"NoExecute\"`\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
+							Description: "Required. The effect of the taint on pods that do not tolerate the taint. Valid effects are NoSchedule, PreferNoSchedule and NoExecute.\n\nPossible enum values:\n - `\"NoExecute\"`\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the over_scheduler to start, and allow all already-running pods to continue running. Enforced by the over_scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the over_scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the over_scheduler.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26729,7 +26729,7 @@ func schema_k8sio_api_core_v1_Toleration(ref common.ReferenceCallback) common.Op
 					},
 					"effect": {
 						SchemaProps: spec.SchemaProps{
-							Description: "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\nPossible enum values:\n - `\"NoExecute\"`\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the scheduler to start, and allow all already-running pods to continue running. Enforced by the scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the scheduler.",
+							Description: "[空 ,NoSchedule, PreferNoSchedul, NoExecute ]\n\nPossible enum values:\n - `\"NoExecute\"`\n - `\"NoSchedule\"` Do not allow new pods to schedule onto the node unless they tolerate the taint, but allow all pods submitted to Kubelet without going through the over_scheduler to start, and allow all already-running pods to continue running. Enforced by the over_scheduler.\n - `\"PreferNoSchedule\"` Like TaintEffectNoSchedule, but the over_scheduler tries not to schedule new pods onto the node, rather than prohibiting new pods from scheduling onto the node entirely. Enforced by the over_scheduler.",
 							Type:        []string{"string"},
 							Format:      "",
 							Enum:        []interface{}{"NoExecute", "NoSchedule", "PreferNoSchedule"}},
@@ -26843,7 +26843,7 @@ func schema_k8sio_api_core_v1_TopologySpreadConstraint(ref common.ReferenceCallb
 					},
 					"whenUnsatisfiable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location,\n  but giving higher precedence to topologies that would help reduce the\n  skew.\nA constraint is considered \"Unsatisfiable\" for an incoming pod if and only if every possible node assignment for that pod would violate \"MaxSkew\" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.\n\nPossible enum values:\n - `\"DoNotSchedule\"` instructs the scheduler not to schedule the pod when constraints are not satisfied.\n - `\"ScheduleAnyway\"` instructs the scheduler to schedule the pod even if constraints are not satisfied.",
+							Description: "WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the over_scheduler not to schedule it. - ScheduleAnyway tells the over_scheduler to schedule the pod in any location,\n  but giving higher precedence to topologies that would help reduce the\n  skew.\nA constraint is considered \"Unsatisfiable\" for an incoming pod if and only if every possible node assignment for that pod would violate \"MaxSkew\" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but over_scheduler won't make it *more* imbalanced. It's a required field.\n\nPossible enum values:\n - `\"DoNotSchedule\"` instructs the over_scheduler not to schedule the pod when constraints are not satisfied.\n - `\"ScheduleAnyway\"` instructs the over_scheduler to schedule the pod even if constraints are not satisfied.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -26857,7 +26857,7 @@ func schema_k8sio_api_core_v1_TopologySpreadConstraint(ref common.ReferenceCallb
 					},
 					"minDomains": {
 						SchemaProps: spec.SchemaProps{
-							Description: "MinDomains indicates a minimum number of eligible domains. When the number of eligible domains with matching topology keys is less than minDomains, Pod Topology Spread treats \"global minimum\" as 0, and then the calculation of Skew is performed. And when the number of eligible domains with matching topology keys equals or greater than minDomains, this value has no effect on scheduling. As a result, when the number of eligible domains is less than minDomains, scheduler won't schedule more than maxSkew Pods to those domains. If value is nil, the constraint behaves as if MinDomains is equal to 1. Valid values are integers greater than 0. When value is not nil, WhenUnsatisfiable must be DoNotSchedule.\n\nFor example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so \"global minimum\" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.\n\nThis is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).",
+							Description: "MinDomains indicates a minimum number of eligible domains. When the number of eligible domains with matching topology keys is less than minDomains, Pod Topology Spread treats \"global minimum\" as 0, and then the calculation of Skew is performed. And when the number of eligible domains with matching topology keys equals or greater than minDomains, this value has no effect on scheduling. As a result, when the number of eligible domains is less than minDomains, over_scheduler won't schedule more than maxSkew Pods to those domains. If value is nil, the constraint behaves as if MinDomains is equal to 1. Valid values are integers greater than 0. When value is not nil, WhenUnsatisfiable must be DoNotSchedule.\n\nFor example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so \"global minimum\" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.\n\nThis is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -41420,7 +41420,7 @@ func schema_k8sio_api_resource_v1alpha1_AllocationResult(ref common.ReferenceCal
 					},
 					"availableOnNodes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "This field will get set by the resource driver after it has allocated the resource driver to inform the scheduler where it can schedule Pods using the ResourceClaim.\n\nSetting this field is optional. If null, the resource is available everywhere.",
+							Description: "This field will get set by the resource driver after it has allocated the resource driver to inform the over_scheduler where it can schedule Pods using the ResourceClaim.\n\nSetting this field is optional. If null, the resource is available everywhere.",
 							Ref:         ref("k8s.io/api/core/v1.NodeSelector"),
 						},
 					},
@@ -42105,7 +42105,7 @@ func schema_k8sio_api_resource_v1alpha1_ResourceClass(ref common.ReferenceCallba
 					},
 					"suitableNodes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Only nodes matching the selector will be considered by the scheduler when trying to find a Node that fits a Pod when that Pod uses a ResourceClaim that has not been allocated yet.\n\nSetting this field is optional. If null, all nodes are candidates.",
+							Description: "Only nodes matching the selector will be considered by the over_scheduler when trying to find a Node that fits a Pod when that Pod uses a ResourceClaim that has not been allocated yet.\n\nSetting this field is optional. If null, all nodes are candidates.",
 							Ref:         ref("k8s.io/api/core/v1.NodeSelector"),
 						},
 					},
@@ -42943,7 +42943,7 @@ func schema_k8sio_api_storage_v1_CSIStorageCapacity(ref common.ReferenceCallback
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "CSIStorageCapacity stores the result of one CSI GetCapacity call. For a given StorageClass, this describes the available capacity in a particular topology segment.  This can be used when considering where to instantiate new PersistentVolumes.\n\nFor example this can express things like: - StorageClass \"standard\" has \"1234 GiB\" available in \"topology.kubernetes.io/zone=us-east1\" - StorageClass \"localssd\" has \"10 GiB\" available in \"kubernetes.io/hostname=knode-abc123\"\n\nThe following three cases all imply that no capacity is available for a certain combination: - no object exists with suitable topology and storage class name - such an object exists, but the capacity is unset - such an object exists, but the capacity is zero\n\nThe producer of these objects can decide which approach is more suitable.\n\nThey are consumed by the kube-scheduler when a CSI driver opts into capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The scheduler compares the MaximumVolumeSize against the requested size of pending volumes to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back to a comparison against the less precise Capacity. If that is also unset, the scheduler assumes that capacity is insufficient and tries some other node.",
+				Description: "CSIStorageCapacity stores the result of one CSI GetCapacity call. For a given StorageClass, this describes the available capacity in a particular topology segment.  This can be used when considering where to instantiate new PersistentVolumes.\n\nFor example this can express things like: - StorageClass \"standard\" has \"1234 GiB\" available in \"topology.kubernetes.io/zone=us-east1\" - StorageClass \"localssd\" has \"10 GiB\" available in \"kubernetes.io/hostname=knode-abc123\"\n\nThe following three cases all imply that no capacity is available for a certain combination: - no object exists with suitable topology and storage class name - such an object exists, but the capacity is unset - such an object exists, but the capacity is zero\n\nThe producer of these objects can decide which approach is more suitable.\n\nThey are consumed by the kube-over_scheduler when a CSI driver opts into capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The over_scheduler compares the MaximumVolumeSize against the requested size of pending volumes to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back to a comparison against the less precise Capacity. If that is also unset, the over_scheduler assumes that capacity is insufficient and tries some other node.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -43531,7 +43531,7 @@ func schema_k8sio_api_storage_v1alpha1_CSIStorageCapacity(ref common.ReferenceCa
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "CSIStorageCapacity stores the result of one CSI GetCapacity call. For a given StorageClass, this describes the available capacity in a particular topology segment.  This can be used when considering where to instantiate new PersistentVolumes.\n\nFor example this can express things like: - StorageClass \"standard\" has \"1234 GiB\" available in \"topology.kubernetes.io/zone=us-east1\" - StorageClass \"localssd\" has \"10 GiB\" available in \"kubernetes.io/hostname=knode-abc123\"\n\nThe following three cases all imply that no capacity is available for a certain combination: - no object exists with suitable topology and storage class name - such an object exists, but the capacity is unset - such an object exists, but the capacity is zero\n\nThe producer of these objects can decide which approach is more suitable.\n\nThey are consumed by the kube-scheduler when a CSI driver opts into capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The scheduler compares the MaximumVolumeSize against the requested size of pending volumes to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back to a comparison against the less precise Capacity. If that is also unset, the scheduler assumes that capacity is insufficient and tries some other node.",
+				Description: "CSIStorageCapacity stores the result of one CSI GetCapacity call. For a given StorageClass, this describes the available capacity in a particular topology segment.  This can be used when considering where to instantiate new PersistentVolumes.\n\nFor example this can express things like: - StorageClass \"standard\" has \"1234 GiB\" available in \"topology.kubernetes.io/zone=us-east1\" - StorageClass \"localssd\" has \"10 GiB\" available in \"kubernetes.io/hostname=knode-abc123\"\n\nThe following three cases all imply that no capacity is available for a certain combination: - no object exists with suitable topology and storage class name - such an object exists, but the capacity is unset - such an object exists, but the capacity is zero\n\nThe producer of these objects can decide which approach is more suitable.\n\nThey are consumed by the kube-over_scheduler when a CSI driver opts into capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The over_scheduler compares the MaximumVolumeSize against the requested size of pending volumes to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back to a comparison against the less precise Capacity. If that is also unset, the over_scheduler assumes that capacity is insufficient and tries some other node.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -44273,7 +44273,7 @@ func schema_k8sio_api_storage_v1beta1_CSIStorageCapacity(ref common.ReferenceCal
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "CSIStorageCapacity stores the result of one CSI GetCapacity call. For a given StorageClass, this describes the available capacity in a particular topology segment.  This can be used when considering where to instantiate new PersistentVolumes.\n\nFor example this can express things like: - StorageClass \"standard\" has \"1234 GiB\" available in \"topology.kubernetes.io/zone=us-east1\" - StorageClass \"localssd\" has \"10 GiB\" available in \"kubernetes.io/hostname=knode-abc123\"\n\nThe following three cases all imply that no capacity is available for a certain combination: - no object exists with suitable topology and storage class name - such an object exists, but the capacity is unset - such an object exists, but the capacity is zero\n\nThe producer of these objects can decide which approach is more suitable.\n\nThey are consumed by the kube-scheduler when a CSI driver opts into capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The scheduler compares the MaximumVolumeSize against the requested size of pending volumes to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back to a comparison against the less precise Capacity. If that is also unset, the scheduler assumes that capacity is insufficient and tries some other node.",
+				Description: "CSIStorageCapacity stores the result of one CSI GetCapacity call. For a given StorageClass, this describes the available capacity in a particular topology segment.  This can be used when considering where to instantiate new PersistentVolumes.\n\nFor example this can express things like: - StorageClass \"standard\" has \"1234 GiB\" available in \"topology.kubernetes.io/zone=us-east1\" - StorageClass \"localssd\" has \"10 GiB\" available in \"kubernetes.io/hostname=knode-abc123\"\n\nThe following three cases all imply that no capacity is available for a certain combination: - no object exists with suitable topology and storage class name - such an object exists, but the capacity is unset - such an object exists, but the capacity is zero\n\nThe producer of these objects can decide which approach is more suitable.\n\nThey are consumed by the kube-over_scheduler when a CSI driver opts into capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The over_scheduler compares the MaximumVolumeSize against the requested size of pending volumes to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back to a comparison against the less precise Capacity. If that is also unset, the over_scheduler assumes that capacity is insufficient and tries some other node.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -53704,9 +53704,9 @@ func schema_k8sio_kube_proxy_config_v1alpha1_KubeProxyIPVSConfiguration(ref comm
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Duration"),
 						},
 					},
-					"scheduler": {
+					"over_scheduler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ipvs scheduler",
+							Description: "ipvs over_scheduler",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -53757,7 +53757,7 @@ func schema_k8sio_kube_proxy_config_v1alpha1_KubeProxyIPVSConfiguration(ref comm
 						},
 					},
 				},
-				Required: []string{"syncPeriod", "minSyncPeriod", "scheduler", "excludeCIDRs", "strictARP", "tcpTimeout", "tcpFinTimeout", "udpTimeout"},
+				Required: []string{"syncPeriod", "minSyncPeriod", "over_scheduler", "excludeCIDRs", "strictARP", "tcpTimeout", "tcpFinTimeout", "udpTimeout"},
 			},
 		},
 		Dependencies: []string{
@@ -53920,7 +53920,7 @@ func schema_k8sio_kube_scheduler_config_v1_Extender(ref common.ReferenceCallback
 					"tlsConfig": {
 						SchemaProps: spec.SchemaProps{
 							Description: "TLSConfig specifies the transport layer security config",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.ExtenderTLSConfig"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.ExtenderTLSConfig"),
 						},
 					},
 					"httpTimeout": {
@@ -53931,7 +53931,7 @@ func schema_k8sio_kube_scheduler_config_v1_Extender(ref common.ReferenceCallback
 					},
 					"nodeCacheCapable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeCacheCapable specifies that the extender is capable of caching node information, so the scheduler should only send minimal information about the eligible nodes assuming that the extender already cached full details of all nodes in the cluster",
+							Description: "NodeCacheCapable specifies that the extender is capable of caching node information, so the over_scheduler should only send minimal information about the eligible nodes assuming that the extender already cached full details of all nodes in the cluster",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -53943,13 +53943,13 @@ func schema_k8sio_kube_scheduler_config_v1_Extender(ref common.ReferenceCallback
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedResources is a list of extended resources that are managed by this extender. - A pod will be sent to the extender on the Filter, Prioritize and Bind\n  (if the extender is the binder) phases iff the pod requests at least\n  one of the extended resources in this list. If empty or unspecified,\n  all pods will be sent to this extender.\n- If IgnoredByScheduler is set to true for a resource, kube-scheduler\n  will skip checking the resource in predicates.",
+							Description: "ManagedResources is a list of extended resources that are managed by this extender. - A pod will be sent to the extender on the Filter, Prioritize and Bind\n  (if the extender is the binder) phases iff the pod requests at least\n  one of the extended resources in this list. If empty or unspecified,\n  all pods will be sent to this extender.\n- If IgnoredByScheduler is set to true for a resource, kube-over_scheduler\n  will skip checking the resource in predicates.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.ExtenderManagedResource"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.ExtenderManagedResource"),
 									},
 								},
 							},
@@ -53967,7 +53967,7 @@ func schema_k8sio_kube_scheduler_config_v1_Extender(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/kube-scheduler/config/v1.ExtenderManagedResource", "k8s.io/kube-scheduler/config/v1.ExtenderTLSConfig"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/kube-over_scheduler/config/v1.ExtenderManagedResource", "k8s.io/kube-over_scheduler/config/v1.ExtenderTLSConfig"},
 	}
 }
 
@@ -53988,7 +53988,7 @@ func schema_k8sio_kube_scheduler_config_v1_ExtenderManagedResource(ref common.Re
 					},
 					"ignoredByScheduler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IgnoredByScheduler indicates whether kube-scheduler should ignore this resource when applying predicates.",
+							Description: "IgnoredByScheduler indicates whether kube-over_scheduler should ignore this resource when applying predicates.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -54122,7 +54122,7 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "KubeSchedulerConfiguration configures a scheduler",
+				Description: "KubeSchedulerConfiguration configures a over_scheduler",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -54176,7 +54176,7 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref common
 					},
 					"percentageOfNodesToScore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the scheduler stops its search for more feasible nodes in the cluster. This helps improve scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored. It is overridden by profile level PercentageofNodesToScore.",
+							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the over_scheduler stops its search for more feasible nodes in the cluster. This helps improve over_scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then over_scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored. It is overridden by profile level PercentageofNodesToScore.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -54205,13 +54205,13 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref common
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Profiles are scheduling profiles that kube-scheduler supports. Pods can choose to be scheduled under a particular profile by setting its associated scheduler name. Pods that don't specify any scheduler name are scheduled with the \"default-scheduler\" profile, if present here.",
+							Description: "Profiles are scheduling profiles that kube-over_scheduler supports. Pods can choose to be scheduled under a particular profile by setting its associated over_scheduler name. Pods that don't specify any over_scheduler name are scheduled with the \"default-over_scheduler\" profile, if present here.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.KubeSchedulerProfile"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.KubeSchedulerProfile"),
 									},
 								},
 							},
@@ -54224,13 +54224,13 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref common
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Extenders are the list of scheduler extenders, each holding the values of how to communicate with the extender. These extenders are shared by all scheduler profiles.",
+							Description: "Extenders are the list of over_scheduler extenders, each holding the values of how to communicate with the extender. These extenders are shared by all over_scheduler profiles.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.Extender"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.Extender"),
 									},
 								},
 							},
@@ -54241,7 +54241,7 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerConfiguration(ref common
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/component-base/config/v1alpha1.ClientConnectionConfiguration", "k8s.io/component-base/config/v1alpha1.LeaderElectionConfiguration", "k8s.io/kube-scheduler/config/v1.Extender", "k8s.io/kube-scheduler/config/v1.KubeSchedulerProfile"},
+			"k8s.io/component-base/config/v1alpha1.ClientConnectionConfiguration", "k8s.io/component-base/config/v1alpha1.LeaderElectionConfiguration", "k8s.io/kube-over_scheduler/config/v1.Extender", "k8s.io/kube-over_scheduler/config/v1.KubeSchedulerProfile"},
 	}
 }
 
@@ -54254,14 +54254,14 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerProfile(ref common.Refer
 				Properties: map[string]spec.Schema{
 					"schedulerName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SchedulerName is the name of the scheduler associated to this profile. If SchedulerName matches with the pod's \"spec.schedulerName\", then the pod is scheduled with this profile.",
+							Description: "SchedulerName is the name of the over_scheduler associated to this profile. If SchedulerName matches with the pod's \"spec.schedulerName\", then the pod is scheduled with this profile.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"percentageOfNodesToScore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the scheduler stops its search for more feasible nodes in the cluster. This helps improve scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored. It will override global PercentageOfNodesToScore. If it is empty, global PercentageOfNodesToScore will be used.",
+							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the over_scheduler stops its search for more feasible nodes in the cluster. This helps improve over_scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then over_scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored. It will override global PercentageOfNodesToScore. If it is empty, global PercentageOfNodesToScore will be used.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -54269,7 +54269,7 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerProfile(ref common.Refer
 					"plugins": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Plugins specify the set of plugins that should be enabled or disabled. Enabled plugins are the ones that should be enabled in addition to the default plugins. Disabled plugins are any of the default plugins that should be disabled. When no enabled or disabled plugin is specified for an extension point, default plugins for that extension point will be used if there is any. If a QueueSort plugin is specified, the same QueueSort Plugin and PluginConfig must be specified for all profiles.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.Plugins"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.Plugins"),
 						},
 					},
 					"pluginConfig": {
@@ -54288,7 +54288,7 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerProfile(ref common.Refer
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.PluginConfig"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.PluginConfig"),
 									},
 								},
 							},
@@ -54298,7 +54298,7 @@ func schema_k8sio_kube_scheduler_config_v1_KubeSchedulerProfile(ref common.Refer
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.PluginConfig", "k8s.io/kube-scheduler/config/v1.Plugins"},
+			"k8s.io/kube-over_scheduler/config/v1.PluginConfig", "k8s.io/kube-over_scheduler/config/v1.Plugins"},
 	}
 }
 
@@ -54374,7 +54374,7 @@ func schema_k8sio_kube_scheduler_config_v1_NodeResourcesBalancedAllocationArgs(r
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.ResourceSpec"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.ResourceSpec"),
 									},
 								},
 							},
@@ -54384,7 +54384,7 @@ func schema_k8sio_kube_scheduler_config_v1_NodeResourcesBalancedAllocationArgs(r
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.ResourceSpec"},
+			"k8s.io/kube-over_scheduler/config/v1.ResourceSpec"},
 	}
 }
 
@@ -54452,14 +54452,14 @@ func schema_k8sio_kube_scheduler_config_v1_NodeResourcesFitArgs(ref common.Refer
 					"scoringStrategy": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ScoringStrategy selects the node resource scoring strategy. The default strategy is LeastAllocated with an equal \"cpu\" and \"memory\" weight.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.ScoringStrategy"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.ScoringStrategy"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.ScoringStrategy"},
+			"k8s.io/kube-over_scheduler/config/v1.ScoringStrategy"},
 	}
 }
 
@@ -54537,13 +54537,13 @@ func schema_k8sio_kube_scheduler_config_v1_PluginSet(ref common.ReferenceCallbac
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Enabled specifies plugins that should be enabled in addition to default plugins. If the default plugin is also configured in the scheduler config file, the weight of plugin will be overridden accordingly. These are called after default plugins and in the same order specified here.",
+							Description: "Enabled specifies plugins that should be enabled in addition to default plugins. If the default plugin is also configured in the over_scheduler config file, the weight of plugin will be overridden accordingly. These are called after default plugins and in the same order specified here.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.Plugin"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.Plugin"),
 									},
 								},
 							},
@@ -54565,7 +54565,7 @@ func schema_k8sio_kube_scheduler_config_v1_PluginSet(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.Plugin"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.Plugin"),
 									},
 								},
 							},
@@ -54575,7 +54575,7 @@ func schema_k8sio_kube_scheduler_config_v1_PluginSet(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.Plugin"},
+			"k8s.io/kube-over_scheduler/config/v1.Plugin"},
 	}
 }
 
@@ -54590,98 +54590,98 @@ func schema_k8sio_kube_scheduler_config_v1_Plugins(ref common.ReferenceCallback)
 						SchemaProps: spec.SchemaProps{
 							Description: "PreEnqueue is a list of plugins that should be invoked before adding pods to the scheduling queue.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"queueSort": {
 						SchemaProps: spec.SchemaProps{
 							Description: "QueueSort is a list of plugins that should be invoked when sorting pods in the scheduling queue.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"preFilter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreFilter is a list of plugins that should be invoked at \"PreFilter\" extension point of the scheduling framework.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Filter is a list of plugins that should be invoked when filtering out nodes that cannot run the Pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"postFilter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PostFilter is a list of plugins that are invoked after filtering phase, but only when no feasible nodes were found for the pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"preScore": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreScore is a list of plugins that are invoked before scoring.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"score": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Score is a list of plugins that should be invoked when ranking nodes that have passed the filtering phase.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"reserve": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Reserve is a list of plugins invoked when reserving/unreserving resources after a node is assigned to run the pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"permit": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Permit is a list of plugins that control binding of a Pod. These plugins can prevent or delay binding of a Pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"preBind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreBind is a list of plugins that should be invoked before a pod is bound.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"bind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bind is a list of plugins that should be invoked at \"Bind\" extension point of the scheduling framework. The scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.",
+							Description: "Bind is a list of plugins that should be invoked at \"Bind\" extension point of the scheduling framework. The over_scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"postBind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PostBind is a list of plugins that should be invoked after a pod is successfully bound.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 					"multiPoint": {
 						SchemaProps: spec.SchemaProps{
 							Description: "MultiPoint is a simplified config section to enable plugins for all valid extension points. Plugins enabled through MultiPoint will automatically register for every individual extension point the plugin has implemented. Disabling a plugin through MultiPoint disables that behavior. The same is true for disabling \"*\" through MultiPoint (no default plugins will be automatically registered). Plugins can still be disabled through their individual extension points.\n\nIn terms of precedence, plugin config follows this basic hierarchy\n  1. Specific extension points\n  2. Explicitly configured MultiPoint plugins\n  3. The set of default plugins, as MultiPoint plugins\nThis implies that a higher precedence plugin will run first and overwrite any settings within MultiPoint. Explicitly user-configured plugins also take a higher precedence over default plugins. Within this hierarchy, an Enabled setting takes precedence over Disabled. For example, if a plugin is set in both `multiPoint.Enabled` and `multiPoint.Disabled`, the plugin will be enabled. Similarly, including `multiPoint.Disabled = '*'` and `multiPoint.Enabled = pluginA` will still register that specific plugin through MultiPoint. This follows the same behavior as all other extension point configurations.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.PluginSet"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.PluginSet"},
+			"k8s.io/kube-over_scheduler/config/v1.PluginSet"},
 	}
 }
 
@@ -54760,7 +54760,7 @@ func schema_k8sio_kube_scheduler_config_v1_RequestedToCapacityRatioParam(ref com
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.UtilizationShapePoint"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.UtilizationShapePoint"),
 									},
 								},
 							},
@@ -54770,7 +54770,7 @@ func schema_k8sio_kube_scheduler_config_v1_RequestedToCapacityRatioParam(ref com
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.UtilizationShapePoint"},
+			"k8s.io/kube-over_scheduler/config/v1.UtilizationShapePoint"},
 	}
 }
 
@@ -54833,7 +54833,7 @@ func schema_k8sio_kube_scheduler_config_v1_ScoringStrategy(ref common.ReferenceC
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.ResourceSpec"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.ResourceSpec"),
 									},
 								},
 							},
@@ -54842,14 +54842,14 @@ func schema_k8sio_kube_scheduler_config_v1_ScoringStrategy(ref common.ReferenceC
 					"requestedToCapacityRatio": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Arguments specific to RequestedToCapacityRatio strategy.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1.RequestedToCapacityRatioParam"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1.RequestedToCapacityRatioParam"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.RequestedToCapacityRatioParam", "k8s.io/kube-scheduler/config/v1.ResourceSpec"},
+			"k8s.io/kube-over_scheduler/config/v1.RequestedToCapacityRatioParam", "k8s.io/kube-over_scheduler/config/v1.ResourceSpec"},
 	}
 }
 
@@ -54924,7 +54924,7 @@ func schema_k8sio_kube_scheduler_config_v1_VolumeBindingArgs(ref common.Referenc
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1.UtilizationShapePoint"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1.UtilizationShapePoint"),
 									},
 								},
 							},
@@ -54934,7 +54934,7 @@ func schema_k8sio_kube_scheduler_config_v1_VolumeBindingArgs(ref common.Referenc
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1.UtilizationShapePoint"},
+			"k8s.io/kube-over_scheduler/config/v1.UtilizationShapePoint"},
 	}
 }
 
@@ -55037,7 +55037,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref common.ReferenceCal
 					},
 					"tlsConfig": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/kube-scheduler/config/v1beta2.ExtenderTLSConfig"),
+							Ref: ref("k8s.io/kube-over_scheduler/config/v1beta2.ExtenderTLSConfig"),
 						},
 					},
 					"httpTimeout": {
@@ -55064,7 +55064,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref common.ReferenceCal
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.ExtenderManagedResource"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.ExtenderManagedResource"),
 									},
 								},
 							},
@@ -55082,7 +55082,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Extender(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/kube-scheduler/config/v1beta2.ExtenderManagedResource", "k8s.io/kube-scheduler/config/v1beta2.ExtenderTLSConfig"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/kube-over_scheduler/config/v1beta2.ExtenderManagedResource", "k8s.io/kube-over_scheduler/config/v1beta2.ExtenderTLSConfig"},
 	}
 }
 
@@ -55221,7 +55221,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "KubeSchedulerConfiguration configures a scheduler",
+				Description: "KubeSchedulerConfiguration configures a over_scheduler",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -55289,7 +55289,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref c
 					},
 					"percentageOfNodesToScore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the scheduler stops its search for more feasible nodes in the cluster. This helps improve scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored.",
+							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the over_scheduler stops its search for more feasible nodes in the cluster. This helps improve over_scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then over_scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -55318,13 +55318,13 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref c
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Profiles are scheduling profiles that kube-scheduler supports. Pods can choose to be scheduled under a particular profile by setting its associated scheduler name. Pods that don't specify any scheduler name are scheduled with the \"default-scheduler\" profile, if present here.",
+							Description: "Profiles are scheduling profiles that kube-over_scheduler supports. Pods can choose to be scheduled under a particular profile by setting its associated over_scheduler name. Pods that don't specify any over_scheduler name are scheduled with the \"default-over_scheduler\" profile, if present here.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.KubeSchedulerProfile"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.KubeSchedulerProfile"),
 									},
 								},
 							},
@@ -55337,13 +55337,13 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref c
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Extenders are the list of scheduler extenders, each holding the values of how to communicate with the extender. These extenders are shared by all scheduler profiles.",
+							Description: "Extenders are the list of over_scheduler extenders, each holding the values of how to communicate with the extender. These extenders are shared by all over_scheduler profiles.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.Extender"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.Extender"),
 									},
 								},
 							},
@@ -55354,7 +55354,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerConfiguration(ref c
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/component-base/config/v1alpha1.ClientConnectionConfiguration", "k8s.io/component-base/config/v1alpha1.LeaderElectionConfiguration", "k8s.io/kube-scheduler/config/v1beta2.Extender", "k8s.io/kube-scheduler/config/v1beta2.KubeSchedulerProfile"},
+			"k8s.io/component-base/config/v1alpha1.ClientConnectionConfiguration", "k8s.io/component-base/config/v1alpha1.LeaderElectionConfiguration", "k8s.io/kube-over_scheduler/config/v1beta2.Extender", "k8s.io/kube-over_scheduler/config/v1beta2.KubeSchedulerProfile"},
 	}
 }
 
@@ -55367,7 +55367,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerProfile(ref common.
 				Properties: map[string]spec.Schema{
 					"schedulerName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SchedulerName is the name of the scheduler associated to this profile. If SchedulerName matches with the pod's \"spec.schedulerName\", then the pod is scheduled with this profile.",
+							Description: "SchedulerName is the name of the over_scheduler associated to this profile. If SchedulerName matches with the pod's \"spec.schedulerName\", then the pod is scheduled with this profile.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -55375,7 +55375,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerProfile(ref common.
 					"plugins": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Plugins specify the set of plugins that should be enabled or disabled. Enabled plugins are the ones that should be enabled in addition to the default plugins. Disabled plugins are any of the default plugins that should be disabled. When no enabled or disabled plugin is specified for an extension point, default plugins for that extension point will be used if there is any. If a QueueSort plugin is specified, the same QueueSort Plugin and PluginConfig must be specified for all profiles.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.Plugins"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.Plugins"),
 						},
 					},
 					"pluginConfig": {
@@ -55394,7 +55394,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerProfile(ref common.
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.PluginConfig"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginConfig"),
 									},
 								},
 							},
@@ -55404,7 +55404,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_KubeSchedulerProfile(ref common.
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.PluginConfig", "k8s.io/kube-scheduler/config/v1beta2.Plugins"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.PluginConfig", "k8s.io/kube-over_scheduler/config/v1beta2.Plugins"},
 	}
 }
 
@@ -55480,7 +55480,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesBalancedAllocationA
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.ResourceSpec"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.ResourceSpec"),
 									},
 								},
 							},
@@ -55490,7 +55490,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesBalancedAllocationA
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.ResourceSpec"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.ResourceSpec"},
 	}
 }
 
@@ -55558,14 +55558,14 @@ func schema_k8sio_kube_scheduler_config_v1beta2_NodeResourcesFitArgs(ref common.
 					"scoringStrategy": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ScoringStrategy selects the node resource scoring strategy. The default strategy is LeastAllocated with an equal \"cpu\" and \"memory\" weight.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.ScoringStrategy"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.ScoringStrategy"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.ScoringStrategy"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.ScoringStrategy"},
 	}
 }
 
@@ -55643,13 +55643,13 @@ func schema_k8sio_kube_scheduler_config_v1beta2_PluginSet(ref common.ReferenceCa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Enabled specifies plugins that should be enabled in addition to default plugins. If the default plugin is also configured in the scheduler config file, the weight of plugin will be overridden accordingly. These are called after default plugins and in the same order specified here.",
+							Description: "Enabled specifies plugins that should be enabled in addition to default plugins. If the default plugin is also configured in the over_scheduler config file, the weight of plugin will be overridden accordingly. These are called after default plugins and in the same order specified here.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.Plugin"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.Plugin"),
 									},
 								},
 							},
@@ -55671,7 +55671,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_PluginSet(ref common.ReferenceCa
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.Plugin"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.Plugin"),
 									},
 								},
 							},
@@ -55681,7 +55681,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_PluginSet(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.Plugin"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.Plugin"},
 	}
 }
 
@@ -55696,98 +55696,98 @@ func schema_k8sio_kube_scheduler_config_v1beta2_Plugins(ref common.ReferenceCall
 						SchemaProps: spec.SchemaProps{
 							Description: "PreEnqueue is a list of plugins that should be invoked before adding pods to the scheduling queue.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"queueSort": {
 						SchemaProps: spec.SchemaProps{
 							Description: "QueueSort is a list of plugins that should be invoked when sorting pods in the scheduling queue.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"preFilter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreFilter is a list of plugins that should be invoked at \"PreFilter\" extension point of the scheduling framework.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Filter is a list of plugins that should be invoked when filtering out nodes that cannot run the Pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"postFilter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PostFilter is a list of plugins that are invoked after filtering phase, but only when no feasible nodes were found for the pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"preScore": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreScore is a list of plugins that are invoked before scoring.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"score": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Score is a list of plugins that should be invoked when ranking nodes that have passed the filtering phase.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"reserve": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Reserve is a list of plugins invoked when reserving/unreserving resources after a node is assigned to run the pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"permit": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Permit is a list of plugins that control binding of a Pod. These plugins can prevent or delay binding of a Pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"preBind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreBind is a list of plugins that should be invoked before a pod is bound.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"bind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bind is a list of plugins that should be invoked at \"Bind\" extension point of the scheduling framework. The scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.",
+							Description: "Bind is a list of plugins that should be invoked at \"Bind\" extension point of the scheduling framework. The over_scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"postBind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PostBind is a list of plugins that should be invoked after a pod is successfully bound.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 					"multiPoint": {
 						SchemaProps: spec.SchemaProps{
 							Description: "MultiPoint is a simplified config section to enable plugins for all valid extension points.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.PluginSet"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.PluginSet"},
 	}
 }
 
@@ -55866,7 +55866,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_RequestedToCapacityRatioParam(re
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.UtilizationShapePoint"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.UtilizationShapePoint"),
 									},
 								},
 							},
@@ -55876,7 +55876,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_RequestedToCapacityRatioParam(re
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.UtilizationShapePoint"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.UtilizationShapePoint"},
 	}
 }
 
@@ -55939,7 +55939,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_ScoringStrategy(ref common.Refer
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.ResourceSpec"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.ResourceSpec"),
 									},
 								},
 							},
@@ -55948,14 +55948,14 @@ func schema_k8sio_kube_scheduler_config_v1beta2_ScoringStrategy(ref common.Refer
 					"requestedToCapacityRatio": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Arguments specific to RequestedToCapacityRatio strategy.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta2.RequestedToCapacityRatioParam"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta2.RequestedToCapacityRatioParam"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.RequestedToCapacityRatioParam", "k8s.io/kube-scheduler/config/v1beta2.ResourceSpec"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.RequestedToCapacityRatioParam", "k8s.io/kube-over_scheduler/config/v1beta2.ResourceSpec"},
 	}
 }
 
@@ -56030,7 +56030,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_VolumeBindingArgs(ref common.Ref
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta2.UtilizationShapePoint"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta2.UtilizationShapePoint"),
 									},
 								},
 							},
@@ -56040,7 +56040,7 @@ func schema_k8sio_kube_scheduler_config_v1beta2_VolumeBindingArgs(ref common.Ref
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta2.UtilizationShapePoint"},
+			"k8s.io/kube-over_scheduler/config/v1beta2.UtilizationShapePoint"},
 	}
 }
 
@@ -56145,7 +56145,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_Extender(ref common.ReferenceCal
 					"tlsConfig": {
 						SchemaProps: spec.SchemaProps{
 							Description: "TLSConfig specifies the transport layer security config",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.ExtenderTLSConfig"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.ExtenderTLSConfig"),
 						},
 					},
 					"httpTimeout": {
@@ -56156,7 +56156,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_Extender(ref common.ReferenceCal
 					},
 					"nodeCacheCapable": {
 						SchemaProps: spec.SchemaProps{
-							Description: "NodeCacheCapable specifies that the extender is capable of caching node information, so the scheduler should only send minimal information about the eligible nodes assuming that the extender already cached full details of all nodes in the cluster",
+							Description: "NodeCacheCapable specifies that the extender is capable of caching node information, so the over_scheduler should only send minimal information about the eligible nodes assuming that the extender already cached full details of all nodes in the cluster",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -56168,13 +56168,13 @@ func schema_k8sio_kube_scheduler_config_v1beta3_Extender(ref common.ReferenceCal
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "ManagedResources is a list of extended resources that are managed by this extender. - A pod will be sent to the extender on the Filter, Prioritize and Bind\n  (if the extender is the binder) phases iff the pod requests at least\n  one of the extended resources in this list. If empty or unspecified,\n  all pods will be sent to this extender.\n- If IgnoredByScheduler is set to true for a resource, kube-scheduler\n  will skip checking the resource in predicates.",
+							Description: "ManagedResources is a list of extended resources that are managed by this extender. - A pod will be sent to the extender on the Filter, Prioritize and Bind\n  (if the extender is the binder) phases iff the pod requests at least\n  one of the extended resources in this list. If empty or unspecified,\n  all pods will be sent to this extender.\n- If IgnoredByScheduler is set to true for a resource, kube-over_scheduler\n  will skip checking the resource in predicates.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.ExtenderManagedResource"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.ExtenderManagedResource"),
 									},
 								},
 							},
@@ -56192,7 +56192,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_Extender(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/kube-scheduler/config/v1beta3.ExtenderManagedResource", "k8s.io/kube-scheduler/config/v1beta3.ExtenderTLSConfig"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Duration", "k8s.io/kube-over_scheduler/config/v1beta3.ExtenderManagedResource", "k8s.io/kube-over_scheduler/config/v1beta3.ExtenderTLSConfig"},
 	}
 }
 
@@ -56213,7 +56213,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_ExtenderManagedResource(ref comm
 					},
 					"ignoredByScheduler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "IgnoredByScheduler indicates whether kube-scheduler should ignore this resource when applying predicates.",
+							Description: "IgnoredByScheduler indicates whether kube-over_scheduler should ignore this resource when applying predicates.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -56332,7 +56332,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref c
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "KubeSchedulerConfiguration configures a scheduler",
+				Description: "KubeSchedulerConfiguration configures a over_scheduler",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -56386,7 +56386,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref c
 					},
 					"percentageOfNodesToScore": {
 						SchemaProps: spec.SchemaProps{
-							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the scheduler stops its search for more feasible nodes in the cluster. This helps improve scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored.",
+							Description: "PercentageOfNodesToScore is the percentage of all nodes that once found feasible for running a pod, the over_scheduler stops its search for more feasible nodes in the cluster. This helps improve over_scheduler's performance. Scheduler always tries to find at least \"minFeasibleNodesToFind\" feasible nodes no matter what the value of this flag is. Example: if the cluster size is 500 nodes and the value of this flag is 30, then over_scheduler stops finding further feasible nodes once it finds 150 feasible ones. When the value is 0, default percentage (5%--50% based on the size of the cluster) of the nodes will be scored.",
 							Type:        []string{"integer"},
 							Format:      "int32",
 						},
@@ -56415,13 +56415,13 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref c
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Profiles are scheduling profiles that kube-scheduler supports. Pods can choose to be scheduled under a particular profile by setting its associated scheduler name. Pods that don't specify any scheduler name are scheduled with the \"default-scheduler\" profile, if present here.",
+							Description: "Profiles are scheduling profiles that kube-over_scheduler supports. Pods can choose to be scheduled under a particular profile by setting its associated over_scheduler name. Pods that don't specify any over_scheduler name are scheduled with the \"default-over_scheduler\" profile, if present here.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.KubeSchedulerProfile"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.KubeSchedulerProfile"),
 									},
 								},
 							},
@@ -56434,13 +56434,13 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref c
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Extenders are the list of scheduler extenders, each holding the values of how to communicate with the extender. These extenders are shared by all scheduler profiles.",
+							Description: "Extenders are the list of over_scheduler extenders, each holding the values of how to communicate with the extender. These extenders are shared by all over_scheduler profiles.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.Extender"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.Extender"),
 									},
 								},
 							},
@@ -56451,7 +56451,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerConfiguration(ref c
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/component-base/config/v1alpha1.ClientConnectionConfiguration", "k8s.io/component-base/config/v1alpha1.LeaderElectionConfiguration", "k8s.io/kube-scheduler/config/v1beta3.Extender", "k8s.io/kube-scheduler/config/v1beta3.KubeSchedulerProfile"},
+			"k8s.io/component-base/config/v1alpha1.ClientConnectionConfiguration", "k8s.io/component-base/config/v1alpha1.LeaderElectionConfiguration", "k8s.io/kube-over_scheduler/config/v1beta3.Extender", "k8s.io/kube-over_scheduler/config/v1beta3.KubeSchedulerProfile"},
 	}
 }
 
@@ -56464,7 +56464,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerProfile(ref common.
 				Properties: map[string]spec.Schema{
 					"schedulerName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SchedulerName is the name of the scheduler associated to this profile. If SchedulerName matches with the pod's \"spec.schedulerName\", then the pod is scheduled with this profile.",
+							Description: "SchedulerName is the name of the over_scheduler associated to this profile. If SchedulerName matches with the pod's \"spec.schedulerName\", then the pod is scheduled with this profile.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -56472,7 +56472,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerProfile(ref common.
 					"plugins": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Plugins specify the set of plugins that should be enabled or disabled. Enabled plugins are the ones that should be enabled in addition to the default plugins. Disabled plugins are any of the default plugins that should be disabled. When no enabled or disabled plugin is specified for an extension point, default plugins for that extension point will be used if there is any. If a QueueSort plugin is specified, the same QueueSort Plugin and PluginConfig must be specified for all profiles.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.Plugins"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.Plugins"),
 						},
 					},
 					"pluginConfig": {
@@ -56491,7 +56491,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerProfile(ref common.
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.PluginConfig"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginConfig"),
 									},
 								},
 							},
@@ -56501,7 +56501,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_KubeSchedulerProfile(ref common.
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.PluginConfig", "k8s.io/kube-scheduler/config/v1beta3.Plugins"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.PluginConfig", "k8s.io/kube-over_scheduler/config/v1beta3.Plugins"},
 	}
 }
 
@@ -56577,7 +56577,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesBalancedAllocationA
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.ResourceSpec"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.ResourceSpec"),
 									},
 								},
 							},
@@ -56587,7 +56587,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesBalancedAllocationA
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.ResourceSpec"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.ResourceSpec"},
 	}
 }
 
@@ -56655,14 +56655,14 @@ func schema_k8sio_kube_scheduler_config_v1beta3_NodeResourcesFitArgs(ref common.
 					"scoringStrategy": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ScoringStrategy selects the node resource scoring strategy. The default strategy is LeastAllocated with an equal \"cpu\" and \"memory\" weight.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.ScoringStrategy"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.ScoringStrategy"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.ScoringStrategy"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.ScoringStrategy"},
 	}
 }
 
@@ -56740,13 +56740,13 @@ func schema_k8sio_kube_scheduler_config_v1beta3_PluginSet(ref common.ReferenceCa
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Enabled specifies plugins that should be enabled in addition to default plugins. If the default plugin is also configured in the scheduler config file, the weight of plugin will be overridden accordingly. These are called after default plugins and in the same order specified here.",
+							Description: "Enabled specifies plugins that should be enabled in addition to default plugins. If the default plugin is also configured in the over_scheduler config file, the weight of plugin will be overridden accordingly. These are called after default plugins and in the same order specified here.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.Plugin"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.Plugin"),
 									},
 								},
 							},
@@ -56768,7 +56768,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_PluginSet(ref common.ReferenceCa
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.Plugin"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.Plugin"),
 									},
 								},
 							},
@@ -56778,7 +56778,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_PluginSet(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.Plugin"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.Plugin"},
 	}
 }
 
@@ -56793,98 +56793,98 @@ func schema_k8sio_kube_scheduler_config_v1beta3_Plugins(ref common.ReferenceCall
 						SchemaProps: spec.SchemaProps{
 							Description: "PreEnqueue is a list of plugins that should be invoked before adding pods to the scheduling queue.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"queueSort": {
 						SchemaProps: spec.SchemaProps{
 							Description: "QueueSort is a list of plugins that should be invoked when sorting pods in the scheduling queue.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"preFilter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreFilter is a list of plugins that should be invoked at \"PreFilter\" extension point of the scheduling framework.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"filter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Filter is a list of plugins that should be invoked when filtering out nodes that cannot run the Pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"postFilter": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PostFilter is a list of plugins that are invoked after filtering phase, but only when no feasible nodes were found for the pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"preScore": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreScore is a list of plugins that are invoked before scoring.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"score": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Score is a list of plugins that should be invoked when ranking nodes that have passed the filtering phase.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"reserve": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Reserve is a list of plugins invoked when reserving/unreserving resources after a node is assigned to run the pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"permit": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Permit is a list of plugins that control binding of a Pod. These plugins can prevent or delay binding of a Pod.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"preBind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PreBind is a list of plugins that should be invoked before a pod is bound.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"bind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Bind is a list of plugins that should be invoked at \"Bind\" extension point of the scheduling framework. The scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.",
+							Description: "Bind is a list of plugins that should be invoked at \"Bind\" extension point of the scheduling framework. The over_scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"postBind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PostBind is a list of plugins that should be invoked after a pod is successfully bound.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 					"multiPoint": {
 						SchemaProps: spec.SchemaProps{
 							Description: "MultiPoint is a simplified config section to enable plugins for all valid extension points. Plugins enabled through MultiPoint will automatically register for every individual extension point the plugin has implemented. Disabling a plugin through MultiPoint disables that behavior. The same is true for disabling \"*\" through MultiPoint (no default plugins will be automatically registered). Plugins can still be disabled through their individual extension points.\n\nIn terms of precedence, plugin config follows this basic hierarchy\n  1. Specific extension points\n  2. Explicitly configured MultiPoint plugins\n  3. The set of default plugins, as MultiPoint plugins\nThis implies that a higher precedence plugin will run first and overwrite any settings within MultiPoint. Explicitly user-configured plugins also take a higher precedence over default plugins. Within this hierarchy, an Enabled setting takes precedence over Disabled. For example, if a plugin is set in both `multiPoint.Enabled` and `multiPoint.Disabled`, the plugin will be enabled. Similarly, including `multiPoint.Disabled = '*'` and `multiPoint.Enabled = pluginA` will still register that specific plugin through MultiPoint. This follows the same behavior as all other extension point configurations.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.PluginSet"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.PluginSet"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.PluginSet"},
 	}
 }
 
@@ -56963,7 +56963,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_RequestedToCapacityRatioParam(re
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.UtilizationShapePoint"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.UtilizationShapePoint"),
 									},
 								},
 							},
@@ -56973,7 +56973,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_RequestedToCapacityRatioParam(re
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.UtilizationShapePoint"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.UtilizationShapePoint"},
 	}
 }
 
@@ -57036,7 +57036,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_ScoringStrategy(ref common.Refer
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.ResourceSpec"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.ResourceSpec"),
 									},
 								},
 							},
@@ -57045,14 +57045,14 @@ func schema_k8sio_kube_scheduler_config_v1beta3_ScoringStrategy(ref common.Refer
 					"requestedToCapacityRatio": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Arguments specific to RequestedToCapacityRatio strategy.",
-							Ref:         ref("k8s.io/kube-scheduler/config/v1beta3.RequestedToCapacityRatioParam"),
+							Ref:         ref("k8s.io/kube-over_scheduler/config/v1beta3.RequestedToCapacityRatioParam"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.RequestedToCapacityRatioParam", "k8s.io/kube-scheduler/config/v1beta3.ResourceSpec"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.RequestedToCapacityRatioParam", "k8s.io/kube-over_scheduler/config/v1beta3.ResourceSpec"},
 	}
 }
 
@@ -57127,7 +57127,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_VolumeBindingArgs(ref common.Ref
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/kube-scheduler/config/v1beta3.UtilizationShapePoint"),
+										Ref:     ref("k8s.io/kube-over_scheduler/config/v1beta3.UtilizationShapePoint"),
 									},
 								},
 							},
@@ -57137,7 +57137,7 @@ func schema_k8sio_kube_scheduler_config_v1beta3_VolumeBindingArgs(ref common.Ref
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/kube-scheduler/config/v1beta3.UtilizationShapePoint"},
+			"k8s.io/kube-over_scheduler/config/v1beta3.UtilizationShapePoint"},
 	}
 }
 

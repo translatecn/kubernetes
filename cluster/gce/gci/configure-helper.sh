@@ -1393,17 +1393,17 @@ EOF
 
 function create-kube-scheduler-config {
   echo "Creating kube-scheduler config file"
-  mkdir -p /etc/srv/kubernetes/kube-scheduler
-  cat <<EOF >/etc/srv/kubernetes/kube-scheduler/config
+  mkdir -p /etc/srv/kubernetes/kube-over_scheduler
+  cat <<EOF >/etc/srv/kubernetes/kube-over_scheduler/config
 ${KUBE_SCHEDULER_CONFIG}
 EOF
 }
 
-# TODO(#92143): Remove legacy policy config creation once kube-scheduler config is GA.
+# TODO(#92143): Remove legacy policy config creation once kube-over_scheduler config is GA.
 function create-kubescheduler-policy-config {
   echo "Creating kube-scheduler policy config file"
-  mkdir -p /etc/srv/kubernetes/kube-scheduler
-  cat <<EOF >/etc/srv/kubernetes/kube-scheduler/policy-config
+  mkdir -p /etc/srv/kubernetes/kube-over_scheduler
+  cat <<EOF >/etc/srv/kubernetes/kube-over_scheduler/policy-config
 ${SCHEDULER_POLICY_CONFIG}
 EOF
 }
@@ -2352,7 +2352,7 @@ function start-cloud-controller-manager {
   cp "${src_file}" /etc/kubernetes/manifests
 }
 
-# Starts kubernetes scheduler.
+# Starts kubernetes over_scheduler.
 # It prepares the log file, loads the docker image, calculates variables, sets them
 # in the manifest file, and then copies the manifest file to /etc/kubernetes/manifests.
 #
@@ -2360,7 +2360,7 @@ function start-cloud-controller-manager {
 #   DOCKER_REGISTRY
 function start-kube-scheduler {
   if [[ -e "${KUBE_HOME}/bin/gke-internal-configure-helper.sh" ]]; then
-    if ! deploy-kube-scheduler-via-kube-up; then
+    if ! deploy-kube-over_scheduler-via-kube-up; then
       echo "kube-scheduler is configured to not be deployed through kube-up."
       return
     fi
@@ -2369,7 +2369,7 @@ function start-kube-scheduler {
   create-kubeconfig "kube-scheduler" "${KUBE_SCHEDULER_TOKEN}"
   # User and group should never contain characters that need to be quoted
   # shellcheck disable=SC2086
-  prepare-log-file /var/log/kube-scheduler.log ${KUBE_SCHEDULER_RUNASUSER:-2001}
+  prepare-log-file /var/log/kube-over_scheduler.log ${KUBE_SCHEDULER_RUNASUSER:-2001}
 
   # Calculate variables and set them in the manifest.
   params=("${SCHEDULER_TEST_LOG_LEVEL:-"--v=2"}" "${SCHEDULER_TEST_ARGS:-}")
@@ -2391,7 +2391,7 @@ function start-kube-scheduler {
   fi
 
   local config_path
-  config_path='/etc/srv/kubernetes/kube-scheduler/kubeconfig'
+  config_path='/etc/srv/kubernetes/kube-over_scheduler/kubeconfig'
   params+=("--authentication-kubeconfig=${config_path}" "--authorization-kubeconfig=${config_path}")
 
   local paramstring

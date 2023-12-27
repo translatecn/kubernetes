@@ -51,25 +51,6 @@ func NewNodeSelector(ns *v1.NodeSelector, opts ...field.PathOption) (*NodeSelect
 	return &NodeSelector{lazy: *lazy}, nil
 }
 
-// NewLazyErrorNodeSelector creates a NodeSelector that only reports parse
-// errors when no terms match.
-func NewLazyErrorNodeSelector(ns *v1.NodeSelector, opts ...field.PathOption) *LazyErrorNodeSelector {
-	p := field.ToPath(opts...)
-	parsedTerms := make([]nodeSelectorTerm, 0, len(ns.NodeSelectorTerms))
-	path := p.Child("nodeSelectorTerms")
-	for i, term := range ns.NodeSelectorTerms {
-		// nil or empty term selects no objects
-		if isEmptyNodeSelectorTerm(&term) {
-			continue
-		}
-		p := path.Index(i)
-		parsedTerms = append(parsedTerms, newNodeSelectorTerm(&term, p))
-	}
-	return &LazyErrorNodeSelector{
-		terms: parsedTerms,
-	}
-}
-
 // Match checks whether the node labels and fields match the selector terms, ORed;
 // nil or empty term matches no objects.
 func (ns *NodeSelector) Match(node *v1.Node) bool {
@@ -165,26 +146,6 @@ type nodeSelectorTerm struct {
 	matchLabels labels.Selector
 	matchFields fields.Selector
 	parseErrs   []error
-}
-
-func newNodeSelectorTerm(term *v1.NodeSelectorTerm, path *field.Path) nodeSelectorTerm {
-	var parsedTerm nodeSelectorTerm
-	var errs []error
-	if len(term.MatchExpressions) != 0 {
-		p := path.Child("matchExpressions")
-		parsedTerm.matchLabels, errs = nodeSelectorRequirementsAsSelector(term.MatchExpressions, p)
-		if errs != nil {
-			parsedTerm.parseErrs = append(parsedTerm.parseErrs, errs...)
-		}
-	}
-	if len(term.MatchFields) != 0 {
-		p := path.Child("matchFields")
-		parsedTerm.matchFields, errs = nodeSelectorRequirementsAsFieldSelector(term.MatchFields, p)
-		if errs != nil {
-			parsedTerm.parseErrs = append(parsedTerm.parseErrs, errs...)
-		}
-	}
-	return parsedTerm
 }
 
 func (t *nodeSelectorTerm) match(nodeLabels labels.Set, nodeFields fields.Set) (bool, []error) {
@@ -321,4 +282,42 @@ func (s RequiredNodeAffinity) Match(node *v1.Node) (bool, error) {
 		return s.nodeSelector.Match(node)
 	}
 	return true, nil
+}
+
+// NewLazyErrorNodeSelector creates a NodeSelector that only reports parse
+// errors when no terms match.
+func NewLazyErrorNodeSelector(ns *v1.NodeSelector, opts ...field.PathOption) *LazyErrorNodeSelector {
+	p := field.ToPath(opts...)
+	parsedTerms := make([]nodeSelectorTerm, 0, len(ns.NodeSelectorTerms))
+	path := p.Child("nodeSelectorTerms")
+	for i, term := range ns.NodeSelectorTerms {
+		// nil or empty term selects no objects
+		if isEmptyNodeSelectorTerm(&term) {
+			continue
+		}
+		p := path.Index(i)
+		parsedTerms = append(parsedTerms, newNodeSelectorTerm(&term, p))
+	}
+	return &LazyErrorNodeSelector{
+		terms: parsedTerms,
+	}
+}
+func newNodeSelectorTerm(term *v1.NodeSelectorTerm, path *field.Path) nodeSelectorTerm {
+	var parsedTerm nodeSelectorTerm
+	var errs []error
+	if len(term.MatchExpressions) != 0 {
+		p := path.Child("matchExpressions")
+		parsedTerm.matchLabels, errs = nodeSelectorRequirementsAsSelector(term.MatchExpressions, p)
+		if errs != nil {
+			parsedTerm.parseErrs = append(parsedTerm.parseErrs, errs...)
+		}
+	}
+	if len(term.MatchFields) != 0 {
+		p := path.Child("matchFields")
+		parsedTerm.matchFields, errs = nodeSelectorRequirementsAsFieldSelector(term.MatchFields, p)
+		if errs != nil {
+			parsedTerm.parseErrs = append(parsedTerm.parseErrs, errs...)
+		}
+	}
+	return parsedTerm
 }

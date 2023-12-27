@@ -745,7 +745,7 @@ items:
   - apiGroups:
     - coordination.k8s.io
     resourceNames:
-    - kube-scheduler
+    - kube-over_scheduler
     resources:
     - leases
     verbs:
@@ -760,7 +760,7 @@ items:
   - apiGroups:
     - ""
     resourceNames:
-    - kube-scheduler
+    - kube-over_scheduler
     resources:
     - endpoints
     verbs:

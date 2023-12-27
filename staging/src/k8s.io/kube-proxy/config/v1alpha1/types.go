@@ -49,8 +49,8 @@ type KubeProxyIPVSConfiguration struct {
 	// minSyncPeriod is the minimum period that ipvs rules are refreshed (e.g. '5s', '1m',
 	// '2h22m').
 	MinSyncPeriod metav1.Duration `json:"minSyncPeriod"`
-	// ipvs scheduler
-	Scheduler string `json:"scheduler"`
+	// ipvs over_scheduler
+	Scheduler string `json:"over_scheduler"`
 	// excludeCIDRs is a list of CIDR's which the ipvs proxier should not touch
 	// when cleaning up ipvs services.
 	ExcludeCIDRs []string `json:"excludeCIDRs"`

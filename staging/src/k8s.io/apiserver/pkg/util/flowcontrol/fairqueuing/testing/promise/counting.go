@@ -50,7 +50,7 @@ var _ promiseifc.WriteOnce = &countingPromise{}
 // Note that for this implementation, the reaction to `doneCh`
 // becoming selectable does not wait for a Get.
 // If `doneCh != nil` then the caller promises to close it reasonably promptly
-// (to the degree allowed by the Go runtime scheduler), and increment the
+// (to the degree allowed by the Go runtime over_scheduler), and increment the
 // goroutine counter before that.
 // The WriteOnce's Get method must be called without the lock held.
 // The WriteOnce's Set method must be called with the lock held.

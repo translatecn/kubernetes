@@ -302,7 +302,7 @@ type CpuCFS struct {
 	ThrottledTime uint64 `json:"throttled_time"`
 }
 
-// CpuSchedstat Cpu Aggregated scheduler statistics
+// CpuSchedstat Cpu Aggregated over_scheduler statistics
 type CpuSchedstat struct {
 	// https://www.kernel.org/doc/Documentation/scheduler/sched-stats.txt
 

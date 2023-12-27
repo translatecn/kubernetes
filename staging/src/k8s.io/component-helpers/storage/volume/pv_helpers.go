@@ -45,7 +45,7 @@ const (
 	// controller may not handle it correctly.
 	AnnBoundByController = "pv.kubernetes.io/bound-by-controller"
 
-	// AnnSelectedNode annotation is added to a PVC that has been triggered by scheduler to
+	// AnnSelectedNode annotation is added to a PVC that has been triggered by over_scheduler to
 	// be dynamically provisioned. Its value is the name of the selected node.
 	AnnSelectedNode = "volume.kubernetes.io/selected-node"
 
@@ -91,95 +91,18 @@ func IsDelayBindingProvisioning(claim *v1.PersistentVolumeClaim) bool {
 	return ok
 }
 
-// IsDelayBindingMode checks if claim is in delay binding mode.
-func IsDelayBindingMode(claim *v1.PersistentVolumeClaim, classLister storagelisters.StorageClassLister) (bool, error) {
-	className := GetPersistentVolumeClaimClass(claim)
-	if className == "" {
-		return false, nil
-	}
-
-	class, err := classLister.Get(className)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	if class.VolumeBindingMode == nil {
-		return false, fmt.Errorf("VolumeBindingMode not set for StorageClass %q", className)
-	}
-
-	return *class.VolumeBindingMode == storage.VolumeBindingWaitForFirstConsumer, nil
-}
-
-// GetBindVolumeToClaim returns a new volume which is bound to given claim. In
-// addition, it returns a bool which indicates whether we made modification on
-// original volume.
-func GetBindVolumeToClaim(volume *v1.PersistentVolume, claim *v1.PersistentVolumeClaim) (*v1.PersistentVolume, bool, error) {
-	dirty := false
-
-	// Check if the volume was already bound (either by user or by controller)
-	shouldSetBoundByController := false
-	if !IsVolumeBoundToClaim(volume, claim) {
-		shouldSetBoundByController = true
-	}
-
-	// The volume from method args can be pointing to watcher cache. We must not
-	// modify these, therefore create a copy.
-	volumeClone := volume.DeepCopy()
-
-	// Bind the volume to the claim if it is not bound yet
-	if volume.Spec.ClaimRef == nil ||
-		volume.Spec.ClaimRef.Name != claim.Name ||
-		volume.Spec.ClaimRef.Namespace != claim.Namespace ||
-		volume.Spec.ClaimRef.UID != claim.UID {
-
-		claimRef, err := reference.GetReference(scheme.Scheme, claim)
-		if err != nil {
-			return nil, false, fmt.Errorf("unexpected error getting claim reference: %w", err)
-		}
-		volumeClone.Spec.ClaimRef = claimRef
-		dirty = true
-	}
-
-	// Set AnnBoundByController if it is not set yet
-	if shouldSetBoundByController && !metav1.HasAnnotation(volumeClone.ObjectMeta, AnnBoundByController) {
-		metav1.SetMetaDataAnnotation(&volumeClone.ObjectMeta, AnnBoundByController, "yes")
-		dirty = true
-	}
-
-	return volumeClone, dirty, nil
-}
-
-// IsVolumeBoundToClaim returns true, if given volume is pre-bound or bound
-// to specific claim. Both claim.Name and claim.Namespace must be equal.
-// If claim.UID is present in volume.Spec.ClaimRef, it must be equal too.
-func IsVolumeBoundToClaim(volume *v1.PersistentVolume, claim *v1.PersistentVolumeClaim) bool {
-	if volume.Spec.ClaimRef == nil {
-		return false
-	}
-	if claim.Name != volume.Spec.ClaimRef.Name || claim.Namespace != volume.Spec.ClaimRef.Namespace {
-		return false
-	}
-	if volume.Spec.ClaimRef.UID != "" && claim.UID != volume.Spec.ClaimRef.UID {
-		return false
-	}
-	return true
-}
-
 // FindMatchingVolume goes through the list of volumes to find the best matching volume
 // for the claim.
 //
-// This function is used by both the PV controller and scheduler.
+// This function is used by both the PV controller and over_scheduler.
 //
 // delayBinding is true only in the PV controller path.  When set, prebound PVs are still returned
 // as a match for the claim, but unbound PVs are skipped.
 //
-// node is set only in the scheduler path. When set, the PV node affinity is checked against
+// node is set only in the over_scheduler path. When set, the PV node affinity is checked against
 // the node's labels.
 //
-// excludedVolumes is only used in the scheduler path, and is needed for evaluating multiple
+// excludedVolumes is only used in the over_scheduler path, and is needed for evaluating multiple
 // unbound PVCs for a single Pod at one time.  As each PVC finds a matching PV, the chosen
 // PV needs to be excluded from future matching.
 func FindMatchingVolume(
@@ -339,4 +262,81 @@ func CheckAccessModes(claim *v1.PersistentVolumeClaim, volume *v1.PersistentVolu
 
 func claimToClaimKey(claim *v1.PersistentVolumeClaim) string {
 	return fmt.Sprintf("%s/%s", claim.Namespace, claim.Name)
+}
+
+// IsVolumeBoundToClaim returns true, if given volume is pre-bound or bound
+// to specific claim. Both claim.Name and claim.Namespace must be equal.
+// If claim.UID is present in volume.Spec.ClaimRef, it must be equal too.
+func IsVolumeBoundToClaim(volume *v1.PersistentVolume, claim *v1.PersistentVolumeClaim) bool {
+	if volume.Spec.ClaimRef == nil {
+		return false
+	}
+	if claim.Name != volume.Spec.ClaimRef.Name || claim.Namespace != volume.Spec.ClaimRef.Namespace {
+		return false
+	}
+	if volume.Spec.ClaimRef.UID != "" && claim.UID != volume.Spec.ClaimRef.UID {
+		return false
+	}
+	return true
+}
+
+// GetBindVolumeToClaim returns a new volume which is bound to given claim. In
+// addition, it returns a bool which indicates whether we made modification on
+// original volume.
+func GetBindVolumeToClaim(volume *v1.PersistentVolume, claim *v1.PersistentVolumeClaim) (*v1.PersistentVolume, bool, error) {
+	dirty := false
+
+	// Check if the volume was already bound (either by user or by controller)
+	shouldSetBoundByController := false
+	if !IsVolumeBoundToClaim(volume, claim) {
+		shouldSetBoundByController = true
+	}
+
+	// The volume from method args can be pointing to watcher cache. We must not
+	// modify these, therefore create a copy.
+	volumeClone := volume.DeepCopy()
+
+	// Bind the volume to the claim if it is not bound yet
+	if volume.Spec.ClaimRef == nil ||
+		volume.Spec.ClaimRef.Name != claim.Name ||
+		volume.Spec.ClaimRef.Namespace != claim.Namespace ||
+		volume.Spec.ClaimRef.UID != claim.UID {
+
+		claimRef, err := reference.GetReference(scheme.Scheme, claim)
+		if err != nil {
+			return nil, false, fmt.Errorf("unexpected error getting claim reference: %w", err)
+		}
+		volumeClone.Spec.ClaimRef = claimRef
+		dirty = true
+	}
+
+	// Set AnnBoundByController if it is not set yet
+	if shouldSetBoundByController && !metav1.HasAnnotation(volumeClone.ObjectMeta, AnnBoundByController) {
+		metav1.SetMetaDataAnnotation(&volumeClone.ObjectMeta, AnnBoundByController, "yes")
+		dirty = true
+	}
+
+	return volumeClone, dirty, nil
+}
+
+// IsDelayBindingMode checks if claim is in delay binding mode.
+func IsDelayBindingMode(claim *v1.PersistentVolumeClaim, classLister storagelisters.StorageClassLister) (bool, error) {
+	className := GetPersistentVolumeClaimClass(claim)
+	if className == "" {
+		return false, nil
+	}
+
+	class, err := classLister.Get(className)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if class.VolumeBindingMode == nil {
+		return false, fmt.Errorf("VolumeBindingMode not set for StorageClass %q", className)
+	}
+
+	return *class.VolumeBindingMode == storage.VolumeBindingWaitForFirstConsumer, nil
 }

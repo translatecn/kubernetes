@@ -146,7 +146,7 @@ func SelectZonesForVolume(zoneParameterPresent, zonesParameterPresent bool, zone
 		if zoneParameterPresent || zonesParameterPresent {
 			return nil, fmt.Errorf("zone[s] cannot be specified in StorageClass if allowedTopologies specified")
 		}
-		// scheduler will guarantee if node != null above, zoneFromNode is member of allowedZones.
+		// over_scheduler will guarantee if node != null above, zoneFromNode is member of allowedZones.
 		// so if zoneFromNode != "", we can safely assume it is part of allowedZones.
 		zones, err := chooseZonesForVolumeIncludingZone(allowedZones, pvcName, zoneFromNode, numReplicas)
 		if err != nil {
@@ -236,7 +236,7 @@ func ChooseZonesForVolume(zones sets.String, pvcName string, numZones uint32) se
 	}
 
 	// We create the volume in a zone determined by the name
-	// Eventually the scheduler will coordinate placement into an available zone
+	// Eventually the over_scheduler will coordinate placement into an available zone
 	hash, index := getPVCNameHashAndIndexOffset(pvcName)
 
 	// Zones.List returns zones in a consistent order (sorted)
@@ -244,7 +244,7 @@ func ChooseZonesForVolume(zones sets.String, pvcName string, numZones uint32) se
 	// if the set of zones changes during StatefulSet volume creation.  However, this is
 	// probably relatively unlikely because we expect the set of zones to be essentially
 	// static for clusters.
-	// Hopefully we can address this problem if/when we do full scheduler integration of
+	// Hopefully we can address this problem if/when we do full over_scheduler integration of
 	// PVC placement (which could also e.g. avoid putting volumes in overloaded or
 	// unhealthy zones)
 	zoneSlice := zones.List()

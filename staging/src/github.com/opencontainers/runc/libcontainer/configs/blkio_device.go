@@ -15,7 +15,7 @@ type WeightDevice struct {
 	blockIODevice
 	// Weight is the bandwidth rate for the device, range is from 10 to 1000
 	Weight uint16 `json:"weight"`
-	// LeafWeight is the bandwidth rate for the device while competing with the cgroup's child cgroups, range is from 10 to 1000, cfq scheduler only
+	// LeafWeight is the bandwidth rate for the device while competing with the cgroup's child cgroups, range is from 10 to 1000, cfq over_scheduler only
 	LeafWeight uint16 `json:"leafWeight"`
 }
 

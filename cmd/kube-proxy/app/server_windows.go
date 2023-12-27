@@ -34,8 +34,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/events"
-	"k8s.io/component-base/configz"
 	"k8s.io/component-base/metrics"
+	"k8s.io/component-base/over_configz"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/proxy"
 	proxyconfigapi "k8s.io/kubernetes/pkg/proxy/apis/config"
@@ -55,7 +55,7 @@ func newProxyServer(config *proxyconfigapi.KubeProxyConfiguration, master string
 		return nil, errors.New("config is required")
 	}
 
-	if c, err := configz.New(proxyconfigapi.GroupName); err == nil {
+	if c, err := over_configz.New(proxyconfigapi.GroupName); err == nil {
 		c.Set(config)
 	} else {
 		return nil, fmt.Errorf("unable to register configz: %s", err)

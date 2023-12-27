@@ -236,14 +236,14 @@ type VolumePluginWithAttachLimits interface {
 	// For example - calling this function for EBS volume plugin on a GCE node should
 	// result in error.
 	// The returned values are stored in node allocatable property and will be used
-	// by scheduler to determine how many pods with volumes can be scheduled on given node.
+	// by over_scheduler to determine how many pods with volumes can be scheduled on given node.
 	GetVolumeLimits() (map[string]int64, error)
 	// Return volume limit key string to be used in node capacity constraints
 	// The key must start with prefix storage-limits-. For example:
 	//    - storage-limits-aws-ebs
 	//    - storage-limits-csi-cinder
 	// The key should respect character limit of ResourceName type
-	// This function may be called by kubelet or scheduler to identify node allocatable property
+	// This function may be called by kubelet or over_scheduler to identify node allocatable property
 	// which stores volumes limits.
 	VolumeLimitKey(spec *Spec) string
 }

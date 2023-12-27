@@ -111,20 +111,6 @@ func Conflicts(labels1, labels2 Set) bool {
 	return false
 }
 
-// Merge combines given maps, and does not check for any conflicts
-// between the maps. In case of conflicts, second map (labels2) wins
-func Merge(labels1, labels2 Set) Set {
-	mergedMap := Set{}
-
-	for k, v := range labels1 {
-		mergedMap[k] = v
-	}
-	for k, v := range labels2 {
-		mergedMap[k] = v
-	}
-	return mergedMap
-}
-
 // Equals returns true if the given maps are equal
 func Equals(labels1, labels2 Set) bool {
 	if len(labels1) != len(labels2) {
@@ -169,4 +155,18 @@ func ConvertSelectorToLabelsMap(selector string, opts ...field.PathOption) (Set,
 		labelsMap[key] = value
 	}
 	return labelsMap, nil
+}
+
+// Merge combines given maps, and does not check for any conflicts
+// between the maps. In case of conflicts, second map (labels2) wins
+func Merge(labels1, labels2 Set) Set {
+	mergedMap := Set{}
+
+	for k, v := range labels1 {
+		mergedMap[k] = v
+	}
+	for k, v := range labels2 {
+		mergedMap[k] = v
+	}
+	return mergedMap
 }

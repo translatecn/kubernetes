@@ -108,7 +108,7 @@ type PodSpec struct {
 	ServiceAccountName string
 
 	// NodeName is a request to schedule this pod onto a specific node.  If it is non-empty,
-	// the scheduler simply schedules this pod onto that node, assuming that it fits resource
+	// the over_scheduler simply schedules this pod onto that node, assuming that it fits resource
 	// requirements.
 	// +optional
 	NodeName string
@@ -120,8 +120,8 @@ type PodSpec struct {
 	// If not specified, the pod will not have a domainname at all.
 	// +optional
 	Subdomain string
-	// If specified, the pod will be dispatched by specified scheduler.
-	// If not specified, the pod will be dispatched by default scheduler.
+	// If specified, the pod will be dispatched by specified over_scheduler.
+	// If not specified, the pod will be dispatched by default over_scheduler.
 	// +optional
 	SchedulerName string
 }

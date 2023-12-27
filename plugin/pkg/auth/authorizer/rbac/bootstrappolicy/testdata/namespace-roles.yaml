@@ -103,7 +103,7 @@ items:
   - apiGroups:
     - ""
     resourceNames:
-    - kube-scheduler
+    - kube-over_scheduler
     resources:
     - configmaps
     verbs:

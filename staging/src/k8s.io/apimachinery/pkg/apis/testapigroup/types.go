@@ -108,7 +108,7 @@ type CarpSpec struct {
 	ServiceAccountName string
 
 	// NodeName is a request to schedule this carp onto a specific node.  If it is non-empty,
-	// the scheduler simply schedules this carp onto that node, assuming that it fits resource
+	// the over_scheduler simply schedules this carp onto that node, assuming that it fits resource
 	// requirements.
 	// +optional
 	NodeName string
@@ -120,8 +120,8 @@ type CarpSpec struct {
 	// If not specified, the carp will not have a domainname at all.
 	// +optional
 	Subdomain string
-	// If specified, the carp will be dispatched by specified scheduler.
-	// If not specified, the carp will be dispatched by default scheduler.
+	// If specified, the carp will be dispatched by specified over_scheduler.
+	// If not specified, the carp will be dispatched by default over_scheduler.
 	// +optional
 	SchedulerName string
 }

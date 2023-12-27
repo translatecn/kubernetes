@@ -2606,11 +2606,11 @@ const (
 
 // These are reasons for a pod's transition to a condition.
 const (
-	// PodReasonUnschedulable reason in PodScheduled PodCondition means that the scheduler
+	// PodReasonUnschedulable reason in PodScheduled PodCondition means that the over_scheduler
 	// can't schedule the pod right now, for example due to insufficient resources in the cluster.
 	PodReasonUnschedulable = "Unschedulable"
 
-	// PodReasonSchedulingGated reason in PodScheduled PodCondition means that the scheduler
+	// PodReasonSchedulingGated reason in PodScheduled PodCondition means that the over_scheduler
 	// skips scheduling the pod because one or more scheduling gates are still present.
 	PodReasonSchedulingGated = "SchedulingGated"
 
@@ -2820,7 +2820,7 @@ type PodAffinity struct {
 	// podAffinityTerm are intersected, i.e. all terms must be satisfied.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution []PodAffinityTerm `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,1,rep,name=requiredDuringSchedulingIgnoredDuringExecution"`
-	// The scheduler will prefer to schedule pods to nodes that satisfy
+	// The over_scheduler will prefer to schedule pods to nodes that satisfy
 	// the affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2855,7 +2855,7 @@ type PodAntiAffinity struct {
 	// podAffinityTerm are intersected, i.e. all terms must be satisfied.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution []PodAffinityTerm `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,1,rep,name=requiredDuringSchedulingIgnoredDuringExecution"`
-	// The scheduler will prefer to schedule pods to nodes that satisfy
+	// The over_scheduler will prefer to schedule pods to nodes that satisfy
 	// the anti-affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2952,13 +2952,13 @@ type TaintEffect string
 
 const (
 	// Do not allow new pods to schedule onto the node unless they tolerate the taint,
-	// but allow all pods submitted to Kubelet without going through the scheduler
+	// but allow all pods submitted to Kubelet without going through the over_scheduler
 	// to start, and allow all already-running pods to continue running.
-	// Enforced by the scheduler.
+	// Enforced by the over_scheduler.
 	TaintEffectNoSchedule TaintEffect = "NoSchedule"
-	// Like TaintEffectNoSchedule, but the scheduler tries not to schedule
+	// Like TaintEffectNoSchedule, but the over_scheduler tries not to schedule
 	// new pods onto the node, rather than prohibiting new pods from scheduling
-	// onto the node entirely. Enforced by the scheduler.
+	// onto the node entirely. Enforced by the over_scheduler.
 	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule" //
 	TaintEffectNoExecute        TaintEffect = "NoExecute"        // 如果某个 Pod 不能容忍节点的污点,则需要将其驱逐出节点.这个过程由 NodeController 实现.
 )
@@ -3087,7 +3087,7 @@ type PodSpec struct {
 	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty" protobuf:"varint,21,opt,name=automountServiceAccountToken"`
 
 	// NodeName is a request to schedule this pod onto a specific node. If it is non-empty,
-	// the scheduler simply schedules this pod onto that node, assuming that it fits resource
+	// the over_scheduler simply schedules this pod onto that node, assuming that it fits resource
 	// requirements.
 	// +optional
 	NodeName string `json:"nodeName,omitempty" protobuf:"bytes,10,opt,name=nodeName"`
@@ -3135,8 +3135,8 @@ type PodSpec struct {
 	// If specified, the pod's scheduling constraints
 	// +optional
 	Affinity *Affinity `json:"affinity,omitempty" protobuf:"bytes,18,opt,name=affinity"`
-	// If specified, the pod will be dispatched by specified scheduler.
-	// If not specified, the pod will be dispatched by default scheduler.
+	// If specified, the pod will be dispatched by specified over_scheduler.
+	// If not specified, the pod will be dispatched by default over_scheduler.
 	// +optional
 	SchedulerName string `json:"schedulerName,omitempty" protobuf:"bytes,19,opt,name=schedulerName"`
 	// If specified, the pod's tolerations.
@@ -3195,9 +3195,7 @@ type PodSpec struct {
 	// More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md
 	// +optional
 	Overhead ResourceMap `json:"overhead,omitempty" protobuf:"bytes,32,opt,name=overhead"`
-	// TopologySpreadConstraints describes how a group of pods ought to spread across topology
-	// domains. Scheduler will schedule pods in a way which abides by the constraints.
-	// All topologySpreadConstraints are ANDed.
+	// 指导一组Pod在拓扑域（Topology Domains）中如何分布的规则
 	// +optional
 	// +patchMergeKey=topologyKey
 	// +patchStrategy=merge
@@ -3355,10 +3353,10 @@ type PodSchedulingGate struct {
 type UnsatisfiableConstraintAction string
 
 const (
-	// DoNotSchedule instructs the scheduler not to schedule the pod
+	// DoNotSchedule instructs the over_scheduler not to schedule the pod
 	// when constraints are not satisfied.
 	DoNotSchedule UnsatisfiableConstraintAction = "DoNotSchedule"
-	// ScheduleAnyway instructs the scheduler to schedule the pod
+	// ScheduleAnyway instructs the over_scheduler to schedule the pod
 	// even if constraints are not satisfied.
 	ScheduleAnyway UnsatisfiableConstraintAction = "ScheduleAnyway"
 )
@@ -3376,89 +3374,14 @@ const (
 
 // TopologySpreadConstraint specifies how to spread matching pods among the given topology.
 type TopologySpreadConstraint struct {
-	// MaxSkew describes the degree to which pods may be unevenly distributed.
-	// When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference
-	// between the number of matching pods in the target topology and the global minimum.
-	// The global minimum is the minimum number of matching pods in an eligible domain
-	// or zero if the number of eligible domains is less than MinDomains.
-	// For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
-	// labelSelector spread as 2/2/1:
-	// In this case, the global minimum is 1.
-	// +-------+-------+-------+
-	// | zone1 | zone2 | zone3 |
-	// +-------+-------+-------+
-	// |  P P  |  P P  |   P   |
-	// +-------+-------+-------+
-	// - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2;
-	// scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2)
-	// violate MaxSkew(1).
-	// - if MaxSkew is 2, incoming pod can be scheduled onto any zone.
-	// When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence
-	// to topologies that satisfy it.
-	// It's a required field. Default value is 1 and 0 is not allowed.
+	// Pod在拓扑结构中允许的最大不均匀度 (各个区域数量的差值)
 	MaxSkew int32 `json:"maxSkew" protobuf:"varint,1,opt,name=maxSkew"`
-	// TopologyKey is the key of node labels. Nodes that have a label with this key
-	// and identical values are considered to be in the same topology.
-	// We consider each <key, value> as a "bucket", and try to put balanced number
-	// of pods into each bucket.
-	// We define a domain as a particular instance of a topology.
-	// Also, we define an eligible domain as a domain whose nodes meet the requirements of
-	// nodeAffinityPolicy and nodeTaintsPolicy.
-	// e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology.
-	// And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology.
-	// It's a required field.
-	TopologyKey string `json:"topologyKey" protobuf:"bytes,2,opt,name=topologyKey"`
-	// WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy
-	// the spread constraint.
-	// - DoNotSchedule (default) tells the scheduler not to schedule it.
-	// - ScheduleAnyway tells the scheduler to schedule the pod in any location,
-	//   but giving higher precedence to topologies that would help reduce the
-	//   skew.
-	// A constraint is considered "Unsatisfiable" for an incoming pod
-	// if and only if every possible node assignment for that pod would violate
-	// "MaxSkew" on some topology.
-	// For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same
-	// labelSelector spread as 3/1/1:
-	// +-------+-------+-------+
-	// | zone1 | zone2 | zone3 |
-	// +-------+-------+-------+
-	// | P P P |   P   |   P   |
-	// +-------+-------+-------+
-	// If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled
-	// to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies
-	// MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler
-	// won't make it *more* imbalanced.
-	// It's a required field.
+	// 拓扑域的分割
+	TopologyKey       string                        `json:"topologyKey" protobuf:"bytes,2,opt,name=topologyKey"`
 	WhenUnsatisfiable UnsatisfiableConstraintAction `json:"whenUnsatisfiable" protobuf:"bytes,3,opt,name=whenUnsatisfiable,casttype=UnsatisfiableConstraintAction"`
-	// LabelSelector is used to find matching pods.
-	// Pods that match this label selector are counted to determine the number of pods
-	// in their corresponding topology domain.
 	// +optional
 	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" protobuf:"bytes,4,opt,name=labelSelector"`
-	// MinDomains indicates a minimum number of eligible domains.
-	// When the number of eligible domains with matching topology keys is less than minDomains,
-	// Pod Topology Spread treats "global minimum" as 0, and then the calculation of Skew is performed.
-	// And when the number of eligible domains with matching topology keys equals or greater than minDomains,
-	// this value has no effect on scheduling.
-	// As a result, when the number of eligible domains is less than minDomains,
-	// scheduler won't schedule more than maxSkew Pods to those domains.
-	// If value is nil, the constraint behaves as if MinDomains is equal to 1.
-	// Valid values are integers greater than 0.
-	// When value is not nil, WhenUnsatisfiable must be DoNotSchedule.
-	//
-	// For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same
-	// labelSelector spread as 2/2/2:
-	// +-------+-------+-------+
-	// | zone1 | zone2 | zone3 |
-	// +-------+-------+-------+
-	// |  P P  |  P P  |  P P  |
-	// +-------+-------+-------+
-	// The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0.
-	// In this situation, new pod with the same labelSelector cannot be scheduled,
-	// because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
-	// it will violate MaxSkew.
-	//
-	// This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).
+	//最少有几个域分部
 	// +optional
 	MinDomains *int32 `json:"minDomains,omitempty" protobuf:"varint,5,opt,name=minDomains"`
 	// NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector
@@ -3812,13 +3735,10 @@ type PodStatus struct {
 	// e.g. 'Evicted'
 	// +optional
 	Reason string `json:"reason,omitempty" protobuf:"bytes,4,opt,name=reason"`
-	// nominatedNodeName is set only when this pod preempts other pods on the node, but it cannot be
-	// scheduled right away as preemption victims receive their graceful termination periods.
-	// This field does not guarantee that the pod will be scheduled on this node. Scheduler may decide
-	// to place the pod elsewhere if other nodes become available sooner. Scheduler may also decide to
-	// give the resources on this node to a higher priority pod that is created after preemption.
-	// As a result, this field may be different than PodSpec.nodeName when the pod is
-	// scheduled.
+	// `nominatedNodeName` 字段仅在此 Pod 抢占其他节点上的 Pod 时设置，但不能立即调度，因为被抢占的 Pod 会接收到它们的优雅终止期间。
+	// 这个字段并不保证该 Pod 一定会在此节点上被调度。调度器可能会决定将 Pod 放置在其他节点上，特别是如果其他节点更快变得可用。
+	// 调度器也可能决定将此节点上的资源分配给在抢占之后创建的优先级更高的 Pod。
+	// 因此，在调度时，这个字段的值可能与 `PodSpec.nodeName` 不同。
 	// +optional
 	NominatedNodeName string `json:"nominatedNodeName,omitempty" protobuf:"bytes,11,opt,name=nominatedNodeName"`
 
@@ -5025,7 +4945,7 @@ type AttachedVolume struct {
 }
 
 // AvoidPods describes pods that should avoid this node. This is the value for a
-// Node annotation with key scheduler.alpha.kubernetes.io/preferAvoidPods and
+// Node annotation with key over_scheduler.alpha.kubernetes.io/preferAvoidPods and
 // will eventually become a field of NodeStatus.
 type AvoidPods struct {
 	// Bounded-sized list of signatures of pods that should avoid this node, sorted
@@ -5353,7 +5273,7 @@ type NamespaceList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Binding ties one object to another; for example, a pod is bound to a node by a scheduler.
+// Binding ties one object to another; for example, a pod is bound to a node by a over_scheduler.
 // Deprecated in 1.7, please use the bindings subresource of pods instead.
 type Binding struct {
 	metav1.TypeMeta `json:",inline"`
@@ -6457,12 +6377,12 @@ type RangeAllocation struct {
 }
 
 const (
-	// DefaultSchedulerName defines the name of default scheduler.
-	DefaultSchedulerName = "default-scheduler"
+	// DefaultSchedulerName defines the name of default over_scheduler.
+	DefaultSchedulerName = "default-over_scheduler"
 
 	// RequiredDuringScheduling affinity is not symmetric, but there is an implicit PreferredDuringScheduling affinity rule
 	// corresponding to every RequiredDuringScheduling affinity rule.
-	// When the --hard-pod-affinity-weight scheduler flag is not specified,
+	// When the --hard-pod-affinity-weight over_scheduler flag is not specified,
 	// DefaultHardPodAffinityWeight defines the weight of the implicit PreferredDuringScheduling affinity rule.
 	DefaultHardPodAffinitySymmetricWeight int32 = 1
 )

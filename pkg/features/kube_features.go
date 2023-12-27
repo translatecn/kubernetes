@@ -388,7 +388,7 @@ const (
 	// beta: v1.24
 	// GA: v1.25
 	// IdentifyPodOS allows user to specify OS on which they'd like the Pod run. The user should still set the nodeSelector
-	// with appropriate `kubernetes.io/os` label for scheduler to identify appropriate node for the pod to run.
+	// with appropriate `kubernetes.io/os` label for over_scheduler to identify appropriate node for the pod to run.
 	IdentifyPodOS featuregate.Feature = "IdentifyPodOS"
 
 	// owner: @leakingtapan

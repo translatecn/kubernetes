@@ -86,7 +86,7 @@ const (
 	// https://github.com/kubernetes/kubernetes/issues/72236
 	kubeIPVSFilterChain utiliptables.Chain = "KUBE-IPVS-FILTER"
 
-	// defaultScheduler is the default ipvs scheduler algorithm - round robin.
+	// defaultScheduler is the default ipvs over_scheduler algorithm - round robin.
 	defaultScheduler = "rr"
 
 	// defaultDummyDevice is the default dummy interface which ipvs service address will bind to it.
@@ -459,7 +459,7 @@ func NewProxier(ipt utiliptables.Interface,
 	klog.V(2).InfoS("Record nodeIP and family", "nodeIP", nodeIP, "family", ipFamily)
 
 	if len(scheduler) == 0 {
-		klog.InfoS("IPVS scheduler not specified, use rr by default")
+		klog.InfoS("IPVS over_scheduler not specified, use rr by default")
 		scheduler = defaultScheduler
 	}
 
@@ -742,7 +742,7 @@ func CanUseIPVSProxier(handle KernelHandler, ipsetver IPSetVersioner, scheduler 
 	}
 	mods = utilipvs.GetRequiredIPVSModules(kernelVersion)
 	wantModules := sets.NewString()
-	// We check for the existence of the scheduler mod and will trigger a missingMods error if not found
+	// We check for the existence of the over_scheduler mod and will trigger a missingMods error if not found
 	if scheduler == "" {
 		scheduler = defaultScheduler
 	}

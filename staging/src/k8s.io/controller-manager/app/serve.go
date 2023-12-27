@@ -28,10 +28,10 @@ import (
 	"k8s.io/apiserver/pkg/server/routes"
 	"k8s.io/client-go/kubernetes/scheme"
 	componentbaseconfig "k8s.io/component-base/config"
-	"k8s.io/component-base/configz"
 	"k8s.io/component-base/logs"
 	"k8s.io/component-base/metrics/legacyregistry"
 	_ "k8s.io/component-base/metrics/prometheus/workqueue" // for workqueue metric registration
+	"k8s.io/component-base/over_configz"
 )
 
 func BuildHandlerChain(apiHandler http.Handler, authorizationInfo *apiserver.AuthorizationInfo, authenticationInfo *apiserver.AuthenticationInfo) http.Handler {
@@ -64,7 +64,7 @@ func NewBaseHandler(c *componentbaseconfig.DebuggingConfiguration, healthzHandle
 		}
 		routes.DebugFlags{}.Install(mux, "v", routes.StringFlagPutHandler(logs.GlogSetter))
 	}
-	configz.InstallHandler(mux)
+	over_configz.InstallHandler(mux)
 	mux.Handle("/metrics", legacyregistry.Handler())
 
 	return mux

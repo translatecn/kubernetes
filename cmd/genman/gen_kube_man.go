@@ -81,12 +81,12 @@ func main() {
 		for _, c := range proxy.Commands() {
 			genMarkdown(c, "kube-proxy", outDir)
 		}
-	case "kube-scheduler":
-		// generate manpage for kube-scheduler
+	case "kube-over_scheduler":
+		// generate manpage for kube-over_scheduler
 		scheduler := schapp.NewSchedulerCommand()
 		genMarkdown(scheduler, "", outDir)
 		for _, c := range scheduler.Commands() {
-			genMarkdown(c, "kube-scheduler", outDir)
+			genMarkdown(c, "kube-over_scheduler", outDir)
 		}
 	case "kubelet":
 		// generate manpage for kubelet

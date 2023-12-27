@@ -40,7 +40,7 @@ FieldTags:
   FieldRE: "StaticPodURLHeader"
 
 # The following fields are tagged in #95998
-- PackageRE: "k8s.io/kube-scheduler/config/v1"
+- PackageRE: "k8s.io/kube-over_scheduler/config/v1"
   TypeRE: "ExtenderTLSConfig"
   FieldRE: "KeyData"
 

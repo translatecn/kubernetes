@@ -27,11 +27,11 @@ import (
 )
 
 const (
-	// SchedulerDefaultLockObjectNamespace defines default scheduler lock object namespace ("kube-system")
+	// SchedulerDefaultLockObjectNamespace defines default over_scheduler lock object namespace ("kube-system")
 	SchedulerDefaultLockObjectNamespace string = metav1.NamespaceSystem
 
-	// SchedulerDefaultLockObjectName defines default scheduler lock object name ("kube-scheduler")
-	SchedulerDefaultLockObjectName = "kube-scheduler"
+	// SchedulerDefaultLockObjectName defines default over_scheduler lock object name ("kube-over_scheduler")
+	SchedulerDefaultLockObjectName = "kube-over_scheduler"
 
 	// SchedulerDefaultProviderName defines the default provider names
 	SchedulerDefaultProviderName = "DefaultProvider"
@@ -39,7 +39,7 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// KubeSchedulerConfiguration configures a scheduler
+// KubeSchedulerConfiguration configures a over_scheduler
 type KubeSchedulerConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -58,11 +58,11 @@ type KubeSchedulerConfiguration struct {
 	componentbaseconfigv1alpha1.DebuggingConfiguration `json:",inline"`
 
 	// PercentageOfNodesToScore is the percentage of all nodes that once found feasible
-	// for running a pod, the scheduler stops its search for more feasible nodes in
-	// the cluster. This helps improve scheduler's performance. Scheduler always tries to find
+	// for running a pod, the over_scheduler stops its search for more feasible nodes in
+	// the cluster. This helps improve over_scheduler's performance. Scheduler always tries to find
 	// at least "minFeasibleNodesToFind" feasible nodes no matter what the value of this flag is.
 	// Example: if the cluster size is 500 nodes and the value of this flag is 30,
-	// then scheduler stops finding further feasible nodes once it finds 150 feasible ones.
+	// then over_scheduler stops finding further feasible nodes once it finds 150 feasible ones.
 	// When the value is 0, default percentage (5%--50% based on the size of the cluster) of the
 	// nodes will be scored.
 	PercentageOfNodesToScore *int32 `json:"percentageOfNodesToScore,omitempty"`
@@ -77,16 +77,16 @@ type KubeSchedulerConfiguration struct {
 	// the default value (10s) will be used.
 	PodMaxBackoffSeconds *int64 `json:"podMaxBackoffSeconds,omitempty"`
 
-	// Profiles are scheduling profiles that kube-scheduler supports. Pods can
+	// Profiles are scheduling profiles that kube-over_scheduler supports. Pods can
 	// choose to be scheduled under a particular profile by setting its associated
-	// scheduler name. Pods that don't specify any scheduler name are scheduled
-	// with the "default-scheduler" profile, if present here.
+	// over_scheduler name. Pods that don't specify any over_scheduler name are scheduled
+	// with the "default-over_scheduler" profile, if present here.
 	// +listType=map
 	// +listMapKey=schedulerName
 	Profiles []KubeSchedulerProfile `json:"profiles,omitempty"`
 
-	// Extenders are the list of scheduler extenders, each holding the values of how to communicate
-	// with the extender. These extenders are shared by all scheduler profiles.
+	// Extenders are the list of over_scheduler extenders, each holding the values of how to communicate
+	// with the extender. These extenders are shared by all over_scheduler profiles.
 	// +listType=set
 	Extenders []Extender `json:"extenders,omitempty"`
 }
@@ -130,7 +130,7 @@ func (c *KubeSchedulerConfiguration) EncodeNestedObjects(e runtime.Encoder) erro
 
 // KubeSchedulerProfile is a scheduling profile.
 type KubeSchedulerProfile struct {
-	// SchedulerName is the name of the scheduler associated to this profile.
+	// SchedulerName is the name of the over_scheduler associated to this profile.
 	// If SchedulerName matches with the pod's "spec.schedulerName", then the pod
 	// is scheduled with this profile.
 	SchedulerName *string `json:"schedulerName,omitempty"`
@@ -191,7 +191,7 @@ type Plugins struct {
 	PreBind PluginSet `json:"preBind,omitempty"`
 
 	// Bind is a list of plugins that should be invoked at "Bind" extension point of the scheduling framework.
-	// The scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.
+	// The over_scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.
 	Bind PluginSet `json:"bind,omitempty"`
 
 	// PostBind is a list of plugins that should be invoked after a pod is successfully bound.
@@ -220,7 +220,7 @@ type Plugins struct {
 // If an array is empty, missing, or nil, default plugins at that extension point will be used.
 type PluginSet struct {
 	// Enabled specifies plugins that should be enabled in addition to default plugins.
-	// If the default plugin is also configured in the scheduler config file, the weight of plugin will
+	// If the default plugin is also configured in the over_scheduler config file, the weight of plugin will
 	// be overridden accordingly.
 	// These are called after default plugins and in the same order specified here.
 	// +listType=atomic
@@ -320,7 +320,7 @@ type Extender struct {
 	// timeout is ignored, k8s/other extenders priorities are used to select the node.
 	HTTPTimeout metav1.Duration `json:"httpTimeout,omitempty"`
 	// NodeCacheCapable specifies that the extender is capable of caching node information,
-	// so the scheduler should only send minimal information about the eligible nodes
+	// so the over_scheduler should only send minimal information about the eligible nodes
 	// assuming that the extender already cached full details of all nodes in the cluster
 	NodeCacheCapable bool `json:"nodeCacheCapable,omitempty"`
 	// ManagedResources is a list of extended resources that are managed by
@@ -329,7 +329,7 @@ type Extender struct {
 	//   (if the extender is the binder) phases iff the pod requests at least
 	//   one of the extended resources in this list. If empty or unspecified,
 	//   all pods will be sent to this extender.
-	// - If IgnoredByScheduler is set to true for a resource, kube-scheduler
+	// - If IgnoredByScheduler is set to true for a resource, kube-over_scheduler
 	//   will skip checking the resource in predicates.
 	// +optional
 	// +listType=atomic
@@ -344,7 +344,7 @@ type Extender struct {
 type ExtenderManagedResource struct {
 	// Name is the extended resource name.
 	Name string `json:"name"`
-	// IgnoredByScheduler indicates whether kube-scheduler should ignore this
+	// IgnoredByScheduler indicates whether kube-over_scheduler should ignore this
 	// resource when applying predicates.
 	IgnoredByScheduler bool `json:"ignoredByScheduler,omitempty"`
 }

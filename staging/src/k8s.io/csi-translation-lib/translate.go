@@ -142,27 +142,6 @@ func (CSITranslator) IsMigratedCSIDriverByName(csiPluginName string) bool {
 	return false
 }
 
-// GetInTreePluginNameFromSpec returns the plugin name
-func (CSITranslator) GetInTreePluginNameFromSpec(pv *v1.PersistentVolume, vol *v1.Volume) (string, error) {
-	if pv != nil {
-		for _, curPlugin := range inTreePlugins {
-			if curPlugin.CanSupport(pv) {
-				return curPlugin.GetInTreePluginName(), nil
-			}
-		}
-		return "", fmt.Errorf("could not find in-tree plugin name from persistent volume %v", pv)
-	} else if vol != nil {
-		for _, curPlugin := range inTreePlugins {
-			if curPlugin.CanSupportInline(vol) {
-				return curPlugin.GetInTreePluginName(), nil
-			}
-		}
-		return "", fmt.Errorf("could not find in-tree plugin name from volume %v", vol)
-	} else {
-		return "", errors.New("both persistent volume and volume are nil")
-	}
-}
-
 // GetCSINameFromInTreeName returns the name of a CSI driver that supersedes the
 // in-tree plugin with the given name
 func (CSITranslator) GetCSINameFromInTreeName(pluginName string) (string, error) {
@@ -209,4 +188,25 @@ func (CSITranslator) RepairVolumeHandle(driverName, volumeHandle, nodeID string)
 		return plugin.RepairVolumeHandle(volumeHandle, nodeID)
 	}
 	return "", fmt.Errorf("could not find In-Tree driver name for CSI plugin %v", driverName)
+}
+
+// GetInTreePluginNameFromSpec returns the plugin name
+func (CSITranslator) GetInTreePluginNameFromSpec(pv *v1.PersistentVolume, vol *v1.Volume) (string, error) {
+	if pv != nil {
+		for _, curPlugin := range inTreePlugins {
+			if curPlugin.CanSupport(pv) {
+				return curPlugin.GetInTreePluginName(), nil
+			}
+		}
+		return "", fmt.Errorf("could not find in-tree plugin name from persistent volume %v", pv)
+	} else if vol != nil {
+		for _, curPlugin := range inTreePlugins {
+			if curPlugin.CanSupportInline(vol) {
+				return curPlugin.GetInTreePluginName(), nil
+			}
+		}
+		return "", fmt.Errorf("could not find in-tree plugin name from volume %v", vol)
+	} else {
+		return "", errors.New("both persistent volume and volume are nil")
+	}
 }

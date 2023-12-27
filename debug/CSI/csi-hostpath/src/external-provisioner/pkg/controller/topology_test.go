@@ -1303,7 +1303,7 @@ func TestPreferredTopologies(t *testing.T) {
 			expectedPreferred: nil,
 			expectError:       true,
 		},
-		// This case is never triggered in reality due to scheduler behavior
+		// This case is never triggered in reality due to over_scheduler behavior
 		"topology from selected node is not in allowedTopologies": {
 			allowedTopologies: []v1.TopologySelectorTerm{
 				{

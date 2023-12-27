@@ -97,11 +97,11 @@ items:
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: system:kube-scheduler
+    name: system:kube-over_scheduler
   subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: User
-    name: system:kube-scheduler
+    name: system:kube-over_scheduler
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: ClusterRoleBinding
   metadata:
@@ -198,10 +198,10 @@ items:
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: system:volume-scheduler
+    name: system:volume-over_scheduler
   subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: User
-    name: system:kube-scheduler
+    name: system:kube-over_scheduler
 kind: List
 metadata: {}

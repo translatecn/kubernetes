@@ -16,7 +16,7 @@ limitations under the License.
 
 // Package corev1 defines functions which should satisfy one of the following:
 //
-// - Be used by more than one core component (kube-scheduler, kubelet, kube-apiserver, etc.)
+// - Be used by more than one core component (kube-over_scheduler, kubelet, kube-apiserver, etc.)
 // - Be used by a core component and another kubernetes project (cluster-autoscaler, descheduler)
 //
 // And be a scheduling feature.

@@ -1844,7 +1844,7 @@ func (c *Cloud) GetCandidateZonesForDynamicVolume() (sets.String, error) {
 	for _, instance := range instances {
 		// We skip over master nodes, if the installation tool labels them with one of the well-known master labels
 		// This avoids creating a volume in a zone where only the master is running - e.g. #34583
-		// This is a short-term workaround until the scheduler takes care of zone selection
+		// This is a short-term workaround until the over_scheduler takes care of zone selection
 		master := false
 		for _, tag := range instance.Tags {
 			tagKey := aws.StringValue(tag.Key)

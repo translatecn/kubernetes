@@ -73,7 +73,7 @@ func DeepEqualSafePodSpec() example.PodSpec {
 	return example.PodSpec{
 		RestartPolicy:                 "Always",
 		TerminationGracePeriodSeconds: &grace,
-		SchedulerName:                 "default-scheduler",
+		SchedulerName:                 "default-over_scheduler",
 	}
 }
 

@@ -183,7 +183,7 @@ func (p *StaticPolicy) Allocate(s state.State, pod *v1.Pod, container *v1.Contai
 		// if the CPU requested is a multiple of the number of virtual cpus per physical cores.
 		// In case CPU request is not a multiple of the number of virtual cpus per physical cores the Pod will be put
 		// in Failed state, with SMTAlignmentError as reason. Since the allocation happens in terms of physical cores
-		// and the scheduler is responsible for ensuring that the workload goes to a node that has enough CPUs,
+		// and the over_scheduler is responsible for ensuring that the workload goes to a node that has enough CPUs,
 		// the pod would be placed on a node where there are enough physical cores available to be allocated.
 		// Just like the behaviour in case of static policy, takeByTopology will try to first allocate CPUs from the same socket
 		// and only in case the request cannot be sattisfied on a single socket, CPU allocation is done for a workload to occupy all

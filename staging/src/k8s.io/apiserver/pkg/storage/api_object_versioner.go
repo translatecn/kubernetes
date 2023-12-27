@@ -70,19 +70,6 @@ func (a APIObjectVersioner) PrepareObjectForStorage(obj runtime.Object) error {
 	return nil
 }
 
-// ObjectResourceVersion implements Versioner
-func (a APIObjectVersioner) ObjectResourceVersion(obj runtime.Object) (uint64, error) {
-	accessor, err := meta.Accessor(obj)
-	if err != nil {
-		return 0, err
-	}
-	version := accessor.GetResourceVersion()
-	if len(version) == 0 {
-		return 0, nil
-	}
-	return strconv.ParseUint(version, 10, 64)
-}
-
 // ParseResourceVersion takes a resource version argument and converts it to
 // the etcd version. For watch we should pass to helper.Watch(). Because resourceVersion is
 // an opaque value, the default watch behavior for non-zero watch is to watch
@@ -127,4 +114,17 @@ func (a APIObjectVersioner) CompareResourceVersion(lhs, rhs runtime.Object) int 
 	}
 
 	return 1
+}
+
+// ObjectResourceVersion implements Versioner
+func (a APIObjectVersioner) ObjectResourceVersion(obj runtime.Object) (uint64, error) {
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return 0, err
+	}
+	version := accessor.GetResourceVersion()
+	if len(version) == 0 {
+		return 0, nil
+	}
+	return strconv.ParseUint(version, 10, 64)
 }

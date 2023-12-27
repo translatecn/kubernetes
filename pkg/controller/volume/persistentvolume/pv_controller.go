@@ -599,7 +599,7 @@ func (ctrl *PersistentVolumeController) syncVolume(ctx context.Context, volume *
 		}
 		if !found {
 			// If the PV was created by an external PV provisioner or
-			// bound by external PV binder (e.g. kube-scheduler), it's
+			// bound by external PV binder (e.g. kube-over_scheduler), it's
 			// possible under heavy load that the corresponding PVC is not synced to
 			// controller local cache yet. So we need to double-check PVC in
 			//   1) informer cache
@@ -1824,11 +1824,11 @@ func (ctrl *PersistentVolumeController) provisionClaimOperationExternal(
 	return provisionerName, nil
 }
 
-// rescheduleProvisioning signal back to the scheduler to retry dynamic provisioning
+// rescheduleProvisioning signal back to the over_scheduler to retry dynamic provisioning
 // by removing the AnnSelectedNode annotation
 func (ctrl *PersistentVolumeController) rescheduleProvisioning(claim *v1.PersistentVolumeClaim) {
 	if _, ok := claim.Annotations[storagehelpers.AnnSelectedNode]; !ok {
-		// Provisioning not triggered by the scheduler, skip
+		// Provisioning not triggered by the over_scheduler, skip
 		return
 	}
 

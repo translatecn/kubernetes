@@ -210,7 +210,7 @@ Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
 Events:
   Type    Reason                  Age   From                      Message
   ----    ------                  ----  ----                      -------
-  Normal  Scheduled               106s  default-scheduler         Successfully assigned default/my-csi-app to csi-prow-worker
+  Normal  Scheduled               106s  default-over_scheduler         Successfully assigned default/my-csi-app to csi-prow-worker
   Normal  SuccessfulAttachVolume  106s  attachdetach-controller   AttachVolume.Attach succeeded for volume "pvc-ad827273-8d08-430b-9d5a-e60e05a2bc3e"
   Normal  Pulling                 102s  kubelet, csi-prow-worker  Pulling image "busybox"
   Normal  Pulled                  99s   kubelet, csi-prow-worker  Successfully pulled image "busybox"

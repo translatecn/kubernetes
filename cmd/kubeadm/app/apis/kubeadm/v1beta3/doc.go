@@ -133,7 +133,7 @@ limitations under the License.
 // - Etcd configurations; use it e.g. to customize the local etcd or to configure the API server
 // for using an external etcd cluster.
 //
-// - kube-apiserver, kube-scheduler, kube-controller-manager configurations; use it to customize control-plane
+// - kube-apiserver, kube-over_scheduler, kube-controller-manager configurations; use it to customize control-plane
 // components by adding customized setting or overriding kubeadm default settings.
 //
 //	apiVersion: kubeproxy.config.k8s.io/v1alpha1
@@ -240,7 +240,7 @@ limitations under the License.
 //	    mountPath: "/etc/some-pod-path"
 //	    readOnly: false
 //	    pathType: File
-//	scheduler:
+//	over_scheduler:
 //	  extraArgs:
 //	    address: "10.100.0.1"
 //	  extraVolumes:

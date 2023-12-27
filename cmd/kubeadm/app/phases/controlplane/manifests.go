@@ -343,7 +343,7 @@ func getControllerManagerCommand(cfg *kubeadmapi.ClusterConfiguration) []string 
 	return command
 }
 
-// getSchedulerCommand builds the right scheduler command from the given config object and version
+// getSchedulerCommand builds the right over_scheduler command from the given config object and version
 func getSchedulerCommand(cfg *kubeadmapi.ClusterConfiguration) []string {
 	kubeconfigFile := filepath.Join(kubeadmconstants.KubernetesDir, kubeadmconstants.SchedulerKubeConfigFileName)
 	defaultArguments := map[string]string{
@@ -354,7 +354,7 @@ func getSchedulerCommand(cfg *kubeadmapi.ClusterConfiguration) []string {
 		"authorization-kubeconfig":  kubeconfigFile,
 	}
 
-	command := []string{"kube-scheduler"}
+	command := []string{"kube-over_scheduler"}
 	command = append(command, kubeadmutil.BuildArgumentListFromMap(defaultArguments, cfg.Scheduler.ExtraArgs)...)
 	return command
 }

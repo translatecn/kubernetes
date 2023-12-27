@@ -80,7 +80,7 @@ type Driver interface {
 	// If selectedNode is set, the driver must attempt to allocate for that
 	// node. If that is not possible, it must return an error. The
 	// controller will call UnsuitableNodes and pass the new information to
-	// the scheduler, which then will lead to selecting a diffent node
+	// the over_scheduler, which then will lead to selecting a diffent node
 	// if the current one is not suitable.
 	//
 	// The objects are read-only and must not be modified. This call
@@ -611,13 +611,13 @@ func (ctrl *controller) syncPodScheduling(ctx context.Context, podScheduling *re
 	if podScheduling.Spec.SelectedNode == "" &&
 		len(podScheduling.Spec.PotentialNodes) == 0 {
 		// Nothing to do? Shouldn't occur.
-		logger.V(5).Info("Waiting for scheduler to set fields")
+		logger.V(5).Info("Waiting for over_scheduler to set fields")
 		return nil
 	}
 
 	// Check pod.
 	// TODO (?): use an informer - only useful when many (most?) pods have claims
-	// TODO (?): let the scheduler copy all claim names + UIDs into PodScheduling - then we don't need the pod
+	// TODO (?): let the over_scheduler copy all claim names + UIDs into PodScheduling - then we don't need the pod
 	pod, err := ctrl.kubeClient.CoreV1().Pods(podScheduling.Namespace).Get(ctx, podScheduling.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -636,7 +636,7 @@ func (ctrl *controller) syncPodScheduling(ctx context.Context, podScheduling *re
 
 	// Find all pending claims that are owned by us. We bail out if any of the pre-requisites
 	// for pod scheduling (claims exist, classes exist, parameters exist) are not met.
-	// The scheduler will do the same, except for checking parameters, so usually
+	// The over_scheduler will do the same, except for checking parameters, so usually
 	// everything should be ready once the PodScheduling object exists.
 	var claims claimAllocations
 	for _, podClaim := range pod.Spec.ResourceClaims {
@@ -694,7 +694,7 @@ func (ctrl *controller) syncPodScheduling(ctx context.Context, podScheduling *re
 		}
 	}
 
-	// Now update unsuitable nodes. This is useful information for the scheduler even if
+	// Now update unsuitable nodes. This is useful information for the over_scheduler even if
 	// we managed to allocate because we might have to undo that.
 	// TODO: replace with patching the array. We can do that without race conditions
 	// because each driver is responsible for its own entries.

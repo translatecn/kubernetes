@@ -66,12 +66,12 @@ import (
 	"k8s.io/client-go/util/keyutil"
 	cloudprovider "k8s.io/cloud-provider"
 	cliflag "k8s.io/component-base/cli/flag"
-	"k8s.io/component-base/configz"
 	"k8s.io/component-base/featuregate"
 	"k8s.io/component-base/logs"
 	logsapi "k8s.io/component-base/logs/api/v1"
 	"k8s.io/component-base/metrics"
 	"k8s.io/component-base/metrics/legacyregistry"
+	"k8s.io/component-base/over_configz"
 	tracing "k8s.io/component-base/tracing"
 	"k8s.io/component-base/version"
 	"k8s.io/component-base/version/verflag"
@@ -412,7 +412,7 @@ func Run(ctx context.Context, s *options.KubeletServer, kubeDeps *kubelet.Depend
 	return nil
 }
 
-func setConfigz(cz *configz.Config, kc *kubeletconfiginternal.KubeletConfiguration) error {
+func setConfigz(cz *over_configz.Config, kc *kubeletconfiginternal.KubeletConfiguration) error {
 	scheme, _, err := kubeletscheme.NewSchemeAndCodecs()
 	if err != nil {
 		return err
@@ -426,7 +426,7 @@ func setConfigz(cz *configz.Config, kc *kubeletconfiginternal.KubeletConfigurati
 }
 
 func initConfigz(kc *kubeletconfiginternal.KubeletConfiguration) error {
-	cz, err := configz.New("kubeletconfig")
+	cz, err := over_configz.New("kubeletconfig")
 	if err != nil {
 		klog.ErrorS(err, "Failed to register configz")
 		return err

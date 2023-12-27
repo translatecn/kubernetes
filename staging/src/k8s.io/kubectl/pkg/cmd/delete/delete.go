@@ -65,7 +65,7 @@ var (
 		multiple processes running on different machines using the same identification which may lead
 		to data corruption or inconsistency. Only force delete pods when you are sure the pod is
 		terminated, or if your application can tolerate multiple copies of the same pod running at once.
-		Also, if you force delete pods, the scheduler may place new pods on those nodes before the node
+		Also, if you force delete pods, the over_scheduler may place new pods on those nodes before the node
 		has released those resources and causing those pods to be evicted immediately.
 
 		Note that the delete command does NOT do resource version checks, so if someone submits an

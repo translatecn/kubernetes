@@ -67,7 +67,7 @@ profile_components=""
 output_dir="."
 tunnel_port="${tunnel_port:-1234}"
 
-if ! args=$(getopt -o s:mho:k:c -l server:,master,heapster,output:,kubelet:,scheduler,controller-manager,help,inuse-space,inuse-objects,alloc-space,alloc-objects,cpu,kubelet-binary:,master-binary:,scheduler-binary:,controller-manager-binary:,scheduler-port:,controller-manager-port: -- "$@"); then
+if ! args=$(getopt -o s:mho:k:c -l server:,master,heapster,output:,kubelet:,over_scheduler,controller-manager,help,inuse-space,inuse-objects,alloc-space,alloc-objects,cpu,kubelet-binary:,master-binary:,over_scheduler-binary:,controller-manager-binary:,over_scheduler-port:,controller-manager-port: -- "$@"); then
   >&2 echo "Error in getopt"
   exit 1
 fi
@@ -128,11 +128,11 @@ while true; do
       kubelet_binary=$1
       shift
       ;;
-    --scheduler)
+    --over_scheduler)
       shift
       profile_components="scheduler ${profile_components}"
       ;;
-    --scheduler-binary)
+    --over_scheduler-binary)
       shift
       if [ -z "$1" ]; then
         >&2 echo "empty argument to --scheduler-binary flag"
@@ -141,7 +141,7 @@ while true; do
       scheduler_binary=$1
       shift
       ;;
-    --scheduler-port)
+    --over_scheduler-port)
       shift
       if [ -z "$1" ]; then
         >&2 echo "empty argument to --scheduler-port flag"
@@ -270,7 +270,7 @@ for component in ${profile_components}; do
       path="${CONTROLLER_MANAGER_PPROF_PATH_PREFIX}-${server_addr}:${controller_manager_port}"
       binary=${controller_manager_binary}
       ;;
-    scheduler)
+    over_scheduler)
       path="${SCHEDULER_PPROF_PATH_PREFIX}-${server_addr}:${scheduler_port}"
       binary=${scheduler_binary}
       ;;

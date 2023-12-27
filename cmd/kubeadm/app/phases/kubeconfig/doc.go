@@ -30,6 +30,6 @@ package kubeconfig
 		Files to KubernetesDir (default /etc/kubernetes):
 		 - admin.conf
 		 - kubelet.conf
-		 - scheduler.conf
+		 - over_scheduler.conf
 		 - controller-manager.conf
 */

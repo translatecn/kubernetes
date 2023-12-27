@@ -28,10 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/component-base/configz"
+	"k8s.io/component-base/over_configz"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
-	"k8s.io/kubernetes/cmd/kube-scheduler/app/options"
 	kubeschedulerconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/over_config"
+	"k8s.io/kubernetes/cmd/kube-scheduler/app/over_options"
 
 	"k8s.io/klog/v2"
 )
@@ -42,7 +42,7 @@ type TearDownFunc func()
 // TestServer return values supplied by kube-test-ApiServer
 type TestServer struct {
 	LoopbackClientConfig *restclient.Config // Rest client config using the magic token
-	Options              *options.Options
+	Options              *over_options.Options
 	Config               *kubeschedulerconfig.Config
 	TearDownFn           TearDownFunc // TearDown function
 	TmpDir               string       // Temp Dir used, by the apiserver
@@ -55,7 +55,7 @@ type Logger interface {
 	Logf(format string, args ...interface{})
 }
 
-// StartTestServer starts a kube-scheduler. A rest client config and a tear-down func,
+// StartTestServer starts a kube-over_scheduler. A rest client config and a tear-down func,
 // and location of the tmpdir are returned.
 //
 // Note: we return a tear-down func instead of a stop channel because the later will leak temporary
@@ -69,7 +69,7 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 	tearDown := func() {
 		cancel()
 
-		// If the scheduler was started, let's wait for it to
+		// If the over_scheduler was started, let's wait for it to
 		// shutdown clearly.
 		if errCh != nil {
 			err, ok := <-errCh
@@ -80,7 +80,7 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 		if len(result.TmpDir) != 0 {
 			os.RemoveAll(result.TmpDir)
 		}
-		configz.Delete("componentconfig")
+		over_configz.Delete("componentconfig")
 	}
 	defer func() {
 		if result.TearDownFn == nil {
@@ -88,14 +88,14 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 		}
 	}()
 
-	result.TmpDir, err = os.MkdirTemp("", "kube-scheduler")
+	result.TmpDir, err = os.MkdirTemp("", "kube-over_scheduler")
 	if err != nil {
 		return result, fmt.Errorf("failed to create temp dir: %v", err)
 	}
 
 	fs := pflag.NewFlagSet("test", pflag.PanicOnError)
 
-	opts := options.NewOptions()
+	opts := over_options.NewOptions()
 	nfs := opts.Flags
 	for _, f := range nfs.FlagSets {
 		fs.AddFlagSet(f)
@@ -109,7 +109,7 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 		}
 		opts.SecureServing.ServerCert.CertDirectory = result.TmpDir
 
-		t.Logf("kube-scheduler will listen securely on port %d...", opts.SecureServing.BindPort)
+		t.Logf("kube-over_scheduler will listen securely on port %d...", opts.SecureServing.BindPort)
 	}
 
 	cc, sched, err := app.Setup(ctx, opts)

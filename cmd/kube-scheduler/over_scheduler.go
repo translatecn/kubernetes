@@ -28,6 +28,7 @@ import (
 )
 
 func main() {
+
 	os.Args = scheduler.Init(os.Args)
 	command := app.NewSchedulerCommand()
 	code := cli.Run(command)

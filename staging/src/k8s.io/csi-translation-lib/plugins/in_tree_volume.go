@@ -200,7 +200,7 @@ func translateTopologyFromInTreeToCSI(pv *v1.PersistentVolume, csiTopologyKey st
 	}
 
 	// if the in-tree PV has beta region label, replace it with GA label to ensure
-	// the scheduler is able to schedule it on new nodes with only GA kubernetes label
+	// the over_scheduler is able to schedule it on new nodes with only GA kubernetes label
 	// No need to check it for zone label because it has already been replaced if exist
 	if regionLabel == v1.LabelFailureDomainBetaRegion {
 		regions := getTopologyValues(pv, regionLabel)

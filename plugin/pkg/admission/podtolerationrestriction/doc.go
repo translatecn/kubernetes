@@ -24,7 +24,7 @@ limitations under the License.
 // does not have associated default or whitelist of tolerations, then
 // cluster level default or whitelist of tolerations are used instead
 // if specified. Tolerations to a namespace are assigned via
-// scheduler.alpha.kubernetes.io/defaultTolerations and
-// scheduler.alpha.kubernetes.io/tolerationsWhitelist annotations
+// over_scheduler.alpha.kubernetes.io/defaultTolerations and
+// over_scheduler.alpha.kubernetes.io/tolerationsWhitelist annotations
 // keys.
 package podtolerationrestriction // import "k8s.io/kubernetes/plugin/pkg/admission/podtolerationrestriction"
