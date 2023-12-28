@@ -78,7 +78,7 @@ func exampleFuncs(codecs runtimeserializer.CodecFactory) []interface{} {
 			s.TerminationGracePeriodSeconds = &ttl
 
 			if s.SchedulerName == "" {
-				s.SchedulerName = "default-over_scheduler"
+				s.SchedulerName = "default-scheduler"
 			}
 		},
 		func(j *example.PodPhase, c fuzz.Continue) {

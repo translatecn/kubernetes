@@ -45,7 +45,7 @@ const (
 	// controller may not handle it correctly.
 	AnnBoundByController = "pv.kubernetes.io/bound-by-controller"
 
-	// AnnSelectedNode annotation is added to a PVC that has been triggered by over_scheduler to
+	// AnnSelectedNode annotation is added to a PVC that has been triggered by scheduler to
 	// be dynamically provisioned. Its value is the name of the selected node.
 	AnnSelectedNode = "volume.kubernetes.io/selected-node"
 
@@ -94,15 +94,15 @@ func IsDelayBindingProvisioning(claim *v1.PersistentVolumeClaim) bool {
 // FindMatchingVolume goes through the list of volumes to find the best matching volume
 // for the claim.
 //
-// This function is used by both the PV controller and over_scheduler.
+// This function is used by both the PV controller and scheduler.
 //
 // delayBinding is true only in the PV controller path.  When set, prebound PVs are still returned
 // as a match for the claim, but unbound PVs are skipped.
 //
-// node is set only in the over_scheduler path. When set, the PV node affinity is checked against
+// node is set only in the scheduler path. When set, the PV node affinity is checked against
 // the node's labels.
 //
-// excludedVolumes is only used in the over_scheduler path, and is needed for evaluating multiple
+// excludedVolumes is only used in the scheduler path, and is needed for evaluating multiple
 // unbound PVCs for a single Pod at one time.  As each PVC finds a matching PV, the chosen
 // PV needs to be excluded from future matching.
 func FindMatchingVolume(

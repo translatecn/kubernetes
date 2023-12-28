@@ -935,7 +935,7 @@ func (dsc *DaemonSetsController) manage(ctx context.Context, ds *apps.DaemonSet,
 		podsToDelete = append(podsToDelete, podsToDeleteOnNode...)
 	}
 
-	// Remove unscheduled pods assigned to not existing nodes when daemonset pods are scheduled by over_scheduler.
+	// Remove unscheduled pods assigned to not existing nodes when daemonset pods are scheduled by scheduler.
 	// If node doesn't exist then pods are never scheduled and can't be deleted by PodGCController.
 	podsToDelete = append(podsToDelete, getUnscheduledPodsWithoutNode(nodeList, nodeToDaemonPods)...)
 
@@ -998,7 +998,7 @@ func (dsc *DaemonSetsController) syncNodes(ctx context.Context, ds *apps.DaemonS
 
 				podTemplate := template.DeepCopy()
 				// The pod's NodeAffinity will be updated to make sure the Pod is bound
-				// to the target node by default over_scheduler. It is safe to do so because there
+				// to the target node by default scheduler. It is safe to do so because there
 				// should be no conflicting node affinity with the target node.
 				podTemplate.Spec.Affinity = util.ReplaceDaemonSetPodNodeNameNodeAffinity(
 					podTemplate.Spec.Affinity, nodesNeedingDaemonPods[ix])

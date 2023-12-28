@@ -34,7 +34,7 @@ xxx='''/Users/acejilam/Desktop/kubernetes/go.mod:236:5: replace k8s.io/client-go
 /Users/acejilam/Desktop/kubernetes/go.mod:394:5: replace k8s.io/api/coordination/v1: invalid module path
 /Users/acejilam/Desktop/kubernetes/go.mod:416:5: replace k8s.io/code-generator/examples/crd/listers/example/v1: invalid module path
 /Users/acejilam/Desktop/kubernetes/go.mod:428:5: replace k8s.io/client-go/kubernetes/typed/storage/v1: invalid module path
-/Users/acejilam/Desktop/kubernetes/go.mod:431:5: replace k8s.io/apiserver/pkg/quota/v1: invalid module path
+/Users/acejilam/Desktop/kubernetes/go.mod:431:5: replace k8s.io/apiserver/pkg/over_quota/v1: invalid module path
 /Users/acejilam/Desktop/kubernetes/go.mod:434:5: replace k8s.io/api/core/v1: invalid module path
 /Users/acejilam/Desktop/kubernetes/go.mod:443:5: replace k8s.io/apiserver/pkg/admission/plugin/webhook/config/apis/webhookadmission/v1: invalid module path
 /Users/acejilam/Desktop/kubernetes/go.mod:446:5: replace k8s.io/client-go/listers/coordination/v1: invalid module path

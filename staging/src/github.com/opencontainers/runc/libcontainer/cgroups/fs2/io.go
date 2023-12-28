@@ -42,7 +42,7 @@ func setIo(dirPath string, r *configs.Resources) error {
 		return nil
 	}
 
-	// If BFQ IO over_scheduler is available, use it.
+	// If BFQ IO scheduler is available, use it.
 	var bfq *os.File
 	if r.BlkioWeight != 0 || len(r.BlkioWeightDevice) > 0 {
 		var err error

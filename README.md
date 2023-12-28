@@ -7,7 +7,7 @@
 ----
 
 Kubernetes, also known as K8s, is an open source system for managing [containerized applications]
-across multiple hosts. It provides basic mechanisms for deployment, maintenance,
+across multiple ho[.zshrc](..%2F..%2FDocuments%2F.zshrc)sts. It provides basic mechanisms for deployment, maintenance,
 and scaling of applications.
 
 Kubernetes builds upon a decade and a half of experience at Google running

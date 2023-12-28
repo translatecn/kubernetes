@@ -19,8 +19,8 @@ package install
 import (
 	eventv1 "k8s.io/api/events/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	quota "k8s.io/apiserver/pkg/quota/v1"
-	"k8s.io/apiserver/pkg/quota/v1/generic"
+	quota "k8s.io/apiserver/pkg/over_quota/v1"
+	"k8s.io/apiserver/pkg/over_quota/v1/generic"
 	"k8s.io/kubernetes/pkg/apis/authentication"
 	"k8s.io/kubernetes/pkg/apis/authorization"
 	"k8s.io/kubernetes/pkg/quota/v1/evaluator/core"

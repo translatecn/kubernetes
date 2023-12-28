@@ -157,15 +157,15 @@ const (
 	KubeletKubeConfigFileName = "kubelet.conf"
 	// ControllerManagerKubeConfigFileName defines the file name for the controller manager's kubeconfig file
 	ControllerManagerKubeConfigFileName = "controller-manager.conf"
-	// SchedulerKubeConfigFileName defines the file name for the over_scheduler's kubeconfig file
-	SchedulerKubeConfigFileName = "over_scheduler.conf"
+	// SchedulerKubeConfigFileName defines the file name for the scheduler's kubeconfig file
+	SchedulerKubeConfigFileName = "scheduler.conf"
 
 	// Some well-known users, groups, roles and clusterrolebindings in the core Kubernetes authorization system
 
 	// ControllerManagerUser defines the well-known user the controller-manager should be authenticated as
 	ControllerManagerUser = "system:kube-controller-manager"
-	// SchedulerUser defines the well-known user the over_scheduler should be authenticated as
-	SchedulerUser = "system:kube-over_scheduler"
+	// SchedulerUser defines the well-known user the scheduler should be authenticated as
+	SchedulerUser = "system:kube-scheduler"
 	// NodesUserPrefix defines the user name prefix as requested by the Node authorizer.
 	NodesUserPrefix = "system:node:"
 	// SystemPrivilegedGroup defines the well-known group for the apiservers. This group is also superuser by default
@@ -317,8 +317,8 @@ const (
 	KubeAPIServer = "kube-apiserver"
 	// KubeControllerManager defines variable used internally when referring to kube-controller-manager component
 	KubeControllerManager = "kube-controller-manager"
-	// KubeScheduler defines variable used internally when referring to kube-over_scheduler component
-	KubeScheduler = "kube-over_scheduler"
+	// KubeScheduler defines variable used internally when referring to kube-scheduler component
+	KubeScheduler = "kube-scheduler"
 	// KubeProxy defines variable used internally when referring to kube-proxy component
 	KubeProxy = "kube-proxy"
 	// CoreDNS defines variable used internally when referring to the CoreDNS component
@@ -379,7 +379,7 @@ const (
 	// KubeletPort is the default port for the kubelet server on each host machine.
 	// May be overridden by a flag at startup.
 	KubeletPort = 10250
-	// KubeSchedulerPort is the default port for the over_scheduler status server.
+	// KubeSchedulerPort is the default port for the scheduler status server.
 	// May be overridden by a flag at startup.
 	KubeSchedulerPort = 10259
 	// KubeControllerManagerPort is the default port for the controller manager status server.
@@ -426,7 +426,7 @@ const (
 	KubeControllerManagerUserName string = "kubeadm-kcm"
 	// The username of the user that kube-apiserver runs as.
 	KubeAPIServerUserName string = "kubeadm-kas"
-	// The username of the user that kube-over_scheduler runs as.
+	// The username of the user that kube-scheduler runs as.
 	KubeSchedulerUserName string = "kubeadm-ks"
 	// The username of the user that etcd runs as.
 	EtcdUserName string = "kubeadm-etcd"

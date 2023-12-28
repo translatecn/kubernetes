@@ -22,7 +22,7 @@ import (
 )
 
 // This file is a common place holder for volume limit utility constants
-// shared between volume package and over_scheduler
+// shared between volume package and scheduler
 
 const (
 	// EBSVolumeLimitKey resource name that will store volume limits for EBS

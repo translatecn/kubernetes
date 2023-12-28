@@ -28,11 +28,11 @@ const (
 
 	// TolerationsAnnotationKey represents the key of tolerations data (json serialized)
 	// in the Annotations of a Pod.
-	TolerationsAnnotationKey string = "over_scheduler.alpha.kubernetes.io/tolerations"
+	TolerationsAnnotationKey string = "scheduler.alpha.kubernetes.io/tolerations"
 
 	// TaintsAnnotationKey represents the key of taints data (json serialized)
 	// in the Annotations of a Node.
-	TaintsAnnotationKey string = "over_scheduler.alpha.kubernetes.io/taints"
+	TaintsAnnotationKey string = "scheduler.alpha.kubernetes.io/taints"
 
 	// SeccompPodAnnotationKey represents the key of a seccomp profile applied
 	// to all containers of a pod.
@@ -76,7 +76,7 @@ const (
 
 	// PreferAvoidPodsAnnotationKey represents the key of preferAvoidPods data (json serialized)
 	// in the Annotations of a Node.
-	PreferAvoidPodsAnnotationKey string = "over_scheduler.alpha.kubernetes.io/preferAvoidPods"
+	PreferAvoidPodsAnnotationKey string = "scheduler.alpha.kubernetes.io/preferAvoidPods"
 
 	// ObjectTTLAnnotations represents a suggestion for kubelet for how long it can cache
 	// an object (e.g. secret, config map) before fetching it again from apiserver.

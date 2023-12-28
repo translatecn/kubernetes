@@ -58,7 +58,7 @@ var (
 		// availability of any controller runs in the cluster.
 		SuggestedPriorityLevelConfigurationLeaderElection,
 		// "workload-high" is used by those workloads with higher priority but their failure won't directly
-		// impact the existing running pods in the cluster, which includes kube-over_scheduler, and those well-known
+		// impact the existing running pods in the cluster, which includes kube-scheduler, and those well-known
 		// built-in workloads such as "deployments", "replicasets" and other low-level custom workload which
 		// is important for the cluster.
 		SuggestedPriorityLevelConfigurationWorkloadHigh,
@@ -409,7 +409,7 @@ var (
 		},
 	)
 	SuggestedFlowSchemaKubeScheduler = newFlowSchema(
-		"kube-over_scheduler", "workload-high", 800,
+		"kube-scheduler", "workload-high", 800,
 		flowcontrol.FlowDistinguisherMethodByNamespaceType,
 		flowcontrol.PolicyRulesWithSubjects{
 			Subjects: users(user.KubeScheduler),

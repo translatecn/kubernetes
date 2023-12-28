@@ -60,7 +60,7 @@ spec:
   nodeName: node-name
   priority: 0
   restartPolicy: Always
-  schedulerName: default-over_scheduler
+  schedulerName: default-scheduler
   securityContext: {}
   serviceAccount: default
   serviceAccountName: default

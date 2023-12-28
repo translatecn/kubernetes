@@ -55,8 +55,8 @@ func Register(plugins *admission.Plugins) {
 
 // The annotation keys for default and whitelist of tolerations
 const (
-	NSDefaultTolerations string = "over_scheduler.alpha.kubernetes.io/defaultTolerations"
-	NSWLTolerations      string = "over_scheduler.alpha.kubernetes.io/tolerationsWhitelist"
+	NSDefaultTolerations string = "scheduler.alpha.kubernetes.io/defaultTolerations"
+	NSWLTolerations      string = "scheduler.alpha.kubernetes.io/tolerationsWhitelist"
 )
 
 var _ admission.MutationInterface = &Plugin{}
@@ -238,8 +238,8 @@ func (p *Plugin) getNamespaceTolerationsWhitelist(nsName string) ([]api.Tolerati
 }
 
 // extractNSTolerations extracts default or whitelist of tolerations from
-// following namespace annotations keys: "over_scheduler.alpha.kubernetes.io/defaultTolerations"
-// and "over_scheduler.alpha.kubernetes.io/tolerationsWhitelist". If these keys are
+// following namespace annotations keys: "scheduler.alpha.kubernetes.io/defaultTolerations"
+// and "scheduler.alpha.kubernetes.io/tolerationsWhitelist". If these keys are
 // unset (nil), extractNSTolerations returns nil. If the value to these
 // keys are set to empty, an empty toleration is returned, otherwise
 // configured tolerations are returned.

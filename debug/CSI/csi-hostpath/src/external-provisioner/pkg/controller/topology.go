@@ -159,14 +159,14 @@ func GenerateAccessibilityRequirements(
 		}
 		topologyKeys := getTopologyKeys(selectedCSINode, driverName)
 		if len(topologyKeys) == 0 {
-			// The over_scheduler selected a node with no topology information.
+			// The scheduler selected a node with no topology information.
 			// This can happen if:
 			//
 			// * the node driver is not deployed on all nodes.
 			// * the node driver is being restarted and has not re-registered yet. This should be
 			//   temporary and a retry should eventually succeed.
 			//
-			// Returning an error in provisioning will cause the over_scheduler to retry and potentially
+			// Returning an error in provisioning will cause the scheduler to retry and potentially
 			// (but not guaranteed) pick a different node.
 			return nil, fmt.Errorf("no topology key found on CSINode %s", selectedCSINode.Name)
 		}
@@ -253,7 +253,7 @@ func GenerateAccessibilityRequirements(
 			preferredTerms = sortAndShift(requisiteTerms, selectedTopology, 0)
 			if preferredTerms == nil {
 				// Topology from selected node is not in requisite. This case should never be hit:
-				// - If AllowedTopologies is specified, the over_scheduler should choose a node satisfying the
+				// - If AllowedTopologies is specified, the scheduler should choose a node satisfying the
 				//   constraint.
 				// - Otherwise, the aggregated topology is guaranteed to contain topology information from the
 				//   selected node.
@@ -324,14 +324,14 @@ func aggregateTopologies(
 		// Delayed binding; use topology key from selected node
 		topologyKeys = getTopologyKeys(selectedCSINode, driverName)
 		if len(topologyKeys) == 0 {
-			// The over_scheduler selected a node with no topology information.
+			// The scheduler selected a node with no topology information.
 			// This can happen if:
 			//
 			// * the node driver is not deployed on all nodes.
 			// * the node driver is being restarted and has not re-registered yet. This should be
 			//   temporary and a retry should eventually succeed.
 			//
-			// Returning an error in provisioning will cause the over_scheduler to retry and potentially
+			// Returning an error in provisioning will cause the scheduler to retry and potentially
 			// (but not guaranteed) pick a different node.
 			return nil, fmt.Errorf("no topology key found on CSINode %s", selectedCSINode.Name)
 		}

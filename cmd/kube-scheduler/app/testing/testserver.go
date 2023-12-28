@@ -55,7 +55,7 @@ type Logger interface {
 	Logf(format string, args ...interface{})
 }
 
-// StartTestServer starts a kube-over_scheduler. A rest client config and a tear-down func,
+// StartTestServer starts a kube-scheduler. A rest client config and a tear-down func,
 // and location of the tmpdir are returned.
 //
 // Note: we return a tear-down func instead of a stop channel because the later will leak temporary
@@ -69,7 +69,7 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 	tearDown := func() {
 		cancel()
 
-		// If the over_scheduler was started, let's wait for it to
+		// If the scheduler was started, let's wait for it to
 		// shutdown clearly.
 		if errCh != nil {
 			err, ok := <-errCh
@@ -88,7 +88,7 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 		}
 	}()
 
-	result.TmpDir, err = os.MkdirTemp("", "kube-over_scheduler")
+	result.TmpDir, err = os.MkdirTemp("", "kube-scheduler")
 	if err != nil {
 		return result, fmt.Errorf("failed to create temp dir: %v", err)
 	}
@@ -109,7 +109,7 @@ func StartTestServer(t Logger, customFlags []string) (result TestServer, err err
 		}
 		opts.SecureServing.ServerCert.CertDirectory = result.TmpDir
 
-		t.Logf("kube-over_scheduler will listen securely on port %d...", opts.SecureServing.BindPort)
+		t.Logf("kube-scheduler will listen securely on port %d...", opts.SecureServing.BindPort)
 	}
 
 	cc, sched, err := app.Setup(ctx, opts)

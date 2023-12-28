@@ -1361,7 +1361,7 @@ rules:
       branch: release-1.26
       dir: staging/src/k8s.io/kubelet
   library: true
-- destination: kube-over_scheduler
+- destination: kube-scheduler
   branches:
   - name: master
     dependencies:
@@ -1375,7 +1375,7 @@ rules:
       branch: master
     source:
       branch: master
-      dir: staging/src/k8s.io/kube-over_scheduler
+      dir: staging/src/k8s.io/kube-scheduler
   - name: release-1.22
     go: 1.16.15
     dependencies:
@@ -1389,7 +1389,7 @@ rules:
       branch: release-1.22
     source:
       branch: release-1.22
-      dir: staging/src/k8s.io/kube-over_scheduler
+      dir: staging/src/k8s.io/kube-scheduler
   - name: release-1.23
     go: 1.17.13
     dependencies:
@@ -1403,7 +1403,7 @@ rules:
       branch: release-1.23
     source:
       branch: release-1.23
-      dir: staging/src/k8s.io/kube-over_scheduler
+      dir: staging/src/k8s.io/kube-scheduler
   - name: release-1.24
     go: 1.18.9
     dependencies:
@@ -1417,7 +1417,7 @@ rules:
       branch: release-1.24
     source:
       branch: release-1.24
-      dir: staging/src/k8s.io/kube-over_scheduler
+      dir: staging/src/k8s.io/kube-scheduler
   - name: release-1.25
     go: 1.19.4
     dependencies:
@@ -1431,7 +1431,7 @@ rules:
       branch: release-1.25
     source:
       branch: release-1.25
-      dir: staging/src/k8s.io/kube-over_scheduler
+      dir: staging/src/k8s.io/kube-scheduler
   - name: release-1.26
     go: 1.19.4
     dependencies:
@@ -1445,7 +1445,7 @@ rules:
       branch: release-1.26
     source:
       branch: release-1.26
-      dir: staging/src/k8s.io/kube-over_scheduler
+      dir: staging/src/k8s.io/kube-scheduler
   library: true
 - destination: controller-manager
   branches:

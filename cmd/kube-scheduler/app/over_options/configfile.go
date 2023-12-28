@@ -24,11 +24,11 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
-	"k8s.io/kubernetes/pkg/over_scheduler/apis/config"
-	"k8s.io/kubernetes/pkg/over_scheduler/apis/config/scheme"
-	configv1 "k8s.io/kubernetes/pkg/over_scheduler/apis/config/v1"
-	configv1beta2 "k8s.io/kubernetes/pkg/over_scheduler/apis/config/v1beta2"
-	configv1beta3 "k8s.io/kubernetes/pkg/over_scheduler/apis/config/v1beta3"
+	"k8s.io/kubernetes/pkg/scheduler/apis/config"
+	"k8s.io/kubernetes/pkg/scheduler/apis/config/scheme"
+	configv1 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1"
+	configv1beta2 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta2"
+	configv1beta3 "k8s.io/kubernetes/pkg/scheduler/apis/config/v1beta3"
 )
 
 func loadConfigFromFile(file string) (*config.KubeSchedulerConfiguration, error) {
@@ -47,7 +47,7 @@ func loadConfig(data []byte) (*config.KubeSchedulerConfiguration, error) {
 		return nil, err
 	}
 	if cfgObj, ok := obj.(*config.KubeSchedulerConfiguration); ok {
-		// We don't set this field in pkg/over_scheduler/apis/config/{version}/conversion.go
+		// We don't set this field in pkg/scheduler/apis/config/{version}/conversion.go
 		// because the field will be cleared later by API machinery during
 		// conversion. See KubeSchedulerConfiguration internal type definition for
 		// more details.

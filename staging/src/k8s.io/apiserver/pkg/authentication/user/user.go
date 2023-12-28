@@ -62,5 +62,5 @@ const (
 	// core kubernetes process identities
 	KubeProxy             = "system:kube-proxy"
 	KubeControllerManager = "system:kube-controller-manager"
-	KubeScheduler         = "system:kube-over_scheduler"
+	KubeScheduler         = "system:kube-scheduler"
 )

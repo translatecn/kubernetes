@@ -59,7 +59,7 @@ spec:
             memory: {{ metadata_agent_memory_request }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      schedulerName: default-over_scheduler
+      schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
       tolerations:
       - operator: "Exists"
@@ -123,7 +123,7 @@ spec:
             memory: {{ metadata_agent_cluster_level_memory_request }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      schedulerName: default-over_scheduler
+      schedulerName: default-scheduler
       terminationGracePeriodSeconds: 30
   strategy:
     rollingUpdate:

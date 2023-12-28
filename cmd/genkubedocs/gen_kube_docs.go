@@ -64,8 +64,8 @@ func main() {
 		// generate docs for kube-proxy
 		proxy := proxyapp.NewProxyCommand()
 		doc.GenMarkdownTree(proxy, outDir)
-	case "kube-over_scheduler":
-		// generate docs for kube-over_scheduler
+	case "kube-scheduler":
+		// generate docs for kube-scheduler
 		scheduler := schapp.NewSchedulerCommand()
 		doc.GenMarkdownTree(scheduler, outDir)
 	case "kubelet":

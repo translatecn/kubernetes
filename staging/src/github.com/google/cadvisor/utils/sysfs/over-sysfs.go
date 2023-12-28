@@ -88,7 +88,7 @@ type SysFs interface {
 	GetBlockDevices() ([]os.FileInfo, error)
 	// Get Size of a given block device.
 	GetBlockDeviceSize(string) (string, error)
-	// Get over_scheduler type for the block device.
+	// Get scheduler type for the block device.
 	GetBlockDeviceScheduler(string) (string, error)
 	// Get device major:minor number string.
 	GetBlockDeviceNumbers(string) (string, error)
@@ -185,7 +185,7 @@ func (fs *realSysFs) GetBlockDeviceNumbers(name string) (string, error) {
 }
 
 func (fs *realSysFs) GetBlockDeviceScheduler(name string) (string, error) {
-	sched, err := ioutil.ReadFile(path.Join(blockDir, name, "/queue/over_scheduler"))
+	sched, err := ioutil.ReadFile(path.Join(blockDir, name, "/queue/scheduler"))
 	if err != nil {
 		return "", err
 	}

@@ -27,11 +27,11 @@ import (
 )
 
 const (
-	// SchedulerDefaultLockObjectNamespace defines default over_scheduler lock object namespace ("kube-system")
+	// SchedulerDefaultLockObjectNamespace defines default scheduler lock object namespace ("kube-system")
 	SchedulerDefaultLockObjectNamespace string = metav1.NamespaceSystem
 
-	// SchedulerDefaultLockObjectName defines default over_scheduler lock object name ("kube-over_scheduler")
-	SchedulerDefaultLockObjectName = "kube-over_scheduler"
+	// SchedulerDefaultLockObjectName defines default scheduler lock object name ("kube-scheduler")
+	SchedulerDefaultLockObjectName = "kube-scheduler"
 
 	// SchedulerDefaultProviderName defines the default provider names
 	SchedulerDefaultProviderName = "DefaultProvider"
@@ -39,7 +39,7 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// KubeSchedulerConfiguration configures a over_scheduler
+// KubeSchedulerConfiguration configures a scheduler
 type KubeSchedulerConfiguration struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -65,11 +65,11 @@ type KubeSchedulerConfiguration struct {
 	componentbaseconfigv1alpha1.DebuggingConfiguration `json:",inline"`
 
 	// PercentageOfNodesToScore is the percentage of all nodes that once found feasible
-	// for running a pod, the over_scheduler stops its search for more feasible nodes in
-	// the cluster. This helps improve over_scheduler's performance. Scheduler always tries to find
+	// for running a pod, the scheduler stops its search for more feasible nodes in
+	// the cluster. This helps improve scheduler's performance. Scheduler always tries to find
 	// at least "minFeasibleNodesToFind" feasible nodes no matter what the value of this flag is.
 	// Example: if the cluster size is 500 nodes and the value of this flag is 30,
-	// then over_scheduler stops finding further feasible nodes once it finds 150 feasible ones.
+	// then scheduler stops finding further feasible nodes once it finds 150 feasible ones.
 	// When the value is 0, default percentage (5%--50% based on the size of the cluster) of the
 	// nodes will be scored.
 	PercentageOfNodesToScore *int32 `json:"percentageOfNodesToScore,omitempty"`
@@ -84,16 +84,16 @@ type KubeSchedulerConfiguration struct {
 	// the default value (10s) will be used.
 	PodMaxBackoffSeconds *int64 `json:"podMaxBackoffSeconds,omitempty"`
 
-	// Profiles are scheduling profiles that kube-over_scheduler supports. Pods can
+	// Profiles are scheduling profiles that kube-scheduler supports. Pods can
 	// choose to be scheduled under a particular profile by setting its associated
-	// over_scheduler name. Pods that don't specify any over_scheduler name are scheduled
-	// with the "default-over_scheduler" profile, if present here.
+	// scheduler name. Pods that don't specify any scheduler name are scheduled
+	// with the "default-scheduler" profile, if present here.
 	// +listType=map
 	// +listMapKey=schedulerName
 	Profiles []KubeSchedulerProfile `json:"profiles,omitempty"`
 
-	// Extenders are the list of over_scheduler extenders, each holding the values of how to communicate
-	// with the extender. These extenders are shared by all over_scheduler profiles.
+	// Extenders are the list of scheduler extenders, each holding the values of how to communicate
+	// with the extender. These extenders are shared by all scheduler profiles.
 	// +listType=set
 	Extenders []Extender `json:"extenders,omitempty"`
 }
@@ -137,7 +137,7 @@ func (c *KubeSchedulerConfiguration) EncodeNestedObjects(e runtime.Encoder) erro
 
 // KubeSchedulerProfile is a scheduling profile.
 type KubeSchedulerProfile struct {
-	// SchedulerName is the name of the over_scheduler associated to this profile.
+	// SchedulerName is the name of the scheduler associated to this profile.
 	// If SchedulerName matches with the pod's "spec.schedulerName", then the pod
 	// is scheduled with this profile.
 	SchedulerName *string `json:"schedulerName,omitempty"`
@@ -198,7 +198,7 @@ type Plugins struct {
 	PreBind PluginSet `json:"preBind,omitempty"`
 
 	// Bind is a list of plugins that should be invoked at "Bind" extension point of the scheduling framework.
-	// The over_scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.
+	// The scheduler call these plugins in order. Scheduler skips the rest of these plugins as soon as one returns success.
 	Bind PluginSet `json:"bind,omitempty"`
 
 	// PostBind is a list of plugins that should be invoked after a pod is successfully bound.
@@ -212,7 +212,7 @@ type Plugins struct {
 // If an array is empty, missing, or nil, default plugins at that extension point will be used.
 type PluginSet struct {
 	// Enabled specifies plugins that should be enabled in addition to default plugins.
-	// If the default plugin is also configured in the over_scheduler config file, the weight of plugin will
+	// If the default plugin is also configured in the scheduler config file, the weight of plugin will
 	// be overridden accordingly.
 	// These are called after default plugins and in the same order specified here.
 	// +listType=atomic

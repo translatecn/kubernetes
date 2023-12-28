@@ -16,5 +16,5 @@ limitations under the License.
 
 // +k8s:deepcopy-gen=package
 
-// Package v1 contains over_scheduler API objects.
-package v1 // import "k8s.io/kube-over_scheduler/extender/v1"
+// Package v1 contains scheduler API objects.
+package v1 // import "k8s.io/kube-scheduler/extender/v1"

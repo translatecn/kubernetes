@@ -51,7 +51,7 @@ var (
 			short: getPhaseDescription(kubeadmconstants.KubeControllerManager),
 		},
 		kubeadmconstants.KubeScheduler: {
-			name:  "over_scheduler",
+			name:  "scheduler",
 			short: getPhaseDescription(kubeadmconstants.KubeScheduler),
 		},
 	}

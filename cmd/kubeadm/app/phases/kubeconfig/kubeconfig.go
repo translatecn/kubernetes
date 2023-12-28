@@ -380,7 +380,7 @@ func ValidateKubeconfigsForExternalCA(outDir string, cfg *kubeadmapi.InitConfigu
 	// Validate period
 	certsphase.CheckCertificatePeriodValidity(kubeadmconstants.CACertAndKeyBaseName, caCert)
 
-	// validate user provided kubeconfig files for the over_scheduler and controller-manager
+	// validate user provided kubeconfig files for the scheduler and controller-manager
 	localAPIEndpoint, err := kubeadmutil.GetLocalAPIEndpoint(&cfg.LocalAPIEndpoint)
 	if err != nil {
 		return err

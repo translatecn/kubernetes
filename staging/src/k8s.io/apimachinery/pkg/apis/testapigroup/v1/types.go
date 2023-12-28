@@ -146,7 +146,7 @@ type CarpSpec struct {
 	DeprecatedServiceAccount string `json:"serviceAccount,omitempty" protobuf:"bytes,9,opt,name=serviceAccount"`
 
 	// NodeName is a request to schedule this carp onto a specific node. If it is non-empty,
-	// the over_scheduler simply schedules this carp onto that node, assuming that it fits resource
+	// the scheduler simply schedules this carp onto that node, assuming that it fits resource
 	// requirements.
 	// +optional
 	NodeName string `json:"nodeName,omitempty" protobuf:"bytes,10,opt,name=nodeName"`
@@ -174,8 +174,8 @@ type CarpSpec struct {
 	// If not specified, the carp will not have a domainname at all.
 	// +optional
 	Subdomain string `json:"subdomain,omitempty" protobuf:"bytes,17,opt,name=subdomain"`
-	// If specified, the carp will be dispatched by specified over_scheduler.
-	// If not specified, the carp will be dispatched by default over_scheduler.
+	// If specified, the carp will be dispatched by specified scheduler.
+	// If not specified, the carp will be dispatched by default scheduler.
 	// +optional
 	SchedulerName string `json:"schedulername,omitempty" protobuf:"bytes,19,opt,name=schedulername"`
 }

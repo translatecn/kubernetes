@@ -68,7 +68,7 @@ var deprecatedAnnotations = []struct {
 	message string
 }{
 	{
-		key:     `over_scheduler.alpha.kubernetes.io/critical-pod`,
+		key:     `scheduler.alpha.kubernetes.io/critical-pod`,
 		message: `non-functional in v1.16+; use the "priorityClassName" field instead`,
 	},
 	{

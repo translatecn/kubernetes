@@ -56,9 +56,9 @@ var (
 			long:  "Generate the kubeconfig file for the controller manager to use and save it to %s file",
 		},
 		kubeadmconstants.SchedulerKubeConfigFileName: {
-			name:  "over_scheduler",
-			short: "Generate a kubeconfig file for the over_scheduler to use",
-			long:  "Generate the kubeconfig file for the over_scheduler to use and save it to %s file.",
+			name:  "scheduler",
+			short: "Generate a kubeconfig file for the scheduler to use",
+			long:  "Generate the kubeconfig file for the scheduler to use and save it to %s file.",
 		},
 	}
 )

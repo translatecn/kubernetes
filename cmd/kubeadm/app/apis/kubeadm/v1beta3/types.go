@@ -109,9 +109,9 @@ type ClusterConfiguration struct {
 	// +optional
 	ControllerManager ControlPlaneComponent `json:"controllerManager,omitempty"`
 
-	// Scheduler contains extra settings for the over_scheduler control plane component
+	// Scheduler contains extra settings for the scheduler control plane component
 	// +optional
-	Scheduler ControlPlaneComponent `json:"over_scheduler,omitempty"`
+	Scheduler ControlPlaneComponent `json:"scheduler,omitempty"`
 
 	// DNS defines the options for the DNS add-on installed in the cluster.
 	// +optional
@@ -435,7 +435,7 @@ type HostPathMount struct {
 type Patches struct {
 	// Directory is a path to a directory that contains files named "target[suffix][+patchtype].extension".
 	// For example, "kube-apiserver0+merge.yaml" or just "etcd.json". "target" can be one of
-	// "kube-apiserver", "kube-controller-manager", "kube-over_scheduler", "etcd", "kubeletconfiguration".
+	// "kube-apiserver", "kube-controller-manager", "kube-scheduler", "etcd", "kubeletconfiguration".
 	// "patchtype" can be one of "strategic" "merge" or "json" and they match the patch formats supported by kubectl.
 	// The default "patchtype" is "strategic". "extension" must be either "json" or "yaml".
 	// "suffix" is an optional string that can be used to determine which patches are applied

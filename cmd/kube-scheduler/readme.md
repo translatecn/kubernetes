@@ -31,35 +31,16 @@ pod -> assumeCache[pod] -> Restore[store[pod]]
 
 state := framework.NewCycleState() 在整个pod 的一次调度周期内存在
 
+type Extender struct {}
+
+未调度的pod
+    - 执行每个 runPreEnqueuePlugins，都成功 加入 ActiveQ 发信号
+    - 有一个失败，加入 unschedulablePods
+
+ 
 
 
-- runPreEnqueuePlugins
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+从 ActiveQ 获取 pod
 
 schedulingCycle
     - SchedulePod     

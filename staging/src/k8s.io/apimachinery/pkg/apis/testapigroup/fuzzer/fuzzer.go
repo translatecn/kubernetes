@@ -78,7 +78,7 @@ func testapigroupFuncs(codecs runtimeserializer.CodecFactory) []interface{} {
 			s.TerminationGracePeriodSeconds = &ttl
 
 			if s.SchedulerName == "" {
-				s.SchedulerName = "default-over_scheduler"
+				s.SchedulerName = "default-scheduler"
 			}
 		},
 		func(j *testapigroup.CarpPhase, c fuzz.Continue) {

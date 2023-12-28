@@ -2467,10 +2467,10 @@ const (
 	PodReady PodConditionType = "Ready"
 	// PodInitialized means that all init containers in the pod have started successfully.
 	PodInitialized PodConditionType = "Initialized"
-	// PodReasonUnschedulable reason in PodScheduled PodCondition means that the over_scheduler
+	// PodReasonUnschedulable reason in PodScheduled PodCondition means that the scheduler
 	// can't schedule the pod right now, for example due to insufficient resources in the cluster.
 	PodReasonUnschedulable = "Unschedulable"
-	// PodReasonSchedulingGated reason in PodScheduled PodCondition means that the over_scheduler
+	// PodReasonSchedulingGated reason in PodScheduled PodCondition means that the scheduler
 	// skips scheduling the pod because one or more scheduling gates are still present.
 	PodReasonSchedulingGated = "SchedulingGated"
 	// ContainersReady indicates whether all containers in the pod are ready.
@@ -2648,7 +2648,7 @@ type PodAffinity struct {
 	// podAffinityTerm are intersected, i.e. all terms must be satisfied.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution []PodAffinityTerm
-	// The over_scheduler will prefer to schedule pods to nodes that satisfy
+	// The scheduler will prefer to schedule pods to nodes that satisfy
 	// the affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2683,7 +2683,7 @@ type PodAntiAffinity struct {
 	// podAffinityTerm are intersected, i.e. all terms must be satisfied.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution []PodAffinityTerm
-	// The over_scheduler will prefer to schedule pods to nodes that satisfy
+	// The scheduler will prefer to schedule pods to nodes that satisfy
 	// the anti-affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2747,7 +2747,7 @@ type NodeAffinity struct {
 	// may or may not try to eventually evict the pod from its node.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution *NodeSelector
-	// The over_scheduler will prefer to schedule pods to nodes that satisfy
+	// The scheduler will prefer to schedule pods to nodes that satisfy
 	// the affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2794,18 +2794,18 @@ type TaintEffect string
 // These are valid values for TaintEffect
 const (
 	// Do not allow new pods to schedule onto the node unless they tolerate the taint,
-	// but allow all pods submitted to Kubelet without going through the over_scheduler
+	// but allow all pods submitted to Kubelet without going through the scheduler
 	// to start, and allow all already-running pods to continue running.
-	// Enforced by the over_scheduler.
+	// Enforced by the scheduler.
 	TaintEffectNoSchedule TaintEffect = "NoSchedule"
-	// Like TaintEffectNoSchedule, but the over_scheduler tries not to schedule
+	// Like TaintEffectNoSchedule, but the scheduler tries not to schedule
 	// new pods onto the node, rather than prohibiting new pods from scheduling
-	// onto the node entirely. Enforced by the over_scheduler.
+	// onto the node entirely. Enforced by the scheduler.
 	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule"
 	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
 	// Like TaintEffectNoSchedule, but additionally do not allow pods submitted to
-	// Kubelet without going through the over_scheduler to start.
-	// Enforced by Kubelet and the over_scheduler.
+	// Kubelet without going through the scheduler to start.
+	// Enforced by Kubelet and the scheduler.
 	// TaintEffectNoScheduleNoAdmit TaintEffect = "NoScheduleNoAdmit"
 
 	// Evict any already-running pods that do not tolerate the taint.
@@ -2898,7 +2898,7 @@ type PodSpec struct {
 	AutomountServiceAccountToken *bool
 
 	// NodeName is a request to schedule this pod onto a specific node.  If it is non-empty,
-	// the over_scheduler simply schedules this pod onto that node, assuming that it fits resource
+	// the scheduler simply schedules this pod onto that node, assuming that it fits resource
 	// requirements.
 	// +optional
 	NodeName string
@@ -2926,8 +2926,8 @@ type PodSpec struct {
 	// If specified, the pod's scheduling constraints
 	// +optional
 	Affinity *Affinity
-	// If specified, the pod will be dispatched by specified over_scheduler.
-	// If not specified, the pod will be dispatched by default over_scheduler.
+	// If specified, the pod will be dispatched by specified scheduler.
+	// If not specified, the pod will be dispatched by default scheduler.
 	// +optional
 	SchedulerName string
 	// If specified, the pod's tolerations.
@@ -4413,7 +4413,7 @@ type AttachedVolume struct {
 }
 
 // AvoidPods describes pods that should avoid this node. This is the value for a
-// Node annotation with key over_scheduler.alpha.kubernetes.io/preferAvoidPods and
+// Node annotation with key scheduler.alpha.kubernetes.io/preferAvoidPods and
 // will eventually become a field of NodeStatus.
 type AvoidPods struct {
 	// Bounded-sized list of signatures of pods that should avoid this node, sorted
@@ -4676,7 +4676,7 @@ type NamespaceList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Binding ties one object to another; for example, a pod is bound to a node by a over_scheduler.
+// Binding ties one object to another; for example, a pod is bound to a node by a scheduler.
 // Deprecated in 1.7, please use the bindings subresource of pods instead.
 type Binding struct {
 	metav1.TypeMeta
@@ -5645,7 +5645,7 @@ const (
 	//
 	// RequiredDuringScheduling affinity is not symmetric, but there is an implicit PreferredDuringScheduling affinity rule
 	// corresponding to every RequiredDuringScheduling affinity rule.
-	// When the --hard-pod-affinity-weight over_scheduler flag is not specified,
+	// When the --hard-pod-affinity-weight scheduler flag is not specified,
 	// DefaultHardPodAffinityWeight defines the weight of the implicit PreferredDuringScheduling affinity rule.
 	DefaultHardPodAffinitySymmetricWeight int32 = 1
 )
@@ -5655,10 +5655,10 @@ const (
 type UnsatisfiableConstraintAction string
 
 const (
-	// DoNotSchedule instructs the over_scheduler not to schedule the pod
+	// DoNotSchedule instructs the scheduler not to schedule the pod
 	// when constraints are not satisfied.
 	DoNotSchedule UnsatisfiableConstraintAction = "DoNotSchedule"
-	// ScheduleAnyway instructs the over_scheduler to schedule the pod
+	// ScheduleAnyway instructs the scheduler to schedule the pod
 	// even if constraints are not satisfied.
 	ScheduleAnyway UnsatisfiableConstraintAction = "ScheduleAnyway"
 )
@@ -5710,8 +5710,8 @@ type TopologySpreadConstraint struct {
 	TopologyKey string
 	// WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy
 	// the spread constraint.
-	// - DoNotSchedule (default) tells the over_scheduler not to schedule it.
-	// - ScheduleAnyway tells the over_scheduler to schedule the pod in any location,
+	// - DoNotSchedule (default) tells the scheduler not to schedule it.
+	// - ScheduleAnyway tells the scheduler to schedule the pod in any location,
 	//   but giving higher precedence to topologies that would help reduce the
 	//   skew.
 	// A constraint is considered "Unsatisfiable" for an incoming pod
@@ -5726,7 +5726,7 @@ type TopologySpreadConstraint struct {
 	// +-------+-------+-------+
 	// If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled
 	// to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies
-	// MaxSkew(1). In other words, the cluster can still be imbalanced, but over_scheduler
+	// MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler
 	// won't make it *more* imbalanced.
 	// It's a required field.
 	WhenUnsatisfiable UnsatisfiableConstraintAction
@@ -5741,7 +5741,7 @@ type TopologySpreadConstraint struct {
 	// And when the number of eligible domains with matching topology keys equals or greater than minDomains,
 	// this value has no effect on scheduling.
 	// As a result, when the number of eligible domains is less than minDomains,
-	// over_scheduler won't schedule more than maxSkew Pods to those domains.
+	// scheduler won't schedule more than maxSkew Pods to those domains.
 	// If value is nil, the constraint behaves as if MinDomains is equal to 1.
 	// Valid values are integers greater than 0.
 	// When value is not nil, WhenUnsatisfiable must be DoNotSchedule.

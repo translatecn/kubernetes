@@ -43,9 +43,9 @@ import (
 	logsapi "k8s.io/component-base/logs/api/v1"
 	"k8s.io/component-base/metrics"
 	schedulerappconfig "k8s.io/kubernetes/cmd/kube-scheduler/app/over_config"
-	"k8s.io/kubernetes/pkg/over_scheduler"
-	kubeschedulerconfig "k8s.io/kubernetes/pkg/over_scheduler/apis/config"
-	"k8s.io/kubernetes/pkg/over_scheduler/apis/config/validation"
+	"k8s.io/kubernetes/pkg/scheduler"
+	kubeschedulerconfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
+	"k8s.io/kubernetes/pkg/scheduler/apis/config/validation"
 	netutils "k8s.io/utils/net"
 )
 
@@ -62,7 +62,7 @@ type Options struct {
 	Deprecated     *DeprecatedOptions
 	LeaderElection *componentbaseconfig.LeaderElectionConfiguration
 
-	// ConfigFile is the location of the over_scheduler server's configuration file.
+	// ConfigFile is the location of the scheduler server's configuration file.
 	ConfigFile string // ✅
 
 	// WriteConfigTo is the path where the default configuration will be written.
@@ -98,7 +98,7 @@ func (o *Options) initFlags() {
 	o.Flags = &nfs
 }
 
-// ApplyTo applies the over_scheduler options to the given over_scheduler app configuration.
+// ApplyTo applies the scheduler options to the given scheduler app configuration.
 func (o *Options) ApplyTo(c *schedulerappconfig.Config) error {
 	if len(o.ConfigFile) == 0 {
 		// If the --config arg is not specified, honor the deprecated as well as leader election CLI args.
@@ -198,7 +198,7 @@ func (o *Options) ApplyLeaderElectionTo(cfg *kubeschedulerconfig.KubeSchedulerCo
 	o.ComponentConfig = cfg
 }
 
-// NewOptions returns default over_scheduler app options.
+// NewOptions returns default scheduler app options.
 func NewOptions() *Options {
 	o := &Options{
 		SecureServing:  apiserveroptions.NewSecureServingOptions().WithLoopback(),
@@ -213,7 +213,7 @@ func NewOptions() *Options {
 			RenewDeadline:     metav1.Duration{Duration: 10 * time.Second},
 			RetryPeriod:       metav1.Duration{Duration: 2 * time.Second},
 			ResourceLock:      "leases",
-			ResourceName:      "kube-over_scheduler",
+			ResourceName:      "kube-scheduler",
 			ResourceNamespace: "kube-system",
 		},
 		Metrics: metrics.NewOptions(),
@@ -226,7 +226,7 @@ func NewOptions() *Options {
 
 	// Set the PairName but leave certificate directory blank to generate in-memory by default
 	o.SecureServing.ServerCert.CertDirectory = ""
-	o.SecureServing.ServerCert.PairName = "kube-over_scheduler"
+	o.SecureServing.ServerCert.PairName = "kube-scheduler"
 	o.SecureServing.BindPort = kubeschedulerconfig.DefaultKubeSchedulerPort
 
 	o.initFlags()
@@ -234,7 +234,7 @@ func NewOptions() *Options {
 	return o
 }
 
-// Config return a over_scheduler config object
+// Config return a scheduler config object
 func (o *Options) Config() (*schedulerappconfig.Config, error) {
 	if o.SecureServing != nil {
 		if err := o.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{netutils.ParseIPSloppy("127.0.0.1")}); err != nil {
@@ -258,7 +258,7 @@ func (o *Options) Config() (*schedulerappconfig.Config, error) {
 	// Set up leader election if enabled.
 	var leaderElectionConfig *leaderelection.LeaderElectionConfig
 	if c.ComponentConfig.LeaderElection.LeaderElect {
-		// Use the over_scheduler name in the first profile to record leader election.
+		// Use the scheduler name in the first profile to record leader election.
 		schedulerName := corev1.DefaultSchedulerName
 		if len(c.ComponentConfig.Profiles) != 0 {
 			schedulerName = c.ComponentConfig.Profiles[0].SchedulerName
@@ -271,7 +271,7 @@ func (o *Options) Config() (*schedulerappconfig.Config, error) {
 	}
 
 	c.Client = client
-	c.InformerFactory = over_scheduler.NewInformerFactory(client, 0)
+	c.InformerFactory = scheduler.NewInformerFactory(client, 0)
 	dynClient := dynamic.NewForConfigOrDie(c.KubeConfig)
 	c.DynInformerFactory = dynamicinformer.NewFilteredDynamicSharedInformerFactory(dynClient, 0, corev1.NamespaceAll, nil)
 	c.LeaderElection = leaderElectionConfig
@@ -308,7 +308,7 @@ func makeLeaderElectionConfig(config componentbaseconfig.LeaderElectionConfigura
 		RenewDeadline:   config.RenewDeadline.Duration,
 		RetryPeriod:     config.RetryPeriod.Duration,
 		WatchDog:        leaderelection.NewLeaderHealthzAdaptor(time.Second * 20),
-		Name:            "kube-over_scheduler",
+		Name:            "kube-scheduler",
 		ReleaseOnCancel: true,
 	}, nil
 }
@@ -332,7 +332,7 @@ func createKubeConfig(config componentbaseconfig.ClientConnectionConfiguration, 
 
 // createClients creates a kube client and an event client from the given kubeConfig
 func createClients(kubeConfig *restclient.Config) (clientset.Interface, clientset.Interface, error) {
-	client, err := clientset.NewForConfig(restclient.AddUserAgent(kubeConfig, "over_scheduler"))
+	client, err := clientset.NewForConfig(restclient.AddUserAgent(kubeConfig, "scheduler"))
 	if err != nil {
 		return nil, nil, err
 	}

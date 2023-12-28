@@ -421,7 +421,7 @@ func (ec *Controller) syncClaim(ctx context.Context, namespace, name string) err
 				}
 				if pod == nil {
 					// We might not have it in our informer cache
-					// yet. Removing the pod while the over_scheduler is
+					// yet. Removing the pod while the scheduler is
 					// scheduling it would be bad. We have to be
 					// absolutely sure and thus have to check with
 					// the API server.

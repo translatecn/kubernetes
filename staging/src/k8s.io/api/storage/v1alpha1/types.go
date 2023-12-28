@@ -165,12 +165,12 @@ type VolumeError struct {
 //
 // The producer of these objects can decide which approach is more suitable.
 //
-// They are consumed by the kube-over_scheduler when a CSI driver opts into
-// capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The over_scheduler
+// They are consumed by the kube-scheduler when a CSI driver opts into
+// capacity-aware scheduling with CSIDriverSpec.StorageCapacity. The scheduler
 // compares the MaximumVolumeSize against the requested size of pending volumes
 // to filter out unsuitable nodes. If MaximumVolumeSize is unset, it falls back
 // to a comparison against the less precise Capacity. If that is also unset,
-// the over_scheduler assumes that capacity is insufficient and tries some other
+// the scheduler assumes that capacity is insufficient and tries some other
 // node.
 type CSIStorageCapacity struct {
 	metav1.TypeMeta `json:",inline"`

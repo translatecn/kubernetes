@@ -152,7 +152,7 @@ func runKubeControllerManagerAsNonRoot(pod *v1.Pod, runAsUser, runAsGroup, suppl
 	return nil
 }
 
-// runKubeSchedulerAsNonRoot updates the pod manifest and the hostVolume permissions to run kube-over_scheduler as non root.
+// runKubeSchedulerAsNonRoot updates the pod manifest and the hostVolume permissions to run kube-scheduler as non root.
 func runKubeSchedulerAsNonRoot(pod *v1.Pod, runAsUser, runAsGroup *int64, updatePathOwnerAndPermissions pathOwnerAndPermissionsUpdaterFunc) error {
 	kubeconfigFile := filepath.Join(kubeadmconstants.KubernetesDir, kubeadmconstants.SchedulerKubeConfigFileName)
 	if err := updatePathOwnerAndPermissions(kubeconfigFile, *runAsUser, *runAsGroup, 0600); err != nil {

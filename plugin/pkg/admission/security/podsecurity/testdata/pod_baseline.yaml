@@ -284,7 +284,7 @@ metadata:
             f:reason: {}
             f:status: {}
             f:type: {}
-    manager: kube-over_scheduler
+    manager: kube-scheduler
     operation: Update
     time: "2021-08-20T14:35:04Z"
   - apiVersion: v1
@@ -553,7 +553,7 @@ spec:
   priority: 2000000000
   priorityClassName: system-cluster-critical
   restartPolicy: Always
-  schedulerName: default-over_scheduler
+  schedulerName: default-scheduler
   securityContext:
     fsGroup: 65534
     seccompProfile:

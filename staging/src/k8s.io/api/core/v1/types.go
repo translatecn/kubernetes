@@ -2606,11 +2606,11 @@ const (
 
 // These are reasons for a pod's transition to a condition.
 const (
-	// PodReasonUnschedulable reason in PodScheduled PodCondition means that the over_scheduler
+	// PodReasonUnschedulable reason in PodScheduled PodCondition means that the scheduler
 	// can't schedule the pod right now, for example due to insufficient resources in the cluster.
 	PodReasonUnschedulable = "Unschedulable"
 
-	// PodReasonSchedulingGated reason in PodScheduled PodCondition means that the over_scheduler
+	// PodReasonSchedulingGated reason in PodScheduled PodCondition means that the scheduler
 	// skips scheduling the pod because one or more scheduling gates are still present.
 	PodReasonSchedulingGated = "SchedulingGated"
 
@@ -2820,7 +2820,7 @@ type PodAffinity struct {
 	// podAffinityTerm are intersected, i.e. all terms must be satisfied.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution []PodAffinityTerm `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,1,rep,name=requiredDuringSchedulingIgnoredDuringExecution"`
-	// The over_scheduler will prefer to schedule pods to nodes that satisfy
+	// The scheduler will prefer to schedule pods to nodes that satisfy
 	// the affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2855,7 +2855,7 @@ type PodAntiAffinity struct {
 	// podAffinityTerm are intersected, i.e. all terms must be satisfied.
 	// +optional
 	RequiredDuringSchedulingIgnoredDuringExecution []PodAffinityTerm `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty" protobuf:"bytes,1,rep,name=requiredDuringSchedulingIgnoredDuringExecution"`
-	// The over_scheduler will prefer to schedule pods to nodes that satisfy
+	// The scheduler will prefer to schedule pods to nodes that satisfy
 	// the anti-affinity expressions specified by this field, but it may choose
 	// a node that violates one or more of the expressions. The node that is
 	// most preferred is the one with the greatest sum of weights, i.e.
@@ -2952,13 +2952,13 @@ type TaintEffect string
 
 const (
 	// Do not allow new pods to schedule onto the node unless they tolerate the taint,
-	// but allow all pods submitted to Kubelet without going through the over_scheduler
+	// but allow all pods submitted to Kubelet without going through the scheduler
 	// to start, and allow all already-running pods to continue running.
-	// Enforced by the over_scheduler.
+	// Enforced by the scheduler.
 	TaintEffectNoSchedule TaintEffect = "NoSchedule"
-	// Like TaintEffectNoSchedule, but the over_scheduler tries not to schedule
+	// Like TaintEffectNoSchedule, but the scheduler tries not to schedule
 	// new pods onto the node, rather than prohibiting new pods from scheduling
-	// onto the node entirely. Enforced by the over_scheduler.
+	// onto the node entirely. Enforced by the scheduler.
 	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule" //
 	TaintEffectNoExecute        TaintEffect = "NoExecute"        // 如果某个 Pod 不能容忍节点的污点,则需要将其驱逐出节点.这个过程由 NodeController 实现.
 )
@@ -3087,7 +3087,7 @@ type PodSpec struct {
 	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty" protobuf:"varint,21,opt,name=automountServiceAccountToken"`
 
 	// NodeName is a request to schedule this pod onto a specific node. If it is non-empty,
-	// the over_scheduler simply schedules this pod onto that node, assuming that it fits resource
+	// the scheduler simply schedules this pod onto that node, assuming that it fits resource
 	// requirements.
 	// +optional
 	NodeName string `json:"nodeName,omitempty" protobuf:"bytes,10,opt,name=nodeName"`
@@ -3135,8 +3135,8 @@ type PodSpec struct {
 	// If specified, the pod's scheduling constraints
 	// +optional
 	Affinity *Affinity `json:"affinity,omitempty" protobuf:"bytes,18,opt,name=affinity"`
-	// If specified, the pod will be dispatched by specified over_scheduler.
-	// If not specified, the pod will be dispatched by default over_scheduler.
+	// If specified, the pod will be dispatched by specified scheduler.
+	// If not specified, the pod will be dispatched by default scheduler.
 	// +optional
 	SchedulerName string `json:"schedulerName,omitempty" protobuf:"bytes,19,opt,name=schedulerName"`
 	// If specified, the pod's tolerations.
@@ -3353,10 +3353,10 @@ type PodSchedulingGate struct {
 type UnsatisfiableConstraintAction string
 
 const (
-	// DoNotSchedule instructs the over_scheduler not to schedule the pod
+	// DoNotSchedule instructs the scheduler not to schedule the pod
 	// when constraints are not satisfied.
 	DoNotSchedule UnsatisfiableConstraintAction = "DoNotSchedule"
-	// ScheduleAnyway instructs the over_scheduler to schedule the pod
+	// ScheduleAnyway instructs the scheduler to schedule the pod
 	// even if constraints are not satisfied.
 	ScheduleAnyway UnsatisfiableConstraintAction = "ScheduleAnyway"
 )
@@ -4945,7 +4945,7 @@ type AttachedVolume struct {
 }
 
 // AvoidPods describes pods that should avoid this node. This is the value for a
-// Node annotation with key over_scheduler.alpha.kubernetes.io/preferAvoidPods and
+// Node annotation with key scheduler.alpha.kubernetes.io/preferAvoidPods and
 // will eventually become a field of NodeStatus.
 type AvoidPods struct {
 	// Bounded-sized list of signatures of pods that should avoid this node, sorted
@@ -5273,7 +5273,7 @@ type NamespaceList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Binding ties one object to another; for example, a pod is bound to a node by a over_scheduler.
+// Binding ties one object to another; for example, a pod is bound to a node by a scheduler.
 // Deprecated in 1.7, please use the bindings subresource of pods instead.
 type Binding struct {
 	metav1.TypeMeta `json:",inline"`
@@ -6377,12 +6377,12 @@ type RangeAllocation struct {
 }
 
 const (
-	// DefaultSchedulerName defines the name of default over_scheduler.
-	DefaultSchedulerName = "default-over_scheduler"
+	// DefaultSchedulerName defines the name of default scheduler.
+	DefaultSchedulerName = "default-scheduler"
 
 	// RequiredDuringScheduling affinity is not symmetric, but there is an implicit PreferredDuringScheduling affinity rule
 	// corresponding to every RequiredDuringScheduling affinity rule.
-	// When the --hard-pod-affinity-weight over_scheduler flag is not specified,
+	// When the --hard-pod-affinity-weight scheduler flag is not specified,
 	// DefaultHardPodAffinityWeight defines the weight of the implicit PreferredDuringScheduling affinity rule.
 	DefaultHardPodAffinitySymmetricWeight int32 = 1
 )

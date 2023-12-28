@@ -19,8 +19,8 @@ package core
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	quota "k8s.io/apiserver/pkg/quota/v1"
-	"k8s.io/apiserver/pkg/quota/v1/generic"
+	quota "k8s.io/apiserver/pkg/over_quota/v1"
+	"k8s.io/apiserver/pkg/over_quota/v1/generic"
 	"k8s.io/utils/clock"
 )
 

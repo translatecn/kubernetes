@@ -25,9 +25,9 @@ import (
 	"k8s.io/klog/v2"
 	v1helper "k8s.io/kubernetes/pkg/apis/core/v1/helper"
 	"k8s.io/kubernetes/pkg/kubelet/types"
-	"k8s.io/kubernetes/pkg/over_scheduler"
-	schedulerframework "k8s.io/kubernetes/pkg/over_scheduler/framework"
-	"k8s.io/kubernetes/pkg/over_scheduler/framework/plugins/tainttoleration"
+	"k8s.io/kubernetes/pkg/scheduler"
+	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
+	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/tainttoleration"
 )
 
 type getNodeAnyWayFuncType func() (*v1.Node, error)
@@ -264,7 +264,7 @@ func (e *PredicateFailureError) GetReason() string {
 
 // 检查kubelet关心的一组过滤器.
 func generalFilter(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) []PredicateFailureReason {
-	admissionResults := over_scheduler.AdmissionCheck(pod, nodeInfo, true) // 对 noderesources/nodeport/nodeAffinity/nodename 做一些检查  ✅
+	admissionResults := scheduler.AdmissionCheck(pod, nodeInfo, true) // 对 noderesources/nodeport/nodeAffinity/nodename 做一些检查  ✅
 	var reasons []PredicateFailureReason
 	for _, r := range admissionResults {
 		if r.InsufficientResource != nil {

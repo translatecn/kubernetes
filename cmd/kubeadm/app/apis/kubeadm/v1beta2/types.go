@@ -86,8 +86,8 @@ type ClusterConfiguration struct {
 	// ControllerManager contains extra settings for the controller manager control plane component
 	ControllerManager ControlPlaneComponent `json:"controllerManager,omitempty"`
 
-	// Scheduler contains extra settings for the over_scheduler control plane component
-	Scheduler ControlPlaneComponent `json:"over_scheduler,omitempty"`
+	// Scheduler contains extra settings for the scheduler control plane component
+	Scheduler ControlPlaneComponent `json:"scheduler,omitempty"`
 
 	// DNS defines the options for the DNS add-on installed in the cluster.
 	DNS DNS `json:"dns,omitempty"`

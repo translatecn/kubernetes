@@ -55,9 +55,9 @@ type Handler struct {
 	rootFs          string
 	pid             int
 	includedMetrics container.MetricSet
-	// pidMetricsCache holds CPU over_scheduler stats for existing processes (map key is PID) between calls to schedulerStatsFromProcs.
+	// pidMetricsCache holds CPU scheduler stats for existing processes (map key is PID) between calls to schedulerStatsFromProcs.
 	pidMetricsCache map[int]*info.CpuSchedstat
-	// pidMetricsSaved holds accumulated CPU over_scheduler stats for processes that no longer exist.
+	// pidMetricsSaved holds accumulated CPU scheduler stats for processes that no longer exist.
 	pidMetricsSaved info.CpuSchedstat
 	cycles          uint64
 }
@@ -321,12 +321,12 @@ func (h *Handler) schedulerStatsFromProcs() (info.CpuSchedstat, error) {
 	for _, pid := range pids {
 		f, err := os.Open(path.Join(h.rootFs, "proc", strconv.Itoa(pid), "schedstat"))
 		if err != nil {
-			return info.CpuSchedstat{}, fmt.Errorf("couldn't open over_scheduler statistics for process %d: %v", pid, err)
+			return info.CpuSchedstat{}, fmt.Errorf("couldn't open scheduler statistics for process %d: %v", pid, err)
 		}
 		defer f.Close()
 		contents, err := ioutil.ReadAll(f)
 		if err != nil {
-			return info.CpuSchedstat{}, fmt.Errorf("couldn't read over_scheduler statistics for process %d: %v", pid, err)
+			return info.CpuSchedstat{}, fmt.Errorf("couldn't read scheduler statistics for process %d: %v", pid, err)
 		}
 		alivePids[pid] = struct{}{}
 		rawMetrics := bytes.Split(bytes.TrimRight(contents, "\n"), []byte(" "))
@@ -341,7 +341,7 @@ func (h *Handler) schedulerStatsFromProcs() (info.CpuSchedstat, error) {
 		for i, rawMetric := range rawMetrics {
 			metric, err := strconv.ParseUint(string(rawMetric), 10, 64)
 			if err != nil {
-				return info.CpuSchedstat{}, fmt.Errorf("parsing error while reading over_scheduler statistics for process: %d: %v", pid, err)
+				return info.CpuSchedstat{}, fmt.Errorf("parsing error while reading scheduler statistics for process: %d: %v", pid, err)
 			}
 			switch i {
 			case 0:

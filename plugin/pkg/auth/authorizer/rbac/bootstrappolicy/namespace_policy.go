@@ -114,10 +114,10 @@ func init() {
 	})
 	addNamespaceRole(metav1.NamespaceSystem, rbacv1.Role{
 		// role for the leader locking on supplied configmap
-		ObjectMeta: metav1.ObjectMeta{Name: "system::leader-locking-kube-over_scheduler"},
+		ObjectMeta: metav1.ObjectMeta{Name: "system::leader-locking-kube-scheduler"},
 		Rules: []rbacv1.PolicyRule{
 			rbacv1helpers.NewRule("watch").Groups(legacyGroup).Resources("configmaps").RuleOrDie(),
-			rbacv1helpers.NewRule("get", "update").Groups(legacyGroup).Resources("configmaps").Names("kube-over_scheduler").RuleOrDie(),
+			rbacv1helpers.NewRule("get", "update").Groups(legacyGroup).Resources("configmaps").Names("kube-scheduler").RuleOrDie(),
 		},
 	})
 
@@ -128,7 +128,7 @@ func init() {
 	addNamespaceRoleBinding(metav1.NamespaceSystem,
 		rbacv1helpers.NewRoleBinding("system::leader-locking-kube-controller-manager", metav1.NamespaceSystem).Users(user.KubeControllerManager).SAs(metav1.NamespaceSystem, "kube-controller-manager").BindingOrDie())
 	addNamespaceRoleBinding(metav1.NamespaceSystem,
-		rbacv1helpers.NewRoleBinding("system::leader-locking-kube-over_scheduler", metav1.NamespaceSystem).Users(user.KubeScheduler).SAs(metav1.NamespaceSystem, "kube-over_scheduler").BindingOrDie())
+		rbacv1helpers.NewRoleBinding("system::leader-locking-kube-scheduler", metav1.NamespaceSystem).Users(user.KubeScheduler).SAs(metav1.NamespaceSystem, "kube-scheduler").BindingOrDie())
 	addNamespaceRoleBinding(metav1.NamespaceSystem,
 		rbacv1helpers.NewRoleBinding(saRolePrefix+"bootstrap-signer", metav1.NamespaceSystem).SAs(metav1.NamespaceSystem, "bootstrap-signer").BindingOrDie())
 	// cloud-provider is deprecated starting Kubernetes 1.10 and will be deleted according to GA deprecation policy.

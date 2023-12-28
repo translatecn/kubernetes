@@ -35,7 +35,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
-	quota "k8s.io/apiserver/pkg/quota/v1"
+	quota "k8s.io/apiserver/pkg/over_quota/v1"
 	"k8s.io/client-go/discovery"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"

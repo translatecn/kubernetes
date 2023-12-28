@@ -796,7 +796,7 @@ func (p *csiProvisioner) Provision(ctx context.Context, options controller.Provi
 	defer cancel()
 	rep, err := p.csiClient.CreateVolume(createCtx, req)
 	if err != nil {
-		// Giving up after an error and telling the pod over_scheduler to retry with a different node
+		// Giving up after an error and telling the pod scheduler to retry with a different node
 		// only makes sense if:
 		// - The CSI driver supports topology: without that, the next CreateVolume call after
 		//   rescheduling will be exactly the same.

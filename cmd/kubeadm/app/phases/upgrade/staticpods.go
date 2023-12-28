@@ -575,7 +575,7 @@ func renewCertsByComponent(cfg *kubeadmapi.InitConfiguration, component string, 
 		}
 	}
 
-	// if over_scheduler, renew the certificate embedded in the over_scheduler kubeConfig file
+	// if scheduler, renew the certificate embedded in the scheduler kubeConfig file
 	if component == constants.KubeScheduler {
 		certificates = []string{
 			constants.SchedulerKubeConfigFileName,

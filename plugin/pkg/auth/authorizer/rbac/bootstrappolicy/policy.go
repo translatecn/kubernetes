@@ -481,7 +481,7 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			},
 		},
 		{
-			ObjectMeta: metav1.ObjectMeta{Name: "system:volume-over_scheduler"},
+			ObjectMeta: metav1.ObjectMeta{Name: "system:volume-scheduler"},
 			Rules: []rbacv1.PolicyRule{
 				rbacv1helpers.NewRule(ReadUpdate...).Groups(legacyGroup).Resources("persistentvolumes").RuleOrDie(),
 				rbacv1helpers.NewRule(Read...).Groups(storageGroup).Resources("storageclasses").RuleOrDie(),
@@ -543,10 +543,10 @@ func ClusterRoles() []rbacv1.ClusterRole {
 		// This is for leaderlease access
 		// TODO: scope this to the kube-system namespace
 		rbacv1helpers.NewRule("create").Groups(coordinationGroup).Resources("leases").RuleOrDie(),
-		rbacv1helpers.NewRule("get", "update").Groups(coordinationGroup).Resources("leases").Names("kube-over_scheduler").RuleOrDie(),
+		rbacv1helpers.NewRule("get", "update").Groups(coordinationGroup).Resources("leases").Names("kube-scheduler").RuleOrDie(),
 		// TODO: Remove once we fully migrate to lease in leader-election.
 		rbacv1helpers.NewRule("create").Groups(legacyGroup).Resources("endpoints").RuleOrDie(),
-		rbacv1helpers.NewRule("get", "update").Groups(legacyGroup).Resources("endpoints").Names("kube-over_scheduler").RuleOrDie(),
+		rbacv1helpers.NewRule("get", "update").Groups(legacyGroup).Resources("endpoints").Names("kube-scheduler").RuleOrDie(),
 
 		// Fundamental resources
 		rbacv1helpers.NewRule(Read...).Groups(legacyGroup).Resources("nodes").RuleOrDie(),
@@ -580,8 +580,8 @@ func ClusterRoles() []rbacv1.ClusterRole {
 		)
 	}
 	roles = append(roles, rbacv1.ClusterRole{
-		// a role to use for the kube-over_scheduler
-		ObjectMeta: metav1.ObjectMeta{Name: "system:kube-over_scheduler"},
+		// a role to use for the kube-scheduler
+		ObjectMeta: metav1.ObjectMeta{Name: "system:kube-scheduler"},
 		Rules:      kubeSchedulerRules,
 	})
 
@@ -602,8 +602,8 @@ func ClusterRoleBindings() []rbacv1.ClusterRoleBinding {
 		rbacv1helpers.NewClusterBinding("system:node-proxier").Users(user.KubeProxy).BindingOrDie(),
 		rbacv1helpers.NewClusterBinding("system:kube-controller-manager").Users(user.KubeControllerManager).BindingOrDie(),
 		rbacv1helpers.NewClusterBinding("system:kube-dns").SAs("kube-system", "kube-dns").BindingOrDie(),
-		rbacv1helpers.NewClusterBinding("system:kube-over_scheduler").Users(user.KubeScheduler).BindingOrDie(),
-		rbacv1helpers.NewClusterBinding("system:volume-over_scheduler").Users(user.KubeScheduler).BindingOrDie(),
+		rbacv1helpers.NewClusterBinding("system:kube-scheduler").Users(user.KubeScheduler).BindingOrDie(),
+		rbacv1helpers.NewClusterBinding("system:volume-scheduler").Users(user.KubeScheduler).BindingOrDie(),
 
 		// This default binding of the system:node role to the system:nodes group is deprecated in 1.7 with the availability of the Node authorizer.
 		// This leaves the binding, but with an empty set of subjects, so that tightening reconciliation can remove the subject.
