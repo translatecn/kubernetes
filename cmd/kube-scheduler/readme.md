@@ -48,6 +48,9 @@ schedulingCycle
             - RunPreFilterPlugins
             # - evaluateNominatedNode         只有一个候选节点 可选
             - findNodesThatPassFilters
+                - SelectVictimsOnNode
+                  - RunPreFilterExtensionRemovePod
+                    - runPreFilterExtensionRemovePod
                 - RunFilterPluginsWithNominatedPods
                     - addNominatedPods
                         - RunPreFilterExtensionAddPod
@@ -66,7 +69,7 @@ schedulingCycle
     - PermitPlugins                         可以有很多插件, 返回 Wait、Success、Error ;Wait 加入waitingPods
         - RunReservePluginsUnreserve
 
-    
+
 
 
 ( PreFilter ) 

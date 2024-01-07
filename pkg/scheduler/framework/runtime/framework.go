@@ -484,14 +484,6 @@ func (f *frameworkImpl) IterateOverWaitingPods(callback func(framework.WaitingPo
 	f.waitingPods.iterate(callback)
 }
 
-// GetWaitingPod returns a reference to a WaitingPod given its UID.
-func (f *frameworkImpl) GetWaitingPod(uid types.UID) framework.WaitingPod {
-	if wp := f.waitingPods.get(uid); wp != nil {
-		return wp
-	}
-	return nil // Returning nil instead of *waitingPod(nil).
-}
-
 // RejectWaitingPod rejects a WaitingPod given its UID.
 // The returned value indicates if the given pod is waiting or not.
 func (f *frameworkImpl) RejectWaitingPod(uid types.UID) bool {
@@ -1242,41 +1234,6 @@ func getScoreWeights(f *frameworkImpl, pluginsMap map[string]framework.Plugin, p
 	return nil
 }
 
-// RunPreFilterExtensionRemovePod calls the RemovePod interface for the set of configured
-// PreFilter plugins. It returns directly if any of the plugins return any
-// status other than Success.
-func (f *frameworkImpl) RunPreFilterExtensionRemovePod(
-	ctx context.Context,
-	state *framework.CycleState,
-	podToSchedule *v1.Pod,
-	podInfoToRemove *framework.PodInfo,
-	nodeInfo *framework.NodeInfo,
-) (status *framework.Status) {
-	for _, pl := range f.preFilterPlugins {
-		if pl.PreFilterExtensions() == nil {
-			continue
-		}
-		status = f.runPreFilterExtensionRemovePod(ctx, pl, state, podToSchedule, podInfoToRemove, nodeInfo)
-		if !status.IsSuccess() {
-			err := status.AsError()
-			klog.ErrorS(err, "Failed running RemovePod on PreFilter plugin", "plugin", pl.Name(), "pod", klog.KObj(podToSchedule))
-			return framework.AsStatus(fmt.Errorf("running RemovePod on PreFilter plugin %q: %w", pl.Name(), err))
-		}
-	}
-
-	return nil
-}
-
-func (f *frameworkImpl) runPreFilterExtensionRemovePod(ctx context.Context, pl framework.PreFilterPlugin, state *framework.CycleState, podToSchedule *v1.Pod, podInfoToRemove *framework.PodInfo, nodeInfo *framework.NodeInfo) *framework.Status {
-	if !state.ShouldRecordPluginMetrics() {
-		return pl.PreFilterExtensions().RemovePod(ctx, state, podToSchedule, podInfoToRemove, nodeInfo)
-	}
-	startTime := time.Now()
-	status := pl.PreFilterExtensions().RemovePod(ctx, state, podToSchedule, podInfoToRemove, nodeInfo)
-	f.metricsRecorder.observePluginDurationAsync(preFilterExtensionRemovePod, pl.Name(), status, metrics.SinceInSeconds(startTime))
-	return status
-}
-
 // 将 内置 和 外部的 在  NewInTreeRegistry 中的 MultiPoint(任意)插件 转换成对应的
 //
 //	    preEnqueuePlugins    []framework.PreEnqueuePlugin
@@ -1380,4 +1337,46 @@ func (f *frameworkImpl) expandMultiPointPlugins(profile *config.KubeSchedulerPro
 		plugins.Set(newPlugins)
 	}
 	return nil
+}
+func (f *frameworkImpl) runPreFilterExtensionRemovePod(ctx context.Context, pl framework.PreFilterPlugin, state *framework.CycleState, podToSchedule *v1.Pod, podInfoToRemove *framework.PodInfo, nodeInfo *framework.NodeInfo) *framework.Status {
+	if !state.ShouldRecordPluginMetrics() {
+		return pl.PreFilterExtensions().RemovePod(ctx, state, podToSchedule, podInfoToRemove, nodeInfo)
+	}
+	startTime := time.Now()
+	status := pl.PreFilterExtensions().RemovePod(ctx, state, podToSchedule, podInfoToRemove, nodeInfo)
+	f.metricsRecorder.observePluginDurationAsync(preFilterExtensionRemovePod, pl.Name(), status, metrics.SinceInSeconds(startTime))
+	return status
+}
+
+// RunPreFilterExtensionRemovePod calls the RemovePod interface for the set of configured
+// PreFilter plugins. It returns directly if any of the plugins return any
+// status other than Success.
+func (f *frameworkImpl) RunPreFilterExtensionRemovePod(
+	ctx context.Context,
+	state *framework.CycleState,
+	podToSchedule *v1.Pod,
+	podInfoToRemove *framework.PodInfo,
+	nodeInfo *framework.NodeInfo,
+) (status *framework.Status) {
+	for _, pl := range f.preFilterPlugins {
+		if pl.PreFilterExtensions() == nil {
+			continue
+		}
+		status = f.runPreFilterExtensionRemovePod(ctx, pl, state, podToSchedule, podInfoToRemove, nodeInfo)
+		if !status.IsSuccess() {
+			err := status.AsError()
+			klog.ErrorS(err, "Failed running RemovePod on PreFilter plugin", "plugin", pl.Name(), "pod", klog.KObj(podToSchedule))
+			return framework.AsStatus(fmt.Errorf("running RemovePod on PreFilter plugin %q: %w", pl.Name(), err))
+		}
+	}
+
+	return nil
+}
+
+// GetWaitingPod returns a reference to a WaitingPod given its UID.
+func (f *frameworkImpl) GetWaitingPod(uid types.UID) framework.WaitingPod {
+	if wp := f.waitingPods.get(uid); wp != nil {
+		return wp
+	}
+	return nil // Returning nil instead of *waitingPod(nil).
 }

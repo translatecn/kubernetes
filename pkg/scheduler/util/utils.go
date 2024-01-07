@@ -20,13 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
@@ -73,23 +73,39 @@ func GetEarliestPodStartTime(victims *extenderv1.Victims) *metav1.Time {
 	return earliestPodStartTime
 }
 
-// MoreImportantPod return true when priority of the first pod is higher than
-// the second one. If two pods' priorities are equal, compare their StartTime.
-// It takes arguments of the type "interface{}" to be used with SortableList,
-// but expects those arguments to be *v1.Pod.
-func MoreImportantPod(pod1, pod2 *v1.Pod) bool {
-	p1 := corev1helpers.PodPriority(pod1)
-	p2 := corev1helpers.PodPriority(pod2)
-	if p1 != p2 {
-		return p1 > p2
-	}
-	return GetPodStartTime(pod1).Before(GetPodStartTime(pod2))
+// IsScalarResourceName 验证是否是  扩展、大页、本机和可连接卷资源的 资源
+func IsScalarResourceName(name v1.ResourceName) bool {
+	return v1helper.IsExtendedResourceName(name) || v1helper.IsHugePageResourceName(name) ||
+		v1helper.IsPrefixedNativeResource(name) || v1helper.IsAttachableVolumeResourceName(name)
 }
 
-// Retriable defines the retriable errors during a scheduling cycle.
-func Retriable(err error) bool {
-	return apierrors.IsInternalError(err) || apierrors.IsServiceUnavailable(err) ||
-		net.IsConnectionRefused(err)
+// GetPodFullName returns a name that uniquely identifies a pod.
+func GetPodFullName(pod *v1.Pod) string {
+	// Use underscore as the delimiter because it is not allowed in pod name
+	// (DNS subdomain format).
+	return pod.Name + "_" + pod.Namespace
+}
+
+// DeletePod deletes the given <pod> from API server
+func DeletePod(ctx context.Context, cs kubernetes.Interface, pod *v1.Pod) error {
+	return cs.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, metav1.DeleteOptions{})
+}
+
+// ClearNominatedNodeName internally submit a patch request to API server
+// to set each pods[*].Status.NominatedNodeName> to "".
+func ClearNominatedNodeName(ctx context.Context, cs kubernetes.Interface, pods ...*v1.Pod) utilerrors.Aggregate {
+	var errs []error
+	for _, p := range pods {
+		if len(p.Status.NominatedNodeName) == 0 {
+			continue
+		}
+		podStatusCopy := p.Status.DeepCopy()
+		podStatusCopy.NominatedNodeName = ""
+		if err := PatchPodStatus(ctx, cs, p, podStatusCopy); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return utilerrors.NewAggregate(errs)
 }
 
 // PatchPodStatus calculates the delta bytes change from <old.Status> to <newStatus>,
@@ -125,37 +141,21 @@ func PatchPodStatus(ctx context.Context, cs kubernetes.Interface, old *v1.Pod, n
 	return retry.OnError(retry.DefaultBackoff, Retriable, patchFn)
 }
 
-// DeletePod deletes the given <pod> from API server
-func DeletePod(ctx context.Context, cs kubernetes.Interface, pod *v1.Pod) error {
-	return cs.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, metav1.DeleteOptions{})
-}
-
-// ClearNominatedNodeName internally submit a patch request to API server
-// to set each pods[*].Status.NominatedNodeName> to "".
-func ClearNominatedNodeName(ctx context.Context, cs kubernetes.Interface, pods ...*v1.Pod) utilerrors.Aggregate {
-	var errs []error
-	for _, p := range pods {
-		if len(p.Status.NominatedNodeName) == 0 {
-			continue
-		}
-		podStatusCopy := p.Status.DeepCopy()
-		podStatusCopy.NominatedNodeName = ""
-		if err := PatchPodStatus(ctx, cs, p, podStatusCopy); err != nil {
-			errs = append(errs, err)
-		}
+// MoreImportantPod return true when priority of the first pod is higher than
+// the second one. If two pods' priorities are equal, compare their StartTime.
+// It takes arguments of the type "interface{}" to be used with SortableList,
+// but expects those arguments to be *v1.Pod.
+func MoreImportantPod(pod1, pod2 *v1.Pod) bool {
+	p1 := corev1helpers.PodPriority(pod1)
+	p2 := corev1helpers.PodPriority(pod2)
+	if p1 != p2 {
+		return p1 > p2
 	}
-	return utilerrors.NewAggregate(errs)
+	return GetPodStartTime(pod1).Before(GetPodStartTime(pod2))
 }
 
-// IsScalarResourceName 验证是否是  扩展、大页、本机和可连接卷资源的 资源
-func IsScalarResourceName(name v1.ResourceName) bool {
-	return v1helper.IsExtendedResourceName(name) || v1helper.IsHugePageResourceName(name) ||
-		v1helper.IsPrefixedNativeResource(name) || v1helper.IsAttachableVolumeResourceName(name)
-}
-
-// GetPodFullName returns a name that uniquely identifies a pod.
-func GetPodFullName(pod *v1.Pod) string {
-	// Use underscore as the delimiter because it is not allowed in pod name
-	// (DNS subdomain format).
-	return pod.Name + "_" + pod.Namespace
+// Retriable defines the retriable errors during a scheduling cycle.
+func Retriable(err error) bool {
+	return apierrors.IsInternalError(err) || apierrors.IsServiceUnavailable(err) ||
+		net.IsConnectionRefused(err)
 }

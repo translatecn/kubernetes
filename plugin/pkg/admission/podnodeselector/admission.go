@@ -156,23 +156,6 @@ func (p *Plugin) Validate(ctx context.Context, a admission.Attributes, o admissi
 	return nil
 }
 
-func (p *Plugin) getNamespaceNodeSelectorMap(namespaceName string) (labels.Set, error) {
-	namespace, err := p.namespaceLister.Get(namespaceName)
-	if errors.IsNotFound(err) {
-		namespace, err = p.defaultGetNamespace(namespaceName)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return nil, err
-			}
-			return nil, errors.NewInternalError(err)
-		}
-	} else if err != nil {
-		return nil, errors.NewInternalError(err)
-	}
-
-	return p.getNodeSelectorMap(namespace)
-}
-
 func shouldIgnore(a admission.Attributes) bool {
 	resource := a.GetResource().GroupResource()
 	if resource != api.Resource("pods") {
@@ -231,6 +214,22 @@ func (p *Plugin) defaultGetNamespace(name string) (*corev1.Namespace, error) {
 	return namespace, nil
 }
 
+func isSubset(subSet, superSet labels.Set) bool {
+	if len(superSet) == 0 {
+		return true
+	}
+
+	for k, v := range subSet {
+		value, ok := superSet[k]
+		if !ok {
+			return false
+		}
+		if value != v {
+			return false
+		}
+	}
+	return true
+}
 func (p *Plugin) getNodeSelectorMap(namespace *corev1.Namespace) (labels.Set, error) {
 	selector := labels.Set{}
 	var err error
@@ -260,20 +259,19 @@ func (p *Plugin) getNodeSelectorMap(namespace *corev1.Namespace) (labels.Set, er
 	}
 	return selector, nil
 }
-
-func isSubset(subSet, superSet labels.Set) bool {
-	if len(superSet) == 0 {
-		return true
+func (p *Plugin) getNamespaceNodeSelectorMap(namespaceName string) (labels.Set, error) {
+	namespace, err := p.namespaceLister.Get(namespaceName)
+	if errors.IsNotFound(err) {
+		namespace, err = p.defaultGetNamespace(namespaceName)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil, err
+			}
+			return nil, errors.NewInternalError(err)
+		}
+	} else if err != nil {
+		return nil, errors.NewInternalError(err)
 	}
 
-	for k, v := range subSet {
-		value, ok := superSet[k]
-		if !ok {
-			return false
-		}
-		if value != v {
-			return false
-		}
-	}
-	return true
+	return p.getNodeSelectorMap(namespace)
 }

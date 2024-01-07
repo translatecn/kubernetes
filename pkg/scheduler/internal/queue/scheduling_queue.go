@@ -1052,19 +1052,6 @@ func (p *PriorityQueue) MoveAllToActiveOrBackoffQueue(event framework.ClusterEve
 	p.movePodsToActiveOrBackoffQueue(unschedulablePods, event)
 }
 
-// NominatedPodsForNode returns a copy of pods that are nominated to run on the given node,
-// but they are waiting for other pods to be removed from the node.
-func (npm *nominator) NominatedPodsForNode(nodeName string) []*framework.PodInfo {
-	npm.RLock()
-	defer npm.RUnlock()
-	// Make a copy of the nominated Pods so the caller can mutate safely.
-	pods := make([]*framework.PodInfo, len(npm.nominatedPods[nodeName]))
-	for i := 0; i < len(pods); i++ {
-		pods[i] = npm.nominatedPods[nodeName][i].DeepCopy()
-	}
-	return pods
-}
-
 // NewPodNominator creates a nominator as a backing of framework.PodNominator.
 // A podLister is passed in so as to check if the pod exists
 // before adding its nominatedNode info.
@@ -1082,4 +1069,17 @@ func NewSchedulingQueue(
 	informerFactory informers.SharedInformerFactory,
 	opts ...Option) SchedulingQueue {
 	return NewPriorityQueue(lessFn, informerFactory, opts...)
+}
+
+// NominatedPodsForNode returns a copy of pods that are nominated to run on the given node,
+// but they are waiting for other pods to be removed from the node.
+func (npm *nominator) NominatedPodsForNode(nodeName string) []*framework.PodInfo {
+	npm.RLock()
+	defer npm.RUnlock()
+	// Make a copy of the nominated Pods so the caller can mutate safely.
+	pods := make([]*framework.PodInfo, len(npm.nominatedPods[nodeName]))
+	for i := 0; i < len(pods); i++ {
+		pods[i] = npm.nominatedPods[nodeName][i].DeepCopy()
+	}
+	return pods
 }

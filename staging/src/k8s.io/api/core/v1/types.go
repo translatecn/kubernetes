@@ -3739,6 +3739,7 @@ type PodStatus struct {
 	// 这个字段并不保证该 Pod 一定会在此节点上被调度。调度器可能会决定将 Pod 放置在其他节点上，特别是如果其他节点更快变得可用。
 	// 调度器也可能决定将此节点上的资源分配给在抢占之后创建的优先级更高的 Pod。
 	// 因此，在调度时，这个字段的值可能与 `PodSpec.nodeName` 不同。
+	// 用于指定该 Pod 推荐的节点（Node）。这个字段并不直接影响 Pod 的调度，而是为调度器提供一个建议，告诉调度器该 Pod 更适合被调度到哪个节点。
 	// +optional
 	NominatedNodeName string `json:"nominatedNodeName,omitempty" protobuf:"bytes,11,opt,name=nominatedNodeName"`
 

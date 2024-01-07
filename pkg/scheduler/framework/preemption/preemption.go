@@ -53,8 +53,8 @@ const (
 type Candidate interface {
 	// Victims wraps a list of to-be-preempted Pods and the number of PDB violation.
 	Victims() *extenderv1.Victims
-	// Name returns the target node name where the preemptor gets nominated to run.
-	Name() string
+	// 	// Name returns the target node name where the preemptor gets nominated to run.
+	Name() string // Name返回被抢占的pod 的 目标节点名。
 }
 
 type candidate struct {
@@ -339,6 +339,10 @@ func (ev *Evaluator) SelectCandidate(candidates []Candidate) Candidate {
 // - Evict the victim pods
 // - Reject the victim pods if they are in waitingPod map
 // - Clear the low-priority pods' nominatedNodeName status if needed
+// prepareccandidate 在提名被选中的候选人之前做一些准备工作:
+// -驱逐受害者pod
+// -拒绝受害者pod，如果他们在waitingPod map
+// -清除低优先级pod的nomatednodename状态
 func (ev *Evaluator) prepareCandidate(ctx context.Context, c Candidate, pod *v1.Pod, pluginName string) *framework.Status {
 	fh := ev.Handler
 	cs := ev.Handler.ClientSet()
@@ -389,6 +393,8 @@ func (ev *Evaluator) prepareCandidate(ctx context.Context, c Candidate, pod *v1.
 	// this node. So, we should remove their nomination. Removing their
 	// nomination updates these pods and moves them to the active queue. It
 	// lets scheduler find another place for them.
+	// 指定在此节点上运行的低优先级pod可能不再适合此节点。所以，我们应该取消他们的提名。
+	// 删除它们的提名更新这些pod并将它们移动到活动队列。它让调度程序为它们找到另一个位置。
 	nominatedPods := getLowerPriorityNominatedPods(fh, pod, c.Name())
 	if err := util.ClearNominatedNodeName(ctx, cs, nominatedPods...); err != nil {
 		klog.ErrorS(err, "Cannot clear 'NominatedNodeName' field")
@@ -554,30 +560,6 @@ func pickOneNodeForPreemption(nodesToVictims map[string]*extenderv1.Victims) str
 	return nodeToReturn
 }
 
-// getLowerPriorityNominatedPods returns pods whose priority is smaller than the
-// priority of the given "pod" and are nominated to run on the given node.
-// Note: We could possibly check if the nominated lower priority pods still fit
-// and return those that no longer fit, but that would require lots of
-// manipulation of NodeInfo and PreFilter state per nominated pod. It may not be
-// worth the complexity, especially because we generally expect to have a very
-// small number of nominated pods per node.
-func getLowerPriorityNominatedPods(pn framework.PodNominator, pod *v1.Pod, nodeName string) []*v1.Pod {
-	podInfos := pn.NominatedPodsForNode(nodeName)
-
-	if len(podInfos) == 0 {
-		return nil
-	}
-
-	var lowerPriorityPods []*v1.Pod
-	podPriority := corev1helpers.PodPriority(pod)
-	for _, pi := range podInfos {
-		if corev1helpers.PodPriority(pi.Pod) < podPriority {
-			lowerPriorityPods = append(lowerPriorityPods, pi.Pod)
-		}
-	}
-	return lowerPriorityPods
-}
-
 // DryRunPreemption simulates Preemption logic on <potentialNodes> in parallel,
 // returns preemption candidates and a map indicating filtered nodes statuses.
 // The number of candidates depends on the constraints defined in the plugin's args. In the returned list of
@@ -629,4 +611,28 @@ func (ev *Evaluator) DryRunPreemption(ctx context.Context, pod *v1.Pod, potentia
 	}
 	fh.Parallelizer().Until(ctx, len(potentialNodes), checkNode, ev.PluginName)
 	return append(nonViolatingCandidates.get(), violatingCandidates.get()...), nodeStatuses, utilerrors.NewAggregate(errs)
+}
+
+// getLowerPriorityNominatedPods returns pods whose priority is smaller than the
+// priority of the given "pod" and are nominated to run on the given node.
+// Note: We could possibly check if the nominated lower priority pods still fit
+// and return those that no longer fit, but that would require lots of
+// manipulation of NodeInfo and PreFilter state per nominated pod. It may not be
+// worth the complexity, especially because we generally expect to have a very
+// small number of nominated pods per node.
+func getLowerPriorityNominatedPods(pn framework.PodNominator, pod *v1.Pod, nodeName string) []*v1.Pod {
+	podInfos := pn.NominatedPodsForNode(nodeName)
+
+	if len(podInfos) == 0 {
+		return nil
+	}
+
+	var lowerPriorityPods []*v1.Pod
+	podPriority := corev1helpers.PodPriority(pod)
+	for _, pi := range podInfos {
+		if corev1helpers.PodPriority(pi.Pod) < podPriority {
+			lowerPriorityPods = append(lowerPriorityPods, pi.Pod)
+		}
+	}
+	return lowerPriorityPods
 }

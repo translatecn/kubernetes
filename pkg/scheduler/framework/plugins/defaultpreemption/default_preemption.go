@@ -110,99 +110,6 @@ func (pl *DefaultPreemption) CandidatesToVictimsMap(candidates []preemption.Cand
 	return m
 }
 
-// SelectVictimsOnNode finds minimum set of pods on the given node that should be preempted in order to make enough room
-// for "pod" to be scheduled.
-func (pl *DefaultPreemption) SelectVictimsOnNode(
-	ctx context.Context,
-	state *framework.CycleState,
-	pod *v1.Pod,
-	nodeInfo *framework.NodeInfo,
-	pdbs []*policy.PodDisruptionBudget) ([]*v1.Pod, int, *framework.Status) {
-	var potentialVictims []*framework.PodInfo
-	removePod := func(rpi *framework.PodInfo) error {
-		if err := nodeInfo.RemovePod(rpi.Pod); err != nil {
-			return err
-		}
-		status := pl.fh.RunPreFilterExtensionRemovePod(ctx, state, pod, rpi, nodeInfo)
-		if !status.IsSuccess() {
-			return status.AsError()
-		}
-		return nil
-	}
-	addPod := func(api *framework.PodInfo) error {
-		nodeInfo.AddPodInfo(api)
-		status := pl.fh.RunPreFilterExtensionAddPod(ctx, state, pod, api, nodeInfo)
-		if !status.IsSuccess() {
-			return status.AsError()
-		}
-		return nil
-	}
-	// As the first step, remove all the lower priority pods from the node and
-	// check if the given pod can be scheduled.
-	podPriority := corev1helpers.PodPriority(pod)
-	for _, pi := range nodeInfo.Pods {
-		if corev1helpers.PodPriority(pi.Pod) < podPriority {
-			potentialVictims = append(potentialVictims, pi)
-			if err := removePod(pi); err != nil {
-				return nil, 0, framework.AsStatus(err)
-			}
-		}
-	}
-
-	// No potential victims are found, and so we don't need to evaluate the node again since its state didn't change.
-	if len(potentialVictims) == 0 {
-		message := fmt.Sprintf("No preemption victims found for incoming pod")
-		return nil, 0, framework.NewStatus(framework.UnschedulableAndUnresolvable, message)
-	}
-
-	// If the new pod does not fit after removing all the lower priority pods,
-	// we are almost done and this node is not suitable for preemption. The only
-	// condition that we could check is if the "pod" is failing to schedule due to
-	// inter-pod affinity to one or more victims, but we have decided not to
-	// support this case for performance reasons. Having affinity to lower
-	// priority pods is not a recommended configuration anyway.
-	if status := pl.fh.RunFilterPluginsWithNominatedPods(ctx, state, pod, nodeInfo); !status.IsSuccess() {
-		return nil, 0, status
-	}
-	var victims []*v1.Pod
-	numViolatingVictim := 0
-	sort.Slice(potentialVictims, func(i, j int) bool { return util.MoreImportantPod(potentialVictims[i].Pod, potentialVictims[j].Pod) })
-	// Try to reprieve as many pods as possible. We first try to reprieve the PDB
-	// violating victims and then other non-violating ones. In both cases, we start
-	// from the highest priority victims.
-	violatingVictims, nonViolatingVictims := filterPodsWithPDBViolation(potentialVictims, pdbs)
-	reprievePod := func(pi *framework.PodInfo) (bool, error) {
-		if err := addPod(pi); err != nil {
-			return false, err
-		}
-		status := pl.fh.RunFilterPluginsWithNominatedPods(ctx, state, pod, nodeInfo)
-		fits := status.IsSuccess()
-		if !fits {
-			if err := removePod(pi); err != nil {
-				return false, err
-			}
-			rpi := pi.Pod
-			victims = append(victims, rpi)
-			klog.V(5).InfoS("Pod is a potential preemption victim on node", "pod", klog.KObj(rpi), "node", klog.KObj(nodeInfo.Node()))
-		}
-		return fits, nil
-	}
-	for _, p := range violatingVictims {
-		if fits, err := reprievePod(p); err != nil {
-			return nil, 0, framework.AsStatus(err)
-		} else if !fits {
-			numViolatingVictim++
-		}
-	}
-	// Now we try to reprieve non-violating victims.
-	for _, p := range nonViolatingVictims {
-		if _, err := reprievePod(p); err != nil {
-			return nil, 0, framework.AsStatus(err)
-		}
-	}
-	return victims, numViolatingVictim, framework.NewStatus(framework.Success)
-}
-
 // PodEligibleToPreemptOthers returns one bool and one string. The bool
 // indicates whether this pod should be considered for preempting other pods or
 // not. The string includes the reason if this pod isn't eligible.
@@ -314,4 +221,97 @@ func (pl *DefaultPreemption) PostFilter(ctx context.Context, state *framework.Cy
 		return result, framework.NewStatus(status.Code(), "preemption: "+status.Message())
 	}
 	return result, status
+}
+
+// SelectVictimsOnNode finds minimum set of pods on the given node that should be preempted in order to make enough room
+// for "pod" to be scheduled.
+func (pl *DefaultPreemption) SelectVictimsOnNode(
+	ctx context.Context,
+	state *framework.CycleState,
+	pod *v1.Pod,
+	nodeInfo *framework.NodeInfo,
+	pdbs []*policy.PodDisruptionBudget) ([]*v1.Pod, int, *framework.Status) {
+	var potentialVictims []*framework.PodInfo
+	removePod := func(rpi *framework.PodInfo) error {
+		if err := nodeInfo.RemovePod(rpi.Pod); err != nil {
+			return err
+		}
+		status := pl.fh.RunPreFilterExtensionRemovePod(ctx, state, pod, rpi, nodeInfo)
+		if !status.IsSuccess() {
+			return status.AsError()
+		}
+		return nil
+	}
+	addPod := func(api *framework.PodInfo) error {
+		nodeInfo.AddPodInfo(api)
+		status := pl.fh.RunPreFilterExtensionAddPod(ctx, state, pod, api, nodeInfo)
+		if !status.IsSuccess() {
+			return status.AsError()
+		}
+		return nil
+	}
+	// As the first step, remove all the lower priority pods from the node and
+	// check if the given pod can be scheduled.
+	podPriority := corev1helpers.PodPriority(pod)
+	for _, pi := range nodeInfo.Pods {
+		if corev1helpers.PodPriority(pi.Pod) < podPriority {
+			potentialVictims = append(potentialVictims, pi)
+			if err := removePod(pi); err != nil {
+				return nil, 0, framework.AsStatus(err)
+			}
+		}
+	}
+
+	// No potential victims are found, and so we don't need to evaluate the node again since its state didn't change.
+	if len(potentialVictims) == 0 {
+		message := fmt.Sprintf("No preemption victims found for incoming pod")
+		return nil, 0, framework.NewStatus(framework.UnschedulableAndUnresolvable, message)
+	}
+
+	// If the new pod does not fit after removing all the lower priority pods,
+	// we are almost done and this node is not suitable for preemption. The only
+	// condition that we could check is if the "pod" is failing to schedule due to
+	// inter-pod affinity to one or more victims, but we have decided not to
+	// support this case for performance reasons. Having affinity to lower
+	// priority pods is not a recommended configuration anyway.
+	if status := pl.fh.RunFilterPluginsWithNominatedPods(ctx, state, pod, nodeInfo); !status.IsSuccess() {
+		return nil, 0, status
+	}
+	var victims []*v1.Pod
+	numViolatingVictim := 0
+	sort.Slice(potentialVictims, func(i, j int) bool { return util.MoreImportantPod(potentialVictims[i].Pod, potentialVictims[j].Pod) })
+	// Try to reprieve as many pods as possible. We first try to reprieve the PDB
+	// violating victims and then other non-violating ones. In both cases, we start
+	// from the highest priority victims.
+	violatingVictims, nonViolatingVictims := filterPodsWithPDBViolation(potentialVictims, pdbs)
+	reprievePod := func(pi *framework.PodInfo) (bool, error) {
+		if err := addPod(pi); err != nil {
+			return false, err
+		}
+		status := pl.fh.RunFilterPluginsWithNominatedPods(ctx, state, pod, nodeInfo)
+		fits := status.IsSuccess()
+		if !fits {
+			if err := removePod(pi); err != nil {
+				return false, err
+			}
+			rpi := pi.Pod
+			victims = append(victims, rpi)
+			klog.V(5).InfoS("Pod is a potential preemption victim on node", "pod", klog.KObj(rpi), "node", klog.KObj(nodeInfo.Node()))
+		}
+		return fits, nil
+	}
+	for _, p := range violatingVictims {
+		if fits, err := reprievePod(p); err != nil {
+			return nil, 0, framework.AsStatus(err)
+		} else if !fits {
+			numViolatingVictim++
+		}
+	}
+	// Now we try to reprieve non-violating victims.
+	for _, p := range nonViolatingVictims {
+		if _, err := reprievePod(p); err != nil {
+			return nil, 0, framework.AsStatus(err)
+		}
+	}
+	return victims, numViolatingVictim, framework.NewStatus(framework.Success)
 }
