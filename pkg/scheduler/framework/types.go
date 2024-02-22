@@ -164,7 +164,7 @@ type WeightedAffinityTerm struct {
 
 // Diagnosis records the details to diagnose a scheduling failure.
 type Diagnosis struct { // 记录诊断调度失败的详细信息
-	NodeToStatusMap      NodeToStatusMap // 记录节点的状态信息
+	NodeToStatusMap      NodeToStatusMap // 记录filter 失败节点的状态信息
 	UnschedulablePlugins sets.String     // 记录导致调度失败的插件
 	// PreFilterMsg records the messages returned from PreFilter plugins.
 	PreFilterMsg string
@@ -504,23 +504,6 @@ func podWithRequiredAntiAffinity(p *v1.Pod) bool {
 		len(affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution) != 0
 }
 
-func removeFromSlice(s []*PodInfo, k string) []*PodInfo {
-	for i := range s {
-		k2, err := GetPodKey(s[i].Pod)
-		if err != nil {
-			klog.ErrorS(err, "Cannot get pod key", "pod", klog.KObj(s[i].Pod))
-			continue
-		}
-		if k == k2 {
-			// delete the element
-			s[i] = s[len(s)-1]
-			s = s[:len(s)-1]
-			break
-		}
-	}
-	return s
-}
-
 // RemovePod subtracts pod information from this NodeInfo.
 func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 	k, err := GetPodKey(pod)
@@ -551,26 +534,6 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 		}
 	}
 	return fmt.Errorf("no corresponding pod %s in pods of node %s", pod.Name, n.node.Name)
-}
-
-// resets the slices to nil so that we can do DeepEqual in unit tests.
-func (n *NodeInfo) resetSlicesIfEmpty() {
-	if len(n.PodsWithAffinity) == 0 {
-		n.PodsWithAffinity = nil
-	}
-	if len(n.PodsWithRequiredAntiAffinity) == 0 {
-		n.PodsWithRequiredAntiAffinity = nil
-	}
-	if len(n.Pods) == 0 {
-		n.Pods = nil
-	}
-}
-
-func max(a, b int64) int64 {
-	if a >= b {
-		return a
-	}
-	return b
 }
 
 // resourceRequest = max(sum(podSpec.Containers), podSpec.InitContainers) + overHead
@@ -797,12 +760,6 @@ func NewNodeInfo(pods ...*v1.Pod) *NodeInfo {
 	return ni
 }
 
-// NewPodInfo returns a new PodInfo.
-func NewPodInfo(pod *v1.Pod) (*PodInfo, error) {
-	pInfo := &PodInfo{}
-	err := pInfo.Update(pod)
-	return pInfo, err
-}
 func (n *NodeInfo) AddPodInfo(podInfo *PodInfo) {
 	n.Pods = append(n.Pods, podInfo)
 	if podWithAffinity(podInfo.Pod) { // 设置了亲和性
@@ -885,4 +842,48 @@ func (n *NodeInfo) update(pod *v1.Pod, sign int64) {
 	n.updatePVCRefCounts(pod, sign > 0) // ✅
 
 	n.Generation = nextGeneration()
+}
+
+// NewPodInfo returns a new PodInfo.
+func NewPodInfo(pod *v1.Pod) (*PodInfo, error) {
+	pInfo := &PodInfo{}
+	err := pInfo.Update(pod)
+	return pInfo, err
+}
+
+func removeFromSlice(s []*PodInfo, k string) []*PodInfo {
+	for i := range s {
+		k2, err := GetPodKey(s[i].Pod)
+		if err != nil {
+			klog.ErrorS(err, "Cannot get pod key", "pod", klog.KObj(s[i].Pod))
+			continue
+		}
+		if k == k2 {
+			// delete the element
+			s[i] = s[len(s)-1]
+			s = s[:len(s)-1]
+			break
+		}
+	}
+	return s
+}
+
+// resets the slices to nil so that we can do DeepEqual in unit tests.
+func (n *NodeInfo) resetSlicesIfEmpty() {
+	if len(n.PodsWithAffinity) == 0 {
+		n.PodsWithAffinity = nil
+	}
+	if len(n.PodsWithRequiredAntiAffinity) == 0 {
+		n.PodsWithRequiredAntiAffinity = nil
+	}
+	if len(n.Pods) == 0 {
+		n.Pods = nil
+	}
+}
+
+func max(a, b int64) int64 {
+	if a >= b {
+		return a
+	}
+	return b
 }

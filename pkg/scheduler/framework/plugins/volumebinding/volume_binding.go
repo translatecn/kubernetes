@@ -309,7 +309,7 @@ func (pl *VolumeBinding) Reserve(ctx context.Context, cs *framework.CycleState, 
 
 // Unreserve clears assumed PV and PVC cache.
 // It's idempotent, and does nothing if no cache found for the given pod.
-func (pl *VolumeBinding) Unreserve(ctx context.Context, cs *framework.CycleState, pod *v1.Pod, nodeName string) {
+func (pl *VolumeBinding) UnReserve(ctx context.Context, cs *framework.CycleState, pod *v1.Pod, nodeName string) {
 	s, err := getStateData(cs)
 	if err != nil {
 		return

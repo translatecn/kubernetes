@@ -122,16 +122,6 @@ type Plugin struct {
 	Weight int32
 }
 
-// PluginConfig specifies arguments that should be passed to a plugin at the time of initialization.
-// A plugin that is invoked at multiple extension points is initialized once. Args can have arbitrary structure.
-// It is up to the plugin to process these Args.
-type PluginConfig struct {
-	// Name defines the name of plugin being configured
-	Name string
-	// Args defines the arguments passed to the plugins at the time of initialization. Args can have arbitrary structure.
-	Args runtime.Object
-}
-
 /*
  * NOTE: The following variables and methods are intentionally left out of the staging mirror.
  */
@@ -235,7 +225,6 @@ type ExtenderManagedResource struct {
 
 // ExtenderTLSConfig contains settings to enable TLS with extender
 type ExtenderTLSConfig struct {
-	// Server should be accessed without verifying the TLS certificate. For testing only.
 	Insecure bool
 	// ServerName is passed to the server for SNI and is used in the client to check server
 	// certificates against. If ServerName is empty, the hostname used to contact the
@@ -258,4 +247,14 @@ type ExtenderTLSConfig struct {
 	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
 	// CAData takes precedence over CAFile
 	CAData []byte
+}
+
+// PluginConfig specifies arguments that should be passed to a plugin at the time of initialization.
+// A plugin that is invoked at multiple extension points is initialized once. Args can have arbitrary structure.
+// It is up to the plugin to process these Args.
+type PluginConfig struct {
+	// Name defines the name of plugin being configured
+	Name string
+	// Args defines the arguments passed to the plugins at the time of initialization. Args can have arbitrary structure.
+	Args runtime.Object
 }

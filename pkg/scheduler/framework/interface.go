@@ -438,12 +438,12 @@ type ReservePlugin interface {
 	// updated. If this method returns a failed Status, the scheduler will call
 	// the Unreserve method for all enabled ReservePlugins.
 	Reserve(ctx context.Context, state *CycleState, p *v1.Pod, nodeName string) *Status
-	// Unreserve is called by the scheduling framework when a reserved pod was
+	// UnReserve is called by the scheduling framework when a reserved pod was
 	// rejected, an error occurred during reservation of subsequent plugins, or
 	// in a later phase. The Unreserve method implementation must be idempotent
 	// and may be called by the scheduler even if the corresponding Reserve
 	// method for the same plugin was not called.
-	Unreserve(ctx context.Context, state *CycleState, p *v1.Pod, nodeName string)
+	UnReserve(ctx context.Context, state *CycleState, p *v1.Pod, nodeName string)
 }
 
 // PermitPlugin is an interface that must be implemented by "Permit" plugins.
@@ -508,7 +508,7 @@ type Framework interface {
 	// such case, pod will not be scheduled.
 	RunReservePluginsReserve(ctx context.Context, state *CycleState, pod *v1.Pod, nodeName string) *Status
 
-	// RunReservePluginsUnreserve runs the Unreserve method of the set of
+	// RunReservePluginsUnreserve runs the UnReserve method of the set of
 	// configured Reserve plugins.
 	RunReservePluginsUnreserve(ctx context.Context, state *CycleState, pod *v1.Pod, nodeName string)
 
@@ -600,7 +600,7 @@ type Handle interface {
 type PreFilterResult struct {
 	// The set of nodes that should be considered downstream; if nil then
 	// all nodes are eligible.
-	NodeNames sets.String // 过滤掉的节点，不符合条件
+	NodeNames sets.String // 符合条件的节点， nill  -> 所有
 }
 
 type NominatingMode int
@@ -629,18 +629,8 @@ func NewPostFilterResultWithNominatedNode(name string) *PostFilterResult {
 	}
 }
 
-func (ni *NominatingInfo) Mode() NominatingMode {
-	if ni == nil {
-		return ModeNoop
-	}
-	return ni.NominatingMode
-}
-
-// PodNominator abstracts operations to maintain nominated Pods.
 type PodNominator interface {
-	// AddNominatedPod adds the given pod to the nominator or
-	// updates it if it already exists.
-	AddNominatedPod(pod *PodInfo, nominatingInfo *NominatingInfo)
+	AddNominatedPod(pod *PodInfo, nominatingInfo *NominatingInfo) // 调度失败的pod
 	// DeleteNominatedPodIfExists deletes函数从内部缓存中删除nominatedPod。如果该Pod不存在，则这是一个空操作。
 	DeleteNominatedPodIfExists(pod *v1.Pod)
 	// UpdateNominatedPod updates the <oldPod> with <newPod>.
@@ -730,10 +720,6 @@ func (s *PodsToActivate) Clone() StateData {
 	return s
 }
 
-// NewPodsToActivate instantiates a PodsToActivate object.
-func NewPodsToActivate() *PodsToActivate {
-	return &PodsToActivate{Map: make(map[string]*v1.Pod)}
-}
 func (p *PreFilterResult) AllNodes() bool { // 为空，所有pod符合，否则，不符合
 	return p == nil || p.NodeNames == nil
 }
@@ -755,4 +741,15 @@ func (p *PreFilterResult) Merge(in *PreFilterResult) *PreFilterResult { // 为�
 
 	r.NodeNames = p.NodeNames.Intersection(in.NodeNames)
 	return &r
+}
+func (ni *NominatingInfo) Mode() NominatingMode {
+	if ni == nil {
+		return ModeNoop
+	}
+	return ni.NominatingMode
+}
+
+// NewPodsToActivate instantiates a PodsToActivate object.
+func NewPodsToActivate() *PodsToActivate {
+	return &PodsToActivate{Map: make(map[string]*v1.Pod)}
 }

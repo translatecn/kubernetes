@@ -709,7 +709,7 @@ func (pl *dynamicResources) Reserve(ctx context.Context, cs *framework.CycleStat
 
 // Unreserve clears the ReservedFor field for all claims.
 // It's idempotent, and does nothing if no state found for the given pod.
-func (pl *dynamicResources) Unreserve(ctx context.Context, cs *framework.CycleState, pod *v1.Pod, nodeName string) {
+func (pl *dynamicResources) UnReserve(ctx context.Context, cs *framework.CycleState, pod *v1.Pod, nodeName string) {
 	if !pl.enabled {
 		return
 	}

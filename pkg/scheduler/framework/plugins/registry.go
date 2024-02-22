@@ -26,11 +26,11 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/interpodaffinity"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeaffinity"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodename"
+	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeports"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/noderesources"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeunschedulable"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodevolumelimits"
-	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/defaultbinder"
-	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeports"
+	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/over_defaultbinder"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/podtopologyspread"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/queuesort"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/schedulinggates"
@@ -73,14 +73,14 @@ func NewInTreeRegistry() over_runtime.Registry {
 		over_volumezone.Name:                 over_volumezone.New,
 		nodevolumelimits.CSIName:             over_runtime.FactoryAdapter(fts, nodevolumelimits.NewCSI),
 		nodevolumelimits.EBSName:             over_runtime.FactoryAdapter(fts, nodevolumelimits.NewEBS),
-		nodevolumelimits.GCEPDName:     over_runtime.FactoryAdapter(fts, nodevolumelimits.NewGCEPD),
-		nodevolumelimits.AzureDiskName: over_runtime.FactoryAdapter(fts, nodevolumelimits.NewAzureDisk),
-		nodevolumelimits.CinderName:    over_runtime.FactoryAdapter(fts, nodevolumelimits.NewCinder),
-		interpodaffinity.Name:          interpodaffinity.New,
-		over_queuesort.Name:            over_queuesort.New,
-		defaultbinder.Name:             defaultbinder.New,
-		defaultpreemption.Name:         over_runtime.FactoryAdapter(fts, defaultpreemption.New),
-		over_schedulinggates.Name:      over_runtime.FactoryAdapter(fts, over_schedulinggates.New),
+		nodevolumelimits.GCEPDName:           over_runtime.FactoryAdapter(fts, nodevolumelimits.NewGCEPD),
+		nodevolumelimits.AzureDiskName:       over_runtime.FactoryAdapter(fts, nodevolumelimits.NewAzureDisk),
+		nodevolumelimits.CinderName:          over_runtime.FactoryAdapter(fts, nodevolumelimits.NewCinder),
+		interpodaffinity.Name:                interpodaffinity.New,
+		over_queuesort.Name:                  over_queuesort.New,
+		over_defaultbinder.Name:              over_defaultbinder.New,
+		defaultpreemption.Name:               over_runtime.FactoryAdapter(fts, defaultpreemption.New),
+		over_schedulinggates.Name:            over_runtime.FactoryAdapter(fts, over_schedulinggates.New),
 	}
 
 	return registry

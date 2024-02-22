@@ -93,7 +93,7 @@ type Cache interface {
 	// same name of the specified pod.
 	GetPod(pod *v1.Pod) (*v1.Pod, error)
 
-	IsAssumedPod(pod *v1.Pod) (bool, error)
+	IsAssumedPod(pod *v1.Pod) (bool, error) // 虚拟的pod ，跳过调度
 
 	// AddNode adds overall information about node.
 	// It returns a clone of added NodeInfo object.

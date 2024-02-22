@@ -113,22 +113,6 @@ type schedulerOptions struct {
 // Option configures a Scheduler
 type Option func(*schedulerOptions)
 
-// ScheduleResult represents the result of scheduling a pod.
-type ScheduleResult struct {
-	// Name of the selected node.
-	SuggestedHost string
-	// The number of nodes the scheduler evaluated the pod against in the filtering
-	// phase and beyond.
-	EvaluatedNodes int
-	// The number of nodes out of the evaluated ones that fit the pod.
-	FeasibleNodes int
-
-	// The reason records the failure in scheduling cycle.
-	reason string
-	// The nominating info for scheduling cycle.
-	nominatingInfo *framework.NominatingInfo
-}
-
 var defaultSchedulerOptions = schedulerOptions{
 	percentageOfNodesToScore:          schedulerapi.DefaultPercentageOfNodesToScore,
 	podInitialBackoffSeconds:          int64(internalqueue.DefaultPodInitialBackoffDuration.Seconds()),
@@ -244,7 +228,7 @@ func New(client clientset.Interface,
 	}
 	sched.applyDefaultHandlers()
 
-	addAllEventHandlers(sched, informerFactory, dynInformerFactory, unionedGVKs(clusterEventMap))
+	addAllEventHandlers(sched, informerFactory, dynInformerFactory, unionedGVKs(clusterEventMap)) // ✅
 
 	return sched, nil
 }
@@ -441,4 +425,13 @@ func unionedGVKs(m map[framework.ClusterEvent]sets.String) map[framework.GVK]fra
 		}
 	}
 	return gvkMap
+}
+
+// ScheduleResult represents the result of scheduling a pod.
+type ScheduleResult struct {
+	SuggestedHost  string                    // 被选中的节点的名称。
+	EvaluatedNodes int                       // 调度器在筛选阶段及之后评估 Pod 所涉及的节点数量
+	FeasibleNodes  int                       // 在评估的节点中适合该 Pod 的节点数量
+	reason         string                    // 记录了调度周期中的调度失败原因
+	nominatingInfo *framework.NominatingInfo // 调度周期中的提名信息
 }

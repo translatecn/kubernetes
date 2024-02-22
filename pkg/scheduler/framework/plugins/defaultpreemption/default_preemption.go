@@ -201,28 +201,6 @@ func getPDBLister(informerFactory informers.SharedInformerFactory) policylisters
 	return informerFactory.Policy().V1().PodDisruptionBudgets().Lister()
 }
 
-// PostFilter invoked at the postFilter extension point.
-func (pl *DefaultPreemption) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, m framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
-	defer func() {
-		metrics.PreemptionAttempts.Inc()
-	}()
-
-	pe := preemption.Evaluator{
-		PluginName: names.DefaultPreemption,
-		Handler:    pl.fh,
-		PodLister:  pl.podLister,
-		PdbLister:  pl.pdbLister,
-		State:      state,
-		Interface:  pl,
-	}
-
-	result, status := pe.Preempt(ctx, pod, m)
-	if status.Message() != "" {
-		return result, framework.NewStatus(status.Code(), "preemption: "+status.Message())
-	}
-	return result, status
-}
-
 // SelectVictimsOnNode finds minimum set of pods on the given node that should be preempted in order to make enough room
 // for "pod" to be scheduled.
 func (pl *DefaultPreemption) SelectVictimsOnNode(
@@ -314,4 +292,26 @@ func (pl *DefaultPreemption) SelectVictimsOnNode(
 		}
 	}
 	return victims, numViolatingVictim, framework.NewStatus(framework.Success)
+}
+
+// PostFilter invoked at the postFilter extension point.
+func (pl *DefaultPreemption) PostFilter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, m framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
+	defer func() {
+		metrics.PreemptionAttempts.Inc()
+	}()
+
+	pe := preemption.Evaluator{
+		PluginName: names.DefaultPreemption,
+		Handler:    pl.fh,
+		PodLister:  pl.podLister,
+		PdbLister:  pl.pdbLister,
+		State:      state,
+		Interface:  pl,
+	}
+
+	result, status := pe.Preempt(ctx, pod, m)
+	if status.Message() != "" {
+		return result, framework.NewStatus(status.Code(), "preemption: "+status.Message())
+	}
+	return result, status
 }

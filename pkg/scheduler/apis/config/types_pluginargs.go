@@ -121,14 +121,6 @@ type NodeResourcesBalancedAllocationArgs struct {
 	Resources []ResourceSpec
 }
 
-// UtilizationShapePoint represents a single point of a priority function shape.
-type UtilizationShapePoint struct {
-	// Utilization (x axis). Valid values are 0 to 100. Fully utilized node maps to 100.
-	Utilization int32
-	// Score assigned to a given utilization (y axis). Valid values are 0 to 10.
-	Score int32
-}
-
 // ResourceSpec represents single resource.
 type ResourceSpec struct {
 	// Name of the resource.
@@ -211,4 +203,12 @@ type ScoringStrategy struct {
 type RequestedToCapacityRatioParam struct {
 	// Shape is a list of points defining the scoring function shape.
 	Shape []UtilizationShapePoint
+}
+
+// UtilizationShapePoint represents a single point of a priority function shape.
+type UtilizationShapePoint struct {
+	// Utilization (x axis). Valid values are 0 to 100. Fully utilized node maps to 100.
+	Utilization int32
+	// Score assigned to a given utilization (y axis). Valid values are 0 to 10.
+	Score int32
 }

@@ -52,79 +52,6 @@ type HTTPExtender struct {
 	ignorable        bool
 }
 
-func makeTransport(config *schedulerapi.Extender) (http.RoundTripper, error) {
-	var cfg restclient.Config
-	if config.TLSConfig != nil {
-		cfg.TLSClientConfig.Insecure = config.TLSConfig.Insecure
-		cfg.TLSClientConfig.ServerName = config.TLSConfig.ServerName
-		cfg.TLSClientConfig.CertFile = config.TLSConfig.CertFile
-		cfg.TLSClientConfig.KeyFile = config.TLSConfig.KeyFile
-		cfg.TLSClientConfig.CAFile = config.TLSConfig.CAFile
-		cfg.TLSClientConfig.CertData = config.TLSConfig.CertData
-		cfg.TLSClientConfig.KeyData = config.TLSConfig.KeyData
-		cfg.TLSClientConfig.CAData = config.TLSConfig.CAData
-	}
-	if config.EnableHTTPS {
-		hasCA := len(cfg.CAFile) > 0 || len(cfg.CAData) > 0
-		if !hasCA {
-			cfg.Insecure = true
-		}
-	}
-	tlsConfig, err := restclient.TLSConfigFor(&cfg)
-	if err != nil {
-		return nil, err
-	}
-	if tlsConfig != nil {
-		return utilnet.SetTransportDefaults(&http.Transport{
-			TLSClientConfig: tlsConfig,
-		}), nil
-	}
-	return utilnet.SetTransportDefaults(&http.Transport{}), nil
-}
-
-// NewHTTPExtender creates an HTTPExtender object.
-func NewHTTPExtender(config *schedulerapi.Extender) (framework.Extender, error) {
-	if config.HTTPTimeout.Duration.Nanoseconds() == 0 {
-		config.HTTPTimeout.Duration = time.Duration(DefaultExtenderTimeout)
-	}
-
-	transport, err := makeTransport(config)
-	if err != nil {
-		return nil, err
-	}
-	client := &http.Client{
-		Transport: transport,
-		Timeout:   config.HTTPTimeout.Duration,
-	}
-	managedResources := sets.NewString()
-	for _, r := range config.ManagedResources {
-		managedResources.Insert(string(r.Name))
-	}
-	return &HTTPExtender{
-		extenderURL:      config.URLPrefix,
-		preemptVerb:      config.PreemptVerb,
-		filterVerb:       config.FilterVerb,
-		prioritizeVerb:   config.PrioritizeVerb,
-		bindVerb:         config.BindVerb,
-		weight:           config.Weight,
-		client:           client,
-		nodeCacheCapable: config.NodeCacheCapable,
-		managedResources: managedResources,
-		ignorable:        config.Ignorable,
-	}, nil
-}
-
-// Name returns extenderURL to identify the extender.
-func (h *HTTPExtender) Name() string {
-	return h.extenderURL
-}
-
-// IsIgnorable returns true indicates scheduling should not fail when this extender
-// is unavailable
-func (h *HTTPExtender) IsIgnorable() bool {
-	return h.ignorable
-}
-
 // SupportsPreemption returns true if an extender supports preemption.
 // An extender should have preempt verb defined and enabled its own node cache.
 func (h *HTTPExtender) SupportsPreemption() bool {
@@ -441,4 +368,77 @@ func (h *HTTPExtender) send(action string, args interface{}, result interface{})
 	}
 
 	return json.NewDecoder(resp.Body).Decode(result)
+}
+
+func makeTransport(config *schedulerapi.Extender) (http.RoundTripper, error) {
+	var cfg restclient.Config
+	if config.TLSConfig != nil {
+		cfg.TLSClientConfig.Insecure = config.TLSConfig.Insecure
+		cfg.TLSClientConfig.ServerName = config.TLSConfig.ServerName
+		cfg.TLSClientConfig.CertFile = config.TLSConfig.CertFile
+		cfg.TLSClientConfig.KeyFile = config.TLSConfig.KeyFile
+		cfg.TLSClientConfig.CAFile = config.TLSConfig.CAFile
+		cfg.TLSClientConfig.CertData = config.TLSConfig.CertData
+		cfg.TLSClientConfig.KeyData = config.TLSConfig.KeyData
+		cfg.TLSClientConfig.CAData = config.TLSConfig.CAData
+	}
+	if config.EnableHTTPS {
+		hasCA := len(cfg.CAFile) > 0 || len(cfg.CAData) > 0
+		if !hasCA {
+			cfg.Insecure = true
+		}
+	}
+	tlsConfig, err := restclient.TLSConfigFor(&cfg)
+	if err != nil {
+		return nil, err
+	}
+	if tlsConfig != nil {
+		return utilnet.SetTransportDefaults(&http.Transport{
+			TLSClientConfig: tlsConfig,
+		}), nil
+	}
+	return utilnet.SetTransportDefaults(&http.Transport{}), nil
+}
+
+// NewHTTPExtender creates an HTTPExtender object.
+func NewHTTPExtender(config *schedulerapi.Extender) (framework.Extender, error) {
+	if config.HTTPTimeout.Duration.Nanoseconds() == 0 {
+		config.HTTPTimeout.Duration = time.Duration(DefaultExtenderTimeout)
+	}
+
+	transport, err := makeTransport(config)
+	if err != nil {
+		return nil, err
+	}
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   config.HTTPTimeout.Duration,
+	}
+	managedResources := sets.NewString()
+	for _, r := range config.ManagedResources {
+		managedResources.Insert(r.Name)
+	}
+	return &HTTPExtender{
+		extenderURL:      config.URLPrefix,
+		preemptVerb:      config.PreemptVerb,
+		filterVerb:       config.FilterVerb,
+		prioritizeVerb:   config.PrioritizeVerb,
+		bindVerb:         config.BindVerb,
+		weight:           config.Weight,
+		client:           client,
+		nodeCacheCapable: config.NodeCacheCapable,
+		managedResources: managedResources,
+		ignorable:        config.Ignorable,
+	}, nil
+}
+
+// Name returns extenderURL to identify the extender.
+func (h *HTTPExtender) Name() string {
+	return h.extenderURL
+}
+
+// IsIgnorable returns true indicates scheduling should not fail when this extender
+// is unavailable
+func (h *HTTPExtender) IsIgnorable() bool {
+	return h.ignorable
 }

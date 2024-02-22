@@ -53,21 +53,15 @@ type nodeInfoListItem struct {
 }
 
 type cacheImpl struct {
-	stop   <-chan struct{}
-	ttl    time.Duration
-	period time.Duration
-
-	// This mutex guards all fields within this cache struct.
+	stop        <-chan struct{}
+	ttl         time.Duration
+	period      time.Duration
 	mu          sync.RWMutex
-	assumedPods sets.String // 一组假的pod 不会进入调度循环
-	// a map from pod key to podState.
-	podStates map[string]*podState
-	nodes     map[string]*nodeInfoListItem
-	// headNode points to the most recently updated NodeInfo in "nodes". It is the
-	// head of the linked list.
-	headNode *nodeInfoListItem
-	nodeTree *nodeTree
-	// A map from image name to its imageState.
+	assumedPods sets.String          // 一组假的pod 不会进入调度循环
+	podStates   map[string]*podState // 所有 pod
+	nodes       map[string]*nodeInfoListItem
+	headNode    *nodeInfoListItem
+	nodeTree    *nodeTree
 	imageStates map[string]*imageState
 }
 
@@ -237,34 +231,6 @@ func (cache *cacheImpl) PodCount() (int, error) {
 	return count, nil
 }
 
-func (cache *cacheImpl) FinishBinding(pod *v1.Pod) error {
-	return cache.finishBinding(pod, time.Now())
-}
-
-// finishBinding exists to make tests deterministic by injecting now as an argument
-func (cache *cacheImpl) finishBinding(pod *v1.Pod, now time.Time) error {
-	key, err := framework.GetPodKey(pod)
-	if err != nil {
-		return err
-	}
-
-	cache.mu.RLock()
-	defer cache.mu.RUnlock()
-
-	klog.V(5).InfoS("Finished binding for pod, can be expired", "podKey", key, "pod", klog.KObj(pod))
-	currState, ok := cache.podStates[key]
-	if ok && cache.assumedPods.Has(key) {
-		if cache.ttl == time.Duration(0) {
-			currState.deadline = nil
-		} else {
-			dl := now.Add(cache.ttl)
-			currState.deadline = &dl
-		}
-		currState.bindingFinished = true
-	}
-	return nil
-}
-
 func (cache *cacheImpl) ForgetPod(pod *v1.Pod) error {
 	key, err := framework.GetPodKey(pod)
 	if err != nil {
@@ -284,77 +250,6 @@ func (cache *cacheImpl) ForgetPod(pod *v1.Pod) error {
 		return cache.removePod(pod)
 	}
 	return fmt.Errorf("pod %v(%v) wasn't assumed so cannot be forgotten", key, klog.KObj(pod))
-}
-
-// Assumes that lock is already acquired.
-func (cache *cacheImpl) updatePod(oldPod, newPod *v1.Pod) error {
-	if err := cache.removePod(oldPod); err != nil {
-		return err
-	}
-	return cache.addPod(newPod, false)
-}
-
-// Assumes that lock is already acquired.
-// Removes a pod from the cached node info. If the node information was already
-// removed and there are no more pods left in the node, cleans up the node from
-// the cache.
-func (cache *cacheImpl) removePod(pod *v1.Pod) error {
-	key, err := framework.GetPodKey(pod)
-	if err != nil {
-		return err
-	}
-
-	n, ok := cache.nodes[pod.Spec.NodeName]
-	if !ok {
-		klog.ErrorS(nil, "Node not found when trying to remove pod", "node", klog.KRef("", pod.Spec.NodeName), "podKey", key, "pod", klog.KObj(pod))
-
-	} else {
-		if err := n.info.RemovePod(pod); err != nil {
-			return err
-		}
-		if len(n.info.Pods) == 0 && n.info.Node() == nil {
-			cache.removeNodeInfoFromList(pod.Spec.NodeName)
-		} else {
-			cache.moveNodeInfoToHead(pod.Spec.NodeName)
-		}
-	}
-
-	delete(cache.podStates, key)
-	delete(cache.assumedPods, key)
-	return nil
-}
-
-func (cache *cacheImpl) AddPod(pod *v1.Pod) error {
-	key, err := framework.GetPodKey(pod)
-	if err != nil {
-		return err
-	}
-
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
-
-	currState, ok := cache.podStates[key]
-	switch {
-	case ok && cache.assumedPods.Has(key):
-		// When assuming, we've already added the Pod to cache,
-		// Just update here to make sure the Pod's status is up-to-date.
-		if err = cache.updatePod(currState.pod, pod); err != nil {
-			klog.ErrorS(err, "Error occurred while updating pod")
-		}
-		if currState.pod.Spec.NodeName != pod.Spec.NodeName {
-			// The pod was added to a different node than it was assumed to.
-			klog.InfoS("Pod was added to a different node than it was assumed", "podKey", key, "pod", klog.KObj(pod), "assumedNode", klog.KRef("", pod.Spec.NodeName), "currentNode", klog.KRef("", currState.pod.Spec.NodeName))
-			return nil
-		}
-	case !ok:
-		// Pod was expired. We should add it back.
-		if err = cache.addPod(pod, false); err != nil {
-			klog.ErrorS(err, "Error occurred while adding pod")
-		}
-	default:
-		return fmt.Errorf("pod %v(%v) was already in added state", key, klog.KObj(pod))
-	}
-	return nil
 }
 
 func (cache *cacheImpl) UpdatePod(oldPod, newPod *v1.Pod) error {
@@ -559,32 +454,6 @@ func (cache *cacheImpl) updateMetrics() {
 	metrics.CacheSize.WithLabelValues("pods").Set(float64(len(cache.podStates)))
 	metrics.CacheSize.WithLabelValues("nodes").Set(float64(len(cache.nodes)))
 }
-func (cache *cacheImpl) IsAssumedPod(pod *v1.Pod) (bool, error) {
-	key, err := framework.GetPodKey(pod)
-	if err != nil {
-		return false, err
-	}
-
-	cache.mu.RLock()
-	defer cache.mu.RUnlock()
-
-	return cache.assumedPods.Has(key), nil
-}
-
-func (cache *cacheImpl) AssumePod(pod *v1.Pod) error {
-	key, err := framework.GetPodKey(pod)
-	if err != nil {
-		return err
-	}
-
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
-	if _, ok := cache.podStates[key]; ok {
-		return fmt.Errorf("pod %v(%v) is in the cache, so can't be assumed", key, klog.KObj(pod))
-	}
-
-	return cache.addPod(pod, true)
-}
 
 // moveNodeInfoToHead moves a NodeInfo to the head of "cache.nodes" doubly
 // linked list. The head is the most recently updated NodeInfo.
@@ -614,27 +483,42 @@ func (cache *cacheImpl) moveNodeInfoToHead(name string) {
 	cache.headNode = ni
 }
 
-// Assumes that lock is already acquired.
-func (cache *cacheImpl) addPod(pod *v1.Pod, assumePod bool) error {
+// addNodeImageStates adds states of the images on given node to the given nodeInfo and update the imageStates in
+// scheduler cache. This function assumes the lock to scheduler cache has been acquired.
+func (cache *cacheImpl) addNodeImageStates(node *v1.Node, nodeInfo *framework.NodeInfo) {
+	newSum := make(map[string]*framework.ImageStateSummary)
+
+	for _, image := range node.Status.Images {
+		for _, name := range image.Names {
+			// update the entry in imageStates
+			state, ok := cache.imageStates[name]
+			if !ok {
+				state = &imageState{
+					size:  image.SizeBytes,
+					nodes: sets.NewString(node.Name),
+				}
+				cache.imageStates[name] = state
+			} else {
+				state.nodes.Insert(node.Name)
+			}
+			// create the imageStateSummary for this image
+			if _, ok := newSum[name]; !ok {
+				newSum[name] = cache.createImageStateSummary(state)
+			}
+		}
+	}
+	nodeInfo.ImageStates = newSum
+}
+func (cache *cacheImpl) IsAssumedPod(pod *v1.Pod) (bool, error) { // 虚拟的pod
 	key, err := framework.GetPodKey(pod)
 	if err != nil {
-		return err
+		return false, err
 	}
-	n, ok := cache.nodes[pod.Spec.NodeName]
-	if !ok {
-		n = newNodeInfoListItem(framework.NewNodeInfo())
-		cache.nodes[pod.Spec.NodeName] = n
-	}
-	n.info.AddPod(pod)
-	cache.moveNodeInfoToHead(pod.Spec.NodeName)
-	ps := &podState{
-		pod: pod,
-	}
-	cache.podStates[key] = ps
-	if assumePod {
-		cache.assumedPods.Insert(key)
-	}
-	return nil
+
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
+
+	return cache.assumedPods.Has(key), nil
 }
 
 // UpdateSnapshot takes a snapshot of cached NodeInfo map. This is called at
@@ -739,29 +623,139 @@ func (cache *cacheImpl) UpdateSnapshot(nodeSnapshot *Snapshot) error {
 	return nil
 }
 
-// addNodeImageStates adds states of the images on given node to the given nodeInfo and update the imageStates in
-// scheduler cache. This function assumes the lock to scheduler cache has been acquired.
-func (cache *cacheImpl) addNodeImageStates(node *v1.Node, nodeInfo *framework.NodeInfo) {
-	newSum := make(map[string]*framework.ImageStateSummary)
+func (cache *cacheImpl) AddPod(pod *v1.Pod) error {
+	key, err := framework.GetPodKey(pod)
+	if err != nil {
+		return err
+	}
 
-	for _, image := range node.Status.Images {
-		for _, name := range image.Names {
-			// update the entry in imageStates
-			state, ok := cache.imageStates[name]
-			if !ok {
-				state = &imageState{
-					size:  image.SizeBytes,
-					nodes: sets.NewString(node.Name),
-				}
-				cache.imageStates[name] = state
-			} else {
-				state.nodes.Insert(node.Name)
-			}
-			// create the imageStateSummary for this image
-			if _, ok := newSum[name]; !ok {
-				newSum[name] = cache.createImageStateSummary(state)
-			}
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+
+	currState, ok := cache.podStates[key]
+	switch {
+	case ok && cache.assumedPods.Has(key):
+		// When assuming, we've already added the Pod to cache,
+		// Just update here to make sure the Pod's status is up-to-date.
+		if err = cache.updatePod(currState.pod, pod); err != nil {
+			klog.ErrorS(err, "Error occurred while updating pod")
+		}
+		if currState.pod.Spec.NodeName != pod.Spec.NodeName {
+			// The pod was added to a different node than it was assumed to.
+			klog.InfoS("Pod was added to a different node than it was assumed", "podKey", key, "pod", klog.KObj(pod), "assumedNode", klog.KRef("", pod.Spec.NodeName), "currentNode", klog.KRef("", currState.pod.Spec.NodeName))
+			return nil
+		}
+	case !ok:
+		// Pod was expired. We should add it back.
+		if err = cache.addPod(pod, false); err != nil {
+			klog.ErrorS(err, "Error occurred while adding pod")
+		}
+	default:
+		return fmt.Errorf("pod %v(%v) was already in added state", key, klog.KObj(pod))
+	}
+	return nil
+}
+
+// Assumes that lock is already acquired.
+func (cache *cacheImpl) addPod(pod *v1.Pod, assumePod bool) error {
+	key, err := framework.GetPodKey(pod)
+	if err != nil {
+		return err
+	}
+	n, ok := cache.nodes[pod.Spec.NodeName]
+	if !ok {
+		n = newNodeInfoListItem(framework.NewNodeInfo())
+		cache.nodes[pod.Spec.NodeName] = n
+	}
+	n.info.AddPod(pod)
+	cache.moveNodeInfoToHead(pod.Spec.NodeName)
+	ps := &podState{
+		pod: pod,
+	}
+	cache.podStates[key] = ps
+	if assumePod {
+		cache.assumedPods.Insert(key)
+	}
+	return nil
+}
+
+// Assumes that lock is already acquired.
+func (cache *cacheImpl) updatePod(oldPod, newPod *v1.Pod) error {
+	if err := cache.removePod(oldPod); err != nil {
+		return err
+	}
+	return cache.addPod(newPod, false)
+}
+
+// Assumes that lock is already acquired.
+// Removes a pod from the cached node info. If the node information was already
+// removed and there are no more pods left in the node, cleans up the node from
+// the cache.
+func (cache *cacheImpl) removePod(pod *v1.Pod) error {
+	key, err := framework.GetPodKey(pod)
+	if err != nil {
+		return err
+	}
+
+	n, ok := cache.nodes[pod.Spec.NodeName]
+	if !ok {
+		klog.ErrorS(nil, "Node not found when trying to remove pod", "node", klog.KRef("", pod.Spec.NodeName), "podKey", key, "pod", klog.KObj(pod))
+
+	} else {
+		if err := n.info.RemovePod(pod); err != nil {
+			return err
+		}
+		if len(n.info.Pods) == 0 && n.info.Node() == nil {
+			cache.removeNodeInfoFromList(pod.Spec.NodeName)
+		} else {
+			cache.moveNodeInfoToHead(pod.Spec.NodeName)
 		}
 	}
-	nodeInfo.ImageStates = newSum
+
+	delete(cache.podStates, key)
+	delete(cache.assumedPods, key)
+	return nil
+}
+
+func (cache *cacheImpl) AssumePod(pod *v1.Pod) error {
+	key, err := framework.GetPodKey(pod)
+	if err != nil {
+		return err
+	}
+
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+	if _, ok := cache.podStates[key]; ok {
+		return fmt.Errorf("pod %v(%v) is in the cache, so can't be assumed", key, klog.KObj(pod))
+	}
+
+	return cache.addPod(pod, true)
+}
+
+func (cache *cacheImpl) FinishBinding(pod *v1.Pod) error {
+	return cache.finishBinding(pod, time.Now())
+}
+
+// finishBinding exists to make tests deterministic by injecting now as an argument
+func (cache *cacheImpl) finishBinding(pod *v1.Pod, now time.Time) error {
+	key, err := framework.GetPodKey(pod)
+	if err != nil {
+		return err
+	}
+
+	cache.mu.RLock()
+	defer cache.mu.RUnlock()
+
+	klog.V(5).InfoS("Finished binding for pod, can be expired", "podKey", key, "pod", klog.KObj(pod))
+	currState, ok := cache.podStates[key]
+	if ok && cache.assumedPods.Has(key) {
+		if cache.ttl == time.Duration(0) {
+			currState.deadline = nil
+		} else {
+			dl := now.Add(cache.ttl)
+			currState.deadline = &dl
+		}
+		currState.bindingFinished = true
+	}
+	return nil
 }

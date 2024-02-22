@@ -38,6 +38,9 @@ type Extender struct {}
     - 有一个失败，加入 unschedulablePods
 
  
+addAllEventHandlers     入队监听
+addPodToSchedulingQueue 入队
+EventsToRegister        监听对象的事件            
 
 
 从 ActiveQ 获取 pod
@@ -87,3 +90,18 @@ bindingCycle
 
 # todo 
 - PodTopologySpread
+
+
+
+
+
+
+- /reservation-affinity             :   struct(ReservationAffinity)
+- /reserve-pod                      :   bool
+
+
+
+### 允许使用cpuset
+```
+(qosClass == extension.QoSLSE || qosClass == extension.QoSLSR) && priorityClass == extension.PriorityProd
+```

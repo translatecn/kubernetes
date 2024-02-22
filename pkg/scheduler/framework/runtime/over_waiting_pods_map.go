@@ -79,34 +79,6 @@ type waitingPod struct {
 
 var _ framework.WaitingPod = &waitingPod{}
 
-// newWaitingPod returns a new waitingPod instance.
-func newWaitingPod(pod *v1.Pod, pluginsMaxWaitTime map[string]time.Duration) *waitingPod {
-	wp := &waitingPod{
-		pod: pod,
-		// Allow() and Reject() calls are non-blocking. This property is guaranteed
-		// by using non-blocking send to this channel. This channel has a buffer of size 1
-		// to ensure that non-blocking send will not be ignored - possible situation when
-		// receiving from this channel happens after non-blocking send.
-		s: make(chan *framework.Status, 1),
-	}
-
-	wp.pendingPlugins = make(map[string]*time.Timer, len(pluginsMaxWaitTime))
-	// The time.AfterFunc calls wp.Reject which iterates through pendingPlugins map. Acquire the
-	// lock here so that time.AfterFunc can only execute after newWaitingPod finishes.
-	wp.mu.Lock()
-	defer wp.mu.Unlock()
-	for k, v := range pluginsMaxWaitTime {
-		plugin, waitTime := k, v
-		wp.pendingPlugins[plugin] = time.AfterFunc(waitTime, func() {
-			msg := fmt.Sprintf("rejected due to timeout after waiting %v at plugin %v",
-				waitTime, plugin)
-			wp.Reject(plugin, msg)
-		})
-	}
-
-	return wp
-}
-
 // GetPod returns a reference to the waiting pod.
 func (w *waitingPod) GetPod() *v1.Pod {
 	return w.pod
@@ -162,4 +134,31 @@ func (w *waitingPod) Reject(pluginName, msg string) {
 	case w.s <- framework.NewStatus(framework.Unschedulable, msg).WithFailedPlugin(pluginName):
 	default:
 	}
+}
+
+// newWaitingPod returns a new waitingPod instance.
+func newWaitingPod(pod *v1.Pod, pluginsMaxWaitTime map[string]time.Duration) *waitingPod {
+	wp := &waitingPod{
+		pod: pod,
+		// Allow() and Reject() calls are non-blocking. This property is guaranteed
+		// by using non-blocking send to this channel. This channel has a buffer of size 1
+		// to ensure that non-blocking send will not be ignored - possible situation when
+		// receiving from this channel happens after non-blocking send.
+		s: make(chan *framework.Status, 1),
+	}
+
+	wp.pendingPlugins = make(map[string]*time.Timer, len(pluginsMaxWaitTime))
+	// The time.AfterFunc calls wp.Reject which iterates through pendingPlugins map. Acquire the
+	// lock here so that time.AfterFunc can only execute after newWaitingPod finishes.
+	wp.mu.Lock()
+	defer wp.mu.Unlock()
+	for k, v := range pluginsMaxWaitTime {
+		plugin, waitTime := k, v
+		wp.pendingPlugins[plugin] = time.AfterFunc(waitTime, func() {
+			msg := fmt.Sprintf("rejected due to timeout after waiting %v at plugin %v", waitTime, plugin)
+			wp.Reject(plugin, msg)
+		})
+	}
+
+	return wp
 }

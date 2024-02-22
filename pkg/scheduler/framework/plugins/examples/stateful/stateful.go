@@ -59,8 +59,8 @@ func (mp *MultipointExample) Reserve(ctx context.Context, state *framework.Cycle
 // during "reserve" extension point or later. In this example, the Unreserve
 // method loses its reference to the string slice, allowing it to be garbage
 // collected, and thereby "unallocating" the reserved resources.
-func (mp *MultipointExample) Unreserve(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) {
-	// Unlike Reserve, the Unreserve method may be called concurrently since
+func (mp *MultipointExample) UnReserve(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) {
+	// Unlike Reserve, the UnReserve method may be called concurrently since
 	// there is no guarantee that there will only one unreserve operation at any
 	// given point in time (for example, during the binding cycle).
 	mp.mu.Lock()

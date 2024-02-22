@@ -37,8 +37,8 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/framework"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeaffinity"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodename"
-	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/noderesources"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeports"
+	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/noderesources"
 	"k8s.io/kubernetes/pkg/scheduler/internal/queue"
 )
 
@@ -98,14 +98,6 @@ func (sched *Scheduler) deleteNodeFromCache(obj interface{}) {
 	klog.V(3).InfoS("Delete event for node", "node", klog.KObj(node))
 	if err := sched.Cache.RemoveNode(node); err != nil {
 		klog.ErrorS(err, "Scheduler cache RemoveNode failed")
-	}
-}
-
-func (sched *Scheduler) addPodToSchedulingQueue(obj interface{}) {
-	pod := obj.(*v1.Pod)
-	klog.V(3).InfoS("Add event for unscheduled pod", "pod", klog.KObj(pod))
-	if err := sched.SchedulingQueue.Add(pod); err != nil {
-		utilruntime.HandleError(fmt.Errorf("unable to queue %T: %v", obj, err))
 	}
 }
 
@@ -211,6 +203,152 @@ func assignedPod(pod *v1.Pod) bool {
 // responsibleForPod returns true if the pod has asked to be scheduled by the given scheduler.
 func responsibleForPod(pod *v1.Pod, profiles profile.Map) bool {
 	return profiles.HandlesSchedulerName(pod.Spec.SchedulerName)
+}
+
+func nodeSchedulingPropertiesChange(newNode *v1.Node, oldNode *v1.Node) *framework.ClusterEvent {
+	if nodeSpecUnschedulableChanged(newNode, oldNode) {
+		return &queue.NodeSpecUnschedulableChange
+	}
+	if nodeAllocatableChanged(newNode, oldNode) {
+		return &queue.NodeAllocatableChange
+	}
+	if nodeLabelsChanged(newNode, oldNode) {
+		return &queue.NodeLabelChange
+	}
+	if nodeTaintsChanged(newNode, oldNode) {
+		return &queue.NodeTaintChange
+	}
+	if nodeConditionsChanged(newNode, oldNode) {
+		return &queue.NodeConditionChange
+	}
+
+	return nil
+}
+
+func nodeAllocatableChanged(newNode *v1.Node, oldNode *v1.Node) bool {
+	return !reflect.DeepEqual(oldNode.Status.Allocatable, newNode.Status.Allocatable)
+}
+
+func nodeLabelsChanged(newNode *v1.Node, oldNode *v1.Node) bool {
+	return !reflect.DeepEqual(oldNode.GetLabels(), newNode.GetLabels())
+}
+
+func nodeTaintsChanged(newNode *v1.Node, oldNode *v1.Node) bool {
+	return !reflect.DeepEqual(newNode.Spec.Taints, oldNode.Spec.Taints)
+}
+
+func nodeConditionsChanged(newNode *v1.Node, oldNode *v1.Node) bool {
+	strip := func(conditions []v1.NodeCondition) map[v1.NodeConditionType]v1.ConditionStatus {
+		conditionStatuses := make(map[v1.NodeConditionType]v1.ConditionStatus, len(conditions))
+		for i := range conditions {
+			conditionStatuses[conditions[i].Type] = conditions[i].Status
+		}
+		return conditionStatuses
+	}
+	return !reflect.DeepEqual(strip(oldNode.Status.Conditions), strip(newNode.Status.Conditions))
+}
+
+func nodeSpecUnschedulableChanged(newNode *v1.Node, oldNode *v1.Node) bool {
+	return newNode.Spec.Unschedulable != oldNode.Spec.Unschedulable && !newNode.Spec.Unschedulable
+}
+
+func preCheckForNode(nodeInfo *framework.NodeInfo) queue.PreEnqueueCheck {
+	// Note: the following checks doesn't take preemption into considerations, in very rare
+	// cases (e.g., node resizing), "pod" may still fail a check but preemption helps. We deliberately
+	// chose to ignore those cases as unschedulable pods will be re-queued eventually.
+	return func(pod *v1.Pod) bool {
+		admissionResults := AdmissionCheck(pod, nodeInfo, false)
+		if len(admissionResults) != 0 {
+			return false
+		}
+		_, isUntolerated := corev1helpers.FindMatchingUntoleratedTaint(nodeInfo.Node().Spec.Taints, pod.Spec.Tolerations, func(t *v1.Taint) bool {
+			return t.Effect == v1.TaintEffectNoSchedule
+		})
+		return !isUntolerated
+	}
+}
+
+// AdmissionCheck 调用 noderesources/nodeport/nodeAffinity/nodename 的过滤逻辑,返回失败原因.
+// 它用于kubelet(pkg/kubelet/lifecycle/over-predicate.go)和 scheduler.如果' includeAllFailures '设置为false,则返回第一个失败;否则返回所有失败.
+func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailures bool) []AdmissionResult {
+	var admissionResults []AdmissionResult
+	insufficientResources := noderesources.Fits(pod, nodeInfo)
+	if len(insufficientResources) != 0 {
+		for i := range insufficientResources {
+			admissionResults = append(admissionResults, AdmissionResult{InsufficientResource: &insufficientResources[i]})
+		}
+		if !includeAllFailures {
+			return admissionResults
+		}
+	}
+
+	if matches, _ := corev1nodeaffinity.GetRequiredNodeAffinity(pod).Match(nodeInfo.Node()); !matches { // 节点亲和性
+		admissionResults = append(admissionResults, AdmissionResult{Name: nodeaffinity.Name, Reason: nodeaffinity.ErrReasonPod})
+		if !includeAllFailures {
+			return admissionResults
+		}
+	}
+	if !over_nodename.Fits(pod, nodeInfo) {
+		admissionResults = append(admissionResults, AdmissionResult{Name: over_nodename.Name, Reason: over_nodename.ErrReason})
+		if !includeAllFailures {
+			return admissionResults
+		}
+	}
+	if !nodeports.Fits(pod, nodeInfo) {
+		admissionResults = append(admissionResults, AdmissionResult{Name: nodeports.Name, Reason: nodeports.ErrReason})
+		if !includeAllFailures {
+			return admissionResults
+		}
+	}
+	return admissionResults
+}
+
+// AdmissionResult describes the reason why Scheduler can't admit the pod.
+// If the reason is a resource fit one, then AdmissionResult.InsufficientResource includes the details.
+type AdmissionResult struct {
+	Name                 string
+	Reason               string
+	InsufficientResource *noderesources.InsufficientResource // 资源不足
+}
+
+func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
+	oldPod, newPod := oldObj.(*v1.Pod), newObj.(*v1.Pod)
+	// Bypass update event that carries identical objects; otherwise, a duplicated
+	// Pod may go through scheduling and cause unexpected behavior (see #96071).
+	if oldPod.ResourceVersion == newPod.ResourceVersion {
+		return
+	}
+
+	isAssumed, err := sched.Cache.IsAssumedPod(newPod) // 如果假定pod未过期，则返回true。
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("failed to check whether pod %s/%s is assumed: %v", newPod.Namespace, newPod.Name, err))
+	}
+	if isAssumed {
+		return
+	}
+
+	if err := sched.SchedulingQueue.Update(oldPod, newPod); err != nil {
+		utilruntime.HandleError(fmt.Errorf("unable to update %T: %v", newObj, err))
+	}
+}
+
+func (sched *Scheduler) addNodeToCache(obj interface{}) {
+	node, ok := obj.(*v1.Node)
+	if !ok {
+		klog.ErrorS(nil, "Cannot convert to *v1.Node", "obj", obj)
+		return
+	}
+
+	nodeInfo := sched.Cache.AddNode(node)
+	klog.V(3).InfoS("Add event for node", "node", klog.KObj(node))
+	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.NodeAdd, preCheckForNode(nodeInfo))
+}
+func (sched *Scheduler) addPodToSchedulingQueue(obj interface{}) {
+	pod := obj.(*v1.Pod)
+	klog.V(3).InfoS("Add event for unscheduled pod", "pod", klog.KObj(pod))
+	if err := sched.SchedulingQueue.Add(pod); err != nil {
+		utilruntime.HandleError(fmt.Errorf("unable to queue %T: %v", obj, err))
+	}
 }
 
 // addAllEventHandlers is a helper function used in tests and in Scheduler
@@ -399,143 +537,4 @@ func addAllEventHandlers(
 			)
 		}
 	}
-}
-
-func nodeSchedulingPropertiesChange(newNode *v1.Node, oldNode *v1.Node) *framework.ClusterEvent {
-	if nodeSpecUnschedulableChanged(newNode, oldNode) {
-		return &queue.NodeSpecUnschedulableChange
-	}
-	if nodeAllocatableChanged(newNode, oldNode) {
-		return &queue.NodeAllocatableChange
-	}
-	if nodeLabelsChanged(newNode, oldNode) {
-		return &queue.NodeLabelChange
-	}
-	if nodeTaintsChanged(newNode, oldNode) {
-		return &queue.NodeTaintChange
-	}
-	if nodeConditionsChanged(newNode, oldNode) {
-		return &queue.NodeConditionChange
-	}
-
-	return nil
-}
-
-func nodeAllocatableChanged(newNode *v1.Node, oldNode *v1.Node) bool {
-	return !reflect.DeepEqual(oldNode.Status.Allocatable, newNode.Status.Allocatable)
-}
-
-func nodeLabelsChanged(newNode *v1.Node, oldNode *v1.Node) bool {
-	return !reflect.DeepEqual(oldNode.GetLabels(), newNode.GetLabels())
-}
-
-func nodeTaintsChanged(newNode *v1.Node, oldNode *v1.Node) bool {
-	return !reflect.DeepEqual(newNode.Spec.Taints, oldNode.Spec.Taints)
-}
-
-func nodeConditionsChanged(newNode *v1.Node, oldNode *v1.Node) bool {
-	strip := func(conditions []v1.NodeCondition) map[v1.NodeConditionType]v1.ConditionStatus {
-		conditionStatuses := make(map[v1.NodeConditionType]v1.ConditionStatus, len(conditions))
-		for i := range conditions {
-			conditionStatuses[conditions[i].Type] = conditions[i].Status
-		}
-		return conditionStatuses
-	}
-	return !reflect.DeepEqual(strip(oldNode.Status.Conditions), strip(newNode.Status.Conditions))
-}
-
-func nodeSpecUnschedulableChanged(newNode *v1.Node, oldNode *v1.Node) bool {
-	return newNode.Spec.Unschedulable != oldNode.Spec.Unschedulable && !newNode.Spec.Unschedulable
-}
-
-func preCheckForNode(nodeInfo *framework.NodeInfo) queue.PreEnqueueCheck {
-	// Note: the following checks doesn't take preemption into considerations, in very rare
-	// cases (e.g., node resizing), "pod" may still fail a check but preemption helps. We deliberately
-	// chose to ignore those cases as unschedulable pods will be re-queued eventually.
-	return func(pod *v1.Pod) bool {
-		admissionResults := AdmissionCheck(pod, nodeInfo, false)
-		if len(admissionResults) != 0 {
-			return false
-		}
-		_, isUntolerated := corev1helpers.FindMatchingUntoleratedTaint(nodeInfo.Node().Spec.Taints, pod.Spec.Tolerations, func(t *v1.Taint) bool {
-			return t.Effect == v1.TaintEffectNoSchedule
-		})
-		return !isUntolerated
-	}
-}
-
-// AdmissionCheck 调用 noderesources/nodeport/nodeAffinity/nodename 的过滤逻辑,返回失败原因.
-// 它用于kubelet(pkg/kubelet/lifecycle/over-predicate.go)和 scheduler.如果' includeAllFailures '设置为false,则返回第一个失败;否则返回所有失败.
-func AdmissionCheck(pod *v1.Pod, nodeInfo *framework.NodeInfo, includeAllFailures bool) []AdmissionResult {
-	var admissionResults []AdmissionResult
-	insufficientResources := noderesources.Fits(pod, nodeInfo)
-	if len(insufficientResources) != 0 {
-		for i := range insufficientResources {
-			admissionResults = append(admissionResults, AdmissionResult{InsufficientResource: &insufficientResources[i]})
-		}
-		if !includeAllFailures {
-			return admissionResults
-		}
-	}
-
-	if matches, _ := corev1nodeaffinity.GetRequiredNodeAffinity(pod).Match(nodeInfo.Node()); !matches { // 节点亲和性
-		admissionResults = append(admissionResults, AdmissionResult{Name: nodeaffinity.Name, Reason: nodeaffinity.ErrReasonPod})
-		if !includeAllFailures {
-			return admissionResults
-		}
-	}
-	if !over_nodename.Fits(pod, nodeInfo) {
-		admissionResults = append(admissionResults, AdmissionResult{Name: over_nodename.Name, Reason: over_nodename.ErrReason})
-		if !includeAllFailures {
-			return admissionResults
-		}
-	}
-	if !nodeports.Fits(pod, nodeInfo) {
-		admissionResults = append(admissionResults, AdmissionResult{Name: nodeports.Name, Reason: nodeports.ErrReason})
-		if !includeAllFailures {
-			return admissionResults
-		}
-	}
-	return admissionResults
-}
-
-// AdmissionResult describes the reason why Scheduler can't admit the pod.
-// If the reason is a resource fit one, then AdmissionResult.InsufficientResource includes the details.
-type AdmissionResult struct {
-	Name                 string
-	Reason               string
-	InsufficientResource *noderesources.InsufficientResource // 资源不足
-}
-
-func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
-	oldPod, newPod := oldObj.(*v1.Pod), newObj.(*v1.Pod)
-	// Bypass update event that carries identical objects; otherwise, a duplicated
-	// Pod may go through scheduling and cause unexpected behavior (see #96071).
-	if oldPod.ResourceVersion == newPod.ResourceVersion {
-		return
-	}
-
-	isAssumed, err := sched.Cache.IsAssumedPod(newPod) // 如果假定pod未过期，则返回true。
-	if err != nil {
-		utilruntime.HandleError(fmt.Errorf("failed to check whether pod %s/%s is assumed: %v", newPod.Namespace, newPod.Name, err))
-	}
-	if isAssumed {
-		return
-	}
-
-	if err := sched.SchedulingQueue.Update(oldPod, newPod); err != nil {
-		utilruntime.HandleError(fmt.Errorf("unable to update %T: %v", newObj, err))
-	}
-}
-
-func (sched *Scheduler) addNodeToCache(obj interface{}) {
-	node, ok := obj.(*v1.Node)
-	if !ok {
-		klog.ErrorS(nil, "Cannot convert to *v1.Node", "obj", obj)
-		return
-	}
-
-	nodeInfo := sched.Cache.AddNode(node)
-	klog.V(3).InfoS("Add event for node", "node", klog.KObj(node))
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.NodeAdd, preCheckForNode(nodeInfo))
 }
