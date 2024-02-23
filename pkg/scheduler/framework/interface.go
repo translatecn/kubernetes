@@ -701,20 +701,6 @@ type PostBindPlugin interface {
 	PostBind(ctx context.Context, state *CycleState, p *v1.Pod, nodeName string)
 }
 
-// PodsToActivateKey is a reserved state key for stashing pods.
-// If the stashed pods are present in unschedulablePods or backoffQ,they will be
-// activated (i.e., moved to activeQ) in two phases:
-// - end of a scheduling cycle if it succeeds (will be cleared from `PodsToActivate` if activated)
-// - end of a binding cycle if it succeeds
-var PodsToActivateKey StateKey = "kubernetes.io/pods-to-activate"
-
-// PodsToActivate stores pods to be activated.
-type PodsToActivate struct {
-	sync.Mutex
-	// Map is keyed with namespaced pod name, and valued with the pod.
-	Map map[string]*v1.Pod
-}
-
 // Clone just returns the same state.
 func (s *PodsToActivate) Clone() StateData {
 	return s
@@ -752,4 +738,18 @@ func (ni *NominatingInfo) Mode() NominatingMode {
 // NewPodsToActivate instantiates a PodsToActivate object.
 func NewPodsToActivate() *PodsToActivate {
 	return &PodsToActivate{Map: make(map[string]*v1.Pod)}
+}
+
+// PodsToActivateKey is a reserved state key for stashing pods.
+// If the stashed pods are present in unschedulablePods or backoffQ,they will be
+// activated (i.e., moved to activeQ) in two phases:
+// - end of a scheduling cycle if it succeeds (will be cleared from `PodsToActivate` if activated)
+// - end of a binding cycle if it succeeds
+var PodsToActivateKey StateKey = "kubernetes.io/pods-to-activate"
+
+// PodsToActivate stores pods to be activated.
+type PodsToActivate struct {
+	sync.Mutex
+	// Map is keyed with namespaced pod name, and valued with the pod.
+	Map map[string]*v1.Pod
 }

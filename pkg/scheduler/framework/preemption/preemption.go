@@ -147,7 +147,7 @@ type Evaluator struct {
 // - `<non-nil PostFilterResult, Success>`：这是正常的路径，非空的`nominatedNodeName`将被应用于抢占Pod。
 func (ev *Evaluator) Preempt(ctx context.Context, pod *v1.Pod, m framework.NodeToStatusMap) (*framework.PostFilterResult, *framework.Status) {
 	// 抢占
-	// 0) Fetch the latest version of <pod>.
+	// 0) Fetch the latest version of <pod>.type PodsToActivate struct {
 	// It's safe to directly fetch pod here. Because the informer cache has already been
 	// initialized when creating the Scheduler obj.
 	// However, tests may need to manually initialize the shared pod informer.
