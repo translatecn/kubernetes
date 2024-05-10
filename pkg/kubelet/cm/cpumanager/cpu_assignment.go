@@ -402,22 +402,27 @@ func takeByTopologyNUMAPacked(topo *topology.CPUTopology, availableCPUs cpuset.C
 	}
 
 	// 基于拓扑的最佳适配
-	// 1. 如果可用并且容器需要至少一个NUMA节点或一个插槽的CPU,则获取整个NUMA节点和插槽.如果NUMA节点映射到一个或多个插槽,则首先从NUMA节点中获取.否则,首先从插槽中获取.
-	acc.numaOrSocketsFirst.takeFullFirstLevel()
-	var _ = new(numaFirst).takeFullFirstLevel
-	if acc.isSatisfied() {
-		return acc.result, nil
+	{
+		acc.numaOrSocketsFirst.takeFullFirstLevel() // 尽可能分配整个 numa,socket ,需要申请的>= 每个numa,socket的cpu个数,     谁个数多，先分配谁
+		var _ = new(numaFirst).takeFullFirstLevel
+		if acc.isSatisfied() {
+			return acc.result, nil
+		}
+		acc.numaOrSocketsFirst.takeFullSecondLevel() //  只是换下顺序，numa,socket
+		if acc.isSatisfied() {
+			return acc.result, nil
+		}
+
 	}
-	acc.numaOrSocketsFirst.takeFullSecondLevel()
-	if acc.isSatisfied() {
-		return acc.result, nil
-	}
+
 	// 2. 如果可用并且容器需要至少一个核心的CPU,则获取整个核心.
-	acc.takeFullCores() // need < cpusInCore
+	acc.takeFullCores() // need > cpusInCore
 	if acc.isSatisfied() {
 		return acc.result, nil
 	}
-	// 3. 获取单个线程,优先填充与已经在此分配中获取的整个核心位于同一插槽上的部分分配核心.
+	// 3.
+	// 按照 numa、socket、core 的顺序  排列 逻辑核
+	// 按照 socket、numa、core 的顺序  排列 逻辑核
 	acc.takeRemainingCPUs()
 	if acc.isSatisfied() {
 		return acc.result, nil
